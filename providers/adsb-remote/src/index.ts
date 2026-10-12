@@ -175,6 +175,8 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
   private military: CachedAnswer | undefined;
   /** Each emergency code's last answer (`/v2/sqk/{code}`), kept like a type's. */
   private readonly bySquawk = new Map<string, CachedAnswer>();
+  /** How many aircraft each code's list last had, so the log says so only when it changes. */
+  private readonly lastSquawkCounts = new Map<string, number>();
   /** Recently fetched traces by ICAO address; `points` undefined when there was none. */
   private readonly traces = new Map<string, { atMs: number; points: ObjectTrackAnswer['points'] | undefined }>();
   /** Recently looked-up routes by callsign; `answer` undefined when the lookup failed. */
@@ -261,6 +263,16 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
       }
       this.bySquawk.set(plan.squawk, answer.cached);
       this.planner.recordEmergency(answer.cached.observations.length, now);
+      // Said when a code's count changes, not every minute: the operator's evidence that the
+      // list is asked for, and of an emergency the view would not have shown.
+      const count = answer.cached.observations.length;
+      if (this.lastSquawkCounts.get(plan.squawk) !== count)
+        this.context.logger.info('adsb.lol emergency squawk list', {
+          squawk: plan.squawk,
+          count,
+          sample: answer.cached.observations.slice(0, 3).map((o) => o.externalId ?? o.id),
+        });
+      this.lastSquawkCounts.set(plan.squawk, count);
     } else {
       const url = typeQueryUrl(ADSB_LOL_API_BASE, plan.type);
       let answer: Awaited<ReturnType<AdsbLolProvider['send']>>;

@@ -1,5 +1,5 @@
 import type { GeoBounds, GeoPosition, GeoRegion, WorldEvent, WorldObject } from '@worldview/world-model';
-import { boundsContain, circleBounds } from '@worldview/world-model';
+import { boundsContain, circleBounds, haversineMeters } from '@worldview/world-model';
 import type { FeatureUpdate, RenderFeature, RenderGeometry, RenderMotion, RenderStyle, ViewState } from './contract.js';
 import { worldGeometryParts, worldGeometryToRender } from './contract.js';
 import { deadReckonedMotion } from './motion.js';
@@ -594,11 +594,15 @@ export function presentObjects(input: PresentationInput): PresentationResult {
   for (const ev of input.events ?? [])
     if (EPISODE_EVENTS.has(ev.type) && ev.objectIds[0]) followed.set(ev.objectIds[0], undefined);
 
-  // The selected object's type, for how its trail is drawn (trailFeatures).
+  // The selected object's type and height, for how its trail and route are drawn.
   let selectedType: string | undefined;
+  let selectedAltitudeM: number | undefined;
   for (const obj of input.objects) {
     stats.objects++;
-    if (obj.id === input.selectedId) selectedType = obj.type;
+    if (obj.id === input.selectedId) {
+      selectedType = obj.type;
+      selectedAltitudeM = obj.position?.altitudeM;
+    }
     if (followed.size && obj.position && followed.has(obj.id)) followed.set(obj.id, obj.position);
     // The selected object is drawn even with its layer switched off: chosen from search (the
     // ISS with Space off), it had a panel and an orbit line but no marker, and Follow had
@@ -800,7 +804,16 @@ export function presentObjects(input: PresentationInput): PresentationResult {
       ...trailFeatures(input.selectedId, input.selectedTrack, selectedType === 'aircraft' ? 'absolute' : 'clamp'),
     );
   // The selected flight's route: what is left of it, and its airports.
-  if (input.selectedId && input.selectedRoute) upsert.push(...routeFeatures(input.selectedId, input.selectedRoute));
+  if (input.selectedId && input.selectedRoute)
+    upsert.push(
+      ...routeFeatures(
+        input.selectedId,
+        input.selectedRoute,
+        selectedType === 'aircraft' && selectedAltitudeM !== undefined && selectedAltitudeM > 0
+          ? selectedAltitudeM
+          : undefined,
+      ),
+    );
 
   for (const z of input.zones ?? []) {
     const geometry = zoneGeometry(z.region);
@@ -941,16 +954,23 @@ export interface PresentedRoute {
  * predicted-path style (`trail.route`, a planned route and not an observation), cut at the
  * antimeridian like every trail, and each airport as a small labelled point
  * (`route.airport`; the destination a little larger). None of it is a pick target.
+ *
+ * With `fromAltitudeM` (the aircraft's height) the line starts at the aircraft on the globe
+ * and comes down to the ground at the end of the path, evenly by distance (`descendingPath`):
+ * a planned path drawn on the ground began a little below a marker drawn at altitude, where
+ * the trail now ends (seen on the test laptop, 2026-10-12). Without it, a ground track.
  */
-export function routeFeatures(selectedId: string, route: PresentedRoute): RenderFeature[] {
+export function routeFeatures(selectedId: string, route: PresentedRoute, fromAltitudeM?: number): RenderFeature[] {
   const out: RenderFeature[] = [];
-  splitAtAntimeridian(route.remaining).forEach((piece, i) => {
+  const remaining = fromAltitudeM !== undefined ? descendingPath(route.remaining, fromAltitudeM) : route.remaining;
+  const height = fromAltitudeM !== undefined ? { heightMode: 'absolute' as const } : {};
+  splitAtAntimeridian(remaining).forEach((piece, i) => {
     if (piece.length < 2) return;
     out.push({
       id: `route:${selectedId}${i ? `:${i}` : ''}`,
       objectId: selectedId,
       geometry: { kind: 'line', positions: piece },
-      style: { styleClass: 'trail.route', lineStyle: 'dashed', size: 2 },
+      style: { styleClass: 'trail.route', lineStyle: 'dashed', size: 2, ...height },
       interactive: false,
       priority: 89,
       layer: 'trail',
@@ -972,6 +992,20 @@ export function routeFeatures(selectedId: string, route: PresentedRoute): Render
     });
   });
   return out;
+}
+
+/**
+ * The path with altitudes from `fromAltitudeM` at its first point down to 0 at its last,
+ * in proportion to the distance along it; a path of one point or no length keeps the height.
+ */
+export function descendingPath(path: ReadonlyArray<GeoPosition>, fromAltitudeM: number): GeoPosition[] {
+  const along: number[] = [0];
+  for (let i = 1; i < path.length; i++) along.push(along[i - 1]! + haversineMeters(path[i - 1]!, path[i]!));
+  const total = along[along.length - 1] ?? 0;
+  return path.map((p, i) => ({
+    ...p,
+    altitudeM: total > 0 ? Math.round(fromAltitudeM * (1 - along[i]! / total)) : Math.round(fromAltitudeM),
+  }));
 }
 
 /**

@@ -195,6 +195,12 @@ test('the /v2/sqk/7700 fixture: an emergency anywhere reaches the map a minute i
     'the Atlantic airliner and the Sydney light aircraft, far from the view; the Mode S row has no position',
   );
   assert.ok(listed[0]!.quality.flags?.includes('emergency:general'));
+  const said = ctx.logger.entries.filter((e) => e.message === 'adsb.lol emergency squawk list');
+  assert.deepEqual(
+    said.map((e) => [e.fields?.['squawk'], e.fields?.['count']]),
+    [['7700', 2]],
+    'the log says so once, with the count',
+  );
   // A minute on, the next code; the 7700 answer is kept meanwhile.
   for (let i = 0; i < 4; i++) {
     ctx.clock.advance(15_000);
