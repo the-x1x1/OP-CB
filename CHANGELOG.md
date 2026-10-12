@@ -19,6 +19,14 @@ Versioning: [semantic versioning](https://semver.org/).
   view bar beside the two true-colour layers (`gibs-black-marble`, NASA GIBS, off by default).
   A still picture, not tonight's: a blackout or a new town is not in it.
 
+### Changed
+
+- **A setting for another platform says so.** A provider setting can name the platforms it
+  works on; on any other the Sources panel shows its label with "Not available on Windows:
+  this works on Linux only" instead of a field. The first is the Meshtastic source's "Node
+  plugged in by USB", which was editable on Windows with only its description saying Linux
+  (seen on the test laptop, 2026-10-12).
+
 ### Fixed
 
 - **The selected aircraft's trail is drawn at its recorded altitudes on the globe**, so it now
