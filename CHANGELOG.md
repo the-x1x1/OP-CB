@@ -21,6 +21,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **A test notification** (Help → Diagnostics → Notifications → Send a test notification):
+  the toast here and, on the desktop, an operating-system notification, the way a watch zone's
+  or a pass alert's notice arrives — and it says when the desktop showed none.
 - **Diagnostics has a line for the local API** (Help → Diagnostics, under Sidecars): off,
   Linux only, or where it listens with how many requests it has answered and refused and
   when the last came — never what was asked.
