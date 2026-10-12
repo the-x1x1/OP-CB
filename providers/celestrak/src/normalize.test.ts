@@ -126,6 +126,27 @@ test('a satellite near a high apogee is kept, so it is not frozen at its last ac
   );
 });
 
+test('an element set whose perigee is below the surface is refused before propagation', () => {
+  // Mean motion 16.6 rev/day with e = 0.03: a ≈ 6,491 km, perigee ≈ 6,296 km from the centre,
+  // ~82 km under the equatorial radius — an object that has come down, or elements gone bad.
+  const down: GpElements = { ...ISS, noradId: 99999, name: 'DOWN', meanMotion: 16.6, eccentricity: 0.03 };
+  let propagated = 0;
+  const counting: Propagator = {
+    name: 'counting',
+    propagate: (e, at) => {
+      propagated++;
+      return base.propagator.propagate(e, at);
+    },
+  };
+  const r = normalizeElements([down, ISS], { ...base, propagator: counting });
+  assert.deepEqual(
+    r.rejected.map((x) => [x.index, x.reason]),
+    [[0, 'element set decayed (perigee below the surface)']],
+  );
+  assert.equal(r.observations.length, 1);
+  assert.equal(propagated, 1, 'the decayed set is not propagated at all');
+});
+
 test('with a lead, the observation also says where the satellite will be at the next poll', () => {
   const r = normalizeElements([ISS], { ...base, leadMs: 15_000 });
   const o = r.observations[0]!;

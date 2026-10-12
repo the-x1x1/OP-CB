@@ -42,6 +42,10 @@ Versioning: [semantic versioning](https://semver.org/).
   rejected as out of range, so the last position below that line stayed on the map for days
   and the Sky panel counted it stale from most of the planet. A position may now be as high
   as the Moon's orbit and a little more (500,000 km), so such a satellite keeps moving.
+- **An element set whose perigee is below the Earth's surface is refused** before it is
+  propagated: it describes an object that has come down, or elements gone bad, and SGP4
+  still answers for it with a position that means nothing. Said in the log like the other
+  skipped sets.
 
 ## [0.3.0] — 2026-10-09
 

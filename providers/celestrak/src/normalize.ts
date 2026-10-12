@@ -40,6 +40,8 @@ export interface NormalizeResult {
 }
 
 const DEFAULT_MAX_ELEMENT_AGE_MS = 30 * 24 * 3600_000;
+/** A perigee below this (km above the equatorial radius) is under the surface: the object is down. */
+const DECAYED_PERIGEE_KM = 0;
 const AGING_AFTER_MS = 3 * 24 * 3600_000;
 
 /**
@@ -87,6 +89,10 @@ export function elementsToDraft(e: GpElements, opts: NormalizeOptions): Observat
   const age = opts.nowMs - epochMs;
   if (age > (opts.maxElementAgeMs ?? DEFAULT_MAX_ELEMENT_AGE_MS)) return 'element set too old to propagate';
   if (age < -ELEMENT_VALIDITY_MS) return 'element set epoch too far in the future';
+  // An element set whose perigee is below the Earth's surface describes an object that has
+  // come down, or elements gone bad: SGP4 still answers for it, with a position that means
+  // nothing (satellite.js 7's checkForDecay refuses these by the same measure).
+  if (orbitSummary(e).perigeeKm < DECAYED_PERIGEE_KM) return 'element set decayed (perigee below the surface)';
   let state;
   try {
     state = opts.propagator.propagate(e, opts.nowMs);
