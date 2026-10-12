@@ -280,8 +280,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   was fetched in, or its name; anything else is "Other / not known". CelesTrak's military
   list is its "Miscellaneous Military" group, not every military satellite.
 - The selected satellite's predicted path is one orbital period of SGP4 positions over the
-  rotating Earth (the ground track at altitude), so it does not close on itself: after one
-  period it ends ~23° west of where it began for a low orbit. It is re-fetched when the
+  rotating Earth, drawn on the globe at the satellite's height (on the 2D map as its ground
+  track), so it does not close on itself: after one period it ends ~23° west of where it
+  began for a low orbit. It is re-fetched when the
   satellite has flown most of it.
 - Between reports, aircraft and ships are drawn where their last reported speed and track
   carry them, at most a minute (ships two) ahead of the report; a turn shows when the next

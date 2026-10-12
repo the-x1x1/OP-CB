@@ -148,7 +148,7 @@ test('trail: observed points one trail, predicted ones a dashed line from the la
   assert.ok(out.upsert.some((f) => f.id === 'trail:satellite:norad:1:predicted'));
 });
 
-test('trail: an aircraft trail is drawn at its recorded altitudes, gaps filled; other trails stay ground tracks', () => {
+test('trail: aircraft and satellite trails are drawn at their recorded altitudes, gaps filled; others stay ground tracks', () => {
   const track = [
     { latitude: 20, longitude: -157, altitudeM: 3000 },
     { latitude: 20.1, longitude: -157.1 },
@@ -163,8 +163,9 @@ test('trail: an aircraft trail is drawn at its recorded altitudes, gaps filled; 
     plane.geometry.kind === 'line' ? plane.geometry.positions.map((p) => p.altitudeM) : [],
     [3000, 3000, 3600],
   );
-  // A satellite's trail is its ground track; an earthquake's altitude is minus its depth.
-  assert.equal(trail(obj('satellite:norad:9', 'satellite', {})).style.heightMode, undefined);
+  // A satellite's too (its predicted path is its orbit, up where the marker is); an
+  // earthquake's altitude is minus its depth, so its trail stays on the ground.
+  assert.equal(trail(obj('satellite:norad:9', 'satellite', {})).style.heightMode, 'absolute');
   assert.equal(trail(obj('earthquake:us:9', 'earthquake', {})).style.heightMode, undefined);
   // A track with no altitude at all stays on the ground rather than at 0 m 'absolute'.
   const flat = trailFeatures(
