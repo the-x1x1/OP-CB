@@ -12,6 +12,11 @@ Versioning: [semantic versioning](https://semver.org/).
   an altitude takes its neighbour's, so the line does not drop to the ground and back; a track
   with no altitude at all stays on the ground. A satellite's trail is still its ground track,
   and the 2D map is unchanged.
+- **High-apogee satellites no longer freeze and count as stale.** A satellite propagated above
+  100,000 km (Chandra and INTEGRAL reach ~140,000 km every orbit; TESS ~375,000 km) was
+  rejected as out of range, so the last position below that line stayed on the map for days
+  and the Sky panel counted it stale from most of the planet. A position may now be as high
+  as the Moon's orbit and a little more (500,000 km), so such a satellite keeps moving.
 
 ## [0.3.0] — 2026-10-09
 

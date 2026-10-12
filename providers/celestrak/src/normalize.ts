@@ -1,4 +1,10 @@
-import { isValidLatLon, stableStringify, type JsonValue, type Observation } from '@worldview/world-model';
+import {
+  MAX_ALTITUDE_M,
+  isValidLatLon,
+  stableStringify,
+  type JsonValue,
+  type Observation,
+} from '@worldview/world-model';
 import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
 import { CELESTRAK_MANIFEST, ELEMENT_VALIDITY_MS } from './manifest.js';
 import { orbitSummary, type GpElements } from './elements.js';
@@ -35,7 +41,6 @@ export interface NormalizeResult {
 
 const DEFAULT_MAX_ELEMENT_AGE_MS = 30 * 24 * 3600_000;
 const AGING_AFTER_MS = 3 * 24 * 3600_000;
-const MAX_ALTITUDE_M = 100_000_000; // world-model position schema bound
 
 /**
  * Propagate every element set to `nowMs` and emit one satellite observation each.

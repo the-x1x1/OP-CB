@@ -104,6 +104,28 @@ test('propagator failures and duplicates are rejected with reasons, never thrown
   );
 });
 
+test('a satellite near a high apogee is kept, so it is not frozen at its last accepted position', () => {
+  // Chandra reaches ~139,000 km and INTEGRAL ~145,000 km; the old 100,000 km bound rejected
+  // them near apogee, and the state kept each one's last accepted object, counted stale in
+  // the Sky panel from most of the planet (open work: "the 5 satellites that are always stale").
+  const high: Propagator = {
+    name: 'high',
+    propagate: () => ({ latitude: 10, longitude: 20, altitudeM: 145_000_000, speedMps: 900 }),
+  };
+  const r = normalizeElements([ISS], { ...base, propagator: high, leadMs: 15_000 });
+  assert.equal(r.rejected.length, 0, r.rejected[0]?.reason ?? '');
+  const o = r.observations[0]!;
+  assert.equal(o.position?.altitudeM, 145_000_000);
+  const parsed = observationSchema.parse(o);
+  assert.ok(parsed.ok, parsed.ok ? '' : formatIssues(parsed.issues));
+  // Past the Moon it is a propagation gone wrong, not a satellite.
+  const absurd: Propagator = { ...high, propagate: () => ({ ...high.propagate(ISS, NOW)!, altitudeM: 600_000_000 }) };
+  assert.equal(
+    normalizeElements([ISS], { ...base, propagator: absurd }).rejected[0]?.reason,
+    'propagated altitude out of range',
+  );
+});
+
 test('with a lead, the observation also says where the satellite will be at the next poll', () => {
   const r = normalizeElements([ISS], { ...base, leadMs: 15_000 });
   const o = r.observations[0]!;
