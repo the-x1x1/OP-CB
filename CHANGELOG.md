@@ -21,6 +21,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **Diagnostics has a line for the local API** (Help → Diagnostics, under Sidecars): off,
+  Linux only, or where it listens with how many requests it has answered and refused and
+  when the last came — never what was asked.
 - **A setting for another platform says so.** A provider setting can name the platforms it
   works on; on any other the Sources panel shows its label with "Not available on Windows:
   this works on Linux only" instead of a field. The first is the Meshtastic source's "Node
