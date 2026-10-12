@@ -11,7 +11,7 @@ registry); **CI** — the `Build desktop` workflow on GitHub (Ubuntu 24.04 / Win
 — on the P16s, by hand. Automatic evidence (container, CI) and operator-observed results are kept
 in separate columns of the record: the container never stands in for hardware.
 
-State as of `f7efa28` (`feature/linux-cyberdeck-readiness`), 2026-10-08, after the first green Build desktop run.
+State as of `51a0cb6` (v0.3.0, released 2026-10-09). The quality gates are settled by CI; every field check below is still UNVERIFIED.
 
 ## Quality gates
 
@@ -19,7 +19,7 @@ State as of `f7efa28` (`feature/linux-cyberdeck-readiness`), 2026-10-08, after t
 | --------------------------------------- | --------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm install --frozen-lockfile`        | CI        | Ubuntu 24.04, Windows        | Build desktop run 37908005425 on `f7efa28`, both jobs                                                                         | PASS (CI, Ubuntu 24.04 and Windows)                                                                                                                   |
 | `pnpm format:check`                     | container | Prettier 3.9.8               | VERIFICATION.md §M7                                                                                                           | PASS                                                                                                                                                  |
-| `pnpm lint`                             | CI        | ESLint from the lockfile     | the `CI` workflow (ci.yml) runs it; not yet run on this branch                                                                | UNVERIFIED — dispatch ci.yml on the branch                                                                                                            |
+| `pnpm lint`                             | CI        | ESLint from the lockfile     | the `CI` workflow (ci.yml) on `fdfacaf`: all 16 jobs green, lint and dependency-audit included                                | PASS (CI)                                                                                                                                             |
 | `pnpm typecheck`                        | container | TypeScript 5.9.3, type shims | CI with real types: Build desktop run 37908005425 on `f7efa28`; container: shims, no new errors                               | PASS (CI)                                                                                                                                             |
 | `pnpm boundary-check`                   | container | —                            | 1,007 files, 0 violations                                                                                                     | PASS                                                                                                                                                  |
 | `pnpm test`                             | container | Node 22, Linux               | Build desktop run 37908005425 on `f7efa28` (Linux and Windows); container count in §M7                                        | PASS (CI and container)                                                                                                                               |
@@ -53,14 +53,14 @@ Measurements (H12: idle memory, CPU, GPU, battery draw, Field vs Docked) are tak
 
 ## Failure cases with tests
 
-| Case                 | Test                                                                                                                  | Status                  |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| Device disconnects   | serial unplug (`serial-stream.test.ts`, `meshtastic-serial.test.ts`); decoder stopped (`readsb-local` field tests)    | PASS                    |
-| Missing keyring      | `credential-store-linux.test.ts` (basic_text / unknown refused); smoke `--expect-keyring refused` in CI               | PASS (unit); CI pending |
-| Missing external SSD | `offline.test.ts`: pulled while running, start with it absent, found again                                            | PASS                    |
-| Stale ephemeris      | `celestrak/normalize.test.ts` (aging, expired, too old to propagate), `reproject.ts` age limit                        | PASS                    |
-| Radio absent         | `local-hardware.test.ts` (no stick, DVB driver, no permission); readsb "not detected"; serial "nothing is plugged in" | PASS                    |
-| No GPS fix           | `nodes.test.ts`, `meshtastic-serial.test.ts`: NO FIX, no coordinates, off the map                                     | PASS                    |
+| Case                 | Test                                                                                                                  | Status                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Device disconnects   | serial unplug (`serial-stream.test.ts`, `meshtastic-serial.test.ts`); decoder stopped (`readsb-local` field tests)    | PASS                                                                  |
+| Missing keyring      | `credential-store-linux.test.ts` (basic_text / unknown refused); smoke `--expect-keyring refused` in CI               | PASS (unit; CI tag run 37984031387, smoke with and without a keyring) |
+| Missing external SSD | `offline.test.ts`: pulled while running, start with it absent, found again                                            | PASS                                                                  |
+| Stale ephemeris      | `celestrak/normalize.test.ts` (aging, expired, too old to propagate), `reproject.ts` age limit                        | PASS                                                                  |
+| Radio absent         | `local-hardware.test.ts` (no stick, DVB driver, no permission); readsb "not detected"; serial "nothing is plugged in" | PASS                                                                  |
+| No GPS fix           | `nodes.test.ts`, `meshtastic-serial.test.ts`: NO FIX, no coordinates, off the map                                     | PASS                                                                  |
 
 ## Guides
 
