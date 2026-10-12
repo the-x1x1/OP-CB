@@ -5,6 +5,14 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The selected aircraft's trail is drawn at its recorded altitudes on the globe**, so it now
+  meets the aircraft's marker instead of running along the ground below it. A report without
+  an altitude takes its neighbour's, so the line does not drop to the ground and back; a track
+  with no altitude at all stays on the ground. A satellite's trail is still its ground track,
+  and the 2D map is unchanged.
+
 ## [0.3.0] — 2026-10-09
 
 WORLDVIEW on Linux and the cyberdeck: an installable `.deb` for x86_64 Linux beside the Windows
