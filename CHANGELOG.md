@@ -14,6 +14,10 @@ Versioning: [semantic versioning](https://semver.org/).
   one request a poll: the view's own query gives up one poll in six, and the first emergency
   list comes a minute after the first poll so the view's own aircraft are drawn first. Source
   Health says when such a list recently had an aircraft in it.
+- **Night lights.** NASA's Black Marble — the Earth at night, a cloud-free composite of a year
+  of VIIRS night-time passes (2016; the 2012 composite by setting) — as an imagery view on the
+  view bar beside the two true-colour layers (`gibs-black-marble`, NASA GIBS, off by default).
+  A still picture, not tonight's: a blackout or a new town is not in it.
 
 ### Fixed
 
