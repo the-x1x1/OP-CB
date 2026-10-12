@@ -5,6 +5,16 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **An aircraft emergency anywhere raises its event.** Once a minute, whatever the view, the
+  adsb.lol provider asks for every aircraft squawking one of the emergency codes (`/v2/sqk/`
+  7700, 7600 and 7500 in turn, 7700 every other time), so the aircraft-emergency event and
+  its notification come for an emergency over the Atlantic while the map is on Hawaii. Still
+  one request a poll: the view's own query gives up one poll in six, and the first emergency
+  list comes a minute after the first poll so the view's own aircraft are drawn first. Source
+  Health says when such a list recently had an aircraft in it.
+
 ### Fixed
 
 - **The selected aircraft's trail is drawn at its recorded altitudes on the globe**, so it now

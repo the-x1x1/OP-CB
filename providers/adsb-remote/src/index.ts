@@ -21,6 +21,7 @@ import {
   MAX_CIRCLES,
   TYPE_KEEP_MS,
   militaryQueryUrl,
+  squawkQueryUrl,
   typeQueryUrl,
   type CircleView,
 } from './coverage.js';
@@ -51,8 +52,11 @@ export {
   TYPE_KEEP_MS,
   TYPE_MIN_REFRESH_MS,
   MIL_REFRESH_MS,
+  EMERGENCY_REFRESH_MS,
+  EMERGENCY_SQUAWKS,
   typeQueryUrl,
   militaryQueryUrl,
+  squawkQueryUrl,
 } from './coverage.js';
 export { traceUrl, parseTrace, thin, ADSB_LOL_TRACE_HOST } from './trace.js';
 export type { TraceParseOptions } from './trace.js';
@@ -137,8 +141,11 @@ interface CachedAnswer {
  * view is covered by 250 nm circles on a fixed grid (tiles.ts), one circle a poll, busiest
  * and nearest the centre first; a view wider still gets the commonest types worldwide and
  * the military list in turn (coverage.ts), so a zoomed-out map shows the world's airliners
- * rather than one disc of them. Without bounds it falls back to `settings.homePosition`;
- * without either it returns nothing and says so in health.
+ * rather than one disc of them. Whatever the view, once a minute the poll asks instead for
+ * every aircraft squawking one of the emergency codes (`/v2/sqk/{code}`, coverage.ts), so
+ * the aircraft-emergency event is raised for an emergency anywhere, not only one over the
+ * view. Without bounds it falls back to `settings.homePosition`; without either it returns
+ * nothing and says so in health.
  *
  * Whether a poll asks adsb.lol anything at all is the request budget's call (budget.ts):
  * it adapts to adsb.lol's unpublished, load-dependent limit, and a selected aircraft's route
@@ -166,6 +173,8 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
   private readonly byType = new Map<string, CachedAnswer>();
   /** The worldwide military list's last answer (`/v2/mil`), kept like a type's. */
   private military: CachedAnswer | undefined;
+  /** Each emergency code's last answer (`/v2/sqk/{code}`), kept like a type's. */
+  private readonly bySquawk = new Map<string, CachedAnswer>();
   /** Recently fetched traces by ICAO address; `points` undefined when there was none. */
   private readonly traces = new Map<string, { atMs: number; points: ObjectTrackAnswer['points'] | undefined }>();
   /** Recently looked-up routes by callsign; `answer` undefined when the lookup failed. */
@@ -241,6 +250,17 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
       }
       this.military = answer.cached;
       this.planner.recordMilitary(answer.cached.observations.length, now);
+    } else if (plan.kind === 'sqk') {
+      const url = squawkQueryUrl(ADSB_LOL_API_BASE, plan.squawk);
+      let answer: Awaited<ReturnType<AdsbLolProvider['send']>>;
+      try {
+        answer = await this.send(url, request.signal, this.bySquawk.get(plan.squawk), false, plan.squawk);
+      } catch (err) {
+        this.planner.deferredEmergency(now);
+        throw err;
+      }
+      this.bySquawk.set(plan.squawk, answer.cached);
+      this.planner.recordEmergency(answer.cached.observations.length, now);
     } else {
       const url = typeQueryUrl(ADSB_LOL_API_BASE, plan.type);
       let answer: Awaited<ReturnType<AdsbLolProvider['send']>>;
@@ -261,7 +281,7 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     const observations = this.snapshot(nowMs);
     let newest: number | undefined;
     const lists: Array<CachedAnswer | undefined> = [this.point, this.military, ...this.byCircle.values()];
-    for (const a of [...lists, ...this.byType.values()])
+    for (const a of [...lists, ...this.byType.values(), ...this.bySquawk.values()])
       if (a && (newest === undefined || a.fetchedAtMs > newest)) newest = a.fetchedAtMs;
     return { observations, ...(newest !== undefined ? { cacheAgeMs: Math.max(0, nowMs - newest) } : {}) };
   }
@@ -278,11 +298,12 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     signal: AbortSignal,
     previous: CachedAnswer | undefined,
     listedMilitary = false,
+    listedSquawk?: string,
   ): Promise<{ cached: CachedAnswer; ageMs: number | undefined }> {
     this.budget.sending(this.context.clock.now());
     let answer: { cached: CachedAnswer; ageMs: number | undefined };
     try {
-      answer = await this.fetchAircraft(url, signal, previous, listedMilitary);
+      answer = await this.fetchAircraft(url, signal, previous, listedMilitary, listedSquawk);
     } catch (err) {
       this.noteRefusal(err);
       throw err;
@@ -327,6 +348,7 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     signal: AbortSignal,
     previous: CachedAnswer | undefined,
     listedMilitary = false,
+    listedSquawk?: string,
   ): Promise<{ cached: CachedAnswer; ageMs: number | undefined }> {
     const res = await this.context.http.request({
       url,
@@ -365,6 +387,12 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
       result.observations = result.observations.map((o) =>
         o.payload['military'] === true ? o : { ...o, payload: { ...o.payload, military: true } },
       );
+    // Likewise a squawk list's rows squawk that code by adsb.lol's reckoning: a row that
+    // left the field out still raises the emergency event (event-engine aircraft-emergency).
+    if (listedSquawk)
+      result.observations = result.observations.map((o) =>
+        typeof o.payload['squawk'] === 'string' ? o : { ...o, payload: { ...o.payload, squawk: listedSquawk } },
+      );
     // Rows without a position are expected (Mode S only); the feed is malformed only when
     // every row is unusable for a reason other than a missing position.
     const hard = result.rejected.filter((r) => r.reason !== 'missing position').length;
@@ -397,12 +425,14 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     if (this.point && nowMs - this.point.fetchedAtMs > POINT_KEEP_MS) this.point = undefined;
     if (this.military && nowMs - this.military.fetchedAtMs > TYPE_KEEP_MS) this.military = undefined;
     for (const [type, answer] of this.byType) if (nowMs - answer.fetchedAtMs > TYPE_KEEP_MS) this.byType.delete(type);
+    for (const [code, answer] of this.bySquawk)
+      if (nowMs - answer.fetchedAtMs > TYPE_KEEP_MS) this.bySquawk.delete(code);
     for (const [id, answer] of this.byCircle) if (nowMs - answer.fetchedAtMs > CIRCLE_KEEP_MS) this.byCircle.delete(id);
     // Every answer that is complete for a disc: the point query's and each circle's.
     const discs: Array<{ answer: CachedAnswer; disc: { latitude: number; longitude: number; radiusNm: number } }> = [];
     if (this.point) discs.push({ answer: this.point, disc: this.point.query });
     for (const c of this.byCircle.values()) discs.push({ answer: c, disc: c.tile });
-    const lists: CachedAnswer[] = [...this.byType.values()];
+    const lists: CachedAnswer[] = [...this.byType.values(), ...this.bySquawk.values()];
     if (this.military) lists.push(this.military);
     for (const d of discs) lists.push(d.answer);
     for (const answer of lists) {
@@ -599,12 +629,14 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
 /** What the operator is told when the view is wider than one point query covers. */
 export function coverageNote(
   radiusNm: number,
-  wide: { types: number; oldestAgeMs: number | undefined; military?: boolean } = {
+  wide: { types: number; oldestAgeMs: number | undefined; military?: boolean; emergencies?: boolean } = {
     types: 0,
     oldestAgeMs: undefined,
   },
 ): string {
-  const mil = wide.military ? ', military aircraft worldwide' : '';
+  const mil =
+    (wide.military ? ', military aircraft worldwide' : '') +
+    (wide.emergencies ? ', aircraft squawking an emergency worldwide' : '');
   if (wide.types === 0)
     return `Aircraft within ${radiusNm} nm of the view centre${mil}; the commonest types worldwide are being fetched in turn.`;
   const oldest = wide.oldestAgeMs !== undefined ? Math.max(1, Math.round(wide.oldestAgeMs / 60_000)) : undefined;

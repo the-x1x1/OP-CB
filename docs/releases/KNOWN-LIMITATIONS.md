@@ -122,8 +122,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   beacon whose receiver chain drops the navigational status is not raised. Nothing is passed
   to a coastguard.
 - Aircraft emergencies are what the aircraft broadcast and adsb.lol (or your own receiver)
-  passes on: one outside their coverage is not seen (a wide view is covered in turn, so an
-  emergency far from the view centre can take a pass of 8–12 minutes to appear), a squawk set
+  passes on: one outside their coverage is not seen (adsb.lol's worldwide squawk lists are
+  asked for once a minute, 7700 every other time, so an emergency anywhere adsb.lol hears is
+  seen within about two minutes, a 7600 or 7500 within about four), a squawk set
   by mistake is raised like any other, and one whose aircraft has gone quiet ends 15 minutes
   after it was last heard (to within a minute). An ADS-B minimum-fuel or downed status a later
   report leaves out is kept until a report says otherwise.
@@ -246,7 +247,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   and light aircraft and helicopters elsewhere appear only when zoomed in (Sources says so).
   Military aircraft are the exception: adsb.lol's worldwide military list is fetched once a
   minute at that zoom. "Military" is adsb.lol's database flag; an aircraft it does not
-  list is drawn as civil.
+  list is drawn as civil. Aircraft squawking an emergency are the other exception: at any
+  zoom, one of the three emergency codes is fetched worldwide each minute (7700 every other
+  minute, 7600 and 7500 every fourth), so an emergency is noticed within about two minutes of
+  the aircraft squawking it, and a 7600 or 7500 within about four.
 - adsb.lol has no API key, token or feeder tier today (its documentation says one will be
   required "in the future"), so there is nothing to enter to raise the rate; WorldView
   identifies itself with its own User-Agent. If adsb.lol starts requiring a key, aircraft
