@@ -619,7 +619,7 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     // Zoomed out past what one point query covers, say what the map does show.
     if (!h.message && !this.skippedReason && this.lastQuery?.clipped) {
       h.message = this.lastCircles
-        ? circleNote(this.planner.circleSummary(this.lastCircles.tiles, now), budget)
+        ? circleNote(this.planner.circleSummary(this.lastCircles.tiles, now), budget, this.planner.summary(now))
         : coverageNote(this.lastQuery.radiusNm, this.planner.summary(now));
     }
     const pause = pauseNote(budget);
@@ -665,6 +665,7 @@ export function coverageNote(
 export function circleNote(
   c: { circles: number; answered: number; recent: number; oldestAgeMs: number | undefined },
   budget: Pick<BudgetSummary, 'perMinute'>,
+  wide: { emergencies?: boolean } = {},
 ): string {
   const rate = round1(budget.perMinute);
   const pass = Math.max(1, Math.ceil(c.circles / Math.max(0.1, budget.perMinute)));
@@ -672,9 +673,10 @@ export function circleNote(
     c.oldestAgeMs !== undefined && c.answered > 0
       ? `, the oldest ${Math.max(1, Math.round(c.oldestAgeMs / 60_000))} min ago`
       : '';
+  const emergencies = wide.emergencies ? ', and aircraft squawking an emergency worldwide' : '';
   return (
     `Every aircraft over the view, from ${c.circles} circles of 250 nm asked for in turn, busiest first: ` +
-    `${c.answered} answered, ${c.recent} in the last 2 min${oldest}. ` +
+    `${c.answered} answered, ${c.recent} in the last 2 min${oldest}${emergencies}. ` +
     `adsb.lol is asked ${rate} times a minute, so one pass over every circle takes about ${pass} min; ` +
     `the busiest circles are refreshed more often than the empty ones.`
   );

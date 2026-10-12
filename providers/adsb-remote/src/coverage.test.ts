@@ -18,7 +18,7 @@ import {
   typeQueryUrl,
 } from './coverage.js';
 import { pointQueryForBounds } from './bounds.js';
-import { AdsbLolProvider } from './index.js';
+import { AdsbLolProvider, circleNote } from './index.js';
 import { RequestBudget } from './budget.js';
 import { PRIOR_BASELINE, priorAircraft, tileContains, tilesForBounds, type Tile } from './tiles.js';
 
@@ -459,4 +459,14 @@ test('provider: a 429 fails the poll as RATE_LIMITED, halves the budget, and not
   assert.equal((await p.query(q)).length, 1);
   assert.equal(ctx.http.requests.length, 2);
   assert.equal((await p.health()).status, 'LIVE');
+});
+
+test('circleNote: says when an emergency list recently had an aircraft in it, like the wide note', () => {
+  const c = { circles: 9, answered: 9, recent: 9, oldestAgeMs: 60_000 };
+  const budget = { perMinute: 5.8 };
+  assert.doesNotMatch(circleNote(c, budget), /emergency/);
+  assert.match(
+    circleNote(c, budget, { emergencies: true }),
+    /the oldest 1 min ago, and aircraft squawking an emergency worldwide\. adsb\.lol is asked 5\.8 times a minute/,
+  );
 });
