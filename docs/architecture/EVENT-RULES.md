@@ -103,6 +103,12 @@ second bad afternoon is a new event.
 | end      | AQI ≤ **90** (hysteresis: a reading hovering at 100 does not flap), or the sensor is gone           |
 | ignored  | a reading whose laser channels disagree (`channels: 'disagree'`) neither raises, moves nor ends     |
 
+A station with no US AQI but Canada's Air Quality Health Index (`properties.aqhi`, the
+`eccc-aqhi` source) is read on that scale, never converted: raised at AQHI **7** ("High risk",
+MODERATE; over 10 "Very high risk", SEVERE), ended at **5** or below; the title is ECCC's risk
+category (`High risk air at Metro Vancouver - NW`), the summary names the AQHI, and the event
+carries `scale: 'aqhi'`, `aqhi` and `peakAqhi` instead of `aqi`.
+
 ## reading-limit (`event:reading-limit:<namespace>:<value>.<key>-<episode start, epoch s>`)
 
 A sensor's or weather station's reading past a limit its source declares: a provider

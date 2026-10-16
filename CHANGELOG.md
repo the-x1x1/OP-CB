@@ -12,6 +12,10 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **Air quality, Canada.** The latest Air Quality Health Index at each of Environment and Climate
+  Change Canada's ~120 stations, as air-quality sensors on the Environment layer, with ECCC's
+  risk category; at 7 ("High risk") it is an air-quality event, read on its own scale and never
+  as a US AQI (`eccc-aqhi`, ECCC's data licence, credited; every half hour).
 - **Drop a file on the map.** GeoJSON, TopoJSON, KML, KMZ or GPX, dropped on the map or chosen
   from the palette, drawn for the session in a colour per file, with a card to hide, go to or
   remove each. Only shapes and names are read; nothing in the file is fetched and nothing is kept.

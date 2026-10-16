@@ -21,6 +21,11 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Air quality, Canada
+
+- [ ] Environment lens over Canada: AQHI stations; select one: "AQHI (Canada) 1.8 · low risk
+      (1–10+ scale)", no US AQI row; credit "Data Source: Environment and Climate Change Canada"
+
 ## Thin cloud
 
 - [ ] Sources → GOES-East infrared → Thin cloud 60: after the next read, only the storm tops

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { WorldObject } from '@worldview/world-model';
 import {
+  aqhiText,
   aqiCategory,
   feelsLike,
   formatTemperature,
@@ -48,4 +49,11 @@ test('a buoy: waves by height, period and the direction they come from, whatever
   assert.equal(stationWaves(1.7, 6, 5.6, 69), '1.7 m (5.6 ft) · every 6 s (5.6 s average) · from ENE (69°)');
   assert.equal(stationWaves(undefined, 13, undefined, undefined), 'every 13 s');
   assert.equal(stationWaves(undefined, undefined, undefined, undefined), undefined);
+});
+
+test('AQHI reads with its risk category and its scale, never as an AQI', () => {
+  assert.equal(aqhiText(1.76), '1.8 · low risk (1–10+ scale)');
+  assert.equal(aqhiText(4), '4 · moderate risk (1–10+ scale)');
+  assert.equal(aqhiText(7.4), '7.4 · high risk (1–10+ scale)');
+  assert.equal(aqhiText(11), '11 · very high risk (1–10+ scale)');
 });

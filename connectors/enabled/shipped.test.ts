@@ -103,6 +103,8 @@ const LIGHTNING = ['nowcoast-strike-density'];
 const OVERLAY_CONNECTORS = ['wms', 'wmts'];
 /** The Space Devs' Launch Library 2: use and share freely, credit asked for and given; on by default. */
 const SPACE = ['launch-library-2'];
+/** Environment and Climate Change Canada: its data servers' end-use licence, credit required; on by default. */
+const CANADA = ['eccc-aqhi'];
 const GDACS = [
   'gdacs-earthquakes',
   'gdacs-tropical-cyclones',
@@ -115,7 +117,7 @@ const GDACS = [
 test('the shipped set is the hazard layers, and each passes the shared suite from its sidecar', async () => {
   assert.deepEqual(
     [...byId.keys()].sort(),
-    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...SPACE, ...GDACS].sort(),
+    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...SPACE, ...CANADA, ...GDACS].sort(),
   );
   for (const file of files) {
     const r = await runConnectorSuite(docOf(file), loadSidecar(sidecarPathFor(file), root), defaultConnectorRegistry);
@@ -203,6 +205,15 @@ test('licence: the public-domain US sources start enabled and open their policy;
     // Fifteen calls an hour without a key: one poll every thirty minutes uses two.
     assert.equal(m.refreshPolicy.intervalMs, 1_800_000, id);
   }
+  for (const id of CANADA) {
+    const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
+    assert.equal(m.commercialReview, 'approved', id);
+    assert.equal(m.enabledByDefault, true, id);
+    assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
+    assert.equal(m.dataPolicy.attributionRequired, true, `${id}: the licence prescribes the credit`);
+    assert.equal(m.attribution.text, 'Data Source: Environment and Climate Change Canada', id);
+    assert.deepEqual(m.allowedHosts, ['api.weather.gc.ca'], id);
+  }
   for (const id of GDACS) {
     const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
     assert.equal(m.commercialReview, 'conditional', id);
@@ -218,13 +229,13 @@ test('licence: the public-domain US sources start enabled and open their policy;
   }
 });
 
-test('Overview: each is filed under the Weather, Disasters or Space layer, and that layer shows its object type', () => {
+test('Overview: each is filed under the Weather, Disasters, Space or Environment layer, and that layer shows its object type', () => {
   const lenses = new Map(BUILT_IN_LENSES.map((l) => [l.id, l]));
   for (const id of byId.keys()) {
     const d = definition(id);
     assert.ok(d.categories?.length, id);
     for (const c of d.categories!) {
-      assert.ok(c === 'weather' || c === 'disasters' || c === 'space', `${id}: ${c}`);
+      assert.ok(c === 'weather' || c === 'disasters' || c === 'space' || c === 'environment', `${id}: ${c}`);
       // An overlay is not an object: its switch is the source itself. The rest must be drawn by their layer.
       if (!OVERLAY_CONNECTORS.includes(d.connector))
         assert.ok(lenses.get(c)!.objectTypes.includes(d.objectType), `${id} in ${c}`);

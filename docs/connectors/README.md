@@ -46,6 +46,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 
 | Definition                                                                                        | Connector        | Source                                                                | On by default |
 | ------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------- | ------------- |
+| [eccc-aqhi.json](../../connectors/enabled/eccc-aqhi.json)                                         | `ogc-features`   | Air quality, Canada (ECCC Air Quality Health Index)                   | yes           |
 | [gdacs-droughts.json](../../connectors/enabled/gdacs-droughts.json)                               | `geojson`        | GDACS drought alerts (global)                                         | no            |
 | [gdacs-earthquakes.json](../../connectors/enabled/gdacs-earthquakes.json)                         | `geojson`        | GDACS earthquake alerts (global)                                      | no            |
 | [gdacs-floods.json](../../connectors/enabled/gdacs-floods.json)                                   | `geojson`        | GDACS flood alerts (global)                                           | no            |
@@ -86,6 +87,13 @@ an hour and gone a day after the last good read. No image in the answer is read:
 their own licences. Fixture: `fixtures/connectors/space/ll2-launches-upcoming.json`, three launches
 recorded on 2026-10-16 at about 05:40 UTC by the built-in browser on the operator's laptop, trimmed to the fields
 read (values untouched).
+
+**ECCC AQHI** (`eccc-aqhi`, Environment layer): the latest observed Air Quality Health Index at
+each of Environment and Climate Change Canada's ~120 stations, from the MSC GeoMet OGC API
+(`aqhi-observations-realtime`, `latest=true`), every half hour, as air-quality sensors with
+`aqhi` — a health-risk scale of 1 to 10 and over, never turned into a US AQI; the air-quality
+rule raises at 7 (EVENT-RULES.md). Credited as the licence prescribes. Fixture
+`fixtures/connectors/air/eccc-aqhi-latest.json`, recorded 2026-10-16.
 
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the

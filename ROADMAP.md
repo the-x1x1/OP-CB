@@ -335,14 +335,14 @@ Engineering with no licence or key, in the order they are to be built:
       make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
       KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
       needs a granted folder and a definition.
-- [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's planetary K index and the OVATION aurora
+- [ ] **Space weather** (OSIRIS keywords; needs a gridded-field overlay first — the aurora forecast is a 1° global grid of 65,160 cells, and nothing in the render contract draws a field; wind needs the same, so it is one ADR-008 amendment for both): NOAA SWPC's planetary K index and the OVATION aurora
       forecast (U.S. public domain), the aurora oval drawn over the poles, a Kp line in the Sky
       panel.
 - [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
       clouds-only infrared ramp, previewed while dragged.
 - [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before
       its nominal time; check `nhc-storms` does not reject one up to 90 minutes ahead of the clock.
-- [ ] **Air quality, Canada** (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
+- [x] **Air quality, Canada** (on feature/roadmap-2: `eccc-aqhi`, the air-quality rule reads AQHI on its own scale) (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
       its scale (`{provider, scale, value, band}`), since AQHI, the US AQI and Europe's EAQI do not
       share a meaning. Open Government Licence – Canada (attribution): record first.
 - [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the

@@ -1077,6 +1077,16 @@ export function stationWaves(
   return parts.length ? parts.join(' · ') : undefined;
 }
 
+/**
+ * "1.8 · low risk (1–10+ scale)": Canada's Air Quality Health Index with ECCC's risk category.
+ * A health-risk scale, not a concentration: never shown as, or beside, a US AQI number.
+ */
+export function aqhiText(aqhi: number): string {
+  const v = Math.round(aqhi);
+  const risk = v <= 3 ? 'low risk' : v <= 6 ? 'moderate risk' : v <= 10 ? 'high risk' : 'very high risk';
+  return `${Number.isInteger(aqhi) ? aqhi : aqhi.toFixed(1)} · ${risk} (1–10+ scale)`;
+}
+
 /** Heat index when it is warmer than the air, wind chill when colder; nothing when they agree. */
 export function feelsLike(object: WorldObject): string | undefined {
   const t = num(object, 'temperatureC');
@@ -1188,6 +1198,11 @@ const airQuality: ContextSection = {
       <FieldList
         rows={[
           { label: 'AQI (US EPA, PM2.5)', value: aqi !== undefined ? `${aqi} · ${aqiCategory(aqi)}` : undefined },
+          {
+            label: 'AQHI (Canada)',
+            value: num(object, 'aqhi') !== undefined ? aqhiText(num(object, 'aqhi')!) : undefined,
+          },
+          { label: 'Note', value: str(object, 'specialNotes') },
           {
             label: 'PM2.5',
             value: ugm3(num(object, 'pm25Ugm3'))

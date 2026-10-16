@@ -1,0 +1,163 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-FCWOV-20261014180000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.5444444,
+          44.2669444
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-FCWOV-20261014180000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Tiverton",
+        "location_name_fr": "Tiverton",
+        "location_id": "FCWOV",
+        "observation_datetime": "2026-09-21T18:00:00Z",
+        "observation_datetime_text_en": "2:00 PM EDT Wednesday 14 October 2026",
+        "observation_datetime_text_fr": "2h00 PM HAE mercredi 14 octobre 2026",
+        "aqhi": 1,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-IAEFD-20261016070000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -110.166667,
+          54.45
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-IAEFD-20261016070000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Cold Lake",
+        "location_name_fr": "Cold Lake",
+        "location_id": "IAEFD",
+        "observation_datetime": "2026-09-23T07:00:00Z",
+        "observation_datetime_text_en": "1:00 AM MDT Friday 16 October 2026",
+        "observation_datetime_text_fr": "1h00 AM HAR vendredi 16 octobre 2026",
+        "aqhi": 1.58,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-JBRIK-20261016070000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.113889,
+          49.261111
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-JBRIK-20261016070000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Metro Vancouver - NW",
+        "location_name_fr": "Metro Vancouver - nord-ouest",
+        "location_id": "JBRIK",
+        "observation_datetime": "2026-09-23T07:00:00Z",
+        "observation_datetime_text_en": "12:00 AM PDT Friday 16 October 2026",
+        "observation_datetime_text_fr": "12h00 AM HAP vendredi 16 octobre 2026",
+        "aqhi": 1.76,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-JBNTS-20261016060000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.5,
+          53
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-JBNTS-20261016060000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Quesnel",
+        "location_name_fr": "Quesnel",
+        "location_id": "JBNTS",
+        "observation_datetime": "2026-09-23T06:00:00Z",
+        "observation_datetime_text_en": "11:00 PM PDT Thursday 15 October 2026",
+        "observation_datetime_text_fr": "11h00 PM HAP jeudi 15 octobre 2026",
+        "aqhi": 4,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-JCAAC-20261016060000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -117.666667,
+          49.324722
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-JCAAC-20261016060000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Castlegar",
+        "location_name_fr": "Castlegar",
+        "location_id": "JCAAC",
+        "observation_datetime": "2026-09-23T06:00:00Z",
+        "observation_datetime_text_en": "11:00 PM PDT Thursday 15 October 2026",
+        "observation_datetime_text_fr": "11h00 PM HAP jeudi 15 octobre 2026",
+        "aqhi": 3,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "AQ_OBS-IAHMM-20261016060000",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -118.796111111111,
+          55.1708333333333
+        ]
+      },
+      "properties": {
+        "id": "AQ_OBS-IAHMM-20261016060000",
+        "aqhi_type": "AQHI-Observation",
+        "observation_type": "original",
+        "location_name_en": "Grande Prairie",
+        "location_name_fr": "Grande Prairie",
+        "location_id": "IAHMM",
+        "observation_datetime": "2026-09-23T06:00:00Z",
+        "observation_datetime_text_en": "12:00 AM MDT Friday 16 October 2026",
+        "observation_datetime_text_fr": "12h00 AM HAR vendredi 16 octobre 2026",
+        "aqhi": 3,
+        "special_notes_en": "",
+        "special_notes_fr": "",
+        "latest": true
+      }
+    }
+  ],
+  "numberMatched": 124,
+  "numberReturned": 6
+}

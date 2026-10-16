@@ -362,6 +362,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- Canada's AQHI is the observed hourly index at about 120 stations, not the forecast and not
+  a map between them; ECCC lists a station as latest even when its last reading is days old, and
+  such a station is left off. The AQHI and the US AQI are different scales and are never compared.
 - A dropped file is drawn with its shapes and names only: its own colours, icons, line widths and
   descriptions are not used, a KML ground overlay or 3D model is not drawn, and its shapes cannot
   be selected. At most 12 files and 50,000 shapes, 25 MB a file; they are gone when the app closes.

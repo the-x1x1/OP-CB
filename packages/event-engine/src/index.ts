@@ -58,6 +58,10 @@ export {
   aqiSeverity,
   AIR_QUALITY_RAISE_AQI,
   AIR_QUALITY_CLEAR_AQI,
+  aqhiCategoryName,
+  aqhiSeverity,
+  AQHI_RAISE,
+  AQHI_CLEAR,
 } from './rules/air-quality.js';
 export {
   readingLimitRule,

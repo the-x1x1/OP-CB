@@ -36,6 +36,9 @@ import {
  *             does not open and close an event every two minutes — or the sensor is gone
  *   ignored   a reading whose channels disagree (channels-disagree) neither raises, moves
  *             nor ends an event: one laser is not to be trusted on its own
+ *   AQHI      a station with no US AQI but Canada's AQHI (properties.aqhi, eccc-aqhi) is read on
+ *             its own scale: raised at 7 ("High risk", MODERATE; over 10 "Very high risk",
+ *             SEVERE), ended at 5 or below; the event says AQHI and carries `scale: 'aqhi'`
  */
 export const AIR_QUALITY_RAISE_AQI = 101;
 export const AIR_QUALITY_CLEAR_AQI = 90;
@@ -54,6 +57,27 @@ export function aqiSeverity(aqi: number): SeverityClass {
   if (aqi > 200) return 'SEVERE';
   if (aqi > 150) return 'MODERATE';
   return 'MINOR';
+}
+
+/**
+ * Canada's Air Quality Health Index (ECCC; the `eccc-aqhi` source's `aqhi`): a health-risk scale
+ * of 1 to 10 and over, not a concentration, so it is never turned into a US AQI. Raised at 7
+ * ("High risk"), cleared at 5 or below, so a reading hovering at the line does not flicker.
+ */
+export const AQHI_RAISE = 7;
+export const AQHI_CLEAR = 5;
+
+/** ECCC's risk category for an AQHI value (rounded as ECCC publishes it). */
+export function aqhiCategoryName(aqhi: number): string {
+  const v = Math.round(aqhi);
+  if (v <= 3) return 'Low risk';
+  if (v <= 6) return 'Moderate risk';
+  if (v <= 10) return 'High risk';
+  return 'Very high risk';
+}
+
+export function aqhiSeverity(aqhi: number): SeverityClass {
+  return Math.round(aqhi) > 10 ? 'SEVERE' : 'MODERATE';
 }
 
 export const airQualityRule: ObjectRule = {
@@ -75,7 +99,30 @@ export const airQualityRule: ObjectRule = {
       const previous = active.get(o.id);
       const aqi = numberProp(o, 'aqiUs');
       const trusted = stringProp(o, 'channels') !== 'disagree';
-      if (aqi === undefined || !trusted) continue;
+      if (aqi === undefined) {
+        // No US AQI: Canada's AQHI on its own scale, when the source gives one.
+        const aqhi = numberProp(o, 'aqhi');
+        if (aqhi === undefined || !(aqhi >= 0)) continue;
+        if (!previous) {
+          if (aqhi < AQHI_RAISE) continue;
+          const startSec = Math.floor(Date.parse(o.observedAt) / 1000);
+          const id = makeEventId(EventTypes.AirQuality, parsed.namespace, `${parsed.value}-${startSec}`);
+          out.push(aqhiEvent(id, o, aqhi, undefined, ctx));
+          continue;
+        }
+        if (aqhi <= AQHI_CLEAR) {
+          out.push({
+            ...previous,
+            endAt: o.observedAt,
+            summary: `${previous.summary} Cleared at AQHI ${aqhi}, ${shortUtc(o.observedAt)}.`,
+          });
+          continue;
+        }
+        const next = aqhiEvent(previous.id, o, aqhi, previous, ctx);
+        if (!sameEvent(previous, next)) out.push(next);
+        continue;
+      }
+      if (!trusted) continue;
       if (!previous) {
         if (aqi < AIR_QUALITY_RAISE_AQI) continue;
         const startSec = Math.floor(Date.parse(o.observedAt) / 1000);
@@ -127,6 +174,38 @@ function airEvent(
     observationRefs: refsOf([o]),
     confidence: classifyConfidence(o.confidence),
     severity: aqiSeverity(aqi),
+    summary,
+    properties,
+    geometry: { type: 'Point', coordinates: [o.position!.longitude, o.position!.latitude] },
+    provenance: derivedProvenance([o], ctx.nowIso, refsOf([o])),
+  };
+}
+
+function aqhiEvent(
+  id: string,
+  o: WorldObject,
+  aqhi: number,
+  previous: WorldEvent | undefined,
+  ctx: RuleContext,
+): WorldEvent {
+  const name = stringProp(o, 'name') ?? 'air-quality station';
+  const category = aqhiCategoryName(aqhi);
+  const prevPeak = previous?.properties?.['peakAqhi'];
+  const peak = Math.max(aqhi, typeof prevPeak === 'number' ? prevPeak : aqhi);
+  const since = previous?.startAt ?? o.observedAt;
+  const properties: Record<string, JsonValue> = { scale: 'aqhi', aqhi, peakAqhi: peak, category };
+  const summary =
+    `AQHI ${aqhi} (${category}) on Canada's Air Quality Health Index, a health-risk scale of 1 to 10 and over.` +
+    ` ${AQHI_RAISE} or above since ${shortUtc(since)}${peak > aqhi ? `; peak ${peak}` : ''}.`;
+  return {
+    id,
+    type: EventTypes.AirQuality,
+    title: `${category} air at ${name}`,
+    startAt: since,
+    objectIds: [o.id],
+    observationRefs: refsOf([o]),
+    confidence: classifyConfidence(o.confidence),
+    severity: aqhiSeverity(aqhi),
     summary,
     properties,
     geometry: { type: 'Point', coordinates: [o.position!.longitude, o.position!.latitude] },
