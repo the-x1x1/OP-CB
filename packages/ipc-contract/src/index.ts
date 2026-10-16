@@ -315,6 +315,23 @@ export interface SkyOverheadAnswer {
   sunElevationDeg: number;
   /** Highest first: those the request's filters keep, up to its limit. */
   satellites: SkySatellite[];
+  /**
+   * The aurora forecast at the place, when a source that forecasts it is on (additive,
+   * 2026-10-16): the highest level of chance whose area holds the place — `swpc-aurora`'s
+   * weather-alert areas, which carry `auroraChancePct`. Absent when no such area is held.
+   */
+  aurora?: SkyAurora;
+}
+
+export interface SkyAurora {
+  /** The place is where the chance of aurora overhead is at least this, percent. */
+  chancePct: number;
+  /** …and below this, when a higher level exists and the place is outside its area. */
+  belowPct?: number;
+  /** The time the forecast is for. */
+  forecastFor?: string;
+  /** The source's credit. */
+  attribution?: string;
 }
 
 export interface CollectionItem {

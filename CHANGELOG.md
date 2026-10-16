@@ -14,8 +14,9 @@ Versioning: [semantic versioning](https://semver.org/).
   service does not offer it in JSON or plain text, or while working offline.
 - **Aurora forecast.** NOAA SWPC's OVATION forecast of the chance of aurora overhead in the next
   30 to 90 minutes, drawn as faint nested areas of 10, 30, 50 and 70 percent, green to red, on the
-  Weather layer (`swpc-aurora`, public domain, off by default; every ten minutes). A REST JSON
-  definition can now read a gridded field as areas (`response.contour`).
+  Weather layer (`swpc-aurora`, public domain, off by default; every ten minutes), and in the Sky
+  tab a line with the chance overhead at the place it shows. A REST JSON definition can now read
+  a gridded field as areas (`response.contour`).
 - **Air quality, Canada.** The latest Air Quality Health Index at each of Environment and Climate
   Change Canada's ~120 stations, as air-quality sensors on the Environment layer, with ECCC's
   risk category; at 7 ("High risk") it is an air-quality event, read on its own scale and never

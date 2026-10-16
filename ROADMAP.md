@@ -336,10 +336,14 @@ Engineering with no licence or key, in the order they are to be built:
       KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
       needs a granted folder and a definition.
 - [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's OVATION aurora forecast and planetary K
-      index (U.S. public domain). - [x] The aurora oval (on feature/roadmap-2: `swpc-aurora`; the 1° grid read as areas of 10,
-      30, 50 and 70% by `response.contour`, ADR-013 amendment 2026-10-16 — ordinary
-      weather-alert areas, so no field overlay was needed; ADR-008 unchanged). - [ ] A Kp line in the Sky panel: the planetary K index is one global number, not an object
-      at a place — it needs a home in the Sky panel's data first.
+      index (U.S. public domain).
+  - [x] The aurora oval (on feature/roadmap-2: `swpc-aurora`; the 1° grid read as areas of 10,
+        30, 50 and 70% by `response.contour`, ADR-013 amendment 2026-10-16 — ordinary weather-alert
+        areas, so no field overlay was needed; ADR-008 unchanged).
+  - [x] The chance at the place in the Sky tab (on feature/roadmap-2: `sky.overhead`'s `aurora`,
+        from the areas the world holds; ADR-004 amendment 2026-10-16).
+  - [ ] A Kp line in the Sky panel: the planetary K index is one global number, not an object at
+        a place — it needs a home in the Sky panel's data first.
 - [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
       clouds-only infrared ramp, previewed while dragged.
 - [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before

@@ -1822,6 +1822,12 @@
   gap: var(--wv-space-1);
 }
 
+.wv-sky__aurora {
+  margin: 0;
+  color: var(--wv-success);
+  font-size: var(--wv-text-sm);
+}
+
 .wv-sky__plot {
   width: 100%;
   max-width: 320px;

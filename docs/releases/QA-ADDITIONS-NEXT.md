@@ -26,6 +26,8 @@ are deleted too.
 - [ ] Sources → Aurora forecast on: within ten minutes, a faint green oval round the north
       magnetic pole (and one round the south); select it: "Aurora: 10% chance or more", the time
       it is for, credit "NOAA Space Weather Prediction Center (OVATION)"; nothing in the feed
+- [ ] Sky tab, middle of the map over Fairbanks (64.8° N, 147.7° W) with the source on: a green
+      "Aurora: …% chance overhead at HH:MM UTC" above the plot; over Honolulu, no line
 - [ ] Spin the globe across 180°: the oval meets itself there, no gap and no line across the map
 
 ## Air quality, Canada

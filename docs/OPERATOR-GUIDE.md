@@ -316,6 +316,12 @@ the tab says how many. From the middle of the map, the place is taken once the v
 rested for a moment, and every five seconds while it keeps moving (following a satellite).
 It is always the sky now: with the timeline replaying, the tab says so.
 
+With the **Aurora forecast** source on (Sources; NOAA SWPC, off by default), a green line
+above the plot gives the chance of aurora overhead at the same place — "Aurora: 10–30% chance
+overhead at 20:08 UTC", the band of SWPC's forecast the place lies in and the time it is for —
+and says when the sky there is not dark enough to see it. The same areas are drawn faintly on
+the map. Outside every area, or with the source off, there is no line.
+
 ## Watch zones and notifications
 
 The Watch zones tab of the right-hand rail: a circle round the middle of the view with a

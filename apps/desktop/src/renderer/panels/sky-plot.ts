@@ -39,6 +39,20 @@ export function skySummary(answer: SkyOverheadAnswer): string {
   return `${above} · ${answer.visible.toLocaleString('en-US')} could be seen (sunlit, 10° up or more)`;
 }
 
+/**
+ * "Aurora: 30–50% chance overhead at 20:08 UTC" — the aurora forecast at the place
+ * (`sky.overhead`'s `aurora`), and, in daylight or twilight, that it could not be seen now.
+ * Undefined with no forecast there (the source off, or the place outside every area).
+ */
+export function auroraText(answer: SkyOverheadAnswer): string | undefined {
+  const a = answer.aurora;
+  if (!a) return undefined;
+  const chance = a.belowPct !== undefined ? `${a.chancePct}–${a.belowPct}%` : `${a.chancePct}% or more`;
+  const at = a.forecastFor ? ` at ${new Date(Date.parse(a.forecastFor)).toISOString().slice(11, 16)} UTC` : '';
+  const sky = answer.sunElevationDeg > DARK_SKY_SUN_DEG ? ' · the sky is not dark here now' : '';
+  return `Aurora: ${chance} chance overhead${at}${sky}`;
+}
+
 /** "62° up · 047° NE · 1,120 km". */
 export function lookText(s: SkySatellite): string {
   const bearing = `${String(Math.round(s.azimuthDeg) % 360).padStart(3, '0')}° ${compassPoint(s.azimuthDeg)}`;

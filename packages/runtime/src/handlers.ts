@@ -48,6 +48,7 @@ import { RuntimeCore, errorText } from './core.js';
 import { filterObjects } from './support/subscriptions.js';
 import { ownPlaceResults } from './support/own-places-search.js';
 import { SKY_LIMIT_DEFAULT, skyOverhead } from './support/sky-overhead.js';
+import { auroraHere } from './support/aurora-here.js';
 import { zonesFromGeodata, zonesToGeodata } from './support/zone-geodata.js';
 import { mergeObjectTrack } from './support/object-track.js';
 import {
@@ -559,12 +560,15 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       )
         throw new InvalidRequestError('sky.overhead needs an observer');
       const min = typeof minElevationDeg === 'number' ? Math.max(-5, Math.min(90, minElevationDeg)) : 0;
-      return skyOverhead(core.state.ofType('satellite'), { latitude, longitude }, core.clock.now(), {
+      const sky = skyOverhead(core.state.ofType('satellite'), { latitude, longitude }, core.clock.now(), {
         minElevationDeg: min,
         limit: clampLimit(limit, SKY_LIMIT_DEFAULT, 500),
         ...(Array.isArray(excludeCategories) ? { excludeCategories: excludeCategories.slice(0, 20) } : {}),
         ...(visibleOnly === true ? { visibleOnly: true } : {}),
       });
+      // And the aurora forecast there, from the areas an aurora source holds (support/aurora-here.ts).
+      const aurora = auroraHere(core.state.ofType('weather-alert'), { latitude, longitude });
+      return aurora ? { ...sky, aurora } : sky;
     },
     // Offline reverse lookup ("What's here"): the gazetteers in memory, nothing sent anywhere.
     'search.nearest': async ({ position, kinds, limit, maxDistanceM }) => {
