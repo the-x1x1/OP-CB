@@ -60,6 +60,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [gibs-viirs-noaa20-true-colour.json](../../connectors/enabled/gibs-viirs-noaa20-true-colour.json) | `wmts`           | True colour, worldwide (VIIRS on NOAA-20, NASA GIBS, daily)           | no            |
 | [gibs-viirs-snpp-true-colour.json](../../connectors/enabled/gibs-viirs-snpp-true-colour.json)     | `wmts`           | True colour, worldwide (VIIRS on Suomi NPP, NASA GIBS, daily)         | no            |
 | [launch-library-2.json](../../connectors/enabled/launch-library-2.json)                           | `rest-json`      | Rocket launches, worldwide (Launch Library 2, The Space Devs)         | yes           |
+| [ndbc-observations.json](../../connectors/enabled/ndbc-observations.json)                         | `rest-json`      | Ocean buoys and coastal stations, worldwide (NOAA NDBC)               | yes           |
 | [nhc-forecast-cones.json](../../connectors/enabled/nhc-forecast-cones.json)                       | `arcgis-feature` | NHC forecast cones (active tropical cyclones)                         | yes           |
 | [nhc-forecast-tracks.json](../../connectors/enabled/nhc-forecast-tracks.json)                     | `arcgis-feature` | NHC forecast tracks (active tropical cyclones)                        | yes           |
 | [nhc-forecast-points.json](../../connectors/enabled/nhc-forecast-points.json)                     | `arcgis-feature` | NHC forecast positions (active tropical cyclones)                     | yes           |
@@ -71,6 +72,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [nowcoast-strike-density.json](../../connectors/enabled/nowcoast-strike-density.json)             | `wms`            | Lightning, Americas and Pacific (NOAA nowCOAST strike density)        | yes           |
 | [nws-storm-reports.json](../../connectors/enabled/nws-storm-reports.json)                         | `arcgis-feature` | Storm reports, US (NWS local storm reports: tornado, hail, wind)      | yes           |
 | [spc-day1-outlook.json](../../connectors/enabled/spc-day1-outlook.json)                           | `arcgis-feature` | Severe weather outlook today, US (SPC day 1 categorical)              | yes           |
+| [usgs-volcanoes.json](../../connectors/enabled/usgs-volcanoes.json)                               | `geojson`        | Volcano alerts, US (USGS Volcano Hazards Program)                     | yes           |
 
 **Launch Library 2** (`launch-library-2`, Space layer): the next thirty orbital launches from The
 Space Devs' `GET /2.3.0/launches/upcoming/?limit=30&mode=normal`, every thirty minutes — two of

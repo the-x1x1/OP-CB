@@ -21,6 +21,12 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Ocean buoys
+
+- [ ] Weather layer on, zoomed to Hawaiʻi: markers for 51201, 51202, OOUH1 (Honolulu) and the
+      others; select one: wind, pressure, water temperature, waves
+- [ ] A buoy with no wind sensor (51202) shows no wind row rather than "0"
+
 ## Volcano alerts
 
 - [ ] Disasters layer on: a marker at Kīlauea and at each elevated Alaskan volcano; select one:

@@ -72,6 +72,7 @@ const PUBLIC_DOMAIN = [
   'nws-storm-reports',
   'spc-day1-outlook',
   'usgs-volcanoes',
+  'ndbc-observations',
 ];
 /** NASA GIBS: open, credit requested (and so required here); Himawari is JMA's, distributed openly by NOAA. */
 const GIBS = [
@@ -745,4 +746,22 @@ test('USGS volcanoes: only the elevated ones, each a volcano alert at its summit
   assert.deepEqual(kilauea.geometry, { type: 'Point', coordinates: [-155.287, 19.421] });
   assert.equal(events.find((e) => e.title === 'Shishaldin')!.severity, 'MODERATE', 'YELLOW');
   assert.equal(feed.isRelevant(kilauea), true);
+});
+
+test('NDBC: every station a weather station at its position, its own report time, the missing (MM) values absent', async () => {
+  const def = definition('ndbc-observations');
+  const observations = await poll(
+    def,
+    read('fixtures/connectors/marine/ndbc-latest-obs.txt'),
+    '2026-09-23T06:00:00.000Z',
+  );
+  assert.equal(observations.length, 22);
+  assert.ok(observations.every((o) => o.objectType === 'weather-station'));
+  const kaneohe = observations.find((o) => o.externalId === '51202')!;
+  assert.equal(kaneohe.observedAt, '2026-09-23T04:56:00.000Z', 'its own report time, not the read');
+  assert.equal(kaneohe.payload['waveHeightM'], 1.7);
+  assert.equal(kaneohe.payload['windSpeedMps'], undefined, 'MM is no value');
+  const honolulu = observations.find((o) => o.externalId === 'OOUH1')!;
+  assert.deepEqual(honolulu.position, { latitude: 21.303, longitude: -157.865 });
+  assert.equal(honolulu.payload['pressureSeaLevelHpa'], 1016.3);
 });

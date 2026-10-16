@@ -12,6 +12,14 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **Ocean buoys and coastal stations, worldwide.** The latest report of each of the ~860 stations
+  NOAA's National Data Buoy Center carries, as weather stations on the Weather layer: wind and
+  gusts, pressure and its trend, air and water temperature, waves (height, period and the
+  direction they come from), visibility and tide, whatever each measures. The station panel has
+  rows for water, waves, visibility and tide (`ndbc-observations`, U.S. public domain, every
+  fifteen minutes).
+- **Column-aligned text in a definition** (`response.csv.delimiter: "whitespace"`, and
+  `comment` to skip header lines), for tables like NDBC's.
 - **Volcano alerts, US.** Every US volcano the USGS observatories have raised above normal, at
   its summit in the Disasters layer: its aviation colour code and alert level, the latest
   notice's synopsis and a link to it. ORANGE is a severe alert, RED an extreme one, YELLOW

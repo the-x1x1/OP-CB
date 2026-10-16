@@ -2434,6 +2434,29 @@
       "notes": "Added 2026-10-15 (volcano alerts). Definition connectors/enabled/usgs-volcanoes.json (geojson). The status service lists all 161 US volcanoes with position, aviation colour code, alert level, latest notice synopsis and link; the definition keeps YELLOW, ORANGE and RED. The service page says its items are freely available but designed to support USGS applications, with no guarantee of continuing support. The HANS API (volcanoes.usgs.gov/hans-public/api) carries the same codes without positions, so it was not used. Fixture recorded 2026-10-16 ~05:50 UTC by the built-in browser on the test laptop: 7 of 161 features (every elevated one, two GREEN, one UNASSIGNED), values untouched. Volcano images in the answer (some observatory photos) are not read."
     },
     {
+      "providerId": "ndbc-observations",
+      "name": "NOAA National Data Buoy Center — latest observations of every station (latest_obs.txt)",
+      "sourceUrl": "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt",
+      "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml",
+      "license": "U.S. Government work — public domain (NOAA/NDBC disclaimer). Partner stations' data are distributed by NDBC as part of the same product.",
+      "category": "weather",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Buoys: NOAA National Data Buoy Center",
+        "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (ocean buoys). Definition connectors/enabled/ndbc-observations.json (rest-json, the column-aligned text read with response.csv delimiter whitespace and comment #). About 860 stations, ~100 KB, read every 15 minutes. ndbc.noaa.gov's robots.txt disallows only three named crawlers. Fixture recorded 2026-10-16 ~06:20 UTC by the built-in browser on the test laptop: the two header lines, two buoys off Korea and every Hawaii station, dates moved back to 2026-09-23 for the suite's clock (times of day as served). Partner stations (PacIOOS, NOS tide gauges) appear under NDBC's distribution; NDBC states no restriction on them."
+    },
+    {
       "providerId": "spc-day1-outlook",
       "name": "NOAA Storm Prediction Center — day 1 categorical convective outlook (SPC_wx_outlks MapServer, layer 1)",
       "sourceUrl": "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer/1",

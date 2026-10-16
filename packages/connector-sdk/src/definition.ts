@@ -110,7 +110,11 @@ export interface ResponseSpec {
   itemsAs?: 'array' | 'entries';
   format?: 'json' | 'csv' | 'text';
   /** CSV: the delimiter (default `,`) and whether the first row names the columns (default true). */
-  csv?: { delimiter?: string; header?: boolean; columns?: string[] };
+  /**
+   * `delimiter`: one character, or `whitespace` for a column-aligned text table (lines split
+   * on runs of spaces and tabs, no quoting). `comment`: a character that starts a line to skip.
+   */
+  csv?: { delimiter?: string; header?: boolean; columns?: string[]; comment?: string };
 }
 
 export interface FreshnessSpec {
@@ -387,8 +391,9 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
         format: s.optional(s.enum(['json', 'csv', 'text'] as const)),
         csv: s.optional(
           s.object({
-            delimiter: s.optional(s.string({ min: 1, max: 1 })),
+            delimiter: s.optional(s.union([s.string({ min: 1, max: 1 }), s.enum(['whitespace'] as const)])),
             header: s.optional(s.boolean()),
+            comment: s.optional(s.string({ min: 1, max: 1 })),
             columns: s.optional(s.array(s.string({ min: 1, max: 64 }), { max: 256 })),
           }),
         ),

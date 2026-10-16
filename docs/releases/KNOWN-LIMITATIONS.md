@@ -362,6 +362,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- A buoy is named by its station id (`51202`), not its place: NDBC's latest-observations file
+  carries no names. Each report is as old as the station's last transmission; a buoy that has
+  stopped reporting leaves when NDBC drops it from the file, or a day after its last report,
+  whichever comes first (how long NDBC keeps a silent station listed is not known here).
 - Volcano alerts are the USGS's for US volcanoes (Alaska, the Cascades, California, Hawaii, the
   Northern Mariana Islands, Yellowstone); elsewhere GDACS's volcano alerts (off by default) are
   the only source. The status service says it is meant for USGS applications, with no promise

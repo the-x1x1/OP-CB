@@ -1054,6 +1054,29 @@ export function stationRain(
   return parts.length ? parts.join(' · ') : undefined;
 }
 
+/**
+ * "1.8 m (5.9 ft) · every 8 s (6.4 s average) · from NNW (342°)": significant wave height, the
+ * dominant and average period, and the direction the dominant waves come from, as a buoy
+ * reports them (NDBC WVHT, DPD, APD, MWD); whatever part it has.
+ */
+export function stationWaves(
+  heightM: number | undefined,
+  dominantS: number | undefined,
+  averageS: number | undefined,
+  fromDeg: number | undefined,
+): string | undefined {
+  const parts: string[] = [];
+  if (heightM !== undefined) parts.push(`${heightM.toFixed(1)} m (${(heightM / 0.3048).toFixed(1)} ft)`);
+  if (dominantS !== undefined)
+    parts.push(
+      `every ${Math.round(dominantS)} s${averageS !== undefined ? ` (${averageS.toFixed(1)} s average)` : ''}`,
+    );
+  else if (averageS !== undefined) parts.push(`${averageS.toFixed(1)} s average period`);
+  if (fromDeg !== undefined)
+    parts.push(`from ${COMPASS_16[Math.round((((fromDeg % 360) + 360) % 360) / 22.5) % 16]} (${Math.round(fromDeg)}°)`);
+  return parts.length ? parts.join(' · ') : undefined;
+}
+
 /** Heat index when it is warmer than the air, wind chill when colder; nothing when they agree. */
 export function feelsLike(object: WorldObject): string | undefined {
   const t = num(object, 'temperatureC');
@@ -1098,6 +1121,27 @@ const weatherStation: ContextSection = {
           {
             label: 'Rain',
             value: stationRain(num(object, 'rainRateMmH'), num(object, 'rainTodayMm'), num(object, 'rain24hMm')),
+          },
+          { label: 'Water', value: formatTemperature(num(object, 'waterTempC')) },
+          {
+            label: 'Waves',
+            value: stationWaves(
+              num(object, 'waveHeightM'),
+              num(object, 'wavePeriodDominantS'),
+              num(object, 'wavePeriodAverageS'),
+              num(object, 'waveDirDeg'),
+            ),
+          },
+          {
+            label: 'Visibility',
+            value:
+              num(object, 'visibilityNmi') !== undefined
+                ? `${num(object, 'visibilityNmi')!.toFixed(1)} nmi`
+                : undefined,
+          },
+          {
+            label: 'Tide',
+            value: num(object, 'tideFt') !== undefined ? `${num(object, 'tideFt')!.toFixed(2)} ft` : undefined,
           },
           {
             label: 'Sun',

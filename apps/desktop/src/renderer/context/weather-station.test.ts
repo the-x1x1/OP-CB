@@ -1,7 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { WorldObject } from '@worldview/world-model';
-import { aqiCategory, feelsLike, formatTemperature, stationPressure, stationRain, stationWind } from './sections.js';
+import {
+  aqiCategory,
+  feelsLike,
+  formatTemperature,
+  stationPressure,
+  stationRain,
+  stationWaves,
+  stationWind,
+} from './sections.js';
 
 const station = (properties: Record<string, number>) => ({ properties }) as unknown as WorldObject;
 
@@ -33,4 +41,11 @@ test('an AQI is named by the U.S. EPA category it falls in', () => {
   assert.equal(aqiCategory(154), 'Unhealthy');
   assert.equal(aqiCategory(420), 'Hazardous');
   assert.equal(aqiCategory(undefined), undefined);
+});
+
+test('a buoy: waves by height, period and the direction they come from, whatever part it reports', () => {
+  assert.equal(stationWaves(1.8, undefined, 6.4, 342), '1.8 m (5.9 ft) · 6.4 s average period · from NNW (342°)');
+  assert.equal(stationWaves(1.7, 6, 5.6, 69), '1.7 m (5.6 ft) · every 6 s (5.6 s average) · from ENE (69°)');
+  assert.equal(stationWaves(undefined, 13, undefined, undefined), 'every 13 s');
+  assert.equal(stationWaves(undefined, undefined, undefined, undefined), undefined);
 });

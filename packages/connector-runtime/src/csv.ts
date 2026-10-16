@@ -4,9 +4,16 @@
  * records keyed by the header row (or by `columns` when the file has none); a row with more
  * fields than columns keeps the extras under `_3`, `_4`…; empty cells are absent, and cells
  * that look like numbers stay strings — the mapping's `number` transform decides.
+ *
+ * `delimiter: "whitespace"` reads a column-aligned text table instead (NDBC's
+ * latest_obs.txt): each line split on runs of spaces and tabs, no quoting. `comment` names a
+ * character that starts a line to skip (NDBC's two `#` header lines), in either form.
  */
 export interface CsvOptions {
+  /** One character, or `whitespace` for a column-aligned table. */
   delimiter?: string;
+  /** Rows whose first field starts with this character are skipped. */
+  comment?: string;
   header?: boolean;
   columns?: string[];
   /** Rows at most (the rest are dropped and counted). */
@@ -65,13 +72,29 @@ export function parseCsvRows(text: string, delimiter = ','): string[][] {
   return rows;
 }
 
+/** A column-aligned table: each non-blank line split on runs of spaces and tabs. */
+export function parseWhitespaceRows(text: string): string[][] {
+  const rows: string[][] = [];
+  const start = text.charCodeAt(0) === 0xfeff ? 1 : 0;
+  for (const line of text.slice(start).split(/\r?\n|\r/)) {
+    const t = line.trim();
+    if (!t) continue;
+    const row = t.split(/[ \t]+/);
+    if (row.length > MAX_FIELDS) throw new Error(`more than ${MAX_FIELDS} fields in a row`);
+    rows.push(row);
+  }
+  return rows;
+}
+
 export function parseCsv(text: string, opts: CsvOptions = {}): CsvResult {
   let rows: string[][];
   try {
-    rows = parseCsvRows(text, opts.delimiter ?? ',');
+    rows = opts.delimiter === 'whitespace' ? parseWhitespaceRows(text) : parseCsvRows(text, opts.delimiter ?? ',');
   } catch (err) {
     return { records: [], columns: [], dropped: 0, malformed: err instanceof Error ? err.message : String(err) };
   }
+  const comment = opts.comment;
+  if (comment) rows = rows.filter((r) => !(r[0] ?? '').trimStart().startsWith(comment));
   const header = opts.header ?? true;
   let columns = opts.columns ? [...opts.columns] : [];
   let start = 0;
