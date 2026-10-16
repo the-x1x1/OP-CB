@@ -1,4 +1,4 @@
-Results for FeatureType 'http://nowcoast.noaa.gov:conus_base_reflectivity_mosaic':
+Results for FeatureType 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar:conus_base_reflectivity_mosaic':
 --------------------------------------------
-GRAY_INDEX = 35.5
+Band1 = 35.0
 --------------------------------------------

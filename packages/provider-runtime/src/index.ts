@@ -1496,8 +1496,9 @@ export function cleanOverlayValue(answer: OverlayValueAnswer): OverlayValueAnswe
     if (values.length >= MAX_OVERLAY_VALUES) break;
     if (!v || typeof v.name !== 'string' || !v.name.trim()) continue;
     const name = cut(v.name.trim());
-    if (typeof v.value === 'number' && Number.isFinite(v.value)) values.push({ name, value: v.value });
-    else if (typeof v.value === 'string' && v.value.trim()) values.push({ name, value: cut(v.value.trim()) });
+    const unit = typeof v.unit === 'string' && v.unit.trim() ? { unit: v.unit.trim().slice(0, 24) } : {};
+    if (typeof v.value === 'number' && Number.isFinite(v.value)) values.push({ name, value: v.value, ...unit });
+    else if (typeof v.value === 'string' && v.value.trim()) values.push({ name, value: cut(v.value.trim()), ...unit });
   }
   if (values.length === 0) return undefined;
   const out: OverlayValueAnswer = { label: answer.label.trim().slice(0, 200), values };

@@ -11,8 +11,8 @@ import type { WmsProvider } from './wms.js';
 
 /**
  * WMS GetFeatureInfo for What's here (feature-info.ts, WmsProvider.overlayValue). The answers
- * under fixtures/connectors/hazards/nowcoast-radar-getfeatureinfo* are invented in GeoServer's
- * shapes (see that folder's README): nowCOAST refuses automated reading.
+ * under fixtures/connectors/hazards/nowcoast-radar-getfeatureinfo* were recorded from nowCOAST
+ * by the built-in browser on the operator's laptop (see that folder's README).
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
 const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
@@ -122,7 +122,7 @@ test('the GetFeatureInfo URL carries the layer, the middle pixel, the format, TI
 });
 
 test('a GeoJSON answer gives the first feature’s scalar properties in order; NaN, null and nesting are left out', () => {
-  assert.deepEqual(parseFeatureInfo(ANSWER, 'application/json'), [{ name: 'GRAY_INDEX', value: 35.5 }]);
+  assert.deepEqual(parseFeatureInfo(ANSWER, 'application/json'), [{ name: 'Band1', value: 35 }]);
   assert.deepEqual(parseFeatureInfo(EMPTY, 'application/json'), []);
   const mixed = JSON.stringify({
     type: 'FeatureCollection',
@@ -147,7 +147,7 @@ test('a GeoJSON answer gives the first feature’s scalar properties in order; N
 });
 
 test('a plain-text answer gives the first feature’s name = value lines; numbers stay numbers', () => {
-  assert.deepEqual(parseFeatureInfo(PLAIN, 'text/plain'), [{ name: 'GRAY_INDEX', value: 35.5 }]);
+  assert.deepEqual(parseFeatureInfo(PLAIN, 'text/plain'), [{ name: 'Band1', value: 35 }]);
   const two = [
     "Results for FeatureType 'x':",
     '----',
@@ -194,7 +194,8 @@ test('the shipped radar answers What’s here with one GetFeatureInfo for the fr
   });
   assert.ok(answer);
   assert.equal(answer.label, overlay.name);
-  assert.deepEqual(answer.values, [{ name: 'GRAY_INDEX', value: 35.5 }]);
+  // The service says Band1; the definition says what it is (valueNames, valueUnits).
+  assert.deepEqual(answer.values, [{ name: 'Reflectivity', value: 35, unit: 'dBZ' }]);
   assert.equal(answer.attribution, 'Radar: NOAA nowCOAST, NWS/OAR MRMS');
   assert.equal(answer.frame, overlay.frame);
   const asked = ctx.http.requests.filter((r) => !isCaps(r));
@@ -205,6 +206,8 @@ test('the shipped radar answers What’s here with one GetFeatureInfo for the fr
   assert.equal(q['TIME'], overlay.frame, 'the frame being drawn');
   assert.equal(q['STYLES'], 'weather_radar_base_reflectivity');
   assert.ok((asked[0]!.maxBytes ?? Infinity) <= 64 * 1024);
+  assert.equal(q['VALUENAMES'], undefined, "the names are the definition's, never sent");
+  assert.ok(!/valuenames|valueunits/i.test(JSON.stringify(overlay)), 'nor put in the tile requests');
 });
 
 test('nothing there, an error status (a throw), or a service that offers no format it reads: no answer', async () => {
@@ -247,4 +250,15 @@ test('before the capabilities are read there is nothing to ask', async () => {
   });
   assert.equal(answer, undefined);
   assert.equal(ctx.http.requests.length, 0);
+});
+
+test('valueNames and valueUnits: name=text pairs, checked', () => {
+  const with_ = (query: Record<string, unknown>) =>
+    defaultConnectorRegistry.validate({ ...RADAR, endpoint: { ...(RADAR['endpoint'] as object), query } });
+  const base = (RADAR['endpoint'] as { query: Record<string, unknown> }).query;
+  assert.ok(with_({ ...base, valueNames: 'Band1=Reflectivity,Band2=Echo top' }).ok);
+  const bad = with_({ ...base, valueUnits: 'dBZ' });
+  assert.equal(bad.ok, false);
+  assert.match(bad.errors.join(' '), /valueUnits "dBZ" is not name=text pairs/);
+  assert.ok(with_(base).ok);
 });

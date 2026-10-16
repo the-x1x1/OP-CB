@@ -356,12 +356,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.4.0 (unreleased)
 
-- What's here shows an overlay's value as its source names and gives it (`GRAY_INDEX 35.5`), not
-  in a unit: only the source knows what its numbers stand for. Its reader was written from
-  GeoServer's published answer shapes; nowCOAST could not be read from the build environment, so
-  what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
-  back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
-  lights) have no value at a point.
+- What's here shows an overlay's value as the service gives it, named and with a unit only where
+  the source's definition says: radar as "Reflectivity 35 dBZ" (nowCOAST's layer description
+  says its colours are dBZ, and its answers, seen 2026-10-16, are whole numbers from 0 to the
+  mid 30s under `Band1`), lightning as "Strike density" with no unit (none is published), and
+  GOES infrared as the service's `Band1`, a scaled number (63–123 seen) that is not a temperature.
+  WMTS overlays (the GIBS imagery, Night lights) have no value at a point.
 - The aurora forecast is drawn as areas at four fixed levels (10, 30, 50, 70%), not as a
   continuous field, and its outlines follow a 1° grid. The planetary K index is not shown: it
   has no place on the map, and where it should live is an open decision (ROADMAP).

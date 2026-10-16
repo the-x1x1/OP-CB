@@ -12,6 +12,9 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **What's here names the radar's value.** Reflectivity in dBZ for the US radar, Strike density for
+  lightning, from the definitions (`valueNames`, `valueUnits` in a WMS definition's query): the
+  service itself calls each `Band1`. Checked against nowCOAST's real answers.
 - **Aurora forecast.** NOAA SWPC's OVATION forecast of the chance of aurora overhead in the next
   30 to 90 minutes, drawn as faint nested areas of 10, 30, 50 and 70 percent, green to red, on the
   Weather layer (`swpc-aurora`, public domain, off by default; every ten minutes), and in the Sky

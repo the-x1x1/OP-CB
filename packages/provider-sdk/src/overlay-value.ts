@@ -22,10 +22,18 @@ export interface OverlayValueRequest {
 }
 
 export interface OverlayValue {
-  /** The service's own name for the value (`GRAY_INDEX`, `temperature`). */
+  /**
+   * The value's name: the service's own (`Band1`, `temperature`), or the one the source's
+   * definition gives it (`Reflectivity`) when the service's says nothing to a reader.
+   */
   name: string;
   /** As the service gave it; a number stays a number. */
   value: string | number;
+  /**
+   * The unit, when the source's definition states it (additive, 2026-10-16): a service's
+   * answer never says, and a unit is never guessed.
+   */
+  unit?: string;
 }
 
 export interface OverlayValueAnswer {

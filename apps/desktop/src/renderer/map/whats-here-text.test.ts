@@ -117,7 +117,7 @@ test("a selected satellite's next pass over the point, from its source's answer"
   assert.deepEqual(nextPassRows('ISS (ZARYA)', { satcatName: 'x' }, now), [], 'nothing about passes: nothing said');
 });
 
-test("overlay values: a row per overlay, named as the overlay is, the service's names and values, credit and frame under them", () => {
+test('overlay values: a row per overlay, named as the overlay is, the values with their names and units, credit and frame under them', () => {
   const nowMs = Date.parse('2026-10-15T22:00:00Z');
   const rows = overlayValueRows(
     [
@@ -125,7 +125,7 @@ test("overlay values: a row per overlay, named as the overlay is, the service's 
         overlayId: 'nowcoast-radar:a',
         providerId: 'nowcoast-radar',
         label: 'Weather radar',
-        values: [{ name: 'GRAY_INDEX', value: 35.5123 }],
+        values: [{ name: 'Reflectivity', value: 35.5123, unit: 'dBZ' }],
         attribution: 'Radar: NOAA nowCOAST, NWS/OAR MRMS',
         frame: '2026-10-15T21:36:00Z',
       },
@@ -145,7 +145,7 @@ test("overlay values: a row per overlay, named as the overlay is, the service's 
   assert.deepEqual(rows, [
     {
       label: 'Weather radar',
-      value: 'GRAY_INDEX 35.512',
+      value: 'Reflectivity 35.512 dBZ',
       note: 'Radar: NOAA nowCOAST, NWS/OAR MRMS · frame 21:36 UTC',
     },
     { label: 'Weather radar (2)', value: 'band rain · rate 2', note: 'frame 2020-01-02 03:04 UTC' },

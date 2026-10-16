@@ -239,18 +239,22 @@ GetFeatureInfo request (`feature-info.ts`), through its gated HTTP like the capa
   axis order the version uses, else EPSG:3857; a layer that offers none of these is not asked. `LAYERS` and
   `QUERY_LAYERS` are the definition's, with its styles, vendor parameters and the `TIME` of the frame being
   drawn, `FEATURE_COUNT=1`, and an answer cap of 64 KiB.
-- The answer is the first feature's scalar properties in the service's own names and order (a GeoServer
-  raster gives `GRAY_INDEX`); nested values, nulls, empty text and `NaN` (GeoServer's no-data) are left out.
-  No features, or an OGC exception, is "nothing here". Nothing guesses a unit: only the source knows what
-  its numbers stand for.
+- The answer is the first feature's scalar properties in the service's own names and order (nowCOAST's
+  rasters give `Band1`; other GeoServer rasters `GRAY_INDEX`); nested values, nulls, empty text and `NaN`
+  (GeoServer's no-data) are left out. No features, or an OGC exception, is "nothing here".
+- Nothing guesses a name or a unit. A definition may give them: `valueNames` and `valueUnits` in
+  `endpoint.query`, each `name=text` pairs separated by commas (`"valueNames": "Band1=Reflectivity"`,
+  `"valueUnits": "Band1=dBZ"`), at most 12 and 40 characters each. They are never sent to the service.
 
 ```
 https://nowcoast.noaa.gov/geoserver/observations/weather_radar/wms?TIME=2026-09-27T21:36:00Z&SERVICE=WMS&REQUEST=GetFeatureInfo&VERSION=1.3.0&LAYERS=conus_base_reflectivity_mosaic&QUERY_LAYERS=conus_base_reflectivity_mosaic&STYLES=weather_radar_base_reflectivity&CRS=CRS:84&BBOX=-97.5214,35.4626,-97.5114,35.4726&WIDTH=101&HEIGHT=101&I=50&J=50&INFO_FORMAT=application/json&FEATURE_COUNT=1&FORMAT=image/png
 ```
 
-The shipped nowCOAST answers in `feature-info.test.ts` are invented in GeoServer's shape (nowCOAST refuses
-automated reading); what nowCOAST names its bands and whether radar comes back in dBZ or as a palette index
-is to be seen on a machine with network access.
+The nowCOAST answers in `feature-info.test.ts` were recorded on 2026-10-16 by the built-in browser on the
+operator's laptop: radar `{"Band1":35}` where it was raining in west Texas, `{"Band1":0}` where it was not, and
+no features outside the mosaic. The shipped radar names its value Reflectivity in dBZ (the layer's own
+description says its colours are dBZ); the lightning layer names Strike density without a unit; GOES infrared
+is left as `Band1` (a scaled number, not a temperature).
 
 ## `wmts`
 

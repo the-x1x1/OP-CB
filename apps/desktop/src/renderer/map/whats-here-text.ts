@@ -149,10 +149,10 @@ export function overlayValueText(value: string | number): string {
 
 /**
  * What the drawn overlays' sources say lies under the point (`overlays.valueAt`): a row per
- * overlay, named as the overlay is, its values as the service names them ("GRAY_INDEX 35.5"),
- * and under them the source's credit and the frame the answer is for. The names are the
- * service's own: only the source knows what a raster's numbers stand for, so nothing here
- * guesses a unit.
+ * overlay, named as the overlay is, its values as the service names them ("Band1 35") or as
+ * the source's definition does ("Reflectivity 35 dBZ"), and under them the source's credit and
+ * the frame the answer is for. Only the source knows what a raster's numbers stand for, so
+ * nothing here guesses a name or a unit.
  */
 export function overlayValueRows(results: readonly OverlayValueResult[], nowMs: number): WhatsHereRow[] {
   const rows: WhatsHereRow[] = [];
@@ -161,7 +161,9 @@ export function overlayValueRows(results: readonly OverlayValueResult[], nowMs: 
     let label = r.label;
     for (let n = 2; seen.has(label); n++) label = `${r.label} (${n})`;
     seen.add(label);
-    const value = r.values.map((v) => `${v.name} ${overlayValueText(v.value)}`).join(' · ');
+    const value = r.values
+      .map((v) => `${v.name} ${overlayValueText(v.value)}${v.unit ? ` ${v.unit}` : ''}`)
+      .join(' · ');
     const frame = r.frame ? frameText(r.frame, nowMs) : undefined;
     const note = [r.attribution, frame].filter(Boolean).join(' · ');
     rows.push(note ? { label, value, note } : { label, value });

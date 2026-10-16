@@ -280,8 +280,8 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
   whole, then Ctrl+C — how far it is from home and from the selection, and where the Sun and the
   Moon are there; with a satellite selected, its next pass over the point and whether it can be
   seen with the eye; and with a WMS overlay drawn (weather radar, infrared, lightning density), what
-  its source says lies under the point, in the source's own names (a radar mosaic's `GRAY_INDEX`),
-  with its credit and the frame it is for. From it: **Centre here**, **Measure from here** (starts the measure tool at
+  its source says lies under the point ("Reflectivity 35 dBZ" for the radar; the service's own
+  name where nothing more is known), with its credit and the frame it is for. From it: **Centre here**, **Measure from here** (starts the measure tool at
   the point), **Watch here** (a 50 km watch zone round it) and **Collect** (into the active
   collection). Esc, its close button or a click on the map puts it away. The town comes from
   the lists bundled with the app (the built-in places and Natural Earth's 7,342 cities and

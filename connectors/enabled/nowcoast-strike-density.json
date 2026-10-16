@@ -16,7 +16,8 @@
       "transparent": true,
       "time": "latest",
       "opacity": 0.9,
-      "role": "overlay"
+      "role": "overlay",
+      "valueNames": "Band1=Strike density"
     },
     "intervalSeconds": 300,
     "timeoutSeconds": 20

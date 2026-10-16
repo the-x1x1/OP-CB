@@ -15,7 +15,9 @@
       "format": "image/png",
       "transparent": true,
       "time": "latest",
-      "role": "overlay"
+      "role": "overlay",
+      "valueNames": "Band1=Reflectivity",
+      "valueUnits": "Band1=dBZ"
     },
     "intervalSeconds": 300,
     "timeoutSeconds": 20

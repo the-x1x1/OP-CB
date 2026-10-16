@@ -52,7 +52,19 @@ export const FEATURE_INFO_MAX_BYTES = 64 * 1024;
 /** Keys the renderers set per tile, or the connector sets itself. */
 const OWNED = ['service', 'request', 'bbox', 'width', 'height', 'crs', 'srs'];
 /** GetMap keys the overlay carries in its own fields (not in `parameters`). */
-const OVERLAY_FIELDS = ['layers', 'styles', 'format', 'transparent', 'version', 'time', 'extent', 'role', 'opacity'];
+const OVERLAY_FIELDS = [
+  'layers',
+  'styles',
+  'format',
+  'transparent',
+  'version',
+  'time',
+  'extent',
+  'role',
+  'opacity',
+  'valuenames',
+  'valueunits',
+];
 /** The overlay contract's limits on `parameters`. */
 const PARAMETER_KEY = /^[A-Za-z_][A-Za-z0-9_:-]{0,63}$/;
 const MAX_PARAMETERS = 16;
@@ -74,6 +86,26 @@ export interface WmsConfig {
   vendor: Record<string, string>;
   /** The definition's own opacity (`opacity` in the query, 0–1), which the operator's setting overrides. */
   opacity?: number;
+  /**
+   * What the service's values are called and measured in, for What's here (`valueNames` and
+   * `valueUnits` in the query, each `name=text` pairs separated by commas): a raster's band is
+   * `Band1` to GeoServer and reflectivity in dBZ to its reader. Only the definition can say so.
+   */
+  valueNames?: Record<string, string>;
+  valueUnits?: Record<string, string>;
+}
+
+/** `Band1=Reflectivity,Band2=Echo top` → a table; an error for a pair that is not one. */
+function parsePairs(key: string, raw: string | undefined): Record<string, string> | string | undefined {
+  if (raw === undefined) return undefined;
+  const out: Record<string, string> = {};
+  for (const part of raw.split(',')) {
+    const m = /^\s*([^=]+?)\s*=\s*(.+?)\s*$/.exec(part);
+    if (!m || m[2]!.length > 40)
+      return `${key} "${raw.slice(0, 60)}" is not name=text pairs (text up to 40 characters)`;
+    out[m[1]!] = m[2]!;
+  }
+  return Object.keys(out).length > 12 ? `${key} names more than 12 values` : out;
 }
 
 /**
@@ -124,6 +156,10 @@ export function readWmsConfig(d: ConnectorProviderDefinition): { config: WmsConf
   if (extent && 'error' in extent) errors.push(extent.error);
   const opacity = parseOpacity(q.get('opacity'));
   if (typeof opacity === 'string') errors.push(opacity);
+  const valueNames = parsePairs('valueNames', q.get('valueNames'));
+  if (typeof valueNames === 'string') errors.push(valueNames);
+  const valueUnits = parsePairs('valueUnits', q.get('valueUnits'));
+  if (typeof valueUnits === 'string') errors.push(valueUnits);
   const transparent = (q.get('transparent') ?? 'true').toLowerCase() !== 'false';
   const vendor: Record<string, string> = {};
   for (const k of q.keys()) if (![...OWNED, ...OVERLAY_FIELDS].includes(k.toLowerCase())) vendor[k] = q.get(k)!;
@@ -140,6 +176,8 @@ export function readWmsConfig(d: ConnectorProviderDefinition): { config: WmsConf
   if (time !== undefined) config.time = time;
   if (extent && 'bounds' in extent) config.extent = extent.bounds;
   if (typeof opacity === 'number') config.opacity = opacity;
+  if (valueNames && typeof valueNames === 'object') config.valueNames = valueNames;
+  if (valueUnits && typeof valueUnits === 'object') config.valueUnits = valueUnits;
   return { config };
 }
 
@@ -407,7 +445,13 @@ export class WmsProvider extends OgcOverlayProvider implements OverlayValueSourc
       maxBytes: FEATURE_INFO_MAX_BYTES,
       signal: request.signal,
     });
-    const values = parseFeatureInfo(res.text(), info.format);
+    const names = this.config.valueNames ?? {};
+    const units = this.config.valueUnits ?? {};
+    const values = parseFeatureInfo(res.text(), info.format).map((v) => ({
+      name: names[v.name] ?? v.name,
+      value: v.value,
+      ...(units[v.name] ? { unit: units[v.name]! } : {}),
+    }));
     if (values.length === 0) return undefined;
     const answer: OverlayValueAnswer = { label: info.label, values, attribution: this.definition.attribution.text };
     if (info.frame) answer.frame = info.frame;
