@@ -15,6 +15,7 @@ export * from './telemetry.js';
 export * from './object-track.js';
 export * from './object-details.js';
 export * from './flight-route.js';
+export * from './overlay-value.js';
 export * as testing from './testing.js';
 
 export const PROVIDER_SDK_CONTRACT_VERSION = 'architecture-contract-v1';

@@ -7,7 +7,7 @@ import {
   worldQuerySchema,
   type Schema,
 } from '@worldview/world-model';
-import { MAX_READING_KEYS } from '@worldview/ipc-contract';
+import { MAX_OVERLAY_VALUE_OVERLAYS, MAX_READING_KEYS } from '@worldview/ipc-contract';
 import type {
   RequestChannel,
   RequestOf,
@@ -268,6 +268,16 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
 
   'sources.list': voidSchema,
   'overlays.list': voidSchema,
+  'overlays.valueAt': s.object(
+    {
+      position: s.object(
+        { latitude: s.number({ min: -90, max: 90 }), longitude: s.number({ min: -180, max: 180 }) },
+        { strict: true },
+      ),
+      overlayIds: s.array(shortId, { max: MAX_OVERLAY_VALUE_OVERLAYS }),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'overlays.valueAt'>>,
   'sources.manifest': providerRequest,
   'sources.setEnabled': s.object({ providerId, enabled: s.boolean() }, { strict: true }),
   'sources.refresh': providerRequest,

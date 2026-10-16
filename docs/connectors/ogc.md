@@ -225,6 +225,33 @@ The overlay the example publishes, and the tile template the 2D map derives from
 https://geo.weather.gc.ca/geomet?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=RADAR_1KM_RRAI&STYLES=Radar-Rain_14colors&FORMAT=image%2Fpng&TRANSPARENT=TRUE&CRS=EPSG%3A3857&WIDTH=256&HEIGHT=256&layer=RADAR_1KM_RRAI&BBOX={bbox-epsg-3857}
 ```
 
+### What's here: GetFeatureInfo
+
+When the operator asks What's here about a point, the shell names the overlays it is drawing
+(`overlays.valueAt`, ADR-003 amendment 2026-10-15) and a `wms` provider answers for its own with one
+GetFeatureInfo request (`feature-info.ts`), through its gated HTTP like the capabilities read:
+
+- It asks only when the capabilities list GetFeatureInfo in `application/json`, `application/geo+json` or
+  GeoServer's `text/plain` (in that order of preference) and every layer is `queryable`; HTML and GML are
+  never asked for. Otherwise the overlay has no value to show and nothing is sent.
+- The box is 101 × 101 pixels round the point (about 1.1 km across at the equator), the point at pixel
+  (50, 50) — `I`/`J` in 1.3.0, `X`/`Y` in 1.1.1 — in CRS:84 when the layers list it, else EPSG:4326 in the
+  axis order the version uses, else EPSG:3857; a layer that offers none of these is not asked. `LAYERS` and
+  `QUERY_LAYERS` are the definition's, with its styles, vendor parameters and the `TIME` of the frame being
+  drawn, `FEATURE_COUNT=1`, and an answer cap of 64 KiB.
+- The answer is the first feature's scalar properties in the service's own names and order (a GeoServer
+  raster gives `GRAY_INDEX`); nested values, nulls, empty text and `NaN` (GeoServer's no-data) are left out.
+  No features, or an OGC exception, is "nothing here". Nothing guesses a unit: only the source knows what
+  its numbers stand for.
+
+```
+https://nowcoast.noaa.gov/geoserver/observations/weather_radar/wms?TIME=2026-09-27T21:36:00Z&SERVICE=WMS&REQUEST=GetFeatureInfo&VERSION=1.3.0&LAYERS=conus_base_reflectivity_mosaic&QUERY_LAYERS=conus_base_reflectivity_mosaic&STYLES=weather_radar_base_reflectivity&CRS=CRS:84&BBOX=-97.5214,35.4626,-97.5114,35.4726&WIDTH=101&HEIGHT=101&I=50&J=50&INFO_FORMAT=application/json&FEATURE_COUNT=1&FORMAT=image/png
+```
+
+The shipped nowCOAST answers in `feature-info.test.ts` are invented in GeoServer's shape (nowCOAST refuses
+automated reading); what nowCOAST names its bands and whether radar comes back in dBZ or as a palette index
+is to be seen on a machine with network access.
+
 ## `wmts`
 
 ```json
@@ -352,7 +379,7 @@ second valid capabilities document (for BKG, the same one), since an overlay has
 ## Not done
 
 WFS 1.0.0 and GML output; reprojection of any kind; WMTS tile matrix sets other than Web Mercator, and
-512-pixel tiles; GetFeatureInfo; WCS, CSW and SOS; credentials on tile requests (the renderers fetch tiles
+512-pixel tiles; GetFeatureInfo in HTML or GML, and for a WMTS layer; WCS, CSW and SOS; credentials on tile requests (the renderers fetch tiles
 without one); republishing an overlay between polls (the contract has no way for a provider to ask; the
 host asks after each poll); XML
 `FILTER` beside a viewport.

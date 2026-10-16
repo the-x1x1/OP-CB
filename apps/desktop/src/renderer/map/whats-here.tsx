@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { NearbyPlaceResult } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult } from '@worldview/ipc-contract';
 import type { GeoPosition, JsonValue } from '@worldview/world-model';
 import { Button } from '@worldview/ui';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { useActions } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { mergeDetails } from '../context/satellite-details.js';
-import { cardPlacement, nearestPlaceText, nextPassRows, whatsHereRows } from './whats-here-text.js';
+import { cardPlacement, nearestPlaceText, nextPassRows, overlayValueRows, whatsHereRows } from './whats-here-text.js';
 
 export interface WhatsHereProps {
   host: RendererHostLike | undefined;
@@ -22,6 +22,8 @@ export interface WhatsHereProps {
   satellite?: { id: string; name: string };
   /** The timeline's time when replaying or scrubbed back: the Sun and Moon are for it (passes stay from now). */
   shownAtMs?: number;
+  /** The ids of the overlays drawn over the map (not a basemap): their sources are asked what lies under the point. */
+  overlayIds?: readonly string[];
 }
 
 /**
@@ -43,6 +45,7 @@ export function WhatsHere({
   collection,
   satellite,
   shownAtMs,
+  overlayIds,
 }: WhatsHereProps) {
   const actions = useActions();
   const nowMs = useNow(5000);
@@ -74,6 +77,27 @@ export function WhatsHere({
       live = false;
     };
   }, [actions, satelliteId, position]);
+
+  // What the drawn overlays' sources say is under the point (a WMS layer's GetFeatureInfo).
+  const overlayKey = (overlayIds ?? []).join('\n');
+  const [overlayValues, setOverlayValues] = useState<OverlayValueResult[] | undefined>(() =>
+    overlayKey ? undefined : [],
+  );
+  useEffect(() => {
+    const ids = overlayKey ? overlayKey.split('\n') : [];
+    if (ids.length === 0) {
+      setOverlayValues([]);
+      return undefined;
+    }
+    let live = true;
+    setOverlayValues(undefined);
+    void actions.overlayValues(position, ids).then((answers) => {
+      if (live) setOverlayValues(answers);
+    });
+    return () => {
+      live = false;
+    };
+  }, [actions, overlayKey, position]);
 
   // Beside its point, wherever the map has moved it; hidden while the point is out of sight.
   const place = useCallback(() => {
@@ -116,6 +140,8 @@ export function WhatsHere({
           ? nextPassRows(satellite.name, passes, nowMs)
           : []),
     );
+  if (overlayValues === undefined) rows.push({ label: 'Overlays here', value: 'asking their sources…' });
+  else rows.push(...overlayValueRows(overlayValues, nowMs));
   const title = nearest ? nearestPlaceText(nearest) : undefined;
   const label = `${position.latitude.toFixed(3)}, ${position.longitude.toFixed(3)}`;
 
@@ -142,6 +168,7 @@ export function WhatsHere({
               {...(r.copyable ? { title: 'Click to select, then Ctrl+C' } : {})}
             >
               {r.value}
+              {r.note ? <span className="wv-whats-here__note">{r.note}</span> : null}
             </dd>
           </div>
         ))}

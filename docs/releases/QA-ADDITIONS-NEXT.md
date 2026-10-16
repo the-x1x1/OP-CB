@@ -31,6 +31,9 @@ are deleted too.
 - [ ] Centre here, Measure from here, Watch here (delete the zone), Collect (into the active
       collection)
 - [ ] With the ISS selected, the card gives its next pass over the point
+- [ ] With Weather radar drawn, right-click inside an echo over the US: a "Weather radar" row with
+      the value nowCOAST gives (note its name and whether it reads as dBZ), the credit and the frame
+      time; right-click clear air: no row, or no value. With Work offline on: no row.
 - [ ] Palette "What's here? (the middle of the view)" on a tilted globe describes the ground in
       the middle, not under the camera
 

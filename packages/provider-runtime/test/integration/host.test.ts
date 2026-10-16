@@ -8,6 +8,7 @@ import {
   cleanFlightRoute,
   cleanTrackAnswer,
   cleanDetailsAnswer,
+  cleanOverlayValue,
   pollBudgetMs,
   subscribeFailureStatus,
   viewportPollGapMs,
@@ -1447,6 +1448,101 @@ test('cleanDetailsAnswer: a label, JSON under the size cap, and a link only to a
   assert.equal(
     cleanDetailsAnswer({ label: 'x', properties: {}, sourceUrl: 'http://celestrak.org/a' }, hosts)?.sourceUrl,
     undefined,
+  );
+});
+
+test('overlayValue (ADR-003 amendment 2026-10-15): asked of the provider that published the overlay, bounded, cleaned, not offline', async () => {
+  const clock = new testing.VirtualClock(Date.parse('2026-10-15T08:00:00.000Z'));
+  const { host } = makeHost(
+    clock,
+    fakeFetch(() => new Response('{}')),
+  );
+  const usgs = createProvider();
+  let answer: 'ok' | 'slow' | 'throw' | 'nothing' = 'ok';
+  const asked: unknown[] = [];
+  const probe: import('@worldview/provider-sdk').WorldProvider & import('@worldview/provider-sdk').OverlayValueSource =
+    {
+      manifest: { ...usgs.manifest, id: 'overlay-probe', enabledByDefault: true },
+      initialize: async () => {},
+      start: async () => {},
+      stop: async () => {},
+      health: async () => ({
+        providerId: 'overlay-probe',
+        status: 'LIVE',
+        errorRate: 0,
+        rateLimitState: { limited: false },
+        credentialState: 'not-required',
+      }),
+      overlays: async () => [
+        {
+          id: 'overlay-probe:radar',
+          kind: 'wms',
+          name: 'Radar',
+          attribution: 'Example agency',
+          url: `https://${usgs.manifest.allowedHosts[0]}/wms`,
+          layers: 'radar',
+        },
+      ],
+      async overlayValue(request) {
+        asked.push(request.overlayId);
+        if (answer === 'throw') throw new Error('HTTP 400');
+        if (answer === 'slow') return new Promise<undefined>(() => undefined);
+        if (answer === 'nothing') return undefined;
+        return { label: ' Radar ', values: [{ name: 'GRAY_INDEX', value: 35.5 }], attribution: 'Example agency' };
+      },
+    };
+  host.register(probe);
+  const here = { latitude: 35.47, longitude: -97.52 };
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined, 'not running yet');
+  await host.start();
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(await host.overlayValue('overlay-probe:radar', here), {
+    label: 'Radar',
+    values: [{ name: 'GRAY_INDEX', value: 35.5 }],
+    attribution: 'Example agency',
+  });
+  assert.equal(await host.overlayValue('overlay-probe:other', here), undefined, 'an overlay no one published');
+  answer = 'nothing';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined);
+  answer = 'throw';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined, 'a throw is logged, not raised');
+  answer = 'slow';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here, { timeoutMs: 10 }), undefined, 'late: dropped');
+  answer = 'ok';
+  const before = asked.length;
+  host.setOnline(false);
+  assert.equal(
+    await host.overlayValue('overlay-probe:radar', here),
+    undefined,
+    'a network source is not asked offline',
+  );
+  assert.equal(asked.length, before);
+  host.setOnline(true);
+  await host.dispose();
+});
+
+test('cleanOverlayValue: a label, at most twelve named values (finite numbers or text, cut), a frame only when it is a time', () => {
+  assert.equal(cleanOverlayValue({ label: ' ', values: [{ name: 'a', value: 1 }] }), undefined);
+  assert.equal(cleanOverlayValue({ label: 'x', values: [] }), undefined);
+  assert.equal(
+    cleanOverlayValue({
+      label: 'x',
+      values: [
+        { name: 'a', value: Number.NaN },
+        { name: ' ', value: 1 },
+      ],
+    }),
+    undefined,
+    'nothing usable is no answer',
+  );
+  const many = Array.from({ length: 20 }, (_, i) => ({ name: `v${i}`, value: i }));
+  assert.equal(cleanOverlayValue({ label: 'x', values: many })?.values.length, 12);
+  const long = cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 'y'.repeat(500) }] });
+  assert.equal(long?.values[0]?.value.toString().length, 120);
+  assert.equal(cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 1 }], frame: 'soon' })?.frame, undefined);
+  assert.equal(
+    cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 1 }], frame: '2026-10-15T08:00:00Z' })?.frame,
+    '2026-10-15T08:00:00Z',
   );
 });
 

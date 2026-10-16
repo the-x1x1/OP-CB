@@ -354,6 +354,17 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
+## After 0.4.0 (unreleased)
+
+- What's here shows an overlay's value as its source names and gives it (`GRAY_INDEX 35.5`), not
+  in a unit: only the source knows what its numbers stand for. Its reader was written from
+  GeoServer's published answer shapes; nowCOAST could not be read from the build environment, so
+  what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
+  back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
+  lights) have no value at a point.
+- The question is one request to the overlay's source counted against its own rate budget; asked
+  right after a poll, it can be refused and the row is simply absent.
+
 ## 0.4.0
 
 - The selected aircraft's and satellite's trail, predicted path and route are drawn at their

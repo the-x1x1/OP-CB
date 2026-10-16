@@ -13,6 +13,7 @@ import {
 import { HttpClient, LoggerHub, RingBufferSink, type Logger } from '@worldview/core';
 import {
   type ObjectDetailsAnswer,
+  type OverlayValueAnswer,
   type FlightRouteAnswer,
   type ObjectTrackAnswer,
   type ProviderDataPolicy,
@@ -1166,6 +1167,27 @@ export class RuntimeCore {
       }),
     );
     return answers.filter((a): a is ObjectDetailsAnswer & { providerId: string } => a !== undefined);
+  }
+
+  /**
+   * What the sources of the overlays the shell is drawing say lies under them at one point
+   * (`overlays.valueAt`, provider-sdk overlay-value.ts), in the order asked. Each overlay is
+   * asked of the running provider that published it, all at once, each bounded by the host's
+   * timeout; one that is not published now, or has nothing there, is left out.
+   */
+  async overlayValues(
+    position: { latitude: number; longitude: number },
+    overlayIds: readonly string[],
+  ): Promise<Array<OverlayValueAnswer & { overlayId: string; providerId: string }>> {
+    const published = new Map(this.providerHost.overlays().map((o) => [o.id, o.providerId]));
+    const asked = [...new Set(overlayIds)].filter((id) => published.has(id));
+    const answers = await Promise.all(
+      asked.map(async (overlayId) => {
+        const answer = await this.providerHost.overlayValue(overlayId, position);
+        return answer ? { ...answer, overlayId, providerId: published.get(overlayId)! } : undefined;
+      }),
+    );
+    return answers.filter((a): a is OverlayValueAnswer & { overlayId: string; providerId: string } => a !== undefined);
   }
 
   /** The bundled airline, type and airport tables (support/flight-info.ts), read once on first use. */

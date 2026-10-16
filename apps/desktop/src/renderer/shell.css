@@ -783,6 +783,12 @@
   cursor: text;
 }
 
+.wv-whats-here__note {
+  display: block;
+  color: var(--wv-text-secondary);
+  font-size: var(--wv-text-xs);
+}
+
 .wv-map__notice {
   position: absolute;
   top: var(--wv-space-3);

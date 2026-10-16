@@ -28,6 +28,7 @@ import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@
 import { exportBundle } from '@worldview/diagnostics';
 import {
   EVENT_TYPE_LABELS,
+  MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   type AppSettings,
   type Collection,
@@ -378,6 +379,16 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     // ---- sources -------------------------------------------------------------
     'sources.list': async () => core.providerHost.health.list(),
     'overlays.list': async () => core.providerHost.overlays(),
+    'overlays.valueAt': async ({ position, overlayIds }) => {
+      if (!position || !isValidLatLon(position.latitude, position.longitude))
+        throw new InvalidRequestError('overlays.valueAt needs a position');
+      if (!Array.isArray(overlayIds) || overlayIds.some((id) => typeof id !== 'string' || !id))
+        throw new InvalidRequestError('overlays.valueAt needs overlayIds');
+      return core.overlayValues(
+        { latitude: position.latitude, longitude: position.longitude },
+        overlayIds.slice(0, MAX_OVERLAY_VALUE_OVERLAYS),
+      );
+    },
     'sources.manifest': async ({ providerId }) => {
       requireId(providerId, 'providerId');
       return core.providerHost.manifest(providerId) ?? null;

@@ -1205,6 +1205,7 @@ export function MapHost() {
           {...(selectionAt ? { selection: { name: 'the selection', position: selectionAt } } : {})}
           {...(activeCollection ? { collection: { id: activeCollection.id, name: activeCollection.name } } : {})}
           {...(pastAtMs === undefined ? {} : { shownAtMs: pastAtMs })}
+          overlayIds={drawnOverlays.filter((o) => o.role !== 'basemap').map((o) => o.id)}
           {...(selectedNow?.type === 'satellite'
             ? { satellite: { id: selectedNow.id, name: displayName(selectedNow) } }
             : {})}

@@ -5,6 +5,14 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **What's here reads the weather overlays.** With a WMS overlay drawn — weather radar, infrared
+  satellite, lightning density — What's here asks its source what lies under the point (one
+  WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
+  names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
+  service does not offer it in JSON or plain text, or while working offline.
+
 ## [0.4.0] — 2026-10-12
 
 The map at altitude and the world's emergencies: the selected aircraft's and satellite's lines

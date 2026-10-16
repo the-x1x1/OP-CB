@@ -1,4 +1,4 @@
-import type { NearbyPlaceResult } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult } from '@worldview/ipc-contract';
 import {
   geodesicInverse,
   moonIllumination,
@@ -24,6 +24,8 @@ export interface WhatsHereRow {
   value: string;
   /** A reference to copy (shown so it can be selected whole). */
   copyable?: boolean;
+  /** A smaller line under the value: where it came from. */
+  note?: string;
 }
 
 let regionNames: Intl.DisplayNames | null | undefined;
@@ -137,6 +139,43 @@ export function nextPassRows(
   if (first.visibility)
     rows.push({ label: 'To the eye', value: first.visibility.replace(/^Visible to the eye /, 'visible ') });
   return rows;
+}
+
+/** A value as the service gave it: a number to at most three decimals, text as it is. */
+export function overlayValueText(value: string | number): string {
+  if (typeof value === 'string') return value;
+  return String(Math.round(value * 1000) / 1000);
+}
+
+/**
+ * What the drawn overlays' sources say lies under the point (`overlays.valueAt`): a row per
+ * overlay, named as the overlay is, its values as the service names them ("GRAY_INDEX 35.5"),
+ * and under them the source's credit and the frame the answer is for. The names are the
+ * service's own: only the source knows what a raster's numbers stand for, so nothing here
+ * guesses a unit.
+ */
+export function overlayValueRows(results: readonly OverlayValueResult[], nowMs: number): WhatsHereRow[] {
+  const rows: WhatsHereRow[] = [];
+  const seen = new Set<string>();
+  for (const r of results) {
+    let label = r.label;
+    for (let n = 2; seen.has(label); n++) label = `${r.label} (${n})`;
+    seen.add(label);
+    const value = r.values.map((v) => `${v.name} ${overlayValueText(v.value)}`).join(' · ');
+    const frame = r.frame ? frameText(r.frame, nowMs) : undefined;
+    const note = [r.attribution, frame].filter(Boolean).join(' · ');
+    rows.push(note ? { label, value, note } : { label, value });
+  }
+  return rows;
+}
+
+/** "frame 21:36 UTC", with the date when it is not the same UTC day as now. */
+function frameText(frame: string, nowMs: number): string | undefined {
+  const t = Date.parse(frame);
+  if (Number.isNaN(t)) return undefined;
+  const iso = new Date(t).toISOString();
+  const sameDay = iso.slice(0, 10) === new Date(nowMs).toISOString().slice(0, 10);
+  return `frame ${sameDay ? '' : `${iso.slice(0, 10)} `}${iso.slice(11, 16)} UTC`;
 }
 
 /** The gap between the point and the card, and between the card and the map's edge, CSS px. */

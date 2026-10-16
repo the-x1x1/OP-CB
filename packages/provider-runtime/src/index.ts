@@ -37,6 +37,10 @@ import {
   type FlightRouteRequest,
   MAX_FLIGHT_ROUTE_AIRPORTS,
   isFlightRouteSource,
+  type OverlayValueAnswer,
+  MAX_OVERLAY_VALUES,
+  MAX_OVERLAY_VALUE_CHARS,
+  isOverlayValueSource,
 } from '@worldview/provider-sdk';
 import {
   HttpClient,
@@ -688,6 +692,56 @@ export class ProviderHost {
     } catch (err) {
       h.logger.debug('object details unavailable', {
         objectId: request.objectId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return undefined;
+    } finally {
+      if (timer) clearTimeout(timer);
+      options.signal?.removeEventListener('abort', onOuter);
+    }
+  }
+
+  /**
+   * Ask the provider that published a drawn overlay what lies under it at one point
+   * (ADR-003 amendment 2026-10-15, provider-sdk overlay-value.ts). Undefined — never a throw —
+   * when no running provider published that overlay, it does not implement `overlayValue`,
+   * the application is offline and it is a network source, it has nothing there, fails,
+   * answers late (`timeoutMs`, default 8 s) or answers something unusable (cleanOverlayValue).
+   * The caller (the runtime's `overlays.valueAt`) asks only when the operator asks about a point.
+   */
+  async overlayValue(
+    overlayId: string,
+    position: { latitude: number; longitude: number },
+    options: { timeoutMs?: number; signal?: AbortSignal } = {},
+  ): Promise<OverlayValueAnswer | undefined> {
+    let h: Hosted | undefined;
+    for (const candidate of this.hosted.values())
+      if (candidate.running && !candidate.removed && candidate.overlays.some((o) => o.id === overlayId)) {
+        h = candidate;
+        break;
+      }
+    if (!h || !isOverlayValueSource(h.provider)) return undefined;
+    if (!this.online && h.manifest.transport === 'http') return undefined;
+    const provider = h.provider;
+    const abort = new AbortController();
+    const onOuter = () => abort.abort();
+    options.signal?.addEventListener('abort', onOuter, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<undefined>((resolve) => {
+      timer = setTimeout(() => {
+        abort.abort();
+        resolve(undefined);
+      }, options.timeoutMs ?? 8_000);
+    });
+    try {
+      const answer = await Promise.race([
+        provider.overlayValue({ overlayId, position, signal: abort.signal }),
+        timeout,
+      ]);
+      return answer ? cleanOverlayValue(answer) : undefined;
+    } catch (err) {
+      h.logger.debug('overlay value unavailable', {
+        overlayId,
         error: err instanceof Error ? err.message : String(err),
       });
       return undefined;
@@ -1426,6 +1480,30 @@ export function cleanDetailsAnswer(
       /* not a URL: no link */
     }
   }
+  return out;
+}
+
+/**
+ * An overlay value the shell can show, or undefined: a label, at most MAX_OVERLAY_VALUES values
+ * each with a name and a finite number or a string (both cut to MAX_OVERLAY_VALUE_CHARS), and
+ * a frame only when it is a time. An answer with no usable value is no answer.
+ */
+export function cleanOverlayValue(answer: OverlayValueAnswer): OverlayValueAnswer | undefined {
+  if (!answer || typeof answer.label !== 'string' || !answer.label.trim()) return undefined;
+  const cut = (v: string) => (v.length > MAX_OVERLAY_VALUE_CHARS ? `${v.slice(0, MAX_OVERLAY_VALUE_CHARS - 1)}…` : v);
+  const values: OverlayValueAnswer['values'] = [];
+  for (const v of Array.isArray(answer.values) ? answer.values : []) {
+    if (values.length >= MAX_OVERLAY_VALUES) break;
+    if (!v || typeof v.name !== 'string' || !v.name.trim()) continue;
+    const name = cut(v.name.trim());
+    if (typeof v.value === 'number' && Number.isFinite(v.value)) values.push({ name, value: v.value });
+    else if (typeof v.value === 'string' && v.value.trim()) values.push({ name, value: cut(v.value.trim()) });
+  }
+  if (values.length === 0) return undefined;
+  const out: OverlayValueAnswer = { label: answer.label.trim().slice(0, 200), values };
+  if (typeof answer.frame === 'string' && !Number.isNaN(Date.parse(answer.frame))) out.frame = answer.frame;
+  if (typeof answer.attribution === 'string' && answer.attribution.trim())
+    out.attribution = answer.attribution.trim().slice(0, 200);
   return out;
 }
 

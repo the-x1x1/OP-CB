@@ -38,7 +38,14 @@ import {
   type VisualStyleId,
 } from '@worldview/render-core';
 import { timelineReducer, type TimelineAction, type TimelineControlState, type TimelineSpeed } from '@worldview/ui';
-import type { NearbyPlaceResult, PassAlertSettings, SkyOverheadAnswer, WorldClient } from '@worldview/ipc-contract';
+import type {
+  NearbyPlaceResult,
+  OverlayValueResult,
+  PassAlertSettings,
+  SkyOverheadAnswer,
+  WorldClient,
+} from '@worldview/ipc-contract';
+import { MAX_OVERLAY_VALUE_OVERLAYS } from '@worldview/ipc-contract';
 import type { ContextTab, DialogId, RootAction, RootState } from './types.js';
 import { describeError } from './sync.js';
 import { isCollected } from './collections.js';
@@ -1214,6 +1221,24 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         });
       } catch {
         return null;
+      }
+    },
+    /**
+     * What the sources of the drawn overlays say lies under them at a point (`overlays.valueAt`);
+     * empty when none answers or the request failed.
+     */
+    async overlayValues(position: GeoPosition, overlayIds: readonly string[]): Promise<OverlayValueResult[]> {
+      if (overlayIds.length === 0) return [];
+      try {
+        return await client.request('overlays.valueAt', {
+          position: {
+            latitude: Math.max(-90, Math.min(90, position.latitude)),
+            longitude: ((((position.longitude + 180) % 360) + 360) % 360) - 180,
+          },
+          overlayIds: overlayIds.slice(0, MAX_OVERLAY_VALUE_OVERLAYS),
+        });
+      } catch {
+        return [];
       }
     },
     /** The town nearest a point, from the offline gazetteer; null when none is known or the lookup failed. */

@@ -11,7 +11,7 @@ import type {
   SeverityClass,
   RasterOverlay,
 } from '@worldview/world-model';
-import type { ObjectDetailsAnswer, ProviderManifest } from '@worldview/provider-sdk';
+import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '@worldview/provider-sdk';
 import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
 import type { StateChange, TrackPoint } from '@worldview/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
@@ -52,6 +52,19 @@ export interface WorldTrackPoint extends TrackPoint {
 export interface WorldObjectDetails extends ObjectDetailsAnswer {
   providerId: string;
 }
+
+/**
+ * What a drawn overlay's source says lies under it at one point (`overlays.valueAt`,
+ * provider-sdk overlay-value.ts), with the overlay and provider it came from: `label` and
+ * `attribution` are shown with the values.
+ */
+export interface OverlayValueResult extends OverlayValueAnswer {
+  overlayId: string;
+  providerId: string;
+}
+
+/** The most overlays one `overlays.valueAt` asks about. */
+export const MAX_OVERLAY_VALUE_OVERLAYS = 8;
 
 /**
  * What is known of the selected aircraft's flight (`world.flight`, 2026-09-28): the airline
@@ -910,6 +923,16 @@ export interface WorldRequests {
   'sources.list': { request: void; response: SourceHealthEntry[] };
   /** Raster overlays every running provider publishes (ADR-008 amendment 2026-09-23). */
   'overlays.list': { request: void; response: RasterOverlay[] };
+  /**
+   * Additive, 2026-10-15: what the sources of the overlays the shell is drawing say lies under
+   * them at one point (What's here), in the order asked; an overlay whose source has nothing
+   * there, cannot be asked, or is a network source while working offline is left out. At most
+   * MAX_OVERLAY_VALUE_OVERLAYS overlays.
+   */
+  'overlays.valueAt': {
+    request: { position: { latitude: number; longitude: number }; overlayIds: string[] };
+    response: OverlayValueResult[];
+  };
   'sources.manifest': { request: { providerId: string }; response: ProviderManifest | null };
   'sources.setEnabled': { request: { providerId: string; enabled: boolean }; response: void };
   'sources.refresh': { request: { providerId: string }; response: void };
@@ -1214,6 +1237,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'sources.definitions.draft',
   'sources.definitions.save',
   'overlays.list',
+  'overlays.valueAt',
   'credentials.has',
   'credentials.set',
   'credentials.delete',
