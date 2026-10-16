@@ -31,8 +31,10 @@ const STORM_ID = /^(al|ep|cp)\d{6}$/;
  * hour before that: on the reference laptop every active storm was refused as "in the future"
  * at 20:34, 20:47, 23:39, 23:47 and 02:46 UTC, and so left the map until the hour came round.
  * Such a storm is taken, observed at the time it was read rather than at its nominal time.
+ * God's Eye View found the same and saw it "rarely about an hour" early (its #741, 2026-10-16),
+ * so the allowance is an hour and a half, as there: an hour was the edge of what happens.
  */
-const FUTURE_SKEW_MS = 60 * 60_000;
+export const FUTURE_SKEW_MS = 90 * 60_000;
 
 /** NHC classification codes (CurrentStorms.json `classification`). */
 export const CLASSIFICATIONS: Readonly<Record<string, string>> = Object.freeze({

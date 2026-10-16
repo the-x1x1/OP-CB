@@ -45,6 +45,12 @@ Versioning: [semantic versioning](https://semver.org/).
   History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
   credited).
 
+### Fixed
+
+- **A hurricane advisory released early stays on the map.** NHC sometimes publishes an
+  advisory up to about an hour before its nominal time; the allowance is now ninety minutes
+  (it was one hour, the edge of what happens), as God's Eye View found too.
+
 ## [0.4.0] — 2026-10-12
 
 The map at altitude and the world's emergencies: the selected aircraft's and satellite's lines
