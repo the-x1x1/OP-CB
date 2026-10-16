@@ -315,6 +315,59 @@ legal; the commercial distribution review closed with no outstanding blockers.
       tasks, keyboard-only use of the map, and the HUD's ink over the imagery in each visual
       style (its background is the map, not a token).
 
+## From God's Eye View and OSIRIS, reviewed 2026-10-15
+
+God's Eye View (`bilawalsidhu/gods-eye-view`, UPSTREAM.md) has 778 commits since the import at
+`0dbde1e` (2026-09-20 → `e2274bb`, 2026-10-16); OSIRIS (osirisai.live, "V5.0") publishes a feature
+list but no changelog. What either has that WORLDVIEW does not, taken as a list to work through.
+Nothing is copied without its licence: GEV code is MIT (keep the notice); each data source still
+needs its own record.
+
+Engineering with no licence or key, in the order they are to be built:
+
+- [ ] **GNSS interference from ADS-B integrity** (GEV `eefcb33`; OSIRIS lists GPS jamming):
+      aircraft reporting degraded navigation integrity (NIC < 7, NACp < 8, or readsb's GPS-loss
+      flag) binned into 0.5° cells over a rolling 30 minutes, coloured in gpsjam.org's bands.
+      Built from the aircraft WORLDVIEW already receives (adsb.lol, the operator's own readsb):
+      the providers keep the integrity fields, a derived layer bins them. No new request.
+- [ ] **Drop your own GeoJSON, KML, KMZ or GPX onto the map** (GEV `57b8d8b`): drawn for the
+      session, one colour per file, show/hide, fly to, remove; KML/KMZ sanitized so a file cannot
+      make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
+      KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
+      needs a granted folder and a definition.
+- [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's planetary K index and the OVATION aurora
+      forecast (U.S. public domain), the aurora oval drawn over the poles, a Kp line in the Sky
+      panel.
+- [ ] **Satellite infrared strength** (GEV `86b7dc8`): one setting that thins or thickens the
+      clouds-only infrared ramp, previewed while dragged.
+- [ ] **Cyclone advisories released early** (GEV `6d6ce36`): NHC can publish an advisory before
+      its nominal time; check `nhc-storms` does not reject one up to 90 minutes ahead of the clock.
+- [ ] **Air quality, Canada** (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
+      its scale (`{provider, scale, value, band}`), since AQHI, the US AQI and Europe's EAQI do not
+      share a meaning. Open Government Licence – Canada (attribution): record first.
+- [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the
+      selection; after the 2D profile, since it costs frames.
+
+Each needs a decision of the operator's first:
+
+- **Wind on the globe** (GEV `0251c74`: GFS and ECMWF IFS as animated particles and a reading at
+  the centre): which source — NOAA GFS needs a GRIB2 decoder (a dependency) or a re-served grid;
+  Open-Meteo's record is conditional.
+- **Street-level imagery** (GEV: Mapillary, KartaView, Panoramax, Google Street View): Mapillary
+  needs a key; KartaView is CC BY-SA; Panoramax instances set their own licences; Google is
+  excluded.
+- **Links to a view** (GEV `fe69f22`): a `worldview://` link that opens the app at a place with
+  given layers — registering a protocol handler is an installer and OS change.
+- **An MCP server over the local API** (GEV's tool catalog and `/mcp`): AI clients reading what
+  the app holds; extends ADR-014 and what leaves the app.
+- **Recent imagery for a box** (GEV `#716`): the STAC example for Sentinel-2 on Earth Search, shipped
+  and offered from What's here; Copernicus terms to record.
+- **More camera, transit and bike-share regions** (GEV: Toronto, WSDOT, King County, NYC DOT,
+  Catalonia, Lithuania, Norway; TTC and Ontario transit; Kona & Hilo, Norway and Brazil bike
+  share): each source's licence.
+- **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
+  licence review; the recon tools stay under 1.10.0 below.
+
 ## 1.10.0 — Deferred options from the OSIRIS review (each needs a decision first)
 
 OSIRIS (osirisai.live) ships these; the operator asked for them to be recorded as possible
