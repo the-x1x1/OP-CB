@@ -146,7 +146,7 @@ test('parseAdsbLolResponse: requires ac[] and now', () => {
   assert.equal(parseAdsbLolResponse([]), 'response has no "ac" array');
 });
 
-test('normalize: navigation integrity (NIC, NACp, version, GPS lost) is kept for an ADS-B position only', () => {
+test('normalize: navigation integrity (NIC, NACp, version, GPS lost) is kept but for TIS-B, MLAT included', () => {
   const adsb = aircraftRowToDraft(
     {
       hex: 'a1b2c3',
@@ -167,12 +167,35 @@ test('normalize: navigation integrity (NIC, NACp, version, GPS lost) is kept for
   assert.equal(adsb.payload['navAccuracy'], 0);
   assert.equal(adsb.payload['adsbVersion'], 2);
   assert.equal(adsb.payload['gpsLostAt'], '2026-09-21T07:58:00.400Z');
+  // An aircraft that has lost GPS, as adsb.lol answered on 2026-10-16 over the Gulf of Finland
+  // (values as served): still broadcasting with NIC 0, so placed by MLAT, with the time its fix
+  // was last good. The integrity is the aircraft's own report, and this is the case that counts.
   const mlat = aircraftRowToDraft(
-    { hex: 'a1b2c4', type: 'mlat', lat: 33.5, lon: 44.1, alt_baro: 35000, seen_pos: 1, nic: 0, nac_p: 0 },
+    {
+      hex: '4aca4a',
+      type: 'mlat',
+      lat: 59.596463,
+      lon: 24.47233,
+      alt_baro: 10000,
+      seen_pos: 1.481,
+      nic: 0,
+      version: 2,
+      gpsOkBefore: 1792137369.3,
+      gpsOkLat: 59.730331,
+      gpsOkLon: 23.524109,
+    },
     opts,
   );
   assert.ok(typeof mlat !== 'string');
-  assert.equal(mlat.payload['navIntegrity'], undefined, 'an MLAT position is the ground network’s, not the aircraft’s');
+  assert.equal(mlat.payload['navIntegrity'], 0);
+  assert.equal(mlat.payload['navAccuracy'], undefined, 'none reported');
+  assert.equal(mlat.payload['gpsLostAt'], '2026-10-16T07:56:09.300Z');
+  const tisb = aircraftRowToDraft(
+    { hex: 'a1b2c6', type: 'tisb_icao', lat: 33.5, lon: 44.1, alt_baro: 35000, seen_pos: 1, nic: 0, nac_p: 0 },
+    opts,
+  );
+  assert.ok(typeof tisb !== 'string');
+  assert.equal(tisb.payload['navIntegrity'], undefined, 'a TIS-B track is the ground station’s, not the aircraft’s');
   const odd = aircraftRowToDraft(
     { hex: 'a1b2c5', lat: 33.5, lon: 44.1, seen_pos: 1, nic: 12, nac_p: 8.5, version: 'x', gpsOkBefore: 5 },
     opts,

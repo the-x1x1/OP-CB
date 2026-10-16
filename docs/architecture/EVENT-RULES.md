@@ -177,11 +177,13 @@ Scope: the vessels that changed in the batch; one event per episode of one beaco
 ## gnss-interference (`event:gnss-interference:worldview:<south>_<west>`)
 
 Where aircraft report degraded satellite navigation — GPS jamming or spoofing, as gpsjam.org
-maps it — from the navigation integrity every ADS-B position carries: NIC and NACp
+maps it — from the navigation integrity aircraft broadcast: NIC and NACp
 (`navIntegrity`, `navAccuracy`) and readsb's GPS-loss time (`gpsLostAt`), kept by `adsb-lol` and
-`readsb-local` for positions the aircraft broadcast (not MLAT or TIS-B). Scope: all airborne
-aircraft heard in the last ten minutes; ADS-B version 0 (no NACp) left out. Stateless: the same
-aircraft give the same cells.
+`readsb-local` whatever the position's source but TIS-B. An aircraft that has lost GPS still
+broadcasts, with NIC 0 and often no NACp, and is placed by MLAT: it counts (seen on adsb.lol over
+the Gulf of Finland on 2026-10-16, four such aircraft among 47). Scope: all airborne aircraft
+heard in the last ten minutes that report any of the three; ADS-B version 0 left out.
+Stateless: the same aircraft give the same cells.
 
 | rule     | value                                                                           |
 | -------- | ------------------------------------------------------------------------------- |

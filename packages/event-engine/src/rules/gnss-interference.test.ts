@@ -62,7 +62,11 @@ test('degraded: NIC below 7, NACp below 8, or a GPS fix lost in the last ten min
     false,
     'lost an hour ago and good since',
   );
-  assert.equal(navigationDegraded(aircraft(33, 44, { navIntegrity: 8 })), undefined, 'no NACp');
+  assert.equal(navigationDegraded(aircraft(33, 44, { navIntegrity: 8 })), false, 'NIC alone is a report');
+  // As adsb.lol reported an aircraft over the Gulf of Finland on 2026-10-16: placed by MLAT,
+  // NIC 0, no NACp, its fix last good five minutes before.
+  assert.equal(navigationDegraded(aircraft(33, 44, { navIntegrity: 0, gpsLostAt: at(-300) })), true, 'GPS lost');
+  assert.equal(navigationDegraded(aircraft(33, 44, {})), undefined, 'nothing reported: no say');
   assert.equal(navigationDegraded(aircraft(33, 44, { navIntegrity: 0, navAccuracy: 0, adsbVersion: 0 })), undefined);
   assert.equal(
     navigationDegraded(aircraft(33, 44, { navIntegrity: 0, navAccuracy: 0, onGround: true })),

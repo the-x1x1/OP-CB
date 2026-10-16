@@ -30,8 +30,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - **GPS interference from the aircraft.** Squares of 0.5° where aircraft report degraded
   satellite navigation (NIC below 7, NACp below 8, or a lost GPS fix) in the last ten minutes,
   in gpsjam.org's bands, as events under the Overview and Aviation lenses and for watch zones.
-  adsb.lol and your own receiver now keep each aircraft's navigation integrity; nothing new is
-  asked for.
+  adsb.lol and your own receiver now keep each aircraft's navigation integrity, including for an
+  aircraft placed by MLAT because it has lost GPS; nothing new is asked for.
 - **River and coastal flooding, US.** Every river, lake and tide gauge NOAA's National Water
   Prediction Service has in minor, moderate or major flood, at the gauge in the Disasters layer,
   with the stage, flow, the thresholds of each category and a link to its hydrograph; major

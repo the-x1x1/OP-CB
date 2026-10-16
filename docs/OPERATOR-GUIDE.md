@@ -366,8 +366,9 @@ set by mistake and cleared within minutes.
 0.5° square, at least 2 % of the aircraft there with a navigation integrity — the square is
 drawn in amber under the Overview and Aviation lenses: "GNSS interference likely near 33.25°N
 44.25°E", MINOR at 2–10 % and MODERATE above 10 %, gpsjam.org's bands, over the last ten minutes.
-It is read from what the aircraft broadcast (NIC and NACp; with your own receiver, the GPS-loss
-flag too), so it covers only where aircraft fly with ADS-B, and an aircraft's own receiver can
+It is read from what the aircraft broadcast (NIC and NACp, and when its GPS fix was last good —
+an aircraft that has lost GPS is still placed, by multilateration), so it covers only where
+aircraft fly with ADS-B, and an aircraft's own receiver can
 fault: a sign of jamming or spoofing, not proof. Tick **Aircraft report degraded GPS** in a
 zone to be told of one inside it.
 

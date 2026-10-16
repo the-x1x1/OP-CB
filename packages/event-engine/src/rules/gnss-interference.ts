@@ -15,13 +15,14 @@ import { derivedProvenance, refsOf, type ObjectRule, type RuleContext } from './
  * spoofing, as gpsjam.org maps it), from the integrity every ADS-B position carries.
  *
  *   input     airborne aircraft heard in the last ten minutes (GNSS_WINDOW_MS, as the state
- *             expires aircraft; the engine's own memory keeps them longer) whose position the aircraft
- *             broadcast with a navigation integrity: `navIntegrity` (NIC) and `navAccuracy`
- *             (NACp), kept by the adsb-lol and readsb-local providers. ADS-B version 0
- *             aircraft carry no NACp and are left out; so are MLAT and TIS-B positions, which
- *             carry none.
- *   degraded  NIC < 7 or NACp < 8, or readsb's GPS-loss time (`gpsLostAt`) within ten minutes
- *             of the report: what gpsjam.org counts.
+ *             expires aircraft; the engine's own memory keeps them longer) that report a
+ *             navigation integrity — `navIntegrity` (NIC), `navAccuracy` (NACp) or readsb's
+ *             GPS-loss time (`gpsLostAt`), kept by the adsb-lol and readsb-local providers
+ *             whatever the position's source but TIS-B. An aircraft that has lost GPS is
+ *             placed by MLAT and reports NIC 0, often with no NACp: it counts. ADS-B version 0
+ *             aircraft are left out.
+ *   degraded  NIC < 7 or NACp < 8 (either, as reported), or readsb's GPS-loss time within ten
+ *             minutes of the report: what gpsjam.org counts.
  *   cells     0.5° by 0.5°, by the aircraft's position.
  *   raised    a cell with at least GNSS_MIN_DEGRADED degraded aircraft that are at least 2 %
  *             of the aircraft with integrity in it — MINOR (gpsjam's yellow band, 2–10 %) or
@@ -61,15 +62,19 @@ export function navigationDegraded(o: WorldObject): boolean | undefined {
   if (p['onGround'] === true) return undefined;
   const version = p['adsbVersion'];
   if (typeof version === 'number' && version < 1) return undefined;
-  const nic = p['navIntegrity'];
-  const nacp = p['navAccuracy'];
-  if (typeof nic !== 'number' || typeof nacp !== 'number') return undefined;
+  const nic = typeof p['navIntegrity'] === 'number' ? p['navIntegrity'] : undefined;
+  const nacp = typeof p['navAccuracy'] === 'number' ? p['navAccuracy'] : undefined;
   const lost = p['gpsLostAt'];
   const lostMs = typeof lost === 'string' ? Date.parse(lost) : Number.NaN;
+  if (nic === undefined && nacp === undefined && !Number.isFinite(lostMs)) return undefined;
   const observedMs = Date.parse(o.observedAt);
   const recentLoss =
     Number.isFinite(lostMs) && Number.isFinite(observedMs) && observedMs - lostMs <= GPS_LOSS_WINDOW_MS;
-  return nic < GNSS_NIC_DEGRADED_BELOW || nacp < GNSS_NACP_DEGRADED_BELOW || recentLoss;
+  return (
+    (nic !== undefined && nic < GNSS_NIC_DEGRADED_BELOW) ||
+    (nacp !== undefined && nacp < GNSS_NACP_DEGRADED_BELOW) ||
+    recentLoss
+  );
 }
 
 /** The south-west corner of the cell a position falls in. */

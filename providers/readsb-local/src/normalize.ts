@@ -131,9 +131,12 @@ export function aircraftRowToDraft(raw: unknown, opts: AircraftNormalizeOptions)
   if (rssi !== undefined && rssi <= 0) payload['rssiDb'] = rssi;
   // Navigation integrity (DO-260B NIC and NACp; readsb's gpsOkBefore, when the aircraft last
   // had a good GPS fix before losing it): what the GNSS interference rule bins (event-engine
-  // gnss-interference.ts). Only a position the aircraft broadcast carries it; MLAT and TIS-B
-  // positions are worked out on the ground.
-  if (!positionType || positionType.startsWith('adsb') || positionType.startsWith('adsr')) {
+  // gnss-interference.ts). The aircraft's own report, so kept whatever the position's source —
+  // and an aircraft that has lost GPS is the case that matters most: it still broadcasts, with
+  // NIC 0, so readsb places it by MLAT (`type: "mlat"`) and says when its fix was last good
+  // (seen on adsb.lol over the Gulf of Finland, 2026-10-16). Not TIS-B: a ground station's
+  // rebroadcast of a radar track, whose integrity is the station's, not the aircraft's.
+  if (!positionType?.startsWith('tisb')) {
     const level = (v: number | undefined, max: number) =>
       v !== undefined && Number.isInteger(v) && v >= 0 && v <= max ? v : undefined;
     const nic = level(num(row['nic']), 11);
