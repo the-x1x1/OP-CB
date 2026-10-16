@@ -798,7 +798,7 @@ export class WmtsProvider extends OgcOverlayProvider {
     else if (this.config.opacity !== undefined) overlay.opacity = this.config.opacity;
     if (this.config.fadeBelow)
       overlay.fadeBelow = {
-        ...this.config.fadeBelow,
+        ...shiftFade(this.config.fadeBelow, numberSetting(settings, 'fadeShift')),
         ...(this.config.monochrome ? { monochrome: true } : {}),
         ...(this.config.whiteIsNoData ? { whiteIsNoData: true } : {}),
       };
@@ -919,3 +919,24 @@ export const wmtsConnector: Connector = {
   validate: validateWmts,
   createProvider: (d) => new WmtsProvider(d),
 };
+
+/** The most `fadeShift` moves a fade window, in brightness levels either way. */
+export const MAX_FADE_SHIFT = 100;
+
+/**
+ * The definition's fade window moved by the operator's `fadeShift` setting (levels of the
+ * tiles' brightness, −100 to 100): up hides more thin, warm cloud and leaves only the coldest
+ * tops; down draws more of it. Clamped inside 0–255 with the window kept at least one level
+ * wide, so a shift never turns the fade off or inverts it.
+ */
+export function shiftFade(
+  window: { from: number; to: number },
+  shift: number | undefined,
+): { from: number; to: number } {
+  if (shift === undefined || !Number.isFinite(shift) || shift === 0) return window;
+  const by = Math.round(Math.max(-MAX_FADE_SHIFT, Math.min(MAX_FADE_SHIFT, shift)));
+  const width = window.to - window.from;
+  const from = Math.max(0, Math.min(254, window.from + by));
+  const to = Math.max(from + 1, Math.min(255, from + width));
+  return { from, to };
+}

@@ -21,6 +21,11 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Thin cloud
+
+- [ ] Sources → GOES-East infrared → Thin cloud 60: after the next read, only the storm tops
+      remain over the Americas; −60: haze and low cloud drawn; 0: as before
+
 ## Files on the map
 
 - [ ] Drag a KML from Google Earth onto the map: a dashed frame while dragging; the shapes in

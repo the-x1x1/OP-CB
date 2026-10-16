@@ -45,6 +45,12 @@ Versioning: [semantic versioning](https://semver.org/).
   History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
   credited).
 
+### Changed
+
+- **Thin cloud on the infrared layers.** Each geostationary infrared source has a Thin cloud
+  setting in Sources that moves where cloud starts to be drawn: up for only the coldest tops,
+  down for thinner, warmer cloud too.
+
 ### Fixed
 
 - **A hurricane advisory released early stays on the map.** NHC sometimes publishes an

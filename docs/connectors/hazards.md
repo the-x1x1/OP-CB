@@ -133,6 +133,11 @@ definitions use `fadeBelow: "80,130"`: everything sampled up to East Africa's 74
 cloud from about −20 °C up is drawn whole. The scale is inferred, not published; the visual check
 below settles it.
 
+Each of the five infrared definitions has a **Thin cloud** setting (`fadeShift`, Sources): it moves
+the definition's fade window by up to 100 brightness levels either way (`shiftFade`, wmts.ts),
+kept inside 0–255 and never shut — up leaves only the coldest, highest tops, down draws thinner,
+warmer cloud too. Like opacity, it is applied when the overlay is published, after the next read.
+
 ## Live check (Windows)
 
 ```

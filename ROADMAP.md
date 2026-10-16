@@ -338,9 +338,9 @@ Engineering with no licence or key, in the order they are to be built:
 - [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's planetary K index and the OVATION aurora
       forecast (U.S. public domain), the aurora oval drawn over the poles, a Kp line in the Sky
       panel.
-- [ ] **Satellite infrared strength** (GEV `86b7dc8`): one setting that thins or thickens the
+- [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
       clouds-only infrared ramp, previewed while dragged.
-- [ ] **Cyclone advisories released early** (GEV `6d6ce36`): NHC can publish an advisory before
+- [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before
       its nominal time; check `nhc-storms` does not reject one up to 90 minutes ahead of the clock.
 - [ ] **Air quality, Canada** (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
       its scale (`{provider, scale, value, band}`), since AQHI, the US AQI and Europe's EAQI do not
