@@ -77,8 +77,9 @@ Space Devs' `GET /2.3.0/launches/upcoming/?limit=30&mode=normal`, every thirty m
 the fifteen calls an hour the API allows without a key. Each launch is a `launch` object at its
 pad with the rocket, provider, mission, orbit, status, NET and window; the event engine's launch
 rule makes each one a launch event whose span is the window. The observation time is the time it
-was read (LL2's `last_updated` is kept as `lastUpdated`), so a launch that leaves the list goes
-from the map a day later. No image in the answer is read: some are agencies' or the press's under
+was read (LL2's `last_updated` is kept as `lastUpdated`). A launch that leaves the list leaves the
+map at the next read (each read replaces the last); while reads fail the last list stays, live for
+an hour and gone a day after the last good read. No image in the answer is read: some are agencies' or the press's under
 their own licences. Fixture: `fixtures/connectors/space/ll2-launches-upcoming.json`, three launches
 recorded on 2026-10-16 at about 05:40 UTC by the built-in browser on the operator's laptop, trimmed to the fields
 read (values untouched).
