@@ -1,0 +1,201 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.5852,
+          51.9905
+        ]
+      },
+      "properties": {
+        "volcanoName": "Adagdak",
+        "vnum": "311800",
+        "volcanoCd": "ak3",
+        "volcanoUrl": "https://avo.alaska.edu/volcanoes/volcinfo.php?volcname=Adagdak",
+        "volcanoImage": "https://avo.alaska.edu/images/dbimages/display/1190153184_52_3.jpg",
+        "obs": "avo",
+        "region": "Aleutians",
+        "noticeId": null,
+        "noticeSynopsis": null,
+        "noticeUrl": null,
+        "alertLevel": "UNASSIGNED",
+        "colorCode": "UNASSIGNED",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/unassigned_unassigned.png",
+        "alertDate": null,
+        "colorDate": null,
+        "nvewsThreat": "Moderate Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          145.03,
+          20.437
+        ]
+      },
+      "properties": {
+        "volcanoName": "Ahyi Seamount",
+        "vnum": "284141",
+        "volcanoCd": "nmi2",
+        "volcanoUrl": "https://www.usgs.gov/volcanoes/ahyi-seamount",
+        "volcanoImage": "https://volcanoes.usgs.gov/vsc/images/ahyi/ahyi-home.jpg",
+        "obs": "nmi",
+        "region": "Northern Mariana Islands",
+        "noticeId": "DOI-USGS-NMI-2026-10-15T23:21:29+00:00",
+        "noticeSynopsis": "NMI Ahyi Seamount YELLOW/ADVISORY - Plumes of discolored water seen in satellite imagery; no significant geophysical signals.",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-NMI-2026-10-15T23:21:29+00:00",
+        "alertLevel": "ADVISORY",
+        "colorCode": "YELLOW",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/yellow_advisory.png",
+        "alertDate": "2026-10-15 23:34:00",
+        "colorDate": "2026-10-15 23:34:00",
+        "nvewsThreat": "Very Low Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -165.98555,
+          54.13308
+        ]
+      },
+      "properties": {
+        "volcanoName": "Akutan",
+        "vnum": "311320",
+        "volcanoCd": "ak6",
+        "volcanoUrl": "https://avo.alaska.edu/volcanoes/volcinfo.php?volcname=Akutan",
+        "volcanoImage": "https://avo.alaska.edu/images/dbimages/display/1108076476_60_3.jpg",
+        "obs": "avo",
+        "region": "Aleutians",
+        "noticeId": "DOI-USGS-AVO-2019-09-04T15:47:55-08:00",
+        "noticeSynopsis": "AVO Akutan GREEN/NORMAL - Existing digital equipment refurbished with more robust digital installation",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-AVO-2019-09-04T15:47:55-08:00",
+        "alertLevel": "NORMAL",
+        "colorCode": "GREEN",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/green_normal.png",
+        "alertDate": "2019-09-06 18:29:39",
+        "colorDate": "2019-09-06 18:29:39",
+        "nvewsThreat": "Very High Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -158.209,
+          56.9058
+        ]
+      },
+      "properties": {
+        "volcanoName": "Aniakchak",
+        "vnum": "312090",
+        "volcanoCd": "ak14",
+        "volcanoUrl": "https://avo.alaska.edu/activity/Aniakchak.php",
+        "volcanoImage": "https://avo.alaska.edu/images/dbimages/display/1107911996_45_3.jpg",
+        "obs": "avo",
+        "region": "Alaska Peninsula",
+        "noticeId": "DOI-USGS-AVO-2026-05-05T20:15:40+00:00",
+        "noticeSynopsis": "AVO Aniakchak GREEN/NORMAL - Port Heiden Receive Facility repairs have sufficiently restored power, moving monitoring status of Aniakchak Volcano from UNASSIGNED to GREEN/NORMAL",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-AVO-2026-05-05T20:15:40+00:00",
+        "alertLevel": "NORMAL",
+        "colorCode": "GREEN",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/green_normal.png",
+        "alertDate": "2026-05-05 22:31:29",
+        "colorDate": "2026-05-05 22:31:29",
+        "nvewsThreat": "High Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -176.1109,
+          52.0765
+        ]
+      },
+      "properties": {
+        "volcanoName": "Great Sitkin",
+        "vnum": "311120",
+        "volcanoCd": "ak111",
+        "volcanoUrl": "https://www.avo.alaska.edu/activity/GreatSitkin.php",
+        "volcanoImage": "https://avo.alaska.edu/images/dbimages/display/1102983616_16_3.jpg",
+        "obs": "avo",
+        "region": "Aleutians",
+        "noticeId": "DOI-USGS-AVO-2026-10-15T19:23:04+00:00",
+        "noticeSynopsis": "AVO Great Sitkin ORANGE/WATCH - Slow eruption of lava within the summit crater continues.",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-AVO-2026-10-15T19:23:04+00:00",
+        "alertLevel": "WATCH",
+        "colorCode": "ORANGE",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/orange_watch.png",
+        "alertDate": "2026-10-15 19:51:31",
+        "colorDate": "2026-10-15 19:51:31",
+        "nvewsThreat": "High Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -155.287,
+          19.421
+        ]
+      },
+      "properties": {
+        "volcanoName": "Kilauea",
+        "vnum": "332010",
+        "volcanoCd": "hi3",
+        "volcanoUrl": "https://www.usgs.gov/volcanoes/kilauea",
+        "volcanoImage": "https://volcanoes.usgs.gov/vsc/images/kilauea/kilauea.jpg",
+        "obs": "hvo",
+        "region": "Hawaii",
+        "noticeId": "DOI-USGS-HVO-2026-10-15T19:07:17+00:00",
+        "noticeSynopsis": "HVO Kilauea ORANGE/WATCH - Intermittent overflows from the north vent resumed yesterday and continued through day; less frequent overnight. Kīlauea's summit remains at a high level of pressurization with changes in eruptive activity or location within the summit region possible.",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-HVO-2026-10-15T19:07:17+00:00",
+        "alertLevel": "WATCH",
+        "colorCode": "ORANGE",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/orange_watch.png",
+        "alertDate": "2026-10-15 20:10:46",
+        "colorDate": "2026-10-15 20:10:46",
+        "nvewsThreat": "Very High Threat"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -163.9711,
+          54.7554
+        ]
+      },
+      "properties": {
+        "volcanoName": "Shishaldin",
+        "vnum": "311360",
+        "volcanoCd": "ak252",
+        "volcanoUrl": "https://avo.alaska.edu/activity/Shishaldin.php",
+        "volcanoImage": "https://avo.alaska.edu/images/dbimages/display/1108075524_30_3.jpg",
+        "obs": "avo",
+        "region": "Aleutians",
+        "noticeId": "DOI-USGS-AVO-2026-10-15T19:23:04+00:00",
+        "noticeSynopsis": "AVO Shishaldin YELLOW/ADVISORY - Low-level unrest continues.",
+        "noticeUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-AVO-2026-10-15T19:23:04+00:00",
+        "alertLevel": "ADVISORY",
+        "colorCode": "YELLOW",
+        "statusIconUrl": "https://volcanoes.usgs.gov/images/icons/map/yellow_advisory.png",
+        "alertDate": "2026-10-15 19:51:31",
+        "colorDate": "2026-10-15 19:51:31",
+        "nvewsThreat": "High Threat"
+      }
+    }
+  ]
+}

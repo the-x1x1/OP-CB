@@ -2411,6 +2411,29 @@
       "notes": "Added 2026-09-28 (worldwide weather). Definition connectors/enabled/nws-storm-reports.json (arcgis-feature). Chosen over SPC's today_*.csv files, which carry an HHMM time without a date and could not be read from the build machine (spc.noaa.gov refuses automated reading, robots.txt); SPC's preliminary storm reports are compiled from these same NWS local storm reports. Service description, fields and renderer values read live on 2026-09-28; the fixture holds recorded rows (times moved back five days) and one invented tornado row. Tornado, funnel cloud, waterspout, landspout, hail, marine hail and thunderstorm wind types only (server where and client filter). The service updates every 30 minutes; polled every 15. Object ids are the layer's objectid, which the service may renumber when it republishes: a report may be replaced by an identical one under a new id."
     },
     {
+      "providerId": "usgs-volcanoes",
+      "name": "USGS Volcano Hazards Program — US volcano status (VSC volcano API, GeoJSON)",
+      "sourceUrl": "https://volcanoes.usgs.gov/vsc/api/volcanoApi/geojson",
+      "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "license": "U.S. Government work — public domain (USGS copyrights and credits: USGS-authored information is in the public domain; credit requested)",
+      "category": "disasters",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Volcano alerts: USGS Volcano Hazards Program",
+        "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (volcano alerts). Definition connectors/enabled/usgs-volcanoes.json (geojson). The status service lists all 161 US volcanoes with position, aviation colour code, alert level, latest notice synopsis and link; the definition keeps YELLOW, ORANGE and RED. The service page says its items are freely available but designed to support USGS applications, with no guarantee of continuing support. The HANS API (volcanoes.usgs.gov/hans-public/api) carries the same codes without positions, so it was not used. Fixture recorded 2026-10-16 ~05:50 UTC by the built-in browser on the test laptop: 7 of 161 features (every elevated one, two GREEN, one UNASSIGNED), values untouched. Volcano images in the answer (some observatory photos) are not read."
+    },
+    {
       "providerId": "spc-day1-outlook",
       "name": "NOAA Storm Prediction Center — day 1 categorical convective outlook (SPC_wx_outlks MapServer, layer 1)",
       "sourceUrl": "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer/1",

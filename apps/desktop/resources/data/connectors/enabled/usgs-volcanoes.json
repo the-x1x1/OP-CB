@@ -1,0 +1,85 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "usgs-volcanoes",
+  "name": "Volcano alerts, US (USGS Volcano Hazards Program)",
+  "description": "Every US volcano the USGS observatories (Alaska, California, Cascades, Hawaii, Northern Mariana Islands, Yellowstone) have raised above normal: its aviation colour code (YELLOW, ORANGE, RED) and ground alert level (ADVISORY, WATCH, WARNING), the latest notice's synopsis and a link to it, and the national threat ranking. A volcano at GREEN/NORMAL or not monitored (UNASSIGNED) is left out. Read every thirty minutes from the Volcano Hazards Program's status service.",
+  "connector": "geojson",
+  "objectType": "weather-alert",
+  "categories": ["disasters"],
+  "endpoint": {
+    "url": "https://volcanoes.usgs.gov/vsc/api/volcanoApi/geojson",
+    "intervalSeconds": 1800,
+    "timeoutSeconds": 30,
+    "maxBytes": 2097152
+  },
+  "mapping": {
+    "externalId": { "path": "properties.vnum", "transform": ["string", "trim", "emptyToNone"] },
+    "position": { "geometry": "geometry" },
+    "labels": {
+      "name": { "path": "properties.volcanoName", "transform": ["trim", "emptyToNone"] }
+    },
+    "properties": {
+      "title": { "path": "properties.volcanoName", "transform": ["trim", "emptyToNone"] },
+      "event": { "literal": "Volcano alert" },
+      "severity": {
+        "path": "properties.colorCode",
+        "transform": ["trim", "uppercase"],
+        "map": { "RED": "Extreme", "ORANGE": "Severe", "YELLOW": "Moderate" }
+      },
+      "colorCode": { "path": "properties.colorCode", "transform": ["trim", "uppercase", "emptyToNone"] },
+      "alertLevel": { "path": "properties.alertLevel", "transform": ["trim", "uppercase", "emptyToNone"] },
+      "headline": { "path": "properties.noticeSynopsis", "transform": ["trim", "emptyToNone"] },
+      "description": { "path": "properties.noticeSynopsis", "transform": ["trim", "emptyToNone"] },
+      "areaDesc": { "path": "properties.region", "transform": ["trim", "emptyToNone"] },
+      "senderName": {
+        "path": "properties.obs",
+        "transform": ["trim", "lowercase"],
+        "map": {
+          "avo": "Alaska Volcano Observatory",
+          "calvo": "California Volcano Observatory",
+          "cvo": "Cascades Volcano Observatory",
+          "hvo": "Hawaiian Volcano Observatory",
+          "nmi": "USGS, Northern Mariana Islands",
+          "yvo": "Yellowstone Volcano Observatory"
+        },
+        "default": "USGS Volcano Hazards Program"
+      },
+      "observatory": { "path": "properties.obs", "transform": ["trim", "lowercase", "emptyToNone"] },
+      "sent": { "path": "properties.alertDate", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
+      "colourSince": { "path": "properties.colorDate", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
+      "noticeId": { "path": "properties.noticeId", "transform": ["trim", "emptyToNone"] },
+      "detailUrl": { "path": "properties.noticeUrl", "transform": ["trim", "emptyToNone"] },
+      "volcanoUrl": { "path": "properties.volcanoUrl", "transform": ["trim", "emptyToNone"] },
+      "threat": { "path": "properties.nvewsThreat", "transform": ["trim", "emptyToNone"] },
+      "volcanoCode": { "path": "properties.volcanoCd", "transform": ["trim", "emptyToNone"] },
+      "vnum": { "path": "properties.vnum", "transform": ["string", "trim"] }
+    },
+    "filter": [{ "path": "properties.colorCode", "in": ["YELLOW", "ORANGE", "RED"] }]
+  },
+  "freshness": {
+    "liveSeconds": 3600,
+    "recentSeconds": 21600,
+    "expireSeconds": 86400
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "Volcano alerts: USGS Volcano Hazards Program",
+    "url": "https://www.usgs.gov/programs/VHP",
+    "licenseId": "US-PD"
+  },
+  "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": true,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": true,
+    "offlinePackAllowed": true,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "Volcano alerts: USGS Volcano Hazards Program",
+    "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+  },
+  "review": "commercially-reviewed",
+  "enabled": true
+}

@@ -21,6 +21,13 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Volcano alerts
+
+- [ ] Disasters layer on: a marker at Kīlauea and at each elevated Alaskan volcano; select one:
+      colour code and alert level, the notice synopsis, the observatory, the notice link
+- [ ] The feed lists each as a volcano alert with ORANGE as severe; GDACS volcanoes (if turned
+      on) do not hide them
+
 ## Rocket launches
 
 - [ ] Space layer on: launch markers at Cape Canaveral, Vandenberg, Tanegashima and the like;

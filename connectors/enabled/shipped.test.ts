@@ -71,6 +71,7 @@ const PUBLIC_DOMAIN = [
   'nifc-wildfire-perimeters',
   'nws-storm-reports',
   'spc-day1-outlook',
+  'usgs-volcanoes',
 ];
 /** NASA GIBS: open, credit requested (and so required here); Himawari is JMA's, distributed openly by NOAA. */
 const GIBS = [
@@ -718,4 +719,30 @@ test('Launch Library 2: each launch at its pad, a launch event with the rocket, 
   assert.equal(bandwagon.endAt, '2026-10-19T11:30:00.000Z', 'the window closes an hour after it opens');
   const flown = events.find((e) => e.title === 'Launch — USSF-481')!;
   assert.match(flown.summary ?? '', /Status: Launch Successful\.$/);
+});
+
+test('USGS volcanoes: only the elevated ones, each a volcano alert at its summit, its colour code as the severity', async () => {
+  const { observations, events } = await eventsOf(
+    'usgs-volcanoes',
+    'fixtures/connectors/hazards/usgs-volcanoes-vhp-status.geojson',
+    '2026-10-16T06:00:00.000Z',
+  );
+  assert.deepEqual(observations.map((o) => o.payload['name']).sort(), [
+    'Ahyi Seamount',
+    'Great Sitkin',
+    'Kilauea',
+    'Shishaldin',
+  ]);
+  const kilauea = events.find((e) => e.title === 'Kilauea')!;
+  assert.ok(kilauea, events.map((e) => e.title).join(', '));
+  assert.equal(kilauea.severity, 'SEVERE', 'ORANGE');
+  assert.equal(kilauea.properties?.['issuedAt'], '2026-10-15T20:10:46.000Z');
+  assert.equal(kilauea.properties?.['senderName'], 'Hawaiian Volcano Observatory');
+  assert.match(
+    kilauea.summary ?? '',
+    /^Volcano alert for Hawaii from .* Severity: Severe\. Issued by Hawaiian Volcano Observatory\.$/,
+  );
+  assert.deepEqual(kilauea.geometry, { type: 'Point', coordinates: [-155.287, 19.421] });
+  assert.equal(events.find((e) => e.title === 'Shishaldin')!.severity, 'MODERATE', 'YELLOW');
+  assert.equal(feed.isRelevant(kilauea), true);
 });

@@ -590,3 +590,36 @@ test('concat: a part may list alternatives, the first holding a value is used', 
   );
   assert.throws(() => compileMapping({ externalId: { concat: ['a', []] } }), /a concat part lists 1 to 4 paths/);
 });
+
+test('map: a value looked up after its transforms; no entry is no value, so default applies', () => {
+  const m = compileMapping({
+    externalId: 'id',
+    position: { lat: 'lat', lon: 'lon' },
+    properties: {
+      severity: {
+        path: 'colour',
+        transform: ['trim', 'uppercase'],
+        map: { RED: 'Extreme', ORANGE: 'Severe', YELLOW: 'Moderate' },
+      },
+      level: { path: 'level', map: { '1': 'low', '2': 'high', true: 'on' }, default: 'unknown' },
+    },
+  });
+  const props = (record: Record<string, unknown>) => {
+    const r = mapRecord({ id: 'a', lat: 1, lon: 2, ...record }, m);
+    assert.ok(r.ok);
+    return r.ok ? r.record.properties : {};
+  };
+  assert.equal(props({ colour: ' orange ' })['severity'], 'Severe', 'after the transforms');
+  assert.equal(props({ colour: 'GREEN' })['severity'], undefined, 'no entry: absent');
+  assert.equal(props({ level: 2 })['level'], 'high', 'a number looked up by its text');
+  assert.equal(props({ level: true })['level'], 'on');
+  assert.equal(props({ level: 9 })['level'], 'unknown', 'no entry: the default');
+  assert.equal(props({ level: { a: 1 } })['level'], 'unknown', 'an object is never a key');
+  assert.throws(() => compileMapping({ externalId: { path: 'id', map: {} } }), /map lists 1 to 64 entries/);
+  assert.throws(
+    () => compileMapping({ externalId: { path: 'id', map: [] as unknown as Record<string, string> } }),
+    /map must be an object/,
+  );
+  const many = Object.fromEntries(Array.from({ length: 65 }, (_, i) => [`k${i}`, i]));
+  assert.throws(() => compileMapping({ externalId: { path: 'id', map: many } }), /map lists 1 to 64 entries/);
+});

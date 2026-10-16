@@ -222,6 +222,7 @@ const fieldSchema = s.union([
     ),
     separator: s.optional(s.string({ min: 0, max: 8 })),
     transform: s.optional(s.union([s.string({ min: 1, max: 80 }), s.array(s.string({ min: 1, max: 80 }), { max: 8 })])),
+    map: s.optional(s.record(s.json({ maxDepth: 2 }), { keyPattern: /^.{1,128}$/s, max: 64 })),
     default: s.optional(s.json({ maxDepth: 4 })),
     required: s.optional(s.boolean()),
   }),

@@ -362,6 +362,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- Volcano alerts are the USGS's for US volcanoes (Alaska, the Cascades, California, Hawaii, the
+  Northern Mariana Islands, Yellowstone); elsewhere GDACS's volcano alerts (off by default) are
+  the only source. The status service says it is meant for USGS applications, with no promise
+  it stays.
 - A launch's time is what Launch Library 2 held when it was read, every thirty minutes; a scrub
   or a slip shows at the next read. Only the next thirty launches are listed, which is about six
   weeks ahead. Launch Library is kept by volunteers from public sources; without a key it allows
