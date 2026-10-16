@@ -115,6 +115,25 @@ export interface ResponseSpec {
    * on runs of spaces and tabs, no quoting). `comment`: a character that starts a line to skip.
    */
   csv?: { delimiter?: string; header?: boolean; columns?: string[]; comment?: string };
+  /**
+   * A gridded field read as areas (ADR-013 amendment 2026-10-16): the body is a regular grid of
+   * points, and each record is the area where the value is at least one of `levels` — a
+   * MultiPolygon at `geometry`, with `level`, `upTo` (the next level), `band` (1 for the
+   * lowest) and the body's own top-level values under `source`. `itemsPath` and `csv` do not
+   * apply.
+   */
+  contour?: ContourSpec;
+}
+
+export interface ContourSpec {
+  /** Path to the array of grid points. */
+  pointsPath: string;
+  /** Paths within a point to its longitude, latitude and value; default `$[0]`, `$[1]`, `$[2]`. */
+  lon?: string;
+  lat?: string;
+  value?: string;
+  /** Ascending; one record per level that has an area. */
+  levels: number[];
 }
 
 export interface FreshnessSpec {
@@ -395,6 +414,15 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
             header: s.optional(s.boolean()),
             comment: s.optional(s.string({ min: 1, max: 1 })),
             columns: s.optional(s.array(s.string({ min: 1, max: 64 }), { max: 256 })),
+          }),
+        ),
+        contour: s.optional(
+          s.object({
+            pointsPath: s.string({ min: 1, max: 256 }),
+            lon: s.optional(s.string({ min: 1, max: 256 })),
+            lat: s.optional(s.string({ min: 1, max: 256 })),
+            value: s.optional(s.string({ min: 1, max: 256 })),
+            levels: s.array(s.number({ min: -1e9, max: 1e9 }), { min: 1, max: 8 }),
           }),
         ),
       }),

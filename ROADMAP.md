@@ -335,9 +335,11 @@ Engineering with no licence or key, in the order they are to be built:
       make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
       KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
       needs a granted folder and a definition.
-- [ ] **Space weather** (OSIRIS keywords; needs a gridded-field overlay first — the aurora forecast is a 1° global grid of 65,160 cells, and nothing in the render contract draws a field; wind needs the same, so it is one ADR-008 amendment for both): NOAA SWPC's planetary K index and the OVATION aurora
-      forecast (U.S. public domain), the aurora oval drawn over the poles, a Kp line in the Sky
-      panel.
+- [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's OVATION aurora forecast and planetary K
+      index (U.S. public domain). - [x] The aurora oval (on feature/roadmap-2: `swpc-aurora`; the 1° grid read as areas of 10,
+      30, 50 and 70% by `response.contour`, ADR-013 amendment 2026-10-16 — ordinary
+      weather-alert areas, so no field overlay was needed; ADR-008 unchanged). - [ ] A Kp line in the Sky panel: the planetary K index is one global number, not an object
+      at a place — it needs a home in the Sky panel's data first.
 - [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
       clouds-only infrared ramp, previewed while dragged.
 - [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before

@@ -21,6 +21,13 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Aurora forecast
+
+- [ ] Sources → Aurora forecast on: within ten minutes, a faint green oval round the north
+      magnetic pole (and one round the south); select it: "Aurora: 10% chance or more", the time
+      it is for, credit "NOAA Space Weather Prediction Center (OVATION)"; nothing in the feed
+- [ ] Spin the globe across 180°: the oval meets itself there, no gap and no line across the map
+
 ## Air quality, Canada
 
 - [ ] Environment lens over Canada: AQHI stations; select one: "AQHI (Canada) 1.8 · low risk

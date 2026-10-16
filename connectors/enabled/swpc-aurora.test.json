@@ -1,0 +1,24 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/space/swpc-ovation-aurora.json",
+  "empty": "fixtures/connectors/space/swpc-ovation-quiet.json",
+  "malformed": [
+    { "inline": "not json" },
+    { "inline": "{\"Observation Time\":\"2026-09-23T19:05:00Z\",\"coordinates\":\"none\"}" },
+    { "inline": "{\"coordinates\":[[0,0,1],[1,0,1],[3,0,1],[0,1,1],[1,1,1],[3,1,1]]}" }
+  ],
+  "expectObservations": 1,
+  "expectIds": ["aurora-10"],
+  "expect": [
+    {
+      "externalId": "aurora-10",
+      "observedAt": "2026-09-23T19:05:00.000Z",
+      "payload": {
+        "title": "Aurora: 10% chance or more",
+        "auroraChancePct": 10,
+        "auroraChanceBelowPct": 30,
+        "forecastFor": "2026-09-23T20:08:00.000Z"
+      }
+    }
+  ]
+}

@@ -74,6 +74,7 @@ const PUBLIC_DOMAIN = [
   'usgs-volcanoes',
   'ndbc-observations',
   'nwps-river-flooding',
+  'swpc-aurora',
 ];
 /** NASA GIBS: open, credit requested (and so required here); Himawari is JMA's, distributed openly by NOAA. */
 const GIBS = [
@@ -140,8 +141,9 @@ test('licence: the public-domain US sources start enabled and open their policy;
     assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
     assert.equal(m.dataPolicy.redistributionAllowed, true, id);
     assert.equal(m.attribution.licenseId, 'US-PD', id);
-    // GOES infrared is off by choice (it covers the map under it), not for its licence.
-    assert.equal(m.enabledByDefault, id !== 'nowcoast-goes-infrared', id);
+    // GOES infrared is off by choice (it covers the map under it), not for its licence; so is
+    // the aurora forecast, an area across the high latitudes at any hour, turned on for a purpose.
+    assert.equal(m.enabledByDefault, id !== 'nowcoast-goes-infrared' && id !== 'swpc-aurora', id);
   }
   for (const id of GIBS) {
     const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
@@ -791,4 +793,33 @@ test('NWPS: gauges in flood as flood alerts at the gauge, the category as the se
   assert.equal(devils.severity, 'SEVERE');
   assert.match(devils.summary ?? '', /^Major flooding for Devils Lake from /);
   assert.equal(events.find((e) => e.objectIds[0]?.endsWith('ATKG1'))!.severity, 'MINOR');
+});
+
+test('SWPC aurora: the OVATION grid read as areas, one per level reached, each a weather alert with its outline', async () => {
+  const { observations, events } = await eventsOf(
+    'swpc-aurora',
+    'fixtures/connectors/space/swpc-ovation-aurora.json',
+    '2026-09-23T20:00:00.000Z',
+  );
+  // A quiet evening: the recorded slice (180°–270° E, 50°–80° N) peaks at 17%, so only the 10% level is reached.
+  assert.deepEqual(
+    observations.map((o) => o.externalId),
+    ['aurora-10'],
+  );
+  const [o] = observations;
+  assert.equal(o!.observedAt, '2026-09-23T19:05:00.000Z', 'the time of the solar wind it was run from');
+  assert.equal(o!.payload['forecastFor'], '2026-09-23T20:08:00.000Z');
+  assert.equal(o!.payload['auroraBand'], 'aurora-10', 'its colour on the map (render-core WEATHER_ALERT_SUFFIXES)');
+  assert.equal(o!.geometry?.type, 'MultiPolygon');
+  const rings = o!.geometry?.type === 'MultiPolygon' ? o!.geometry.coordinates.flat(2) : [];
+  assert.ok(
+    rings.every(([lon, lat]) => lon! >= -180 && lon! <= -90 && lat! >= 50 && lat! <= 80),
+    'within the slice, in −180…180',
+  );
+  const [e] = events;
+  assert.equal(events.length, 1);
+  assert.equal(e!.title, 'Aurora: 10% chance or more');
+  assert.equal(e!.severity, 'INFO');
+  assert.equal(shape(e), 'MultiPolygon');
+  assert.equal(feed.isRelevant(e!), false, 'drawn, not news');
 });

@@ -123,6 +123,12 @@ export const DARK_THEME: Theme = {
     'weather-alert.spc-enh': { ...dark('#ffa366', 7), fillAlpha: 0.16, edgePx: 2 },
     'weather-alert.spc-mdt': { ...dark('#e06666', 7), fillAlpha: 0.18, edgePx: 2.5 },
     'weather-alert.spc-high': { ...dark('#ee99ee', 8), fillAlpha: 0.2, edgePx: 3 },
+    // The aurora forecast (swpc-aurora), nested areas of 10, 30, 50 and 70% chance: green to
+    // red as on SWPC's own map, faint enough that the oval reads as a glow over the map.
+    'weather-alert.aurora-10': { ...dark('#22c55e', 5), fillAlpha: 0.1 },
+    'weather-alert.aurora-30': { ...dark('#a3e635', 5), fillAlpha: 0.12 },
+    'weather-alert.aurora-50': { ...dark('#facc15', 6), fillAlpha: 0.14, edgePx: 2 },
+    'weather-alert.aurora-70': { ...dark('#f43f5e', 6), fillAlpha: 0.16, edgePx: 2 },
     // Tropical cyclones by Saffir–Simpson category (storm-style.ts), in the scale's customary
     // colours — cool for a depression and a tropical storm, pale yellow to red for Categories
     // 1–5 — which read on a dark map and on imagery. Their glyphs, forecast positions and past

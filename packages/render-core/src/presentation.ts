@@ -102,6 +102,11 @@ export const WEATHER_ALERT_SUFFIXES: Readonly<Record<string, string>> = Object.f
   ENH: 'spc-enh',
   MDT: 'spc-mdt',
   HIGH: 'spc-high',
+  // SWPC aurora forecast areas (`auroraBand`).
+  'aurora-10': 'aurora-10',
+  'aurora-30': 'aurora-30',
+  'aurora-50': 'aurora-50',
+  'aurora-70': 'aurora-70',
   // NWS severity; GDACS alert level.
   EXTREME: 'extreme',
   SEVERE: 'severe',
@@ -284,10 +289,10 @@ export const DEFAULT_RULES: RenderingRule[] = [
     // thunderstorm, flash flood, hurricane, extreme wind — by the NWS provider's `alertKind`,
     // each in its own colour and with a bolder edge (theme.ts), so a tornado warning cannot be
     // mistaken for a frost advisory of the same severity. Then storm reports by type and SPC
-    // outlook areas by category, in SPC's own colours. Everything else by NWS severity or
-    // GDACS alert level, as before.
+    // outlook areas by category, in SPC's own colours, and aurora forecast areas by their
+    // chance. Everything else by NWS severity or GDACS alert level, as before.
     classBy: {
-      property: ['alertKind', 'reportType', 'spcCategory', 'severity', 'alertLevel'],
+      property: ['alertKind', 'reportType', 'spcCategory', 'auroraBand', 'severity', 'alertLevel'],
       suffixes: WEATHER_ALERT_SUFFIXES,
     },
   },

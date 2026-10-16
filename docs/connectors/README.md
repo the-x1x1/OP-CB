@@ -74,6 +74,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [nwps-river-flooding.json](../../connectors/enabled/nwps-river-flooding.json)                     | `arcgis-feature` | River and coastal flooding, US (NOAA NWPS gauges in flood)            | yes           |
 | [nws-storm-reports.json](../../connectors/enabled/nws-storm-reports.json)                         | `arcgis-feature` | Storm reports, US (NWS local storm reports: tornado, hail, wind)      | yes           |
 | [spc-day1-outlook.json](../../connectors/enabled/spc-day1-outlook.json)                           | `arcgis-feature` | Severe weather outlook today, US (SPC day 1 categorical)              | yes           |
+| [swpc-aurora.json](../../connectors/enabled/swpc-aurora.json)                                     | `rest-json`      | Aurora forecast (NOAA SWPC OVATION, 30–90 minutes ahead)              | no            |
 | [usgs-volcanoes.json](../../connectors/enabled/usgs-volcanoes.json)                               | `geojson`        | Volcano alerts, US (USGS Volcano Hazards Program)                     | yes           |
 
 **Launch Library 2** (`launch-library-2`, Space layer): the next thirty orbital launches from The
@@ -94,6 +95,13 @@ each of Environment and Climate Change Canada's ~120 stations, from the MSC GeoM
 `aqhi` — a health-risk scale of 1 to 10 and over, never turned into a US AQI; the air-quality
 rule raises at 7 (EVENT-RULES.md). Credited as the licence prescribes. Fixture
 `fixtures/connectors/air/eccc-aqhi-latest.json`, recorded 2026-10-16.
+
+**SWPC aurora** (`swpc-aurora`, Weather layer, off by default): NOAA Space Weather Prediction
+Center's OVATION aurora forecast — the chance of aurora overhead 30 to 90 minutes ahead on a 1°
+global grid — read with `response.contour` ([REST-JSON.md](REST-JSON.md)) as the areas of at least
+10, 30, 50 and 70 percent, weather-alert areas in green to red, out of the feed (INFO). Off by
+default because the 10% oval lies across Alaska, Canada, Scandinavia and the Southern Ocean at
+any hour. Fixture `fixtures/connectors/space/swpc-ovation-aurora.json`, recorded 2026-10-16.
 
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the

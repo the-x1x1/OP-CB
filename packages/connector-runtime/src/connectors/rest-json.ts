@@ -22,6 +22,7 @@ import {
 } from '@worldview/connector-sdk';
 import { createPaginator, type PageRequest, type Paginator } from '../pagination.js';
 import { parseCsv } from '../csv.js';
+import { contourRecords } from '../contours.js';
 import { DEFAULT_MAX_BYTES } from '../shared/limits.js';
 import { addUnseen, rejectedMessage, responseOrigin, warnRejected } from '../shared/mapping.js';
 
@@ -206,6 +207,12 @@ export class RestJsonProvider extends PollingProvider {
     } catch {
       return { malformed: 'response is not valid JSON' };
     }
+    const contour = this.definition.response?.contour;
+    if (contour) {
+      const read = contourRecords(body, contour);
+      if ('malformed' in read) return { malformed: read.malformed };
+      return { records: read.records, body };
+    }
     const found = extractRecords(body, this.definition.response);
     if ('malformed' in found) return { malformed: found.malformed };
     return { records: found.records, body };
@@ -308,6 +315,15 @@ export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValid
   if (d.boundsMaxRadiusKm !== undefined && !has(RADIUS_KEYS))
     warnings.push('boundsMaxRadiusKm is set but no {radiusKm}/{radiusNm}/{radiusM} placeholder uses it');
   if (d.pagination?.strategy === 'next-link' && !d.endpoint) errors.push('next-link pagination needs an endpoint');
+  const contour = d.response?.contour;
+  if (contour) {
+    if ((d.response?.format ?? 'json') !== 'json')
+      errors.push('response.contour reads a JSON grid: format must be json');
+    if (contour.levels.some((v, i) => i > 0 && v <= contour.levels[i - 1]!))
+      errors.push('response.contour.levels must be ascending');
+    if (d.response?.itemsPath) warnings.push('response.itemsPath is ignored with response.contour');
+    if (d.pagination) warnings.push('pagination with response.contour: each page is contoured alone');
+  }
   if ((d.response?.format ?? 'json') === 'csv' && d.response?.itemsPath)
     warnings.push('response.itemsPath is ignored for CSV');
   if (!d.mapping.observedAt)

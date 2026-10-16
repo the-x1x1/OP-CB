@@ -1,0 +1,106 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "swpc-aurora",
+  "name": "Aurora forecast (NOAA SWPC OVATION)",
+  "description": "NOAA's Space Weather Prediction Center aurora forecast for the next 30 to 90 minutes: the OVATION model's chance of seeing the aurora overhead on a 1° global grid, drawn as the areas where it is at least 10, 30, 50 and 70 percent. Updated every few minutes from solar wind measured upstream of the Earth.",
+  "connector": "rest-json",
+  "objectType": "weather-alert",
+  "categories": ["weather"],
+  "endpoint": {
+    "url": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+    "intervalSeconds": 600,
+    "timeoutSeconds": 30
+  },
+  "response": {
+    "contour": {
+      "pointsPath": "coordinates",
+      "levels": [10, 30, 50, 70]
+    }
+  },
+  "mapping": {
+    "externalId": {
+      "path": "level",
+      "map": { "10": "aurora-10", "30": "aurora-30", "50": "aurora-50", "70": "aurora-70" },
+      "required": true
+    },
+    "observedAt": {
+      "path": "source[\"Observation Time\"]",
+      "transform": "isoTimestamp"
+    },
+    "position": {
+      "geometry": "geometry"
+    },
+    "geometry": "geometry",
+    "labels": {
+      "name": {
+        "path": "level",
+        "map": {
+          "10": "Aurora: 10% chance or more",
+          "30": "Aurora: 30% chance or more",
+          "50": "Aurora: 50% chance or more",
+          "70": "Aurora: 70% chance or more"
+        }
+      }
+    },
+    "properties": {
+      "title": {
+        "path": "level",
+        "map": {
+          "10": "Aurora: 10% chance or more",
+          "30": "Aurora: 30% chance or more",
+          "50": "Aurora: 50% chance or more",
+          "70": "Aurora: 70% chance or more"
+        }
+      },
+      "event": {
+        "literal": "Aurora forecast"
+      },
+      "auroraChancePct": "level",
+      "auroraBand": {
+        "path": "level",
+        "map": { "10": "aurora-10", "30": "aurora-30", "50": "aurora-50", "70": "aurora-70" }
+      },
+      "auroraChanceBelowPct": "upTo",
+      "forecastFor": {
+        "path": "source[\"Forecast Time\"]",
+        "transform": "isoTimestamp"
+      },
+      "issuedAt": {
+        "path": "source[\"Observation Time\"]",
+        "transform": "isoTimestamp"
+      },
+      "senderName": {
+        "literal": "NOAA Space Weather Prediction Center"
+      },
+      "detailUrl": {
+        "literal": "https://www.swpc.noaa.gov/products/aurora-30-minute-forecast"
+      }
+    }
+  },
+  "freshness": {
+    "liveSeconds": 3600,
+    "recentSeconds": 7200,
+    "expireSeconds": 10800
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "Aurora forecast: NOAA Space Weather Prediction Center (OVATION)",
+    "url": "https://www.swpc.noaa.gov/",
+    "licenseId": "US-PD"
+  },
+  "termsUrl": "https://www.weather.gov/disclaimer",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": true,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": true,
+    "offlinePackAllowed": true,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "Aurora forecast: NOAA Space Weather Prediction Center (OVATION)",
+    "termsUrl": "https://www.weather.gov/disclaimer"
+  },
+  "review": "commercially-reviewed",
+  "enabled": false
+}
