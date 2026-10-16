@@ -21,6 +21,14 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Files on the map
+
+- [ ] Drag a KML from Google Earth onto the map: a dashed frame while dragging; the shapes in
+      a new colour, point names shown, the view moves to them; the card lists it with a count
+- [ ] A KMZ, a GPX track and a GeoJSON the same way; untick, Go to and Remove on the card
+- [ ] A KML with a NetworkLink: drawn without it, the card's row says some were left out
+- [ ] A .txt or a 30 MB file: refused with a toast; dropping a file outside the map does nothing
+
 ## GPS interference
 
 - [ ] Overview lens over the eastern Mediterranean or the Baltic (where gpsjam.org shows

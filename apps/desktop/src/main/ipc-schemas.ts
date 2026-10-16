@@ -7,7 +7,7 @@ import {
   worldQuerySchema,
   type Schema,
 } from '@worldview/world-model';
-import { MAX_OVERLAY_VALUE_OVERLAYS, MAX_READING_KEYS } from '@worldview/ipc-contract';
+import { GEODATA_MAX_FILE_BYTES, MAX_OVERLAY_VALUE_OVERLAYS, MAX_READING_KEYS } from '@worldview/ipc-contract';
 import type {
   RequestChannel,
   RequestOf,
@@ -268,6 +268,14 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
 
   'sources.list': voidSchema,
   'overlays.list': voidSchema,
+  'geodata.read': s.object(
+    {
+      name: s.string({ min: 1, max: 256 }),
+      // base64 of at most GEODATA_MAX_FILE_BYTES (4 characters per 3 bytes, padded).
+      data: s.string({ min: 0, max: Math.ceil(GEODATA_MAX_FILE_BYTES / 3) * 4 }),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'geodata.read'>>,
   'overlays.valueAt': s.object(
     {
       position: s.object(

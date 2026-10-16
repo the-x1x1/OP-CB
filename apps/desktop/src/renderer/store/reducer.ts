@@ -78,6 +78,8 @@ export function initialState(nowMs: number): RootState {
       measure: null,
       whatsHere: null,
       rangeRings: false,
+      importedFiles: [],
+      importRequest: 0,
       followId: null,
     },
   };
@@ -395,6 +397,10 @@ function ui(state: UiSlice, action: RootAction): UiSlice {
       return { ...state, whatsHere: action.whatsHere };
     case 'ui/rangeRings':
       return { ...state, rangeRings: action.on };
+    case 'ui/importedFiles':
+      return { ...state, importedFiles: action.files };
+    case 'ui/importRequest':
+      return { ...state, importRequest: state.importRequest + 1 };
     case 'ui/imageryCompare':
       return state.imageryCompare === action.split ? state : { ...state, imageryCompare: action.split };
     case 'ui/firstFrame':

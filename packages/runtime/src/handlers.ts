@@ -25,9 +25,11 @@ import {
 } from '@worldview/query-engine';
 import { whatChanged } from '@worldview/event-engine';
 import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@worldview/offline';
+import { readGeodata } from './support/geodata-import.js';
 import { exportBundle } from '@worldview/diagnostics';
 import {
   EVENT_TYPE_LABELS,
+  GEODATA_MAX_FILE_BYTES,
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   type AppSettings,
@@ -379,6 +381,15 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     // ---- sources -------------------------------------------------------------
     'sources.list': async () => core.providerHost.health.list(),
     'overlays.list': async () => core.providerHost.overlays(),
+    'geodata.read': async ({ name, data }) => {
+      if (typeof name !== 'string' || !name || typeof data !== 'string')
+        throw new InvalidRequestError('geodata.read needs a file name and its bytes');
+      const bytes = Buffer.from(data, 'base64');
+      if (bytes.byteLength > GEODATA_MAX_FILE_BYTES)
+        return { shapes: [], issues: [`larger than ${GEODATA_MAX_FILE_BYTES / 1024 / 1024} MB`] };
+      const read = readGeodata(name, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+      return { ...(read.format ? { format: read.format } : {}), shapes: read.features, issues: read.issues };
+    },
     'overlays.valueAt': async ({ position, overlayIds }) => {
       if (!position || !isValidLatLon(position.latitude, position.longitude))
         throw new InvalidRequestError('overlays.valueAt needs a position');

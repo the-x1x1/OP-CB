@@ -362,6 +362,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- A dropped file is drawn with its shapes and names only: its own colours, icons, line widths and
+  descriptions are not used, a KML ground overlay or 3D model is not drawn, and its shapes cannot
+  be selected. At most 12 files and 50,000 shapes, 25 MB a file; they are gone when the app closes.
 - GPS interference squares cover only where aircraft fly with ADS-B version 1 or 2 and are
   heard; at night over an ocean there may be one aircraft in a square, and it takes two degraded
   ones to raise it. adsb.lol's view query is shared with everything else asked of it, so a square

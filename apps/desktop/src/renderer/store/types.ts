@@ -1,3 +1,4 @@
+import type { ImportedFile } from '../map/imported-files.js';
 import type {
   GeoPosition,
   JsonValue,
@@ -248,6 +249,13 @@ export interface UiSlice {
    * the selection has a position. Session state.
    */
   rangeRings: boolean;
+  /**
+   * Files the operator dropped on the map or chose from the palette, drawn for the session
+   * (map/imported-files.ts). Session state: never saved.
+   */
+  importedFiles: ImportedFile[];
+  /** Bumped when the palette asks for a file to import; the map opens the file chooser. */
+  importRequest: number;
   /** The object the camera keeps in the middle of the view (F), or null. Ends with the selection. */
   followId: string | null;
   /**
@@ -348,6 +356,8 @@ export type UiAction =
   | { type: 'ui/measure'; measure: MeasureState | null }
   | { type: 'ui/whatsHere'; whatsHere: WhatsHereState | null }
   | { type: 'ui/rangeRings'; on: boolean }
+  | { type: 'ui/importedFiles'; files: ImportedFile[] }
+  | { type: 'ui/importRequest' }
   | { type: 'ui/firstFrame' }
   /** What the camera is doing: asked for by the operator, or reported by the renderer when it stopped by itself. */
   | { type: 'ui/cameraMode'; orbit: boolean; followId: string | null };

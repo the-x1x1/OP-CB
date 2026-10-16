@@ -266,6 +266,13 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
   2D map alike. `]` selects the next object out from the middle of the view and `[` the one
   before (a screen reader hears what was selected). What's here is in the command palette
   (Ctrl+K) for the middle of the view.
+- **Files on the map.** Drop a GeoJSON, TopoJSON, KML, KMZ or GPX file onto the map (or
+  "Draw a file on the map…" in the command palette) and its shapes are drawn for this session,
+  each file in a colour of its own, with point names as labels; the view goes to it. A card at
+  the lower left lists the files: tick one off to hide it, go to it, or remove it. Only shapes
+  and names are read — a KML's network links, remote icons, overlays and balloons are left out,
+  so a file never makes the app fetch anything — and nothing is kept when the app closes. To
+  keep a file as a source that updates, use a connector definition (docs/connectors/files.md).
 - **What's here** (right-click the map, or "What's here?" in the command palette for the
   middle of the view): a card beside the point naming the nearest town and how far and which
   way the point is from it ("41.4 km WNW of Hilo"), the point's coordinates in degrees and

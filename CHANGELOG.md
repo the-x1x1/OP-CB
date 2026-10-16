@@ -12,6 +12,9 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **Drop a file on the map.** GeoJSON, TopoJSON, KML, KMZ or GPX, dropped on the map or chosen
+  from the palette, drawn for the session in a colour per file, with a card to hide, go to or
+  remove each. Only shapes and names are read; nothing in the file is fetched and nothing is kept.
 - **GPS interference from the aircraft.** Squares of 0.5° where aircraft report degraded
   satellite navigation (NIC below 7, NACp below 8, or a lost GPS fix) in the last ten minutes,
   in gpsjam.org's bands, as events under the Overview and Aviation lenses and for watch zones.

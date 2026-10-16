@@ -325,12 +325,12 @@ needs its own record.
 
 Engineering with no licence or key, in the order they are to be built:
 
-- [ ] **GNSS interference from ADS-B integrity** (GEV `eefcb33`; OSIRIS lists GPS jamming):
+- [x] **GNSS interference from ADS-B integrity** (on feature/roadmap-2, `d23bfaf`: 10 minutes, not 30 — the rule is stateless over the aircraft the state holds) (GEV `eefcb33`; OSIRIS lists GPS jamming):
       aircraft reporting degraded navigation integrity (NIC < 7, NACp < 8, or readsb's GPS-loss
       flag) binned into 0.5° cells over a rolling 30 minutes, coloured in gpsjam.org's bands.
       Built from the aircraft WORLDVIEW already receives (adsb.lol, the operator's own readsb):
       the providers keep the integrity fields, a derived layer bins them. No new request.
-- [ ] **Drop your own GeoJSON, KML, KMZ or GPX onto the map** (GEV `57b8d8b`): drawn for the
+- [x] **Drop your own GeoJSON, KML, KMZ or GPX onto the map** (on feature/roadmap-2: read by the runtime, `geodata.read`; shapes and names only, so nothing needs sanitizing — nothing else is read) (GEV `57b8d8b`): drawn for the
       session, one colour per file, show/hide, fly to, remove; KML/KMZ sanitized so a file cannot
       make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
       KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file

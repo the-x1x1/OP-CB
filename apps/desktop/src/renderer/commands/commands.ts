@@ -445,6 +445,14 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
       run: () => actions.toggleMeasure(),
     },
     {
+      id: 'view.import-file',
+      title: 'Draw a file on the map (GeoJSON, KML, KMZ, GPX)…',
+      group: 'World',
+      icon: 'upload',
+      keywords: ['import', 'open', 'file', 'geojson', 'kml', 'kmz', 'gpx', 'topojson', 'drop', 'shapes', 'track'],
+      run: () => actions.requestImport(),
+    },
+    {
       id: 'view.range-rings',
       title: state.ui.rangeRings ? 'Hide range rings' : 'Range rings round the selection',
       group: 'World',

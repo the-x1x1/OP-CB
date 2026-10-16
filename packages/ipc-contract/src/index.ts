@@ -10,6 +10,7 @@ import type {
   GeoRegion,
   SeverityClass,
   RasterOverlay,
+  WorldGeometry,
 } from '@worldview/world-model';
 import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '@worldview/provider-sdk';
 import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
@@ -62,6 +63,23 @@ export interface OverlayValueResult extends OverlayValueAnswer {
   overlayId: string;
   providerId: string;
 }
+
+/** A shape from a file the operator dropped on the map (`geodata.read`): drawn for the session only. */
+export interface GeodataShape {
+  geometry: WorldGeometry;
+  name?: string;
+}
+
+/** What `geodata.read` made of a dropped file. */
+export interface GeodataReadResult {
+  format?: 'geojson' | 'topojson' | 'kml' | 'kmz' | 'gpx';
+  shapes: GeodataShape[];
+  /** What was left out or could not be read, for the operator. */
+  issues: string[];
+}
+
+/** The largest file `geodata.read` takes, before base64 (25 MiB). */
+export const GEODATA_MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 /** The most overlays one `overlays.valueAt` asks about. */
 export const MAX_OVERLAY_VALUE_OVERLAYS = 8;
@@ -934,6 +952,12 @@ export interface WorldRequests {
     request: { position: { latitude: number; longitude: number }; overlayIds: string[] };
     response: OverlayValueResult[];
   };
+  /**
+   * Additive, 2026-10-15: a file the operator dropped on the map (GeoJSON, TopoJSON, KML, KMZ or
+   * GPX by its name), as shapes and names to draw for the session. The bytes come base64; at most
+   * GEODATA_MAX_FILE_BYTES. Nothing in the file is followed or fetched, and nothing is kept.
+   */
+  'geodata.read': { request: { name: string; data: string }; response: GeodataReadResult };
   'sources.manifest': { request: { providerId: string }; response: ProviderManifest | null };
   'sources.setEnabled': { request: { providerId: string; enabled: boolean }; response: void };
   'sources.refresh': { request: { providerId: string }; response: void };
@@ -1239,6 +1263,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'sources.definitions.save',
   'overlays.list',
   'overlays.valueAt',
+  'geodata.read',
   'credentials.has',
   'credentials.set',
   'credentials.delete',

@@ -6,6 +6,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type DragEvent,
 } from 'react';
 import { loadReferenceData } from './reference-data.js';
 import { modelsField } from './perf-fields.js';
@@ -65,6 +66,8 @@ import { AIRCRAFT_HORIZON_MIN_M, footprintFeatures, radioHorizonFeatures } from 
 import { graticuleExtent, graticuleFeatures } from './graticule.js';
 import { rangeRingFeatures, ringSpacingM } from './range-rings.js';
 import { NO_TOOL_LAYER, selectionPosition, sendToolLayer, type ToolLayerShown } from './tool-layers.js';
+import { importedFeatures, importedKey } from './imported-files.js';
+import { ImportedFilesCard } from './imported-files-card.js';
 import { MeasurePanel } from './measure-panel.js';
 import { WhatsHere } from './whats-here.js';
 import { displayName } from '../context/props.js';
@@ -973,6 +976,26 @@ export function MapHost() {
     });
   }, [host, mounted, footprintKey]);
 
+  // ---- files dropped on the map (imported-files.ts): a tool layer of their own ----
+  const importedShown = useRef<ToolLayerShown>(NO_TOOL_LAYER);
+  const importedNow = useRef(ui.importedFiles);
+  importedNow.current = ui.importedFiles;
+  const importKey = mounted === 'ready' ? importedKey(ui.importedFiles) : '';
+  useEffect(() => {
+    if (!host || mounted !== 'ready' || !host.setFeatures) return;
+    sendToolLayer(host, importedShown, importKey, () => importedFeatures(importedNow.current));
+  }, [host, mounted, importKey]);
+  const fileChooser = useRef<HTMLInputElement | null>(null);
+  const [dropping, setDropping] = useState(false);
+  // The palette's "Draw a file on the map…": open the chooser (a new request, not the first render).
+  const importAsked = useRef(ui.importRequest);
+  useEffect(() => {
+    if (ui.importRequest === importAsked.current) return;
+    importAsked.current = ui.importRequest;
+    fileChooser.current?.click();
+  }, [ui.importRequest]);
+  const carriesFiles = (e: DragEvent<HTMLDivElement>) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
+
   // ---- hover: restyle the (at most two) features it touches, not the frame ----
   // The cursor crosses a dot every few frames on a busy overview, and each crossing used to
   // cost a full presentation pass. `restyleHover` gives the same two features a full pass
@@ -1045,7 +1068,47 @@ export function MapHost() {
   // The globe's keyboard move still in the air (keyboard-nav.ts `chainedKeyView`).
   const keyFlight = useRef<KeyFlight | undefined>(undefined);
   return (
-    <div ref={mapRef} className="wv-map" role="region" aria-label="Map">
+    <div
+      ref={mapRef}
+      className="wv-map"
+      role="region"
+      aria-label="Map"
+      onDragOver={(e) => {
+        if (!carriesFiles(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        if (!dropping) setDropping(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        setDropping(false);
+      }}
+      onDrop={(e) => {
+        if (!carriesFiles(e)) return;
+        // Not the browser's: a file dropped on the window would otherwise be opened in it.
+        e.preventDefault();
+        setDropping(false);
+        void actions.importGeodataFiles(Array.from(e.dataTransfer.files));
+      }}
+    >
+      <input
+        ref={fileChooser}
+        type="file"
+        multiple
+        hidden
+        aria-label="Choose a GeoJSON, TopoJSON, KML, KMZ or GPX file to draw on the map"
+        accept=".geojson,.json,.topojson,.kml,.kmz,.gpx"
+        onChange={(e) => {
+          const chosen = Array.from(e.currentTarget.files ?? []);
+          e.currentTarget.value = '';
+          if (chosen.length) void actions.importGeodataFiles(chosen);
+        }}
+      />
+      {dropping ? (
+        <div className="wv-map__drop" aria-hidden="true">
+          Drop a GeoJSON, KML, KMZ or GPX file to draw it on the map
+        </div>
+      ) : null}
       {/* The globe has no keyboard control of its own: focused, it takes the arrow keys, + and −
           (keyboard-nav.ts). The 2D map's canvas takes them itself (MapLibre), so the surface is
           not a second tab stop there. */}
@@ -1188,6 +1251,7 @@ export function MapHost() {
             : ''}
       </p>
       {ui.measure ? <MeasurePanel points={ui.measure.points} area={ui.measure.area ?? false} /> : null}
+      <ImportedFilesCard files={ui.importedFiles} />
       {ui.whatsHere ? (
         <WhatsHere
           host={host ?? undefined}
