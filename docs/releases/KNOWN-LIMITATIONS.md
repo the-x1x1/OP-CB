@@ -362,6 +362,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- A launch's time is what Launch Library 2 held when it was read, every thirty minutes; a scrub
+  or a slip shows at the next read. Only the next thirty launches are listed, which is about six
+  weeks ahead. Launch Library is kept by volunteers from public sources; without a key it allows
+  fifteen requests an hour from one address, and the app uses two.
 - The question is one request to the overlay's source counted against its own rate budget; asked
   right after a poll, it can be refused and the row is simply absent.
 

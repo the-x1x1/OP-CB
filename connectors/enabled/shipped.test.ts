@@ -98,6 +98,8 @@ const TRUE_COLOUR = ['gibs-viirs-snpp-true-colour', 'gibs-viirs-noaa20-true-colo
 const LIGHTNING = ['nowcoast-strike-density'];
 /** Raster overlays: their switch is the source itself, not an object type. */
 const OVERLAY_CONNECTORS = ['wms', 'wmts'];
+/** The Space Devs' Launch Library 2: use and share freely, credit asked for and given; on by default. */
+const SPACE = ['launch-library-2'];
 const GDACS = [
   'gdacs-earthquakes',
   'gdacs-tropical-cyclones',
@@ -110,7 +112,7 @@ const GDACS = [
 test('the shipped set is the hazard layers, and each passes the shared suite from its sidecar', async () => {
   assert.deepEqual(
     [...byId.keys()].sort(),
-    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...GDACS].sort(),
+    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...SPACE, ...GDACS].sort(),
   );
   for (const file of files) {
     const r = await runConnectorSuite(docOf(file), loadSidecar(sidecarPathFor(file), root), defaultConnectorRegistry);
@@ -186,6 +188,18 @@ test('licence: the public-domain US sources start enabled and open their policy;
     );
     assert.deepEqual(m.allowedHosts, ['nowcoast.noaa.gov'], id);
   }
+  for (const id of SPACE) {
+    const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
+    assert.equal(m.commercialReview, 'approved', id);
+    assert.equal(m.enabledByDefault, true, id);
+    assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
+    assert.equal(m.dataPolicy.redistributionAllowed, true, id);
+    assert.equal(m.dataPolicy.attributionRequired, false, `${id}: credit encouraged, not required`);
+    assert.equal(m.attribution.text, 'Launch Library 2 — The Space Devs', id);
+    assert.deepEqual(m.allowedHosts, ['ll.thespacedevs.com'], id);
+    // Fifteen calls an hour without a key: one poll every thirty minutes uses two.
+    assert.equal(m.refreshPolicy.intervalMs, 1_800_000, id);
+  }
   for (const id of GDACS) {
     const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
     assert.equal(m.commercialReview, 'conditional', id);
@@ -201,13 +215,13 @@ test('licence: the public-domain US sources start enabled and open their policy;
   }
 });
 
-test('Overview: each is filed under the Weather or Disasters layer, and that layer shows its object type', () => {
+test('Overview: each is filed under the Weather, Disasters or Space layer, and that layer shows its object type', () => {
   const lenses = new Map(BUILT_IN_LENSES.map((l) => [l.id, l]));
   for (const id of byId.keys()) {
     const d = definition(id);
     assert.ok(d.categories?.length, id);
     for (const c of d.categories!) {
-      assert.ok(c === 'weather' || c === 'disasters', `${id}: ${c}`);
+      assert.ok(c === 'weather' || c === 'disasters' || c === 'space', `${id}: ${c}`);
       // An overlay is not an object: its switch is the source itself. The rest must be drawn by their layer.
       if (!OVERLAY_CONNECTORS.includes(d.connector))
         assert.ok(lenses.get(c)!.objectTypes.includes(d.objectType), `${id} in ${c}`);
@@ -249,7 +263,7 @@ test('nowCOAST radar: the newest frame is the TIME of every tile, a new frame re
 });
 
 /** Observations of one definition over its fixture, through the state and event engines as the runtime runs them. */
-async function eventsOf(id: string, fixture: string, nowIso: string) {
+async function eventsOf(id: string, fixture: string, nowIso: string, eventType = 'weather-alert') {
   const def = definition(id);
   const observations = await poll(def, read(fixture), nowIso);
   const clock = { now: () => Date.parse(nowIso) };
@@ -259,7 +273,7 @@ async function eventsOf(id: string, fixture: string, nowIso: string) {
   const freshness = defaultConnectorRegistry.createProvider(def).manifest.refreshPolicy.freshness;
   state.ingest(observations, { snapshot: true, providerId: def.id, ...(freshness ? { freshness } : {}) });
   state.flush();
-  const events = engine.store.ofType('weather-alert');
+  const events = engine.store.ofType(eventType);
   engine.dispose();
   return { observations, events };
 }
@@ -679,4 +693,29 @@ test('NHC storm layers: forecast positions with time and wind, past track by str
   );
   assert.ok(wind.observations.every((o) => o.geometry?.type === 'Polygon'));
   assert.ok(wind.events.every((e) => !feed.isRelevant(e)));
+});
+
+test('Launch Library 2: each launch at its pad, a launch event with the rocket, provider, pad and NET, its window as the event span', async () => {
+  const { observations, events } = await eventsOf(
+    'launch-library-2',
+    'fixtures/connectors/space/ll2-launches-upcoming.json',
+    '2026-10-16T05:30:00.000Z',
+    'launch',
+  );
+  assert.equal(observations.length, 3);
+  assert.ok(observations.every((o) => o.objectType === 'launch'));
+  assert.equal(events.length, 3);
+  const mmx = events.find((e) => e.title === 'Launch — Martian Moons eXploration (MMX)')!;
+  assert.ok(mmx, events.map((e) => e.title).join(', '));
+  assert.equal(mmx.startAt, '2026-10-19T19:41:03.000Z');
+  assert.equal(mmx.severity, 'INFO');
+  assert.equal(
+    mmx.summary,
+    'H3-24 by Mitsubishi Heavy Industries from Yoshinobu Launch Complex LP-2 NET 2026-10-19 19:41 UTC. Status: Go for Launch.',
+  );
+  assert.deepEqual(mmx.geometry, { type: 'Point', coordinates: [130.97564, 30.400938] });
+  const bandwagon = events.find((e) => e.title.startsWith('Launch — Bandwagon 5'))!;
+  assert.equal(bandwagon.endAt, '2026-10-19T11:30:00.000Z', 'the window closes an hour after it opens');
+  const flown = events.find((e) => e.title === 'Launch — USSF-481')!;
+  assert.match(flown.summary ?? '', /Status: Launch Successful\.$/);
 });

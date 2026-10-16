@@ -41,7 +41,7 @@ limits) is not a connector; it is described in [telemetry.md](telemetry.md).
 
 The definitions in [`connectors/enabled/`](../../connectors/enabled/) ship with the app
 (reviewed, with a licence record each); what they are, their licences and how they draw is
-in [hazards.md](hazards.md). Definitions waiting for review to replace a bespoke provider
+in [hazards.md](hazards.md), except Launch Library 2, which is below the table. Definitions waiting for review to replace a bespoke provider
 are in `connectors/enabled/pending-review/` and do not ship.
 
 | Definition                                                                                        | Connector        | Source                                                                | On by default |
@@ -59,6 +59,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [gibs-imerg-precipitation.json](../../connectors/enabled/gibs-imerg-precipitation.json)           | `wmts`           | Precipitation rate, worldwide (NASA GPM IMERG, 30-minute)             | yes           |
 | [gibs-viirs-noaa20-true-colour.json](../../connectors/enabled/gibs-viirs-noaa20-true-colour.json) | `wmts`           | True colour, worldwide (VIIRS on NOAA-20, NASA GIBS, daily)           | no            |
 | [gibs-viirs-snpp-true-colour.json](../../connectors/enabled/gibs-viirs-snpp-true-colour.json)     | `wmts`           | True colour, worldwide (VIIRS on Suomi NPP, NASA GIBS, daily)         | no            |
+| [launch-library-2.json](../../connectors/enabled/launch-library-2.json)                           | `rest-json`      | Rocket launches, worldwide (Launch Library 2, The Space Devs)         | yes           |
 | [nhc-forecast-cones.json](../../connectors/enabled/nhc-forecast-cones.json)                       | `arcgis-feature` | NHC forecast cones (active tropical cyclones)                         | yes           |
 | [nhc-forecast-tracks.json](../../connectors/enabled/nhc-forecast-tracks.json)                     | `arcgis-feature` | NHC forecast tracks (active tropical cyclones)                        | yes           |
 | [nhc-forecast-points.json](../../connectors/enabled/nhc-forecast-points.json)                     | `arcgis-feature` | NHC forecast positions (active tropical cyclones)                     | yes           |
@@ -70,6 +71,17 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [nowcoast-strike-density.json](../../connectors/enabled/nowcoast-strike-density.json)             | `wms`            | Lightning, Americas and Pacific (NOAA nowCOAST strike density)        | yes           |
 | [nws-storm-reports.json](../../connectors/enabled/nws-storm-reports.json)                         | `arcgis-feature` | Storm reports, US (NWS local storm reports: tornado, hail, wind)      | yes           |
 | [spc-day1-outlook.json](../../connectors/enabled/spc-day1-outlook.json)                           | `arcgis-feature` | Severe weather outlook today, US (SPC day 1 categorical)              | yes           |
+
+**Launch Library 2** (`launch-library-2`, Space layer): the next thirty orbital launches from The
+Space Devs' `GET /2.3.0/launches/upcoming/?limit=30&mode=normal`, every thirty minutes — two of
+the fifteen calls an hour the API allows without a key. Each launch is a `launch` object at its
+pad with the rocket, provider, mission, orbit, status, NET and window; the event engine's launch
+rule makes each one a launch event whose span is the window. The observation time is the time it
+was read (LL2's `last_updated` is kept as `lastUpdated`), so a launch that leaves the list goes
+from the map a day later. No image in the answer is read: some are agencies' or the press's under
+their own licences. Fixture: `fixtures/connectors/space/ll2-launches-upcoming.json`, three launches
+recorded on 2026-10-16 at about 05:40 UTC by the built-in browser on the operator's laptop, trimmed to the fields
+read (values untouched).
 
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the

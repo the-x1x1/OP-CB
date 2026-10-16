@@ -1,0 +1,83 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "launch-library-2",
+  "name": "Rocket launches, worldwide (Launch Library 2)",
+  "description": "The next thirty orbital launches anywhere in the world from The Space Devs' Launch Library 2, each at its launch pad: the rocket, who launches it, the mission and its orbit, the scheduled time (NET, no earlier than) and window, how precise that time is, and the launch status (Go, TBD, TBC, Hold, Success, Failure). A launch that has just flown stays listed for a while with its outcome. Schedules move: a time is what Launch Library holds when it was read, every thirty minutes.",
+  "connector": "rest-json",
+  "objectType": "launch",
+  "categories": ["space"],
+  "endpoint": {
+    "url": "https://ll.thespacedevs.com/2.3.0/launches/upcoming/",
+    "query": {
+      "limit": 30,
+      "mode": "normal",
+      "format": "json"
+    },
+    "intervalSeconds": 1800,
+    "timeoutSeconds": 30,
+    "maxBytes": 2097152
+  },
+  "response": {
+    "itemsPath": "results"
+  },
+  "mapping": {
+    "externalId": "id",
+    "position": {
+      "lat": { "path": "pad.latitude", "transform": "number" },
+      "lon": { "path": "pad.longitude", "transform": "number" }
+    },
+    "labels": {
+      "name": { "path": "name", "transform": ["trim", "emptyToNone"] }
+    },
+    "properties": {
+      "name": { "path": "mission.name", "transform": ["trim", "emptyToNone"] },
+      "title": { "path": "name", "transform": ["trim", "emptyToNone"] },
+      "mission": { "path": "mission.name", "transform": ["trim", "emptyToNone"] },
+      "missionType": { "path": "mission.type", "transform": ["trim", "emptyToNone"] },
+      "description": { "path": "mission.description", "transform": ["trim", "emptyToNone"] },
+      "orbit": { "path": "mission.orbit.name", "transform": ["trim", "emptyToNone"] },
+      "vehicle": { "path": "rocket.configuration.full_name", "transform": ["trim", "emptyToNone"] },
+      "launchProvider": { "path": "launch_service_provider.name", "transform": ["trim", "emptyToNone"] },
+      "launchProviderType": { "path": "launch_service_provider.type.name", "transform": ["trim", "emptyToNone"] },
+      "pad": { "path": "pad.name", "transform": ["trim", "emptyToNone"] },
+      "site": { "path": "pad.location.name", "transform": ["trim", "emptyToNone"] },
+      "countryCode": { "path": "pad.country.alpha_2_code", "transform": ["trim", "uppercase", "emptyToNone"] },
+      "status": { "path": "status.name", "transform": ["trim", "emptyToNone"] },
+      "statusAbbrev": { "path": "status.abbrev", "transform": ["trim", "emptyToNone"] },
+      "net": { "path": "net", "transform": "isoTimestamp" },
+      "netPrecision": { "path": "net_precision.name", "transform": ["trim", "emptyToNone"] },
+      "windowStart": { "path": "window_start", "transform": "isoTimestamp" },
+      "windowEnd": { "path": "window_end", "transform": "isoTimestamp" },
+      "probabilityPercent": { "path": "probability", "transform": "number" },
+      "weatherConcerns": { "path": "weather_concerns", "transform": ["trim", "emptyToNone"] },
+      "failReason": { "path": "failreason", "transform": ["trim", "emptyToNone"] },
+      "webcastLive": { "path": "webcast_live", "transform": "boolean" },
+      "lastUpdated": { "path": "last_updated", "transform": "isoTimestamp" }
+    }
+  },
+  "freshness": {
+    "liveSeconds": 3600,
+    "recentSeconds": 21600,
+    "expireSeconds": 86400
+  },
+  "sourceQuality": "crowdsourced",
+  "attribution": {
+    "text": "Launch Library 2 — The Space Devs",
+    "url": "https://thespacedevs.com/llapi"
+  },
+  "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": true,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": true,
+    "offlinePackAllowed": true,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "Launch Library 2 — The Space Devs",
+    "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use"
+  },
+  "review": "commercially-reviewed",
+  "enabled": true
+}

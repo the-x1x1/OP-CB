@@ -1,0 +1,268 @@
+{
+  "count": 476,
+  "next": "https://ll.thespacedevs.com/2.3.0/launches/upcoming/?format=json&limit=3&mode=normal&offset=3",
+  "previous": null,
+  "results": [
+    {
+      "id": "df88cfbf-f504-4e11-8370-e33dd6280b5b",
+      "url": "https://ll.thespacedevs.com/2.3.0/launches/df88cfbf-f504-4e11-8370-e33dd6280b5b/?format=json",
+      "name": "Falcon 9 Block 5 | USSF-481",
+      "response_mode": "normal",
+      "slug": "falcon-9-block-5-ussf-481",
+      "launch_designator": null,
+      "status": {
+        "id": 3,
+        "name": "Launch Successful",
+        "abbrev": "Success",
+        "description": "The launch vehicle successfully inserted its payload(s) into the target orbit(s)."
+      },
+      "last_updated": "2026-10-16T04:17:09Z",
+      "net": "2026-10-16T00:01:05Z",
+      "net_precision": {
+        "id": 0,
+        "name": "Second",
+        "abbrev": "SEC",
+        "description": "The T-0 is accurate to the second."
+      },
+      "window_end": "2026-10-16T03:44:00Z",
+      "window_start": "2026-10-15T23:44:00Z",
+      "probability": null,
+      "weather_concerns": null,
+      "failreason": "",
+      "hashtag": null,
+      "launch_service_provider": {
+        "response_mode": "list",
+        "id": 121,
+        "url": "https://ll.thespacedevs.com/2.3.0/agencies/121/?format=json",
+        "name": "SpaceX",
+        "abbrev": "SpX",
+        "type": {
+          "id": 3,
+          "name": "Commercial"
+        }
+      },
+      "rocket": {
+        "id": 9267,
+        "configuration": {
+          "response_mode": "list",
+          "id": 164,
+          "url": "https://ll.thespacedevs.com/2.3.0/launcher_configurations/164/?format=json",
+          "name": "Falcon 9",
+          "full_name": "Falcon 9 Block 5",
+          "variant": "Block 5"
+        }
+      },
+      "mission": {
+        "id": 7866,
+        "name": "USSF-481",
+        "type": "Government/Top Secret",
+        "description": "A classified mission for the United States Space Force. It is possibly a batch of classified LEO satellites based on SpaceX’s Starshield satellite bus, based on locations of ascent rocket stage drop zones being fits with previous SDA Transport Layer launches.",
+        "orbit": {
+          "id": 13,
+          "name": "Polar Orbit",
+          "abbrev": "PO"
+        }
+      },
+      "pad": {
+        "id": 16,
+        "url": "https://ll.thespacedevs.com/2.3.0/pads/16/?format=json",
+        "active": true,
+        "name": "Space Launch Complex 4E",
+        "wiki_url": "https://en.wikipedia.org/wiki/Vandenberg_Space_Launch_Complex_4#SLC-4E",
+        "map_url": "https://www.google.com/maps?q=34.632,-120.611",
+        "latitude": 34.632,
+        "longitude": -120.611,
+        "country": {
+          "id": 2,
+          "name": "United States of America",
+          "alpha_2_code": "US",
+          "alpha_3_code": "USA"
+        },
+        "location": {
+          "response_mode": "normal",
+          "id": 11,
+          "url": "https://ll.thespacedevs.com/2.3.0/locations/11/?format=json",
+          "name": "Vandenberg SFB, CA, USA",
+          "longitude": -120.52023,
+          "latitude": 34.75133,
+          "timezone_name": "America/Los_Angeles"
+        }
+      },
+      "webcast_live": false
+    },
+    {
+      "id": "3b430f81-0ff1-4d85-8a1a-cef0de326198",
+      "url": "https://ll.thespacedevs.com/2.3.0/launches/3b430f81-0ff1-4d85-8a1a-cef0de326198/?format=json",
+      "name": "Falcon 9 Block 5 | Bandwagon 5 (Dedicated Mid-Inclination Rideshare)",
+      "response_mode": "normal",
+      "slug": "falcon-9-block-5-bandwagon-5-dedicated-mid-inclina",
+      "launch_designator": null,
+      "status": {
+        "id": 1,
+        "name": "Go for Launch",
+        "abbrev": "Go",
+        "description": "Current T-0 confirmed by official or reliable sources."
+      },
+      "last_updated": "2026-10-13T17:28:28Z",
+      "net": "2026-10-19T10:30:00Z",
+      "net_precision": {
+        "id": 1,
+        "name": "Minute",
+        "abbrev": "MIN",
+        "description": "The T-0 is accurate to the minute."
+      },
+      "window_end": "2026-10-19T11:30:00Z",
+      "window_start": "2026-10-19T10:30:00Z",
+      "probability": null,
+      "weather_concerns": null,
+      "failreason": "",
+      "hashtag": null,
+      "launch_service_provider": {
+        "response_mode": "list",
+        "id": 121,
+        "url": "https://ll.thespacedevs.com/2.3.0/agencies/121/?format=json",
+        "name": "SpaceX",
+        "abbrev": "SpX",
+        "type": {
+          "id": 3,
+          "name": "Commercial"
+        }
+      },
+      "rocket": {
+        "id": 9120,
+        "configuration": {
+          "response_mode": "list",
+          "id": 164,
+          "url": "https://ll.thespacedevs.com/2.3.0/launcher_configurations/164/?format=json",
+          "name": "Falcon 9",
+          "full_name": "Falcon 9 Block 5",
+          "variant": "Block 5"
+        }
+      },
+      "mission": {
+        "id": 7715,
+        "name": "Bandwagon 5 (Dedicated Mid-Inclination Rideshare)",
+        "type": "Dedicated Rideshare",
+        "description": "Dedicated rideshare flight to a mid-inclination orbit with dozens of small microsatellites and nanosatellites for commercial and government customers.",
+        "orbit": {
+          "id": 8,
+          "name": "Low Earth Orbit",
+          "abbrev": "LEO"
+        }
+      },
+      "pad": {
+        "id": 80,
+        "url": "https://ll.thespacedevs.com/2.3.0/pads/80/?format=json",
+        "active": true,
+        "name": "Space Launch Complex 40",
+        "wiki_url": "https://en.wikipedia.org/wiki/Cape_Canaveral_Air_Force_Station_Space_Launch_Complex_40",
+        "map_url": "https://www.google.com/maps?q=28.56194122,-80.57735736",
+        "latitude": 28.56194122,
+        "longitude": -80.57735736,
+        "country": {
+          "id": 2,
+          "name": "United States of America",
+          "alpha_2_code": "US",
+          "alpha_3_code": "USA"
+        },
+        "location": {
+          "response_mode": "normal",
+          "id": 12,
+          "url": "https://ll.thespacedevs.com/2.3.0/locations/12/?format=json",
+          "name": "Cape Canaveral SFS, FL, USA",
+          "longitude": -80.577778,
+          "latitude": 28.488889,
+          "timezone_name": "America/New_York"
+        }
+      },
+      "webcast_live": false
+    },
+    {
+      "id": "69ebbcd2-b257-4070-9ef9-21e7d1f8a883",
+      "url": "https://ll.thespacedevs.com/2.3.0/launches/69ebbcd2-b257-4070-9ef9-21e7d1f8a883/?format=json",
+      "name": "H3-24 | Martian Moons eXploration (MMX)",
+      "response_mode": "normal",
+      "slug": "h3-24-martian-moons-exploration-mmx",
+      "launch_designator": null,
+      "status": {
+        "id": 1,
+        "name": "Go for Launch",
+        "abbrev": "Go",
+        "description": "Current T-0 confirmed by official or reliable sources."
+      },
+      "last_updated": "2026-10-10T06:02:48Z",
+      "net": "2026-10-19T19:41:03Z",
+      "net_precision": {
+        "id": 0,
+        "name": "Second",
+        "abbrev": "SEC",
+        "description": "The T-0 is accurate to the second."
+      },
+      "window_end": "2026-10-19T19:41:03Z",
+      "window_start": "2026-10-19T19:41:03Z",
+      "probability": null,
+      "weather_concerns": null,
+      "failreason": "",
+      "hashtag": null,
+      "launch_service_provider": {
+        "response_mode": "list",
+        "id": 98,
+        "url": "https://ll.thespacedevs.com/2.3.0/agencies/98/?format=json",
+        "name": "Mitsubishi Heavy Industries",
+        "abbrev": "MHI",
+        "type": {
+          "id": 3,
+          "name": "Commercial"
+        }
+      },
+      "rocket": {
+        "id": 7769,
+        "configuration": {
+          "response_mode": "list",
+          "id": 204,
+          "url": "https://ll.thespacedevs.com/2.3.0/launcher_configurations/204/?format=json",
+          "name": "H3-24",
+          "full_name": "H3-24",
+          "variant": "24"
+        }
+      },
+      "mission": {
+        "id": 6287,
+        "name": "Martian Moons eXploration (MMX)",
+        "type": "Planetary Science",
+        "description": "MMX is a Japanese scientific mission to land on Phobos, one of the two moons of Mars, to collect samples before bringing them back to Earth.\r\n\r\nThe mission includes a small French/German rover to explore the surface of Phobos.",
+        "orbit": {
+          "id": 19,
+          "name": "Mars Orbit",
+          "abbrev": "Mars"
+        }
+      },
+      "pad": {
+        "id": 209,
+        "url": "https://ll.thespacedevs.com/2.3.0/pads/209/?format=json",
+        "active": true,
+        "name": "Yoshinobu Launch Complex LP-2",
+        "wiki_url": "https://en.wikipedia.org/wiki/Yoshinobu_Launch_Complex",
+        "map_url": "https://www.google.com/maps?q=30.400938,130.97564",
+        "latitude": 30.400938,
+        "longitude": 130.97564,
+        "country": {
+          "id": 28,
+          "name": "Japan",
+          "alpha_2_code": "JP",
+          "alpha_3_code": "JPN"
+        },
+        "location": {
+          "response_mode": "normal",
+          "id": 26,
+          "url": "https://ll.thespacedevs.com/2.3.0/locations/26/?format=json",
+          "name": "Tanegashima Space Center, Japan",
+          "longitude": 130.97,
+          "latitude": 30.4,
+          "timezone_name": "Asia/Tokyo"
+        }
+      },
+      "webcast_live": false
+    }
+  ]
+}

@@ -21,6 +21,14 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Rocket launches
+
+- [ ] Space layer on: launch markers at Cape Canaveral, Vandenberg, Tanegashima and the like;
+      select one: rocket, provider, mission, orbit, status, NET and window, credit "Launch
+      Library 2 — The Space Devs"
+- [ ] The feed and History list each as a launch event; the window is its span
+- [ ] Source Health: one request every 30 minutes, no rate-limit refusals
+
 ## What's here
 
 - [ ] Right-click the globe, then the 2D map: the card beside the point, nearest town and

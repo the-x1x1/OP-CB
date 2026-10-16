@@ -1754,7 +1754,7 @@
       "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use",
       "license": "The Space Devs terms of use: data may be used and shared in any form; avoid forwarding it without added value; attribution encouraged, not mandatory (GEV DATA_SOURCES.md lines 26, 67). 15 unauthenticated calls/hour; optional token",
       "category": "space",
-      "plannedStatus": "deferred",
+      "plannedStatus": "default",
       "dataPolicy": {
         "cacheAllowed": true,
         "rawPayloadRetentionAllowed": true,
@@ -1768,7 +1768,7 @@
         "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use"
       },
       "commercialReview": "approved",
-      "notes": "Deferred by the migration matrix (row 36), not by licence. Keep the courtesy credit when adopted. Some launch imagery in LL2 responses is third-party (agency/press photos) — do not display images without checking each image's credit field."
+      "notes": "Shipped 2026-10-15 as the connector definition connectors/enabled/launch-library-2.json (the migration matrix's row 36): the next 30 launches every 30 minutes, two of the 15 unauthenticated calls an hour; the courtesy credit is shown. No image from the responses is read or displayed: some are third-party (agency/press photos) under their own licences."
     },
     {
       "providerId": "radio-browser",

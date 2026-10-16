@@ -12,6 +12,11 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **Rocket launches, worldwide.** The next thirty orbital launches from The Space Devs' Launch
+  Library 2, each at its pad on the Space layer, with the rocket, who launches it, the mission and
+  its orbit, the status and the scheduled time and window; each is a launch event in the feed and
+  History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
+  credited).
 
 ## [0.4.0] — 2026-10-12
 
