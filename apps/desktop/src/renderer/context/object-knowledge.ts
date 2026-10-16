@@ -349,3 +349,93 @@ export function feltText(felt: number | undefined, cdi: number | undefined): str
   const intensity = roman ? `strongest felt intensity ${roman}` : undefined;
   return [reports, intensity].filter(Boolean).join(' · ') || undefined;
 }
+
+/** "in 3 d 4 h", "in 2 h 05 m", "in 40 s"; "3 h 10 m ago" once past. */
+export function countdownText(targetMs: number, nowMs: number): string {
+  const ahead = targetMs >= nowMs;
+  const s = Math.round(Math.abs(targetMs - nowMs) / 1000);
+  const d = Math.floor(s / 86_400);
+  const h = Math.floor((s % 86_400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const span = d > 0 ? `${d} d ${h} h` : h > 0 ? `${h} h ${String(m).padStart(2, '0')} m` : m > 0 ? `${m} m` : `${s} s`;
+  return ahead ? `in ${span}` : `${span} ago`;
+}
+
+/** LL2's precision names, as a reader says them after a time. */
+const NET_PRECISION: Record<string, string> = {
+  Second: 'to the second',
+  Minute: 'to the minute',
+  Hour: 'to the hour',
+  Morning: 'some time in the morning',
+  Afternoon: 'some time in the afternoon',
+  Day: 'the day only',
+  Week: 'the week only',
+  Month: 'the month only',
+  Quarter: 'the quarter only',
+  Year: 'the year only',
+};
+
+/**
+ * A launch (the `launch-library-2` definition's payload, or any launch source using the launch
+ * rule's names): the mission, the rocket and who flies it, the pad, the orbit, the status, the
+ * scheduled time with how precise it is and how long until it, and the window. The time is what
+ * the source held when it was read; a launch slips, so the panel says "no earlier than".
+ */
+export function launchRows(p: Props, nowMs: number): Row[] {
+  const net = s(p, 'net');
+  const netMs = net ? Date.parse(net) : Number.NaN;
+  const precision = s(p, 'netPrecision');
+  const coarse = precision !== undefined && !['Second', 'Minute', 'Hour'].includes(precision);
+  const netText = Number.isFinite(netMs)
+    ? [
+        formatUtcDateTime(net),
+        precision ? `(${NET_PRECISION[precision] ?? precision})` : undefined,
+        // A countdown to a time known only to the week would claim more than is known.
+        coarse ? undefined : `· ${countdownText(netMs, nowMs)}`,
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : undefined;
+  const start = s(p, 'windowStart');
+  const end = s(p, 'windowEnd');
+  const startMs = start ? Date.parse(start) : Number.NaN;
+  const endMs = end ? Date.parse(end) : Number.NaN;
+  let windowText: string | undefined;
+  if (Number.isFinite(startMs) && Number.isFinite(endMs)) {
+    if (endMs <= startMs) windowText = 'Instantaneous';
+    else {
+      // "2026-10-19 10:30 to 11:30 UTC", with the closing date too when the window crosses midnight.
+      const from = new Date(startMs).toISOString();
+      const to = new Date(endMs).toISOString();
+      const close = from.slice(0, 10) === to.slice(0, 10) ? to.slice(11, 16) : `${to.slice(0, 10)} ${to.slice(11, 16)}`;
+      windowText = `${from.slice(0, 10)} ${from.slice(11, 16)} to ${close} UTC (${formatDuration(endMs - startMs)})`;
+    }
+  }
+  const missionType = s(p, 'missionType');
+  const mission = s(p, 'mission');
+  const providerType = s(p, 'launchProviderType');
+  const provider = s(p, 'launchProvider');
+  const pad = s(p, 'pad');
+  const site = s(p, 'site');
+  const probability = n(p, 'probabilityPercent');
+  const updated = s(p, 'lastUpdated');
+  return [
+    { label: 'Mission', value: mission ? (missionType ? `${mission} (${missionType})` : mission) : undefined },
+    { label: 'Rocket', value: s(p, 'vehicle') },
+    {
+      label: 'Launch provider',
+      value: provider ? (providerType ? `${provider} (${providerType})` : provider) : undefined,
+    },
+    { label: 'Pad', value: pad && site ? `${pad}, ${site}` : (pad ?? site) },
+    { label: 'Orbit', value: s(p, 'orbit') },
+    { label: 'Status', value: s(p, 'status') },
+    { label: 'No earlier than', value: netText },
+    { label: 'Window', value: windowText },
+    { label: 'Weather', value: probability !== undefined ? `${Math.round(probability)} % favourable` : undefined },
+    { label: 'Weather concerns', value: s(p, 'weatherConcerns') },
+    { label: 'Failure', value: s(p, 'failReason') },
+    { label: 'Webcast', value: p['webcastLive'] === true ? 'Live now' : undefined },
+    { label: 'About the mission', value: s(p, 'description') },
+    { label: 'Record updated', value: updated ? formatUtcDateTime(updated) : undefined },
+  ].filter((r) => r.value !== undefined);
+}

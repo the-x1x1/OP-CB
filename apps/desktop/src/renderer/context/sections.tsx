@@ -24,7 +24,7 @@ import { bool, num, safeHttpsUrl, str, strList } from './props.js';
 import type { ShellActions } from '../store/actions.js';
 import { readMjpeg } from './mjpeg.js';
 import { SatelliteKnowledge } from './satellite-details.js';
-import { feltText, intensityText, magnitudeText, pagerText, vesselRows } from './object-knowledge.js';
+import { feltText, intensityText, launchRows, magnitudeText, pagerText, vesselRows } from './object-knowledge.js';
 import { cpa, cpaText } from './cpa.js';
 import { AircraftDetails } from './flight.js';
 import { useAppState } from '../store/store.js';
@@ -98,6 +98,15 @@ const earthquake: ContextSection = {
         ) : null}
       </div>
     );
+  },
+};
+
+const launch: ContextSection = {
+  id: 'launch',
+  title: 'Launch',
+  render: ({ object, nowMs }) => {
+    const rows = launchRows(object.properties, nowMs);
+    return rows.length ? <FieldList rows={rows} /> : null;
   },
 };
 
@@ -1273,6 +1282,7 @@ export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSecti
   { type: 'aircraft', sections: [aircraft] },
   { type: 'earthquake', sections: [earthquake] },
   { type: 'satellite', sections: [satellite] },
+  { type: 'launch', sections: [launch] },
   { type: 'fire-detection', sections: [fireDetection] },
   { type: 'weather-alert', sections: [weatherAlert] },
   { type: 'storm', sections: [storm] },
