@@ -335,15 +335,15 @@ Engineering with no licence or key, in the order they are to be built:
       make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
       KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
       needs a granted folder and a definition.
-- [ ] **Space weather** (OSIRIS keywords): NOAA SWPC's OVATION aurora forecast and planetary K
+- [x] **Space weather** (OSIRIS keywords): NOAA SWPC's OVATION aurora forecast and planetary K
       index (U.S. public domain).
   - [x] The aurora oval (on feature/roadmap-2: `swpc-aurora`; the 1° grid read as areas of 10,
         30, 50 and 70% by `response.contour`, ADR-013 amendment 2026-10-16 — ordinary weather-alert
         areas, so no field overlay was needed; ADR-008 unchanged).
   - [x] The chance at the place in the Sky tab (on feature/roadmap-2: `sky.overhead`'s `aurora`,
         from the areas the world holds; ADR-004 amendment 2026-10-16).
-  - [ ] A Kp line in the Sky panel: the planetary K index is one global number, not an object at
-        a place — it needs a home in the Sky panel's data first.
+  - The Kp line moved to the decisions below: the planetary K index is one number for the
+    whole Earth, and every object the world model holds has a place.
 - [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
       clouds-only infrared ramp, previewed while dragged.
 - [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before
@@ -371,6 +371,11 @@ Each needs a decision of the operator's first:
 - **More camera, transit and bike-share regions** (GEV: Toronto, WSDOT, King County, NYC DOT,
   Catalonia, Lithuania, Norway; TTC and Ontario transit; Kona & Hilo, Norway and Brazil bike
   share): each source's licence.
+- **The planetary K index in the Sky tab** (OSIRIS; SWPC, public domain): Kp is one reading
+  for the whole Earth, and the world model's objects all have a position or a shape. Either a
+  kind of reading without a place (a world-model change, ADR) or a Sky-tab-only request that
+  fetches it in the runtime outside the provider path (an exception to ADR-003). Which, if
+  either.
 - **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
   licence review; the recon tools stay under 1.10.0 below.
 
