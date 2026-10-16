@@ -10,6 +10,7 @@ import { launchRule } from './rules/launch.js';
 import { stormRule } from './rules/storm.js';
 import { airQualityRule } from './rules/air-quality.js';
 import { aircraftEmergencyRule } from './rules/aircraft-emergency.js';
+import { gnssInterferenceRule } from './rules/gnss-interference.js';
 import { distressBeaconRule } from './rules/distress-beacon.js';
 import { SourceStatusTracker } from './rules/source-status.js';
 import type { ObjectRule, RuleContext } from './rules/types.js';
@@ -49,6 +50,7 @@ export const DEFAULT_RULES: readonly ObjectRule[] = Object.freeze([
   airQualityRule,
   aircraftEmergencyRule,
   distressBeaconRule,
+  gnssInterferenceRule,
 ]);
 
 export class EventEngine {

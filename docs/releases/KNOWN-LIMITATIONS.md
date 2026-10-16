@@ -362,6 +362,11 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   what nowCOAST actually calls its radar, infrared and lightning values, and whether radar comes
   back in dBZ or as a palette index, is not yet seen. WMTS overlays (the GIBS imagery, Night
   lights) have no value at a point.
+- GPS interference squares cover only where aircraft fly with ADS-B version 1 or 2 and are
+  heard; at night over an ocean there may be one aircraft in a square, and it takes two degraded
+  ones to raise it. adsb.lol's view query is shared with everything else asked of it, so a square
+  away from the view is seen only when its aircraft are in another answer. The thresholds are
+  gpsjam.org's, over ten minutes rather than its day.
 - A buoy is named by its station id (`51202`), not its place: NDBC's latest-observations file
   carries no names. Each report is as old as the station's last transmission; a buoy that has
   stopped reporting leaves when NDBC drops it from the file, or a day after its last report,

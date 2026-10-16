@@ -168,6 +168,26 @@ Scope: the vessels that changed in the batch; one event per episode of one beaco
 | end      | a report no longer active (stopped), or not heard for 10 min (ended when last heard)      |
 | reopens  | heard active again within 30 min of a quiet end: the same event                           |
 
+## gnss-interference (`event:gnss-interference:worldview:<south>_<west>`)
+
+Where aircraft report degraded satellite navigation — GPS jamming or spoofing, as gpsjam.org
+maps it — from the navigation integrity every ADS-B position carries: NIC and NACp
+(`navIntegrity`, `navAccuracy`) and readsb's GPS-loss time (`gpsLostAt`), kept by `adsb-lol` and
+`readsb-local` for positions the aircraft broadcast (not MLAT or TIS-B). Scope: all airborne
+aircraft heard in the last ten minutes; ADS-B version 0 (no NACp) left out. Stateless: the same
+aircraft give the same cells.
+
+| rule     | value                                                                           |
+| -------- | ------------------------------------------------------------------------------- |
+| degraded | NIC < 7 · NACp < 8 · GPS fix lost within 10 min of the report                   |
+| cell     | 0.5° × 0.5° by the aircraft's position; the event's geometry is the square      |
+| raised   | ≥ 2 degraded aircraft that are ≥ 2 % of the aircraft with integrity in the cell |
+| severity | MINOR at 2–10 % (gpsjam yellow) · MODERATE above 10 % (red)                     |
+| title    | `GNSS interference likely near <lat>°N <lon>°E` (the cell's centre)             |
+| summary  | how many of how many aircraft, the thresholds, and that it is a sign, not proof |
+| objects  | the degraded aircraft (up to 32); confidence LOW                                |
+| end      | the cell no longer qualifies                                                    |
+
 ## launch (`event:launch:<namespace>:<value>`)
 
 INFO. `startAt` = `properties.net | windowStart | launchAt | observedAt`, `endAt` =
@@ -230,6 +250,7 @@ tie-break.
 | `READING_LIMIT_CLEAR_MARGIN`                                               | 2 % of the limit (≥ 0.1)               |
 | `AIRCRAFT_EMERGENCY_QUIET_MS` / `_FOLLOW_MS` / `_REOPEN_MS`                | 15 min / 1 min / 30 min                |
 | `DISTRESS_BEACON_QUIET_MS` / `_FOLLOW_MS` / `_REOPEN_MS`                   | 10 min / 1 min / 30 min                |
+| `GNSS_CELL_DEG` / `GNSS_WINDOW_MS` / `GNSS_MIN_DEGRADED` / bands           | 0.5° / 10 min / 2 / 2 % · 10 %         |
 | `SOURCE_STATUS_THROTTLE_MS`                                                | 10 min                                 |
 | `WATCH_ZONE_DEDUPE_MS`                                                     | 6 h                                    |
 | `FEED_MAX_ITEMS`                                                           | 500                                    |

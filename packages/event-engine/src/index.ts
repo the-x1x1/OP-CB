@@ -67,6 +67,19 @@ export {
   type LimitedReading,
 } from './rules/reading-limit.js';
 export {
+  gnssInterferenceRule,
+  navigationDegraded,
+  gnssCellOf,
+  cellSeverity as gnssCellSeverity,
+  GNSS_CELL_DEG,
+  GNSS_WINDOW_MS,
+  GNSS_MIN_DEGRADED,
+  GNSS_LOW_FRACTION,
+  GNSS_HIGH_FRACTION,
+  GNSS_NIC_DEGRADED_BELOW,
+  GNSS_NACP_DEGRADED_BELOW,
+} from './rules/gnss-interference.js';
+export {
   aircraftEmergencyRule,
   emergencyOf,
   AIRCRAFT_EMERGENCY_QUIET_MS,

@@ -145,3 +145,42 @@ test('parseAdsbLolResponse: requires ac[] and now', () => {
   assert.equal(parseAdsbLolResponse(null), 'response is not an object');
   assert.equal(parseAdsbLolResponse([]), 'response has no "ac" array');
 });
+
+test('normalize: navigation integrity (NIC, NACp, version, GPS lost) is kept for an ADS-B position only', () => {
+  const adsb = aircraftRowToDraft(
+    {
+      hex: 'a1b2c3',
+      type: 'adsb_icao',
+      lat: 33.5,
+      lon: 44.1,
+      alt_baro: 35000,
+      seen_pos: 1,
+      nic: 0,
+      nac_p: 0,
+      version: 2,
+      gpsOkBefore: 1789977480.4,
+    },
+    opts,
+  );
+  assert.ok(typeof adsb !== 'string');
+  assert.equal(adsb.payload['navIntegrity'], 0);
+  assert.equal(adsb.payload['navAccuracy'], 0);
+  assert.equal(adsb.payload['adsbVersion'], 2);
+  assert.equal(adsb.payload['gpsLostAt'], '2026-09-21T07:58:00.400Z');
+  const mlat = aircraftRowToDraft(
+    { hex: 'a1b2c4', type: 'mlat', lat: 33.5, lon: 44.1, alt_baro: 35000, seen_pos: 1, nic: 0, nac_p: 0 },
+    opts,
+  );
+  assert.ok(typeof mlat !== 'string');
+  assert.equal(mlat.payload['navIntegrity'], undefined, 'an MLAT position is the ground network’s, not the aircraft’s');
+  const odd = aircraftRowToDraft(
+    { hex: 'a1b2c5', lat: 33.5, lon: 44.1, seen_pos: 1, nic: 12, nac_p: 8.5, version: 'x', gpsOkBefore: 5 },
+    opts,
+  );
+  assert.ok(typeof odd !== 'string');
+  assert.deepEqual(
+    ['navIntegrity', 'navAccuracy', 'adsbVersion', 'gpsLostAt'].map((k) => odd.payload[k]),
+    [undefined, undefined, undefined, undefined],
+    'out of range values are left out',
+  );
+});

@@ -12,6 +12,11 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **GPS interference from the aircraft.** Squares of 0.5° where aircraft report degraded
+  satellite navigation (NIC below 7, NACp below 8, or a lost GPS fix) in the last ten minutes,
+  in gpsjam.org's bands, as events under the Overview and Aviation lenses and for watch zones.
+  adsb.lol and your own receiver now keep each aircraft's navigation integrity; nothing new is
+  asked for.
 - **River and coastal flooding, US.** Every river, lake and tide gauge NOAA's National Water
   Prediction Service has in minor, moderate or major flood, at the gauge in the Disasters layer,
   with the stage, flow, the thresholds of each category and a link to its hydrograph; major

@@ -349,6 +349,15 @@ carries on the same event. Tick **An aircraft broadcasts an emergency** in a zon
 one inside it. It is what the aircraft broadcasts: a squawk is set by hand and is sometimes
 set by mistake and cleared within minutes.
 
+**GPS interference.** Where aircraft report degraded satellite navigation — two or more in a
+0.5° square, at least 2 % of the aircraft there with a navigation integrity — the square is
+drawn in amber under the Overview and Aviation lenses: "GNSS interference likely near 33.25°N
+44.25°E", MINOR at 2–10 % and MODERATE above 10 %, gpsjam.org's bands, over the last ten minutes.
+It is read from what the aircraft broadcast (NIC and NACp; with your own receiver, the GPS-loss
+flag too), so it covers only where aircraft fly with ADS-B, and an aircraft's own receiver can
+fault: a sign of jamming or spoofing, not proof. Tick **Aircraft report degraded GPS** in a
+zone to be told of one inside it.
+
 **Distress beacons.** An AIS-SART, a man-overboard device or an EPIRB-AIS that any AIS source
 hears transmitting as active is an event, SEVERE, under the Overview and Maritime lenses:
 "Man overboard: 972111222". It is drawn on the beacon as it drifts, and ends when the beacon

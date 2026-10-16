@@ -21,6 +21,13 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## GPS interference
+
+- [ ] Overview lens over the eastern Mediterranean or the Baltic (where gpsjam.org shows
+      interference most days): amber squares appear; select one: how many aircraft of how many,
+      the degraded aircraft listed under Related
+- [ ] Over Hawaiʻi: no square (or explain any that appears from the aircraft listed)
+
 ## River flooding
 
 - [ ] Disasters layer on: a marker at each gauge in flood (Devils Lake ND major on 2026-10-16);
