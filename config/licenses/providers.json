@@ -2457,6 +2457,29 @@
       "notes": "Added 2026-10-15 (ocean buoys). Definition connectors/enabled/ndbc-observations.json (rest-json, the column-aligned text read with response.csv delimiter whitespace and comment #). About 860 stations, ~100 KB, read every 15 minutes. ndbc.noaa.gov's robots.txt disallows only three named crawlers. Fixture recorded 2026-10-16 ~06:20 UTC by the built-in browser on the test laptop: the two header lines, two buoys off Korea and every Hawaii station, dates moved back to 2026-09-23 for the suite's clock (times of day as served). Partner stations (PacIOOS, NOS tide gauges) appear under NDBC's distribution; NDBC states no restriction on them."
     },
     {
+      "providerId": "nwps-river-flooding",
+      "name": "NOAA National Water Prediction Service — observed river stages (MapServer layer 0), gauges in flood",
+      "sourceUrl": "https://mapservices.weather.noaa.gov/eventdriven/rest/services/water/riv_gauges/MapServer/0",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "license": "U.S. Government work — public domain (NWS disclaimer; service copyright text NOAA/NWS/NWPS)",
+      "category": "disasters",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "River gauges: NOAA National Water Prediction Service",
+        "termsUrl": "https://www.weather.gov/disclaimer"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (river flooding). Definition connectors/enabled/nwps-river-flooding.json (arcgis-feature) with a server where for minor, moderate and major (16 of ~12,900 gauges on 2026-10-16; 44 more at action stage, not asked for). The NWPS JSON API (api.water.noaa.gov/nwps/v1/gauges) has no flood filter and its national list timed out in a browser, so the MapServer is used. obstime is UTC: ABAG1 read 04:30 / 9.23 ft here and 05:30Z / 9.22 ft from the API at the same moment. Fixture recorded 2026-10-16 ~06:40 UTC by the built-in browser on the test laptop: every gauge in flood and two at action stage, dates moved back to 2026-09-23 for the suite's clock."
+    },
+    {
       "providerId": "spc-day1-outlook",
       "name": "NOAA Storm Prediction Center — day 1 categorical convective outlook (SPC_wx_outlks MapServer, layer 1)",
       "sourceUrl": "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/SPC_wx_outlks/MapServer/1",

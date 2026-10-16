@@ -12,6 +12,10 @@ Versioning: [semantic versioning](https://semver.org/).
   WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
   names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
   service does not offer it in JSON or plain text, or while working offline.
+- **River and coastal flooding, US.** Every river, lake and tide gauge NOAA's National Water
+  Prediction Service has in minor, moderate or major flood, at the gauge in the Disasters layer,
+  with the stage, flow, the thresholds of each category and a link to its hydrograph; major
+  flooding is a severe alert (`nwps-river-flooding`, U.S. public domain, every fifteen minutes).
 - **Ocean buoys and coastal stations, worldwide.** The latest report of each of the ~860 stations
   NOAA's National Data Buoy Center carries, as weather stations on the Weather layer: wind and
   gusts, pressure and its trend, air and water temperature, waves (height, period and the

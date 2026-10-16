@@ -21,6 +21,11 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## River flooding
+
+- [ ] Disasters layer on: a marker at each gauge in flood (Devils Lake ND major on 2026-10-16);
+      select one: water body, place, stage against its thresholds, the hydrograph link opens
+
 ## Ocean buoys
 
 - [ ] Weather layer on, zoomed to Hawaiʻi: markers for 51201, 51202, OOUH1 (Honolulu) and the

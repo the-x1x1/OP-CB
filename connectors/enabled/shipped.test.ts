@@ -73,6 +73,7 @@ const PUBLIC_DOMAIN = [
   'spc-day1-outlook',
   'usgs-volcanoes',
   'ndbc-observations',
+  'nwps-river-flooding',
 ];
 /** NASA GIBS: open, credit requested (and so required here); Himawari is JMA's, distributed openly by NOAA. */
 const GIBS = [
@@ -764,4 +765,19 @@ test('NDBC: every station a weather station at its position, its own report time
   const honolulu = observations.find((o) => o.externalId === 'OOUH1')!;
   assert.deepEqual(honolulu.position, { latitude: 21.303, longitude: -157.865 });
   assert.equal(honolulu.payload['pressureSeaLevelHpa'], 1016.3);
+});
+
+test('NWPS: gauges in flood as flood alerts at the gauge, the category as the severity; action stage left out', async () => {
+  const { observations, events } = await eventsOf(
+    'nwps-river-flooding',
+    'fixtures/connectors/hazards/nwps-river-gauges-flooding.geojson',
+    '2026-09-23T06:00:00.000Z',
+  );
+  assert.equal(observations.length, 16);
+  assert.ok(!observations.some((o) => o.externalId === 'AMRL1'), 'action stage is not flooding');
+  const devils = events.find((e) => e.objectIds[0]?.endsWith('DCBN8'))!;
+  assert.equal(devils.title, 'Devils Lake');
+  assert.equal(devils.severity, 'SEVERE');
+  assert.match(devils.summary ?? '', /^Major flooding for Devils Lake from /);
+  assert.equal(events.find((e) => e.objectIds[0]?.endsWith('ATKG1'))!.severity, 'MINOR');
 });

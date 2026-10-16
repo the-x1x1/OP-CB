@@ -70,6 +70,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [nowcoast-goes-infrared.json](../../connectors/enabled/nowcoast-goes-infrared.json)               | `wms`            | Satellite infrared, North America (NOAA nowCOAST GOES)                | no            |
 | [nowcoast-radar.json](../../connectors/enabled/nowcoast-radar.json)                               | `wms`            | Weather radar, US (NOAA nowCOAST MRMS)                                | yes           |
 | [nowcoast-strike-density.json](../../connectors/enabled/nowcoast-strike-density.json)             | `wms`            | Lightning, Americas and Pacific (NOAA nowCOAST strike density)        | yes           |
+| [nwps-river-flooding.json](../../connectors/enabled/nwps-river-flooding.json)                     | `arcgis-feature` | River and coastal flooding, US (NOAA NWPS gauges in flood)            | yes           |
 | [nws-storm-reports.json](../../connectors/enabled/nws-storm-reports.json)                         | `arcgis-feature` | Storm reports, US (NWS local storm reports: tornado, hail, wind)      | yes           |
 | [spc-day1-outlook.json](../../connectors/enabled/spc-day1-outlook.json)                           | `arcgis-feature` | Severe weather outlook today, US (SPC day 1 categorical)              | yes           |
 | [usgs-volcanoes.json](../../connectors/enabled/usgs-volcanoes.json)                               | `geojson`        | Volcano alerts, US (USGS Volcano Hazards Program)                     | yes           |
