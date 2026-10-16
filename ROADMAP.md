@@ -77,7 +77,7 @@ INTEGRATION.md gives, then a refactor pass and `0.2.0-rc.1`:
 - [x] `telemetry` — series descriptors and a Readings panel (Open MCT harvest). Merged with R1 and R5; R2–R4 landed after.
 - [x] `source-health-ui` — the connector shown in Sources and Source Health; the
       operator's folder managed in-app; an Add-source dialog. Merged with its runtime requests 2–3.
-- [x] `offline-basemaps` — Planetiler/Protomaps extracts by tool, a Martin tile source (read side). Merged; B2 (a pack's basemap reaching the 2D map), B3 (pack credit line) and B5 landed; B1 (licence record, operator decision) and B4 (Martin in the app) open.
+- [x] `offline-basemaps` — Planetiler/Protomaps extracts by tool, a Martin tile source (read side). Merged; B2 (a pack's basemap reaching the 2D map), B3 (pack credit line), B4 (Martin in the app, 2026-10-04; its CSP part not done) and B5 landed; B1 (licence record, operator decision) open.
 
 Found during the connector work and deferred to the refactor pass or a later minor (all
 listed with detail in
@@ -280,8 +280,10 @@ same manifest/data-policy contract for devices that need code.
       client API (port 4403), on a new binary local stream (ADR-003 amendment 2026-10-05);
       positions, node info and telemetry, text never read; off by default (on feature/next;
       tested against messages encoded by Meshtastic's own code, not yet against a node).
-- [ ] Meshtastic over USB serial and Bluetooth: the same decoder; needs a serial or BLE
-      transport in the main process.
+- [x] Meshtastic over USB serial (Linux): the same decoder on a serial stream in the main process
+      (ADR-003 amendment 2026-10-08; in 0.3.0, tested against a pseudo-terminal, not yet a node).
+- [ ] Meshtastic over Bluetooth, and USB serial on Windows: each needs a transport in the main
+      process (a design call: docs/cyberdeck/ROADMAP.md).
 - [x] NMEA 2000 through the operator's own gateway (Yacht Devices RAW over TCP): the boat —
       position, course, heading, depth, wind, temperatures — and the ships its AIS hears; read
       only (on feature/next; checked against CANboat's analyzer, not yet against a boat).
