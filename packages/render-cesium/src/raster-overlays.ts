@@ -104,16 +104,54 @@ export function withBrightnessFade<P extends object>(
     const pending = original(x, y, level, request);
     if (!pending) return pending;
     return pending.then((image) =>
-      fadeTile(
-        image as TileImage | undefined,
-        ramp,
-        createCanvas,
-        feather ? { x, y, level, ...feather } : undefined,
-        onFaded,
+      inFadeSlices(() =>
+        fadeTile(
+          image as TileImage | undefined,
+          ramp,
+          createCanvas,
+          feather ? { x, y, level, ...feather } : undefined,
+          onFaded,
+        ),
       ),
     );
   };
   return provider;
+}
+
+/**
+ * How long tiles are faded in one go before the frame gets the thread back. Each faded tile
+ * reads and writes every pixel on the main thread; tiles arriving together (a zoom into a
+ * region with every infrared slice on) used to be faded back to back as one task, and the
+ * test laptop logged tasks of 0.7–1 s and 3 fps there (2026-10-17). In slices, a burst is
+ * spread over frames instead.
+ */
+export const FADE_SLICE_MS = 8;
+const fadeQueue: Array<() => void> = [];
+let fadeScheduled = false;
+
+/** Run `work` in the next fade slice; at least one job runs in each slice. */
+export function inFadeSlices<T>(work: () => T): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    fadeQueue.push(() => {
+      try {
+        resolve(work());
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
+    if (!fadeScheduled) {
+      fadeScheduled = true;
+      setTimeout(drainFades, 0);
+    }
+  });
+}
+
+function drainFades(): void {
+  const until = performance.now() + FADE_SLICE_MS;
+  do fadeQueue.shift()!();
+  while (fadeQueue.length && performance.now() < until);
+  if (fadeQueue.length) setTimeout(drainFades, 0);
+  else fadeScheduled = false;
 }
 
 function fadeTile(

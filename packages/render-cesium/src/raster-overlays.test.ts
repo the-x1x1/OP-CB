@@ -17,6 +17,8 @@ import {
   withFallbackTiles,
   overlaySeries,
   withBrightnessFade,
+  inFadeSlices,
+  FADE_SLICE_MS,
 } from './raster-overlays.js';
 
 const radar = (time: string): RasterOverlay =>
@@ -390,4 +392,36 @@ test('tileRowWeights: the latitude fade follows the picture, upside down for a b
   assert.equal(flipped[0], 1, 'flipped: the first row is the equator');
   assert.equal(flipped[63], 0);
   assert.equal(tileRowWeights({ level: 3, y: 3 }, 64, { south: -60, north: 60 }, true), undefined);
+});
+
+test('tiles are faded in slices: a burst is spread over tasks, in order, never as one long task', async () => {
+  const busy = (ms: number) => {
+    const end = performance.now() + ms;
+    while (performance.now() < end) {
+      /* a tile's worth of pixels */
+    }
+  };
+  // Another task queued just after the burst: in slices, it gets a turn before the burst ends.
+  let otherRan = false;
+  const sawOther: boolean[] = [];
+  const jobs = Array.from({ length: 12 }, (_, i) =>
+    inFadeSlices(() => {
+      busy(FADE_SLICE_MS / 2);
+      sawOther.push(otherRan);
+      return i;
+    }),
+  );
+  setTimeout(() => {
+    otherRan = true;
+  }, 0);
+  assert.deepEqual(sawOther, [], 'nothing runs before the slice');
+  assert.deepEqual(await Promise.all(jobs), [...Array(12).keys()], 'each answered, in order');
+  assert.equal(sawOther[0], false, 'the first slice runs first');
+  assert.equal(sawOther[11], true, 'the rest wait while other work has its turn');
+  await assert.rejects(
+    inFadeSlices(() => {
+      throw new Error('bad tile');
+    }),
+    /bad tile/,
+  );
 });

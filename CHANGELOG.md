@@ -78,6 +78,10 @@ Versioning: [semantic versioning](https://semver.org/).
   On the test laptop the window's memory rose from about 0.5 GB to 6.7 GB within a few minutes
   of zooming over Alaska with every weather layer on; whether this was the whole of it is still
   to be measured.
+- **Infrared tiles are faded in slices on the globe.** Tiles arriving together were faded one
+  after another in a single task (tasks of 0.7–1 s and 3 fps on the test laptop, zooming in with
+  every infrared layer on); they are now faded 8 ms at a time with frames drawn in between. Not
+  yet measured on the laptop.
 
 ## [0.4.0] — 2026-10-12
 
