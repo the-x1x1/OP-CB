@@ -454,3 +454,23 @@ test('area edges: a class with a bold edge (a tornado warning) draws it on the g
   assert.equal(width('weather-alert.tornado-emergency'), 5);
   assert.equal(width('weather-alert.severe'), 1.5);
 });
+
+test('declutter: a later pass gives way to the boxes an earlier pass placed', () => {
+  const placed: import('./labelDeclutter.js').LabelBox[] = [];
+  const objects = declutterLabels(
+    [{ id: 'callsign', x: 100, y: 100, width: 60, height: 14, priority: 1 }],
+    { width: 400, height: 300 },
+    { placed },
+  );
+  assert.deepEqual([...objects], ['callsign']);
+  assert.equal(placed.length, 1);
+  const names = declutterLabels(
+    [
+      { id: 'sea', x: 110, y: 105, width: 90, height: 14, priority: 9, anchor: 'center' },
+      { id: 'far', x: 300, y: 250, width: 40, height: 14, priority: 1, anchor: 'center' },
+    ],
+    { width: 400, height: 300 },
+    { occupied: placed },
+  );
+  assert.deepEqual([...names], ['far'], 'the sea name under the callsign is hidden; one clear of it shows');
+});

@@ -17,7 +17,7 @@ import { EntityLayer } from './entities.js';
 import { DensityLayer } from './density.js';
 import { ALWAYS_VISIBLE, type HorizonTest } from '../horizon.js';
 import { Movers } from './motion.js';
-import { declutterLabels, type LabelCandidate } from '../labelDeclutter.js';
+import { declutterLabels, type LabelBox, type LabelCandidate } from '../labelDeclutter.js';
 
 export type LayerSetModule = Pick<
   CesiumLike,
@@ -299,6 +299,7 @@ export class LayerSet {
   declutter(
     project: (position: Cartesian3Like) => { x: number; y: number } | undefined,
     viewport: { width: number; height: number },
+    placed?: LabelBox[],
   ): number {
     // A label is anchored like its marker: behind the planet, it is not a candidate.
     const inView = (position: Cartesian3Like) => (this.horizon(position) ? project(position) : undefined);
@@ -313,7 +314,7 @@ export class LayerSet {
       labelled.push([prefix, b.labels]);
       for (const c of b.labels.candidates(inView, prefix)) candidates.push(c);
     }
-    const visible = declutterLabels(candidates, viewport);
+    const visible = declutterLabels(candidates, viewport, placed ? { placed } : {});
     let shown = 0;
     for (const [prefix, labels] of labelled) shown += labels.applyVisible(visible, prefix);
     return shown;

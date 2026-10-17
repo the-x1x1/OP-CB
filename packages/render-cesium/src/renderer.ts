@@ -52,6 +52,7 @@ import { ModelLayer } from './layers/models.js';
 import { VisualStyle3D } from './visual-styles.js';
 import { DayNight3D, type DayNightTimers } from './day-night.js';
 import { CameraModes3D } from './camera-modes.js';
+import type { LabelBox } from './labelDeclutter.js';
 
 export interface CesiumWorldRendererOptions {
   cesium: CesiumLike;
@@ -807,8 +808,9 @@ export class CesiumWorldRenderer implements WorldRenderer {
       width: v.canvas.clientWidth || v.canvas.width,
       height: v.canvas.clientHeight || v.canvas.height,
     };
-    this.layers.declutter(project, viewport);
-    this.referenceOverlay?.declutter(project, viewport);
+    const placed: LabelBox[] = [];
+    this.layers.declutter(project, viewport, placed);
+    this.referenceOverlay?.declutter(project, viewport, placed);
     scene.requestRender();
   }
 

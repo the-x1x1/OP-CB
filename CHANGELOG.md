@@ -64,6 +64,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **A sharper map on Auto.** The quality Auto picks is now a floor: while the frame rate holds
+  at 60, the globe and the 2D map draw at more of the display's pixel density (to 2×) and
+  fetch finer imagery tiles, a step at a time, and step back at once when frames slow. On a
+  2× laptop screen Balanced had drawn the globe at 0.625 of the display's pixels. A quality
+  chosen in Settings is kept as chosen.
 - **Thin cloud on the infrared layers.** Each geostationary infrared source has a Thin cloud
   setting in Sources that moves where cloud starts to be drawn: up for only the coldest tops,
   down for thinner, warmer cloud too.
@@ -90,6 +95,8 @@ Versioning: [semantic versioning](https://semver.org/).
   "Kept until … (unless read again)" for an alert whose end is only how long its reading stays
   fresh (a volcano, a flooding gauge), where it read "Ended" two days ahead.
 - **What's here** no longer shows the previous point's overlay values for a moment.
+- **Place names give way to labels on the globe.** A sea's or a country's name was drawn
+  through an aircraft's callsign over it (the two were decluttered separately).
 - **A large dropped file no longer holds the app.** It is read on a worker thread; a 17 MB
   GeoJSON took 1.6 s, during which every window had stood still. If the thread cannot run, the
   file is read as before.
