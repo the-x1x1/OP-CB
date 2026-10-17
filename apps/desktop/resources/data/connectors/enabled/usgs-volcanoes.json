@@ -46,6 +46,7 @@
       },
       "observatory": { "path": "properties.obs", "transform": ["trim", "lowercase", "emptyToNone"] },
       "sent": { "path": "properties.alertDate", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
+      "effectiveFrom": { "path": "properties.colorDate", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
       "colourSince": { "path": "properties.colorDate", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
       "noticeId": { "path": "properties.noticeId", "transform": ["trim", "emptyToNone"] },
       "detailUrl": { "path": "properties.noticeUrl", "transform": ["trim", "emptyToNone"] },
