@@ -70,6 +70,21 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **An alert the source stops listing ends.** A volcano back to normal, a river gauge below flood
+  stage or an aurora level no longer reached stayed drawn on the map, its event never ended.
+  Such an event now ends when a complete read of the source leaves it out (not when a read of
+  an area does, nor when a source is turned off), and the map draws an alert's or a storm's
+  event only while it is in force.
+- **Volcano and flood alerts keep their start.** A volcano alert starts when its colour code was
+  raised (USGS `colorDate`), not at each read; a gauge in flood keeps the start it was first
+  seen with instead of restarting at every reading. Neither states an "until" the source never
+  gave. Gauges with placeholder flood stages (Devils Lake and Stump Lake, North Dakota: 0.1, 0.2
+  and 0.3 ft) are no longer shown as in major flood.
+- **Launch times as precise as known.** A launch Launch Library 2 knows only to the day, week,
+  month or quarter is summarised as such ("NET October 2026 (the month only)"), not as a minute.
+- **Buoys.** A wave period of 0 (no period measured) is left out rather than read "every 0 s",
+  and gusts are labelled without a 10-minute period buoys do not use.
+- **What's here** no longer shows the previous point's overlay values for a moment.
 - **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
   map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
   as the map's answer for the rest of the session. It is now retried in the background — after

@@ -49,6 +49,9 @@ test('a buoy: waves by height, period and the direction they come from, whatever
   assert.equal(stationWaves(1.7, 6, 5.6, 69), '1.7 m (5.6 ft) · every 6 s (5.6 s average) · from ENE (69°)');
   assert.equal(stationWaves(undefined, 13, undefined, undefined), 'every 13 s');
   assert.equal(stationWaves(undefined, undefined, undefined, undefined), undefined);
+  // NDBC 22101 sends DPD 0: no period measured, not waves every 0 s.
+  assert.equal(stationWaves(0.5, 0, undefined, undefined), '0.5 m (1.6 ft)');
+  assert.equal(stationWaves(0.5, 0, 0, undefined), '0.5 m (1.6 ft)');
 });
 
 test('AQHI reads with its risk category and its scale, never as an AQI', () => {

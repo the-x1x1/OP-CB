@@ -79,25 +79,27 @@ export function WhatsHere({
   }, [actions, satelliteId, position]);
 
   // What the drawn overlays' sources say is under the point (a WMS layer's GetFeatureInfo).
+  // Each answer is kept with the point and overlays it was asked for, so the first paint at a new
+  // point (before the effect below asks again) shows "asking", not the last point's values.
   const overlayKey = (overlayIds ?? []).join('\n');
-  const [overlayValues, setOverlayValues] = useState<OverlayValueResult[] | undefined>(() =>
-    overlayKey ? undefined : [],
-  );
+  const askedFor = `${position.latitude},${position.longitude}\n${overlayKey}`;
+  const [overlayAnswer, setOverlayAnswer] = useState<{ for: string; values: OverlayValueResult[] } | undefined>();
+  const overlayValues: OverlayValueResult[] | undefined = !overlayKey
+    ? []
+    : overlayAnswer?.for === askedFor
+      ? overlayAnswer.values
+      : undefined;
   useEffect(() => {
     const ids = overlayKey ? overlayKey.split('\n') : [];
-    if (ids.length === 0) {
-      setOverlayValues([]);
-      return undefined;
-    }
+    if (ids.length === 0) return undefined;
     let live = true;
-    setOverlayValues(undefined);
     void actions.overlayValues(position, ids).then((answers) => {
-      if (live) setOverlayValues(answers);
+      if (live) setOverlayAnswer({ for: askedFor, values: answers });
     });
     return () => {
       live = false;
     };
-  }, [actions, overlayKey, position]);
+  }, [actions, overlayKey, position, askedFor]);
 
   // Beside its point, wherever the map has moved it; hidden while the point is out of sight.
   const place = useCallback(() => {

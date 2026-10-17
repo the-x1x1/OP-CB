@@ -356,6 +356,13 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.4.0 (unreleased)
 
+- An alert from a source read by area (wildfire perimeters, which follow the view) is not ended
+  when the view moves away from it: only a complete read of a source ends what it leaves out.
+  Such an alert ends when its reading goes stale.
+- A river gauge in flood is dated from when WORLDVIEW first saw it in flood (NWPS gives no
+  onset); after a restart, from the first reading then.
+- River gauges whose flood stage is under 0.15 ft are left out as placeholders; a real gauge with
+  a flood stage that low would be left out too.
 - What's here shows an overlay's value as the service gives it, named and with a unit only where
   the source's definition says: radar as "Reflectivity 35 dBZ" (nowCOAST's layer description
   says its colours are dBZ, and its answers, seen 2026-10-16, are whole numbers from 0 to the

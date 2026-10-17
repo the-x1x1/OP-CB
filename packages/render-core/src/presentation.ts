@@ -377,6 +377,11 @@ export interface PresentationInput {
    * back); undefined: now. Only the events that follow a moving object (EPISODE_EVENTS) use it.
    */
   shownAtMs?: number;
+  /**
+   * Now, for the shell's live view: a storm's or an alert's event that has ended by the time
+   * shown (shownAtMs, else this) is not drawn. Undefined: ended ones are drawn as before.
+   */
+  nowMs?: number;
   view: ViewState;
   rules?: RenderingRule[];
   /** Object types visible in the active lens (undefined = all). */
@@ -524,6 +529,13 @@ function episodeShown(ev: WorldEvent, shownAtMs: number | undefined): boolean {
   const start = Date.parse(ev.startAt);
   const end = ev.endAt ? Date.parse(ev.endAt) : Infinity;
   return !(start > shownAtMs) && !(end <= shownAtMs);
+}
+
+/** Whether a storm's or an alert's event is in force at `atMs` (undefined: drawn regardless). */
+function alertShown(ev: WorldEvent, atMs: number | undefined): boolean {
+  if (atMs === undefined) return true;
+  const end = ev.endAt ? Date.parse(ev.endAt) : Number.POSITIVE_INFINITY;
+  return !(end <= atMs);
 }
 
 /** Width in px of a storm's past-track line (drawn in its category colour). */
@@ -869,6 +881,9 @@ export function presentObjects(input: PresentationInput): PresentationResult {
     // one with a shape adds nothing only where the object's own shape is drawn — a mirror
     // copy of an alert without its geometry must not hide the event's polygon too.
     const pointEvent = ev.geometry.type === 'Point';
+    // Ended, or not begun, at the time shown: an alert the source stopped listing (a volcano
+    // back to normal, a gauge below flood stage) stayed drawn while its event was kept.
+    if (!selected && DRAWN_AS_OBJECTS.has(ev.type) && !alertShown(ev, input.shownAtMs ?? input.nowMs)) continue;
     if (
       !selected &&
       DRAWN_AS_OBJECTS.has(ev.type) &&

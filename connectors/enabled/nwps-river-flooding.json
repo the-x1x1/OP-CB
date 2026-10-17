@@ -2,7 +2,7 @@
   "schema": "oneview.connector.v1",
   "id": "nwps-river-flooding",
   "name": "River and coastal flooding, US (NOAA National Water Prediction Service gauges)",
-  "description": "Every river, lake and tide gauge the National Water Prediction Service watches that is in flood now: minor, moderate or major flood stage as the gauge's own thresholds define it, with the water body and place, the observed stage and flow, the stage at which each category begins, and a link to the gauge's hydrograph. About 13,000 gauges are watched; the few in flood are asked for. Read every fifteen minutes.",
+  "description": "Every river, lake and tide gauge the National Water Prediction Service watches that is in flood now: minor, moderate or major flood stage by the gauge's own thresholds, with the water body and place, the observed stage and flow, each category's stage, and a link to the hydrograph. A gauge whose flood stage is a placeholder (under 0.15 ft, as at Devils Lake, ND) is left out. Read every fifteen minutes.",
   "connector": "arcgis-feature",
   "objectType": "weather-alert",
   "categories": ["disasters"],
@@ -55,7 +55,10 @@
       "observedAt": { "path": "properties.obstime", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
       "detailUrl": { "path": "properties.url", "transform": ["trim", "emptyToNone"] }
     },
-    "filter": [{ "path": "properties.status", "in": ["minor", "moderate", "major"] }]
+    "filter": [
+      { "path": "properties.status", "in": ["minor", "moderate", "major"] },
+      { "path": "properties.flood", "min": 0.15 }
+    ]
   },
   "freshness": {
     "liveSeconds": 7200,

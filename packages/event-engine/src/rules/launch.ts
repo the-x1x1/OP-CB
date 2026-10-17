@@ -18,6 +18,7 @@ import { derivedProvenance, refsOf, shortUtc, stringProp, type ObjectRule, type 
  *   id       event:launch:<namespace>:<value>
  *   startAt  properties.net | windowStart | observedAt;  endAt = properties.windowEnd (when present)
  *   title    labels.name | properties.mission | "Launch"
+ *   summary  the time no more precise than properties.netPrecision (LL2's Day, Month, …) says
  */
 export const launchRule: ObjectRule = {
   id: 'launch',
@@ -43,6 +44,49 @@ function isoProp(o: WorldObject, ...keys: string[]): string | undefined {
   return undefined;
 }
 
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/**
+ * The time a launch is held for, said no more precisely than the source knows it (LL2
+ * `net_precision`): a launch known to the month is "October 2026", not a minute in it.
+ */
+export function netText(at: string, precision: string | undefined): string {
+  const d = new Date(at);
+  if (!precision || ['Second', 'Minute', 'Hour'].includes(precision) || !Number.isFinite(d.getTime()))
+    return shortUtc(at);
+  const year = d.getUTCFullYear();
+  const day = at.slice(0, 10);
+  switch (precision) {
+    case 'Year':
+      return `${year} (the year only)`;
+    case 'Quarter':
+      return `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${year} (the quarter only)`;
+    case 'Month':
+      return `${MONTHS[d.getUTCMonth()]} ${year} (the month only)`;
+    case 'Week':
+      return `the week of ${day} (the week only)`;
+    case 'Morning':
+      return `${day}, some time in the morning`;
+    case 'Afternoon':
+      return `${day}, some time in the afternoon`;
+    default:
+      return `${day} (the day only)`;
+  }
+}
+
 function launchEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {
   const parsed = parseObjectId(o.id);
   if (!parsed) return undefined;
@@ -57,7 +101,7 @@ function launchEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {
   if (vehicle) parts.push(vehicle);
   if (provider) parts.push(`by ${provider}`);
   if (pad) parts.push(`from ${pad}`);
-  parts.push(`NET ${shortUtc(startAt)}`);
+  parts.push(`NET ${netText(startAt, stringProp(o, 'netPrecision'))}`);
   let summary = parts.join(' ') + '.';
   if (status) summary += ` Status: ${status}.`;
   const properties: Record<string, JsonValue> = {};

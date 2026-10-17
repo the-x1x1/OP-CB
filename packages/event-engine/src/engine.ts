@@ -169,6 +169,36 @@ export class EventEngine {
         : this.rules.filter((r) => r.scope === 'changed' || objects.some((o) => r.objectTypes.includes(o.type)));
     if (objects.length === 0 && change.removed.length === 0) return;
     this.run(objects, now, rules);
+    if (change.withdrawn?.length) this.endWithdrawn(change.withdrawn, now);
+  }
+
+  /**
+   * End the open events of `endsWhenWithdrawn` rules whose objects their source no longer
+   * lists. An event whose object is in the world again (another provider has it) is left.
+   */
+  private endWithdrawn(withdrawn: readonly string[], now: number): void {
+    const gone = new Set(withdrawn);
+    const state = this.state;
+    const nowIso = new Date(now).toISOString();
+    const result: EventBatchResult = { added: [], updated: [], unchanged: 0 };
+    for (const rule of this.rules) {
+      if (!rule.endsWhenWithdrawn) continue;
+      for (const type of rule.eventTypes)
+        for (const e of this.store.ofType(type)) {
+          if (e.objectIds.length === 0 || !e.objectIds.some((id) => gone.has(id))) continue;
+          if (!e.objectIds.every((id) => gone.has(id) || !state?.has(id))) continue;
+          if (e.endAt && Date.parse(e.endAt) <= now) continue;
+          const start = Date.parse(e.startAt);
+          const endAt = Number.isFinite(start) && start > now ? e.startAt : nowIso;
+          const ended: WorldEvent = { ...e, endAt, properties: { ...(e.properties ?? {}), withdrawnAt: nowIso } };
+          const outcome = this.store.upsert(ended);
+          if (outcome === 'updated') result.updated.push(ended);
+          else if (outcome === 'added') result.added.push(ended);
+          else result.unchanged++;
+          if (outcome !== 'unchanged') this.emitter.emit('event', { event: ended, outcome });
+        }
+    }
+    if (result.added.length || result.updated.length) this.emitter.emit('batch', result);
   }
 
   private run(objects: readonly WorldObject[], now: number, rules: readonly ObjectRule[]): EventBatchResult {

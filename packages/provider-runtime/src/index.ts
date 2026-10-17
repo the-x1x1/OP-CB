@@ -63,6 +63,11 @@ export interface ObservationBatch {
   providerId: string;
   observations: Observation[];
   snapshot: boolean;
+  /**
+   * A snapshot of everything the source lists, not of an area asked for (a boundsQuery poll)
+   * nor cut short: what it leaves out, the source no longer lists (StateChange.withdrawn).
+   */
+  complete?: boolean;
   receivedAt: string;
   /** Provider-declared freshness overrides. */
   freshness?: ProviderManifest['refreshPolicy']['freshness'];
@@ -1001,7 +1006,8 @@ export class ProviderHost {
           ? { center: this.viewportCenter }
           : {}),
       });
-      const batch = this.admit(h, observations, true);
+      const bounded = Boolean(this.viewport && h.manifest.capabilities.boundsQuery);
+      const batch = this.admit(h, observations, true, !bounded);
       h.consecutiveFailures = 0;
       h.waitingForSetup = false;
       h.waitingForKey = false;
@@ -1081,7 +1087,7 @@ export class ProviderHost {
     }
   }
 
-  private admit(h: Hosted, raw: unknown[], snapshot: boolean): ObservationBatch {
+  private admit(h: Hosted, raw: unknown[], snapshot: boolean, complete = false): ObservationBatch {
     const max = this.deps.maxBatch ?? 250_000;
     const sliced = raw.length > max ? raw.slice(0, max) : raw;
     const { accepted, rejected } = admitObservations(sliced);
@@ -1096,6 +1102,7 @@ export class ProviderHost {
       providerId: h.manifest.id,
       observations,
       snapshot,
+      ...(snapshot && complete && sliced.length === raw.length ? { complete: true } : {}),
       receivedAt: new Date(this.clock.now()).toISOString(),
       rejected: rejected.length + wrongProvider + (raw.length - sliced.length),
       ...(h.manifest.refreshPolicy.freshness ? { freshness: h.manifest.refreshPolicy.freshness } : {}),

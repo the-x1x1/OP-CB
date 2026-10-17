@@ -863,6 +863,7 @@ export function MapHost() {
         zones: zs,
         animate: an,
         ...(shownAtMs !== undefined ? { shownAtMs } : {}),
+        nowMs: Date.now(),
         maxFeatures: budget.maxFeatures,
         detail: budget.detail,
         cullToView: false,

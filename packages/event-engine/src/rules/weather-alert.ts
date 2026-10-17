@@ -18,7 +18,10 @@ import { derivedProvenance, refsOf, shortUtc, stringProp, type ObjectRule, type 
  *
  *   id        event:weather-alert:<namespace>:<value>
  *   severity  properties.severity (Extreme/Severe/Moderate/Minor/Unknown, CAP style) → class; unknown → INFO
- *   startAt   properties.effectiveFrom | onset | observedAt;  endAt = object.validUntil | properties.expires | ends
+ *   startAt   properties.effectiveFrom | onset | effective; else the open event's start for the
+ *             same id (a source with no start of its own), else observedAt
+ *   endAt     object.validUntil | properties.expires | ends; the summary's "until" only from the
+ *             source's own end. Ended when the source stops listing it (endsWhenWithdrawn).
  *   issuedAt  properties.sent | issued, when known (event properties)
  *   title     labels.title | properties.headline | properties.event | "Weather alert"
  *
@@ -34,11 +37,17 @@ export const weatherAlertRule: ObjectRule = {
   objectTypes: [ObjectTypes.WeatherAlert],
   eventTypes: [EventTypes.WeatherAlert],
   scope: 'changed',
+  endsWhenWithdrawn: true,
   evaluate(objects, ctx) {
     const fresh = new Map<string, WorldEvent>();
+    let stored: Map<string, WorldEvent> | undefined;
+    const storedEvent = (id: string): WorldEvent | undefined => {
+      stored ??= new Map(ctx.existing(EventTypes.WeatherAlert).map((e) => [e.id, e]));
+      return stored.get(id);
+    };
     for (const o of objects) {
       if (o.type !== ObjectTypes.WeatherAlert) continue;
-      const e = alertEvent(o, ctx);
+      const e = alertEvent(o, ctx, storedEvent);
       if (e) fresh.set(e.id, e);
     }
     if (fresh.size === 0) return [];
@@ -113,17 +122,34 @@ function isoProp(o: WorldObject, ...keys: string[]): string | undefined {
   return undefined;
 }
 
-function alertEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {
+function alertEvent(
+  o: WorldObject,
+  ctx: RuleContext,
+  storedEvent: (id: string) => WorldEvent | undefined = () => undefined,
+): WorldEvent | undefined {
   const parsed = parseObjectId(o.id);
   if (!parsed) return undefined;
+  const id = makeEventId(EventTypes.WeatherAlert, parsed.namespace, parsed.value);
   const eventName = stringProp(o, 'event', 'eventType');
   const title = stringProp(o, 'title') ?? stringProp(o, 'headline') ?? eventName ?? 'Weather alert';
   const area = stringProp(o, 'areaDesc', 'area', 'region');
   const sender = stringProp(o, 'senderName', 'sender', 'issuer');
   const urgency = stringProp(o, 'urgency');
   const certainty = stringProp(o, 'certainty');
-  const startAt = isoProp(o, 'effectiveFrom', 'onset', 'effective') ?? o.observedAt;
-  const endAt = o.validUntil ?? isoProp(o, 'expires', 'ends', 'validUntil');
+  // A source that gives no start of its own (a river gauge in flood, an aurora forecast area)
+  // dates each report by its latest reading: the alert began when it was first seen, so an
+  // open event for the same id keeps its start rather than restarting with every poll.
+  const ownStart = isoProp(o, 'effectiveFrom', 'onset', 'effective');
+  const previous = ownStart ? undefined : storedEvent(id);
+  const stillOpen = previous && (!previous.endAt || Date.parse(previous.endAt) > ctx.now);
+  const startAt =
+    ownStart ??
+    (stillOpen && Date.parse(previous.startAt) <= Date.parse(o.observedAt) ? previous.startAt : o.observedAt);
+  // The end the source gives, and the one the summary states. Without one the event still
+  // ends when the report goes stale (object.validUntil), but "until" would be invented.
+  const ownEnd = isoProp(o, 'ends', 'expires', 'validUntil');
+  const endAt = o.validUntil ?? ownEnd;
+  const statedEnd = ownEnd ? endAt : undefined;
   const severityText = stringProp(o, 'severity');
   const messageType = stringProp(o, 'messageType');
   const references = Array.isArray(o.properties['references'])
@@ -132,7 +158,7 @@ function alertEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {
   const parts: string[] = [];
   if (eventName && eventName !== title) parts.push(eventName);
   if (area) parts.push(`for ${area}`);
-  parts.push(`from ${shortUtc(startAt)}${endAt ? ` until ${shortUtc(endAt)}` : ''}`);
+  parts.push(`from ${shortUtc(startAt)}${statedEnd ? ` until ${shortUtc(statedEnd)}` : ''}`);
   let summary = parts.join(' ') + '.';
   if (severityText) summary += ` Severity: ${severityText}.`;
   if (sender) summary += ` Issued by ${sender}.`;
@@ -155,7 +181,7 @@ function alertEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {
   if (references.length)
     properties['supersedes'] = references.map((r) => makeEventId(EventTypes.WeatherAlert, parsed.namespace, r));
   const event: WorldEvent = {
-    id: makeEventId(EventTypes.WeatherAlert, parsed.namespace, parsed.value),
+    id,
     type: EventTypes.WeatherAlert,
     title,
     startAt,

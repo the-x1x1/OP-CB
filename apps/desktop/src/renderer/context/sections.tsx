@@ -1066,6 +1066,9 @@ export function stationWaves(
   fromDeg: number | undefined,
 ): string | undefined {
   const parts: string[] = [];
+  // A period of zero is no period measured (NDBC 22101 and 22102 send DPD 0), not waves every 0 s.
+  if (dominantS !== undefined && !(dominantS > 0)) dominantS = undefined;
+  if (averageS !== undefined && !(averageS > 0)) averageS = undefined;
   if (heightM !== undefined) parts.push(`${heightM.toFixed(1)} m (${(heightM / 0.3048).toFixed(1)} ft)`);
   if (dominantS !== undefined)
     parts.push(
@@ -1120,7 +1123,9 @@ const weatherStation: ContextSection = {
           { label: 'Dew point', value: formatTemperature(num(object, 'dewPointC')) },
           { label: 'Wind', value: stationWind(num(object, 'windSpeedMps'), num(object, 'windDirDeg')) },
           {
-            label: 'Gusts (10 min)',
+            // Over the source's own period (10 min at a home station, 8 min at an NDBC buoy, 2 min
+            // at a C-MAN station): the label names none of them.
+            label: 'Gusts',
             value:
               num(object, 'windGustMps') !== undefined ? stationWind(num(object, 'windGustMps'), undefined) : undefined,
           },

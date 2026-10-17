@@ -56,9 +56,19 @@ Scope: all live fire detections each run (grid-accelerated single linkage).
 
 Severity from `properties.severity` (CAP words Extreme/Severe/Moderate/Minor → classes,
 anything else INFO; numeric 1–4 also accepted). `startAt` = `properties.effectiveFrom |
-onset | effective | observedAt`; `endAt` = `object.validUntil | properties.expires | ends`.
-Title = `labels.title | properties.headline | properties.event | "Weather alert"`; geometry
-= alert polygon or point.
+onset | effective`; for a source with none of these (a river gauge in flood, an aurora area),
+the start of the open event with the same id, so a flood is not restarted by each reading;
+else `observedAt`. `endAt` = `object.validUntil | properties.ends | expires`. The summary's
+"until" is stated only when the source gives an end of its own (`ends`, `expires`), not one
+taken from how long a reading stays fresh. Title = `labels.title | properties.headline |
+properties.event | "Weather alert"`; geometry = alert polygon or point.
+
+**Withdrawn.** When the source stops listing an alert's object — left out of a complete read
+of everything it lists (`StateChange.withdrawn`; a read of an area only, a provider disabled
+or an object expired is not one) — the open event ends then (`endAt` = now,
+`properties.withdrawnAt`): a volcano back to normal, a gauge below flood stage, an aurora level
+no longer reached. The map draws a storm's or an alert's event only while it is in force at
+the time shown.
 
 **Supersession.** A message that updates or cancels earlier ones (CAP `references`, which
 the NWS provider keeps as `properties.references`, alert URNs) gets `properties.supersedes`
@@ -201,6 +211,9 @@ aircraft give the same cells; whether an open cell is kept is read from its own 
 
 INFO. `startAt` = `properties.net | windowStart | launchAt | observedAt`, `endAt` =
 `properties.windowEnd`; title `Launch — <name>`; summary from vehicle, provider, pad, status.
+The time is said no more precisely than `properties.netPrecision` (LL2 `net_precision`): to the
+minute for Second, Minute and Hour; "2026-10-19 (the day only)", "October 2026 (the month
+only)", "Q4 2026 (the quarter only)" and so on otherwise.
 
 ## source-status-change (`event:source-status-change:<providerId>:<compact time>`)
 

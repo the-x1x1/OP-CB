@@ -30,6 +30,11 @@ import { createSpatialIndex, type SpatialIndex } from '@worldview/hot-spatial-in
 export interface IngestMeta {
   /** Full snapshot from this provider: objects it previously sourced and did not include are removed. */
   snapshot: boolean;
+  /**
+   * The snapshot is of everything the source lists (not of an area asked for, nor cut short):
+   * what it leaves out is reported as withdrawn (StateChange.withdrawn) as well as removed.
+   */
+  withdraws?: boolean;
   providerId: string;
   /** Provider-declared freshness overrides (from manifest.refreshPolicy.freshness). */
   freshness?: Record<string, FreshnessPolicy>;
@@ -49,6 +54,13 @@ export interface StateChange {
   removed: string[];
   /** Objects whose freshness class changed during a sweep. */
   refreshed: string[];
+  /**
+   * Of `removed`, those a provider's own full snapshot (IngestMeta.withdraws) left out — the
+   * source no longer lists them (a volcano back to normal, a gauge below flood stage). Not those
+   * that expired, those outside an area asked for, nor those taken away with their provider
+   * (disabled, removed): the source said nothing of them.
+   */
+  withdrawn?: string[];
   at: string;
   objectCount: number;
 }
@@ -101,11 +113,18 @@ export class WorldState {
   /** Each provider's declared freshness (IngestMeta.freshness), kept for the sweep. */
   private readonly providerFreshness = new Map<string, Record<string, FreshnessPolicy>>();
   private readonly listeners = new Set<Listener>();
-  private pending: { added: Set<string>; updated: Set<string>; removed: Set<string>; refreshed: Set<string> } = {
+  private pending: {
+    added: Set<string>;
+    updated: Set<string>;
+    removed: Set<string>;
+    refreshed: Set<string>;
+    withdrawn: Set<string>;
+  } = {
     added: new Set(),
     updated: new Set(),
     removed: new Set(),
     refreshed: new Set(),
+    withdrawn: new Set(),
   };
   private flushTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly opts: Required<
@@ -345,6 +364,7 @@ export class WorldState {
         const otherRefs = obj.sourceRefs.filter((r) => r.providerId !== meta.providerId);
         if (otherRefs.length === 0) {
           this.delete(id);
+          if (meta.withdraws && this.pending.removed.has(id)) this.pending.withdrawn.add(id);
           result.removed++;
         } else this.replace(obj, { ...obj, sourceRefs: otherRefs, updatedAt: nowIso });
       }
@@ -440,7 +460,15 @@ export class WorldState {
     }
     if (!this.hasPendingChanges()) return undefined;
     const p = this.pending;
-    this.pending = { added: new Set(), updated: new Set(), removed: new Set(), refreshed: new Set() };
+    this.pending = {
+      added: new Set(),
+      updated: new Set(),
+      removed: new Set(),
+      refreshed: new Set(),
+      withdrawn: new Set(),
+    };
+    // Withdrawn and then seen again within one batch is not withdrawn.
+    for (const id of p.withdrawn) if (!p.removed.has(id)) p.withdrawn.delete(id);
     for (const id of p.removed) {
       p.added.delete(id);
       p.updated.delete(id);
@@ -456,6 +484,7 @@ export class WorldState {
       updated: [...p.updated],
       removed: [...p.removed],
       refreshed: [...p.refreshed],
+      ...(p.withdrawn.size ? { withdrawn: [...p.withdrawn] } : {}),
       at: new Date(this.clock.now()).toISOString(),
       objectCount: this.objects.size,
     };

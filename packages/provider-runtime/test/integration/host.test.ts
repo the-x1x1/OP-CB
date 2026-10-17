@@ -1025,10 +1025,13 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   const flush = async () => {
     for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
   };
+  const batches: Array<{ complete?: boolean }> = [];
+  host.onObservations((b) => batches.push(b));
   await host.start();
   t.mock.timers.tick(0);
   await flush();
   assert.equal(polls.length, 1, 'the first poll');
+  assert.equal(batches.at(-1)?.complete, true, 'no view yet: the whole of what the source lists');
   const view = (w: number) => host.setViewport({ west: w, south: 10, east: w + 20, north: 30 });
   view(0);
   view(10); // panning: each move asks again
@@ -1039,6 +1042,7 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   t.mock.timers.tick(22_000);
   await flush();
   assert.equal(polls.length, 2, 'once the budget allows, one poll for the latest view');
+  assert.equal(batches.at(-1)?.complete, undefined, 'a read of the view: what it leaves out is not withdrawn');
   assert.ok(polls[1]! - polls[0]! >= 27_273);
   await host.dispose();
 });

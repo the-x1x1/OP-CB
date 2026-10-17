@@ -24,6 +24,7 @@
         "senderName": "Hawaiian Volcano Observatory",
         "observatory": "hvo",
         "sent": "2026-10-15T20:10:46.000Z",
+        "effectiveFrom": "2026-10-15T20:10:46.000Z",
         "colourSince": "2026-10-15T20:10:46.000Z",
         "noticeId": "DOI-USGS-HVO-2026-10-15T19:07:17+00:00",
         "detailUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-HVO-2026-10-15T19:07:17+00:00",

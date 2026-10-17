@@ -7,7 +7,7 @@
     { "inline": "{\"error\":{\"code\":400,\"message\":\"Unable to complete operation.\",\"details\":[]}}" },
     { "inline": "{\"type\":\"FeatureCollection\",\"features\":\"none\"}" }
   ],
-  "expectObservations": 16,
+  "expectObservations": 14,
   "expect": [
     {
       "externalId": "ATKG1",
@@ -35,13 +35,13 @@
       "attribution": "River gauges: NOAA National Water Prediction Service"
     },
     {
-      "externalId": "DCBN8",
+      "externalId": "TLPT2",
       "payload": {
-        "event": "Major flooding",
-        "severity": "Severe",
-        "stage": 50,
-        "actionStage": null,
-        "areaDesc": "Devils Lake"
+        "event": "Minor flooding",
+        "severity": "Minor",
+        "floodStage": 15,
+        "moderateStage": null,
+        "majorStage": null
       }
     },
     {

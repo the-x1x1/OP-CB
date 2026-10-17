@@ -5,7 +5,7 @@ import type { WorldGeometry } from '@worldview/world-model';
 import { earthquakeRule } from './rules/earthquake.js';
 import { wildfireClusterRule, clusterSeverity, clusterGrowth, hullAreaKm2 } from './rules/wildfire-cluster.js';
 import { weatherAlertRule } from './rules/weather-alert.js';
-import { launchRule } from './rules/launch.js';
+import { launchRule, netText } from './rules/launch.js';
 import { extendTrack, saffirSimpson, stormRule, stormSeverity, type TrackPoint } from './rules/storm.js';
 import { SourceStatusTracker, isNotableTransition, type SourceChange } from './rules/source-status.js';
 import { EventStore } from './store.js';
@@ -204,6 +204,34 @@ test('wildfireClusterRule: identity survives the earliest detection expiring; me
   assert.equal(ended[0]!.endAt, iso(DAY));
 });
 
+test('weatherAlertRule: a source with no start or end of its own — the start is when first seen, no "until" stated', () => {
+  const gauge = (observedAt: string) =>
+    obj({
+      id: 'weather-alert:nwps-river-flooding:atkg1',
+      type: 'weather-alert',
+      providerId: 'nwps-river-flooding',
+      lat: 31.2,
+      lon: -81.9,
+      observedAt,
+      validUntil: new Date(Date.parse(observedAt) + DAY).toISOString(),
+      labels: { title: 'Satilla River' },
+      properties: { event: 'Minor flooding', areaDesc: 'Atkinson', severity: 'Minor' },
+    });
+  const store = new EventStore();
+  const [first] = weatherAlertRule.evaluate([gauge(iso(-HOUR))], ctxAt(T0, store));
+  assert.equal(first!.startAt, iso(-HOUR));
+  assert.equal(first!.endAt, iso(DAY - HOUR), 'it still ends when the reading goes stale');
+  assert.equal(first!.summary, 'Minor flooding for Atkinson from 2026-09-21 11:00 UTC. Severity: Minor.');
+  store.upsert(first!);
+  // The next reading, fifteen minutes on: the same flood, not a new one.
+  const [next] = weatherAlertRule.evaluate([gauge(iso(-HOUR + 15 * 60_000))], ctxAt(T0, store));
+  assert.equal(next!.startAt, iso(-HOUR));
+  // Once that event has ended, a flood seen again starts afresh.
+  store.upsert({ ...next!, endAt: iso(-1) });
+  const [again] = weatherAlertRule.evaluate([gauge(iso(0))], ctxAt(T0, store));
+  assert.equal(again!.startAt, iso(0));
+});
+
 test('weatherAlertRule: severity from payload, endAt from validUntil, geometry passthrough', () => {
   const polygon: WorldGeometry = {
     type: 'Polygon',
@@ -231,6 +259,7 @@ test('weatherAlertRule: severity from payload, endAt from validUntil, geometry p
       areaDesc: 'Oahu North Shore',
       senderName: 'NWS Honolulu HI',
       effectiveFrom: iso(-HOUR),
+      expires: iso(5 * HOUR),
       urgency: 'Expected',
       certainty: 'Likely',
     },
@@ -306,6 +335,20 @@ test('launchRule: INFO event with NET time and pad position', () => {
   assert.equal(e!.endAt, iso(5 * HOUR));
   assert.equal(e!.summary, 'Falcon 9 by SpaceX from SLC-40 NET 2026-09-21 15:00 UTC. Status: Go.');
   assert.deepEqual(e!.geometry, { type: 'Point', coordinates: [-80.6, 28.6] });
+  // Known only to the month (LL2 net_precision): the summary does not name a minute in it.
+  const month = launchRule.evaluate([{ ...l, properties: { ...l.properties, netPrecision: 'Month' } }], ctxAt(T0))[0]!;
+  assert.equal(month.summary, 'Falcon 9 by SpaceX from SLC-40 NET September 2026 (the month only). Status: Go.');
+  assert.deepEqual(
+    ['Hour', 'Day', 'Week', 'Quarter', 'Year', 'Afternoon'].map((p) => netText('2026-10-19T10:30:00.000Z', p)),
+    [
+      '2026-10-19 10:30 UTC',
+      '2026-10-19 (the day only)',
+      'the week of 2026-10-19 (the week only)',
+      'Q4 2026 (the quarter only)',
+      '2026 (the year only)',
+      '2026-10-19, some time in the afternoon',
+    ],
+  );
 });
 
 test('sourceStatusRule: notable transitions only, throttled to one per provider per 10 minutes', () => {

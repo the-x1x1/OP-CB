@@ -279,16 +279,29 @@ test('nowCOAST radar: the newest frame is the TIME of every tile, a new frame re
 });
 
 /** Observations of one definition over its fixture, through the state and event engines as the runtime runs them. */
-async function eventsOf(id: string, fixture: string, nowIso: string, eventType = 'weather-alert') {
+async function eventsOf(
+  id: string,
+  fixture: string,
+  nowIso: string,
+  eventType = 'weather-alert',
+  then?: { fixture: string; nowIso: string },
+) {
   const def = definition(id);
   const observations = await poll(def, read(fixture), nowIso);
-  const clock = { now: () => Date.parse(nowIso) };
+  let now = Date.parse(nowIso);
+  const clock = { now: () => now };
   const state = new WorldState({ clock, flushDelayMs: 0 });
   const engine = new EventEngine({ clock });
   engine.attach(state);
   const freshness = defaultConnectorRegistry.createProvider(def).manifest.refreshPolicy.freshness;
-  state.ingest(observations, { snapshot: true, providerId: def.id, ...(freshness ? { freshness } : {}) });
+  const meta = { snapshot: true, withdraws: true, providerId: def.id, ...(freshness ? { freshness } : {}) };
+  state.ingest(observations, meta);
   state.flush();
+  if (then) {
+    now = Date.parse(then.nowIso);
+    state.ingest(await poll(def, read(then.fixture), then.nowIso), meta);
+    state.flush();
+  }
   const events = engine.store.ofType(eventType);
   engine.dispose();
   return { observations, events };
@@ -753,13 +766,33 @@ test('USGS volcanoes: only the elevated ones, each a volcano alert at its summit
   assert.equal(kilauea.severity, 'SEVERE', 'ORANGE');
   assert.equal(kilauea.properties?.['issuedAt'], '2026-10-15T20:10:46.000Z');
   assert.equal(kilauea.properties?.['senderName'], 'Hawaiian Volcano Observatory');
-  assert.match(
-    kilauea.summary ?? '',
-    /^Volcano alert for Hawaii from .* Severity: Severe\. Issued by Hawaiian Volcano Observatory\.$/,
+  // Since its colour was raised (colorDate), not since the poll; USGS gives no end.
+  assert.equal(kilauea.startAt, '2026-10-15T20:10:46.000Z');
+  assert.equal(
+    kilauea.summary,
+    'Volcano alert for Hawaii from 2026-10-15 20:10 UTC. Severity: Severe. Issued by Hawaiian Volcano Observatory.',
   );
   assert.deepEqual(kilauea.geometry, { type: 'Point', coordinates: [-155.287, 19.421] });
   assert.equal(events.find((e) => e.title === 'Shishaldin')!.severity, 'MODERATE', 'YELLOW');
   assert.equal(feed.isRelevant(kilauea), true);
+});
+
+test('USGS volcanoes: a volcano back to normal (left out of the next read) ends its alert then', async () => {
+  const { events } = await eventsOf(
+    'usgs-volcanoes',
+    'fixtures/connectors/hazards/usgs-volcanoes-vhp-status.geojson',
+    '2026-10-16T06:00:00.000Z',
+    'weather-alert',
+    {
+      fixture: 'fixtures/connectors/hazards/usgs-volcanoes-vhp-status-empty.geojson',
+      nowIso: '2026-10-16T06:30:00.000Z',
+    },
+  );
+  assert.equal(events.length, 4);
+  for (const e of events) {
+    assert.equal(e.endAt, '2026-10-16T06:30:00.000Z', e.title);
+    assert.equal(e.properties?.['withdrawnAt'], '2026-10-16T06:30:00.000Z');
+  }
 });
 
 test('NDBC: every station a weather station at its position, its own report time, the missing (MM) values absent', async () => {
@@ -780,19 +813,24 @@ test('NDBC: every station a weather station at its position, its own report time
   assert.equal(honolulu.payload['pressureSeaLevelHpa'], 1016.3);
 });
 
-test('NWPS: gauges in flood as flood alerts at the gauge, the category as the severity; action stage left out', async () => {
+test('NWPS: gauges in flood as flood alerts at the gauge, the category as the severity; action stage and placeholder stages left out', async () => {
   const { observations, events } = await eventsOf(
     'nwps-river-flooding',
     'fixtures/connectors/hazards/nwps-river-gauges-flooding.geojson',
     '2026-09-23T06:00:00.000Z',
   );
-  assert.equal(observations.length, 16);
+  assert.equal(observations.length, 14);
   assert.ok(!observations.some((o) => o.externalId === 'AMRL1'), 'action stage is not flooding');
-  const devils = events.find((e) => e.objectIds[0]?.endsWith('DCBN8'))!;
-  assert.equal(devils.title, 'Devils Lake');
-  assert.equal(devils.severity, 'SEVERE');
-  assert.match(devils.summary ?? '', /^Major flooding for Devils Lake from /);
-  assert.equal(events.find((e) => e.objectIds[0]?.endsWith('ATKG1'))!.severity, 'MINOR');
+  // Devils Lake and Stump Lake carry flood stages of 0.1/0.2/0.3 ft against a lake near 50 ft.
+  assert.ok(!observations.some((o) => o.externalId === 'DCBN8' || o.externalId === 'ESLN8'), 'placeholder stages');
+  const atkinson = events.find((e) => e.objectIds[0]?.endsWith('ATKG1'))!;
+  assert.equal(atkinson.title, 'Satilla River');
+  assert.equal(atkinson.severity, 'MINOR');
+  // NWPS gives no end: the summary does not invent one from how long a reading stays fresh.
+  assert.equal(
+    atkinson.summary,
+    'Minor flooding for Atkinson from 2026-09-23 04:45 UTC. Severity: Minor. Issued by NOAA National Water Prediction Service.',
+  );
 });
 
 test('SWPC aurora: the OVATION grid read as areas, one per level reached, each a weather alert with its outline', async () => {

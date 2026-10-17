@@ -312,6 +312,19 @@ test('presentation: an alert keeps its polygon at every detail level, and its ev
   const pointEvent = { ...event, geometry: { type: 'Point', coordinates: [-105.5, 41.5] } } as unknown as WorldEvent;
   const glyph = presentObjects({ objects: [bare], events: [pointEvent], view, cullToView: false });
   assert.ok(!glyph.upsert.some((f) => f.eventId), 'a point event adds nothing to a drawn mark');
+  // Its object gone (the source stopped listing it) and its event ended: nothing is drawn now,
+  // though it is while the timeline shows a moment before the end, or when it is selected.
+  const ended = { ...event, endAt: '2026-10-03T20:00:00.000Z' } as unknown as WorldEvent;
+  const after = Date.parse('2026-10-03T20:30:00.000Z');
+  const drawn = (input: Partial<Parameters<typeof presentObjects>[0]>) =>
+    presentObjects({ objects: [], events: [ended], view, cullToView: false, ...input }).upsert.some(
+      (f) => f.id === 'event:weather-alert:nws:w',
+    );
+  assert.equal(drawn({ nowMs: after }), false, 'ended: not drawn');
+  assert.equal(drawn({ nowMs: after, shownAtMs: Date.parse('2026-10-03T19:00:00.000Z') }), true, 'in force then');
+  assert.equal(drawn({ nowMs: after, selectedId: ended.id }), true, 'the selection');
+  assert.equal(drawn({ nowMs: Date.parse('2026-10-03T19:59:00.000Z') }), true, 'not yet ended');
+  assert.equal(drawn({}), true, 'no clock given: as before');
 });
 
 test('presentation: a tight crowd stays 200 separate points by default; clustering is opt-in; lens visibility', () => {

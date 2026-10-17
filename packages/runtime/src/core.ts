@@ -1026,6 +1026,7 @@ export class RuntimeCore {
   private onBatch(batch: ObservationBatch): void {
     this.state.ingest(batch.observations, {
       snapshot: batch.snapshot,
+      ...(batch.complete ? { withdraws: true } : {}),
       providerId: batch.providerId,
       ...(batch.freshness ? { freshness: batch.freshness } : {}),
     });
