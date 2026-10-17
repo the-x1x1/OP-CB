@@ -47,6 +47,11 @@ are deleted too.
 
 - [ ] Drag a KML from Google Earth onto the map: a dashed frame while dragging; the shapes in
       a new colour, point names shown, the view moves to them; the card lists it with a count
+- [x] Palette → "Draw a file on the map…" with a KML of a point, a line, an area and a
+      NetworkLink (`Downloads\wv-qa\qa-shapes.kml`, made up): the three drawn in one colour, each
+      named (the line and the area at a dot), the card "qa-shapes.kml · 3 · some left out", Remove
+      clears them — seen 2026-10-17 01:44Z, build `0943d44`, 3D. The view went to them but cut the
+      line's ends off (padded since)
 - [ ] A KMZ, a GPX track and a GeoJSON the same way; untick, Go to and Remove on the card
 - [ ] A KML with a NetworkLink: drawn without it, the card's row says some were left out
 - [ ] A .txt or a 30 MB file: refused with a toast; dropping a file outside the map does nothing

@@ -68,6 +68,10 @@ Versioning: [semantic versioning](https://semver.org/).
 - **A hurricane advisory released early stays on the map.** NHC sometimes publishes an
   advisory up to about an hour before its nominal time; the allowance is now ninety minutes
   (it was one hour, the edge of what happens), as God's Eye View found too.
+- **A fly to an area on the globe leaves a margin.** The globe fitted a box edge to edge, under
+  the bars at the foot of the map, so a dropped file's line ran off both sides of the view it was
+  flown to (seen on the test laptop); it now leaves 12 % of the box on every side, as the 2D map
+  leaves 48 px.
 - **The globe no longer stops rendering when weather layers are switched off in 2D.** Overlays
   taken off the globe were destroyed, and a globe tile still loading one of their frames threw
   "This object was destroyed" when the 3D view came back, which stopped rendering until the app

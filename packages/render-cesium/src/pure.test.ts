@@ -8,6 +8,7 @@ import {
   normalizeHeadingDegrees,
   rectangleToBounds,
   resolveFlyTarget,
+  padBounds,
   viewStateToCamera,
 } from './view.js';
 import { pickAnchor, resolvePickedFeatureId, toPickResult } from './picking.js';
@@ -104,10 +105,20 @@ test('view: fly targets prefer bounds, then altitude, then zoom, then a sensible
     pitchDegrees: -90,
   };
   const bounds = { west: -1, south: -1, east: 1, north: 1 };
+  // Widened by 12 % a side: Cesium fits edge to edge, and the canvas has bars over its foot.
   assert.deepEqual(resolveFlyTarget({ position: { latitude: 0, longitude: 0 }, bounds }, current), {
     kind: 'bounds',
-    bounds,
+    bounds: { west: -1.24, south: -1.24, east: 1.24, north: 1.24 },
   });
+  // Across 180°: still the short way round, still across it.
+  assert.deepEqual(padBounds({ west: 170, south: 10, east: -170, north: 20 }), {
+    west: 167.6,
+    south: 8.8,
+    east: -167.6,
+    north: 21.2,
+  });
+  assert.deepEqual(padBounds({ west: -10, south: 80, east: 10, north: 88.9 }).north, 89, 'not past the pole');
+  assert.equal(padBounds({ west: -170, south: 0, east: 170, north: 1 }).west, -180, 'nearly the whole way: all of it');
   assert.equal(
     (resolveFlyTarget({ position: { latitude: 1, longitude: 2 }, altitudeM: 300 }, current) as { height: number })
       .height,
