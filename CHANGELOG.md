@@ -85,6 +85,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - **Buoys.** A wave period of 0 (no period measured) is left out rather than read "every 0 s",
   and gusts are labelled without a 10-minute period buoys do not use.
 - **What's here** no longer shows the previous point's overlay values for a moment.
+- **A dropped file either side of 180°** (Fiji, the Aleutians) is flown to as one box across
+  180°, not a view of the whole world between its two halves.
 - **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
   map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
   as the map's answer for the rest of the session. It is now retried in the background — after

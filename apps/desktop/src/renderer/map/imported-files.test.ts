@@ -103,6 +103,21 @@ test('bounds and where to fly', () => {
   const b = shapesBounds(file('a').shapes);
   assert.deepEqual(b, { west: -155.83, south: 0, east: 3, north: 19.83 });
   assert.equal(shapesBounds([]), undefined);
+  // Either side of 180° (Fiji): a box across it, west > east, not one round the world.
+  const fiji = shapesBounds([
+    {
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [177.4, -17.8],
+          [179.9, -16.5],
+          [-179.8, -16.2],
+        ],
+      },
+    },
+    { geometry: { type: 'Point', coordinates: [-178.5, -18.1] } },
+  ]);
+  assert.deepEqual(fiji, { west: 177.4, south: -18.1, east: -178.5, north: -16.2 });
   const t = importedTarget({ ...file('a'), bounds: b! });
   assert.deepEqual(t?.bounds, b);
   assert.equal(importedTarget({ ...file('a'), shapes: [] }), undefined);

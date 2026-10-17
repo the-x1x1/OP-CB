@@ -47,16 +47,15 @@ export function nextImportColour(files: readonly ImportedFile[]): string {
 
 /** The box round every coordinate of the shapes; undefined for none. */
 export function shapesBounds(shapes: readonly GeodataShape[]): GeoBounds | undefined {
-  let west = Infinity;
   let south = Infinity;
-  let east = -Infinity;
   let north = -Infinity;
+  const lons: number[] = [];
   const visit = (v: unknown): void => {
     if (!Array.isArray(v)) return;
     if (typeof v[0] === 'number' && typeof v[1] === 'number') {
       const [lon, lat] = v as [number, number];
-      if (lon < west) west = lon;
-      if (lon > east) east = lon;
+      if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
+      lons.push(lon >= -180 && lon <= 180 ? lon : ((((lon + 180) % 360) + 360) % 360) - 180);
       if (lat < south) south = lat;
       if (lat > north) north = lat;
       return;
@@ -64,7 +63,23 @@ export function shapesBounds(shapes: readonly GeodataShape[]): GeoBounds | undef
     for (const x of v) visit(x);
   };
   for (const s of shapes) visit(s.geometry.coordinates);
-  return Number.isFinite(west) ? { west, south, east, north } : undefined;
+  if (lons.length === 0) return undefined;
+  // The narrowest span of longitude that holds every point: the complement of the widest gap
+  // between neighbouring longitudes, the gap across 180° included. Shapes either side of 180°
+  // (Fiji, the Aleutians) give a box across it (west > east), not one round the whole world.
+  lons.sort((a, b) => a - b);
+  let gap = lons[0]! + 360 - lons[lons.length - 1]!;
+  let west = lons[0]!;
+  let east = lons[lons.length - 1]!;
+  for (let i = 1; i < lons.length; i++) {
+    const g = lons[i]! - lons[i - 1]!;
+    if (g > gap) {
+      gap = g;
+      west = lons[i]!;
+      east = lons[i - 1]!;
+    }
+  }
+  return { west, south, east, north };
 }
 
 /** One geometry as the renderers' parts: points, lines, polygons. */
