@@ -39,6 +39,7 @@ import {
   GOOGLE_3D_ATTRIBUTION,
   type Google3DOptions,
 } from './google3d.js';
+import { detachImageryLayer } from './detach-layer.js';
 
 export interface StackDescriptor {
   id: string;
@@ -388,7 +389,7 @@ export class MapStackController {
   private removeImageryLayer(): void {
     this.removeImageryErrorListener?.();
     this.removeImageryErrorListener = null;
-    if (this.imageryLayer) this.viewer.imageryLayers.remove(this.imageryLayer, true);
+    if (this.imageryLayer) detachImageryLayer(this.viewer.imageryLayers, this.imageryLayer);
     this.imageryLayer = null;
     this.activeImageryProvider = null;
   }

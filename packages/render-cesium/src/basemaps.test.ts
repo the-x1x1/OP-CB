@@ -314,7 +314,8 @@ test('controller: destroy removes the layer, credits and disposes cached provide
   h.controller.destroy();
   await settle();
   assert.equal(h.viewer.imageryLayers.length, 0);
-  assert.equal(h.created[0]!.destroyed, true);
+  // Taken off, not destroyed: a tile still holding its imagery would throw (detach-layer.ts).
+  assert.equal(h.created[0]!.destroyed, false);
   assert.equal(ne.destroyed, true);
   assert.equal(h.credits.current, null);
   const after = await h.controller.setStack(OSM_STACK_ID);

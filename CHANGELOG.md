@@ -68,6 +68,11 @@ Versioning: [semantic versioning](https://semver.org/).
 - **A hurricane advisory released early stays on the map.** NHC sometimes publishes an
   advisory up to about an hour before its nominal time; the allowance is now ninety minutes
   (it was one hour, the edge of what happens), as God's Eye View found too.
+- **The globe no longer stops rendering when weather layers are switched off in 2D.** Overlays
+  taken off the globe were destroyed, and a globe tile still loading one of their frames threw
+  "This object was destroyed" when the 3D view came back, which stopped rendering until the app
+  was restarted (seen on the test laptop). Layers are now taken off without being destroyed;
+  Cesium's destroy freed nothing anyway.
 
 ## [0.4.0] — 2026-10-12
 

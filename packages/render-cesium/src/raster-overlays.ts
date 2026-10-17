@@ -16,6 +16,7 @@ import type {
   TileProviderErrorLike,
   ViewerLike,
 } from './cesium-like.js';
+import { detachImageryLayer } from './detach-layer.js';
 
 /**
  * Raster overlays (ADR-008 amendment) on the globe: one imagery layer per overlay, kept
@@ -545,7 +546,7 @@ export class RasterOverlays3D {
       next.push(held);
     }
     // Whatever is left was dropped from the list: gone at once.
-    for (const h of byKey.values()) this.viewer.imageryLayers.remove(h.layer, true);
+    for (const h of byKey.values()) detachImageryLayer(this.viewer.imageryLayers, h.layer);
     // Order: index 0 is the basemap; overlays follow in list order, beneath whatever came
     // after (the reference borders). Detach and re-add the kept ones so the order is exact.
     for (const h of [...next, ...replaced]) if (this.held.includes(h)) this.viewer.imageryLayers.remove(h.layer, false);
@@ -642,14 +643,14 @@ export class RasterOverlays3D {
         this.retire(old, FRAME_HANDOVER_CHECK_MS, waited + FRAME_HANDOVER_CHECK_MS);
         return;
       }
-      this.viewer.imageryLayers.remove(old.layer, true);
+      detachImageryLayer(this.viewer.imageryLayers, old.layer);
       this.viewer.scene.requestRender();
     }, wait);
     this.retiring.set(timer, old);
   }
 
   private removeAll(): void {
-    for (const h of this.held) this.viewer.imageryLayers.remove(h.layer, true);
+    for (const h of this.held) detachImageryLayer(this.viewer.imageryLayers, h.layer);
     this.held = [];
   }
 

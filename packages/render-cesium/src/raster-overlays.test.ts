@@ -110,11 +110,23 @@ test('the old frame waits for the globe to load the new one, and not past the ca
   assert.equal(checks, 1 + (FRAME_HANDOVER_MAX_MS - FRAME_HANDOVER_MS) / FRAME_HANDOVER_CHECK_MS);
 });
 
-test('a dropped overlay is removed at once', () => {
-  const { viewer, overlays } = setup();
+test('a dropped overlay is removed at once, and never destroyed', () => {
+  const { viewer, overlays, timers } = setup();
   overlays.set([topo, radar('a')]);
+  const dropped = viewer.imageryLayers.layers[2]!;
   overlays.set([topo]);
   assert.equal(viewer.imageryLayers.layers.length, 2);
+  // A globe tile may still hold its imagery; a destroyed layer would stop rendering for good
+  // (seen on the test laptop, 2026-10-17). Nor is a retired frame or a cleared stack destroyed.
+  assert.equal(dropped.isDestroyed(), false);
+  overlays.set([topo, radar('b')]);
+  overlays.set([topo, radar('c')]);
+  const retired = viewer.imageryLayers.layers[2]!;
+  for (const t of timers.splice(0)) t();
+  assert.equal(retired.isDestroyed(), false);
+  const kept = viewer.imageryLayers.layers.slice(1);
+  overlays.dispose();
+  assert.ok(kept.every((l) => !l.isDestroyed()));
 });
 
 test('imagery comparison: each source on its side of the divider, a new frame keeps its side, null draws all whole', () => {

@@ -155,7 +155,8 @@ test('reference overlay (3D): borders become an imagery layer on top; names foll
 
   // Switching borders off removes the layer; names stay.
   renderer.setReference(data, { borders: false, labels: true });
-  assert.equal(cesium.canvasLayers[0]!.isDestroyed(), true);
+  assert.equal(viewer.imageryLayers.indexOf(cesium.canvasLayers[0]!), -1, 'taken off the globe');
+  assert.equal(cesium.canvasLayers[0]!.isDestroyed(), false, 'and not destroyed (detach-layer.ts)');
   assert.equal(labels().length, 2);
   renderer.setReference(null, { borders: true, labels: true });
   assert.equal(labels().length, 0, 'no data, no names');

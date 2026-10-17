@@ -11,6 +11,7 @@ import type {
 import { declutterLabels, estimateLabelSize, type LabelCandidate } from './labelDeclutter.js';
 import { ALWAYS_VISIBLE, type HorizonTest, type Vec3 } from './horizon.js';
 import { ReferenceTileSource, type TileContext2D } from './reference-tiles.js';
+import { detachImageryLayer } from './detach-layer.js';
 
 /** Deep enough for a city block; the tiles redraw the same simplified lines at every level. */
 const MAX_TILE_LEVEL = 18;
@@ -60,7 +61,7 @@ export class ReferenceOverlay3D {
     // Borders.
     const wantBorders = Boolean(data && options.borders && data.lines.length);
     if (this.layer && (!wantBorders || dataChanged)) {
-      this.viewer.imageryLayers.remove(this.layer, true);
+      detachImageryLayer(this.viewer.imageryLayers, this.layer);
       this.layer = undefined;
     }
     if (wantBorders && !this.layer && data) {
@@ -92,7 +93,7 @@ export class ReferenceOverlay3D {
   }
 
   dispose(): void {
-    if (this.layer) this.viewer.imageryLayers.remove(this.layer, true);
+    if (this.layer) detachImageryLayer(this.viewer.imageryLayers, this.layer);
     if (this.labels) this.viewer.scene.primitives.remove(this.labels);
     this.layer = undefined;
     this.labels = undefined;
