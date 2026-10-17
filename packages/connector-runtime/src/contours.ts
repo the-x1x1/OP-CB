@@ -13,7 +13,8 @@ import { readPath, type ContourSpec } from '@worldview/connector-sdk';
  * saddle cells settled by the cell's mean. The grid is padded with a border below every
  * level, so every ring closes; a global grid (longitudes covering the whole circle) wraps,
  * with the first column repeated at +360°, so longitudes stay within −180…180 and an area
- * across the antimeridian is two polygons meeting there. Rings are counter-clockwise round
+ * across the antimeridian is two polygons meeting there; a regional grid across 180° is laid
+ * on the whole circle the same way. Rings are counter-clockwise round
  * an area and clockwise round a hole (RFC 7946), each hole put in the smallest area that
  * holds it.
  */
@@ -56,25 +57,33 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
   }
   if (triples.length < 4) return { malformed: 'too few grid points' };
 
-  const lons = axis(triples.map((t) => t[0]));
+  const lonValues = triples.map((t) => t[0]);
+  const lons = axis(lonValues);
   const lats = axis(triples.map((t) => t[1]));
-  if ('malformed' in lons) return { malformed: `longitudes: ${lons.malformed}` };
+  // A regional grid across 180° (170° E to 170° W) reads, once its longitudes are put in
+  // −180…180, as two runs with a gap between: it is laid on the whole circle, the columns it
+  // does not have below every level, so it wraps and is cut at 180° as a global grid is.
+  const columns = 'malformed' in lons ? acrossSeam(lonValues) : undefined;
+  if ('malformed' in lons && !columns) return { malformed: `longitudes: ${lons.malformed}` };
   if ('malformed' in lats) return { malformed: `latitudes: ${lats.malformed}` };
-  if (lons.values.length > MAX_CONTOUR_DIMENSION || lats.values.length > MAX_CONTOUR_DIMENSION)
+  const lon = columns?.circle ?? (lons as { values: number[]; step: number });
+  if (lon.values.length > MAX_CONTOUR_DIMENSION || lats.values.length > MAX_CONTOUR_DIMENSION)
     return { malformed: `a grid wider than ${MAX_CONTOUR_DIMENSION} points` };
   // The grid the points span must be mostly there: a few thousand points along two lines
   // would otherwise make millions of empty cells (and seconds of work on every poll).
-  const cells = lons.values.length * lats.values.length;
+  const cells = (columns?.present ?? lon.values.length) * lats.values.length;
   if (cells > MAX_CONTOUR_POINTS || cells > 4 * triples.length) return { malformed: 'the points do not fill a grid' };
-  const wraps = Math.abs(lons.values.length * lons.step - 360) < lons.values.length * STEP_TOLERANCE;
+  if (lon.values.length * lats.values.length > MAX_CONTOUR_POINTS)
+    return { malformed: 'the points do not fill a grid' };
+  const wraps = Math.abs(lon.values.length * lon.step - 360) < lon.values.length * STEP_TOLERANCE;
 
   // Round the circle, the columns either side of the seam are repeated across it: the first
   // after the last (+360°) and, for a grid offset from 180° (0.5°, 1.5° …), the last before the
   // first (−360°), so the area up to ±180° is covered on both sides. Outlines are cut at ±180°.
-  const lead = wraps && lons.values[0]! > -180 + STEP_TOLERANCE ? 1 : 0;
+  const lead = wraps && lon.values[0]! > -180 + STEP_TOLERANCE ? 1 : 0;
   const xs = wraps
-    ? [...(lead ? [lons.values[lons.values.length - 1]! - 360] : []), ...lons.values, lons.values[0]! + 360]
-    : lons.values;
+    ? [...(lead ? [lon.values[lon.values.length - 1]! - 360] : []), ...lon.values, lon.values[0]! + 360]
+    : lon.values;
   const ys = lats.values;
   const nx = xs.length;
   const ny = ys.length;
@@ -82,7 +91,7 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
   const W = nx + 2;
   const H = ny + 2;
   const grid = new Float64Array(W * H).fill(Number.NEGATIVE_INFINITY);
-  const xIndex = new Map(lons.values.map((x, i) => [key(x), i + lead]));
+  const xIndex = new Map(lon.values.map((x, i) => [key(x), i + lead]));
   const yIndex = new Map(ys.map((y, j) => [key(y), j]));
   for (const [x, y, v] of triples) {
     const i = xIndex.get(key(x));
@@ -122,6 +131,36 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
 const key = (n: number) => n.toFixed(6);
 /** How far two steps may differ and still be one spacing: values are compared at six decimals. */
 const STEP_TOLERANCE = 3e-6;
+
+/**
+ * Longitudes that are evenly spaced except for one gap, a whole number of steps, on a step that
+ * divides the circle: a regional grid across 180°. Gives the whole circle at that step (the
+ * columns present keep their own values) and how many columns are present.
+ */
+function acrossSeam(values: number[]): { circle: { values: number[]; step: number }; present: number } | undefined {
+  const distinct = [...new Set(values.map(key))].map(Number).sort((a, b) => a - b);
+  if (distinct.length < 2) return undefined;
+  let step = Number.POSITIVE_INFINITY;
+  for (let i = 1; i < distinct.length; i++) step = Math.min(step, distinct[i]! - distinct[i - 1]!);
+  const perCircle = Math.round(360 / step);
+  if (!(step > 0) || perCircle > MAX_CONTOUR_DIMENSION || Math.abs(perCircle * step - 360) > perCircle * STEP_TOLERANCE)
+    return undefined;
+  let gaps = 0;
+  for (let i = 1; i < distinct.length; i++) {
+    const d = distinct[i]! - distinct[i - 1]!;
+    if (Math.abs(d - step) <= STEP_TOLERANCE) continue;
+    const n = Math.round(d / step);
+    if (Math.abs(n * step - d) > n * STEP_TOLERANCE) return undefined;
+    gaps++;
+  }
+  // One gap only, and the runs either side of it reach the seam: the grid is in one piece
+  // across 180°, not a grid with columns missing.
+  if (gaps !== 1 || distinct[0]! - step > -180 + STEP_TOLERANCE || distinct.at(-1)! + step < 180 - STEP_TOLERANCE)
+    return undefined;
+  const first = distinct[0]!;
+  const circle = Array.from({ length: perCircle }, (_, i) => Number(key(first + i * step)));
+  return { circle: { values: circle, step }, present: distinct.length };
+}
 
 /** The sorted distinct values of one axis and their spacing, which must be even. */
 function axis(values: number[]): { values: number[]; step: number } | { malformed: string } {

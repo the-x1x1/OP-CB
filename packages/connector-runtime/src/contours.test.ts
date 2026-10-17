@@ -188,3 +188,39 @@ test('a grid whose step is not exact at six decimals (1/3°) is still a grid', (
   assert.ok('records' in r, 'malformed' in r ? r.malformed : '');
   assert.equal(r.records.length, 1);
 });
+
+test('a regional grid across 180° (160° E to 160° W) is read: an area across 180° is cut there', () => {
+  // 5° grid, longitudes 160…200 (the source's 0–359 form), latitudes 50…70. High at 175…185 on
+  // 60° N, and a separate peak at 165° E.
+  const coordinates: number[][] = [];
+  for (let lon = 160; lon <= 200; lon += 5)
+    for (let lat = 50; lat <= 70; lat += 5)
+      coordinates.push([
+        lon,
+        lat,
+        lat === 60 && (lon === 175 || lon === 180 || lon === 185) ? 50 : lon === 165 && lat === 55 ? 50 : 0,
+      ]);
+  const r = contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [10] });
+  assert.ok('records' in r, 'malformed' in r ? r.malformed : '');
+  const polys = r.records[0]!.geometry.coordinates;
+  const spans = polys
+    .map((poly) => {
+      const xs = poly[0]!.map((p) => p[0]!);
+      return [Math.min(...xs), Math.max(...xs)];
+    })
+    .sort((a, b) => a[0]! - b[0]!);
+  // A 50 falls to 10 four fifths of the way to a 0 5° on: 4° out, at 171° and −171° (189° E).
+  assert.deepEqual(spans, [
+    [-180, -171],
+    [161, 169],
+    [171, 180],
+  ]);
+  assert.ok(polys.flat(2).every(([x]) => x! >= -180 && x! <= 180));
+});
+
+test('a grid with a column missing in the middle is still not a grid', () => {
+  const coordinates = [0, 1, 2, 4, 5].flatMap((x) => [0, 1].map((y) => [x, y, 1]));
+  assert.deepEqual(contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [1] }), {
+    malformed: 'longitudes: not evenly spaced',
+  });
+});

@@ -87,6 +87,9 @@ Versioning: [semantic versioning](https://semver.org/).
 - **What's here** no longer shows the previous point's overlay values for a moment.
 - **A dropped file either side of 180°** (Fiji, the Aleutians) is flown to as one box across
   180°, not a view of the whole world between its two halves.
+- **A gridded field across 180°.** A REST JSON definition's `response.contour` now reads a
+  regional grid that crosses 180° (the Bering Sea, Fiji), cutting its areas there, where it
+  was refused as unevenly spaced.
 - **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
   map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
   as the map's answer for the rest of the session. It is now retried in the background — after
