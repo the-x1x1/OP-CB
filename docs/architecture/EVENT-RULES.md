@@ -58,14 +58,17 @@ Severity from `properties.severity` (CAP words Extreme/Severe/Moderate/Minor →
 anything else INFO; numeric 1–4 also accepted). `startAt` = `properties.effectiveFrom |
 onset | effective`; for a source with none of these (a river gauge in flood, an aurora area),
 the start of the open event with the same id, so a flood is not restarted by each reading;
-else `observedAt`. `endAt` = `object.validUntil | properties.ends | expires`. The summary's
+else `observedAt`. `endAt` = `properties.ends | expires` (the source's), else `object.validUntil`
+(freshness only: `properties.endFromFreshness`). The summary's
 "until" is stated only when the source gives an end of its own (`ends`, `expires`), not one
 taken from how long a reading stays fresh. Title = `labels.title | properties.headline |
 properties.event | "Weather alert"`; geometry = alert polygon or point.
 
 **Withdrawn.** When the source stops listing an alert's object — left out of a complete read
-of everything it lists (`StateChange.withdrawn`; a read of an area only, a provider disabled
-or an object expired is not one) — the open event ends then (`endAt` = now,
+of everything it lists (`StateChange.withdrawn`; not a read of an area only, an answer the
+provider said is partial — records refused, a page limit reached, a layer truncated
+(`ProviderContext.incomplete`) — the first read after its settings changed, a provider
+disabled, or an object expired) — the open event ends then (`endAt` = now,
 `properties.withdrawnAt`): a volcano back to normal, a gauge below flood stage, an aurora level
 no longer reached. The map draws a storm's or an alert's event only while it is in force at
 the time shown.

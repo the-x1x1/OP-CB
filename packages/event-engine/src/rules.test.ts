@@ -272,6 +272,13 @@ test('weatherAlertRule: severity from payload, endAt from validUntil, geometry p
   assert.equal(e!.startAt, iso(-HOUR));
   assert.equal(e!.endAt, iso(5 * HOUR));
   assert.equal(e!.properties?.['endFromFreshness'], undefined);
+  // A source's own end wins over a longer freshness window (an SPC outlook valid 12 h, kept 30).
+  const [outlook] = weatherAlertRule.evaluate(
+    [{ ...alert, validUntil: iso(30 * HOUR), properties: { ...alert.properties, expires: iso(12 * HOUR) } }],
+    ctxAt(T0),
+  );
+  assert.equal(outlook!.endAt, iso(12 * HOUR));
+  assert.match(outlook!.summary ?? '', /until 2026-09-22 00:00 UTC/);
   assert.deepEqual(e!.geometry, polygon);
   assert.equal(
     e!.summary,
@@ -340,15 +347,23 @@ test('launchRule: INFO event with NET time and pad position', () => {
   // Known only to the month (LL2 net_precision): the summary does not name a minute in it.
   const month = launchRule.evaluate([{ ...l, properties: { ...l.properties, netPrecision: 'Month' } }], ctxAt(T0))[0]!;
   assert.equal(month.summary, 'Falcon 9 by SpaceX from SLC-40 NET September 2026 (the month only). Status: Go.');
+  // An offset time is dated in UTC, not as written.
+  assert.equal(netText('2026-10-19T22:00:00-05:00', 'Day'), '2026-10-20 (the day only)');
   assert.deepEqual(
-    ['Hour', 'Day', 'Week', 'Quarter', 'Year', 'Afternoon'].map((p) => netText('2026-10-19T10:30:00.000Z', p)),
+    ['Minute', 'Hour', 'Day', 'Week', 'Quarter 4', 'Year Half 2', 'Year', 'Afternoon', 'Decade', 'Era'].map((p) =>
+      netText('2026-10-19T10:30:00.000Z', p),
+    ),
     [
       '2026-10-19 10:30 UTC',
+      '2026-10-19 10:00 UTC (the hour only)',
       '2026-10-19 (the day only)',
       'the week of 2026-10-19 (the week only)',
       'Q4 2026 (the quarter only)',
+      'second half of 2026 (the half-year only)',
       '2026 (the year only)',
       '2026-10-19, some time in the afternoon',
+      'the 2020s (the decade only)',
+      '2026-10-19 (Era)',
     ],
   );
 });

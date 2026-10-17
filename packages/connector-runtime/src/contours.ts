@@ -157,9 +157,16 @@ function acrossSeam(values: number[]): { circle: { values: number[]; step: numbe
   // across 180°, not a grid with columns missing.
   if (gaps !== 1 || distinct[0]! - step > -180 + STEP_TOLERANCE || distinct.at(-1)! + step < 180 - STEP_TOLERANCE)
     return undefined;
+  // The circle at the exact step (360 / columns), each present column at its own value, so a
+  // step not exact at six decimals (1/3°) does not drift away from the columns it should meet.
+  const exact = 360 / perCircle;
   const first = distinct[0]!;
-  const circle = Array.from({ length: perCircle }, (_, i) => Number(key(first + i * step)));
-  return { circle: { values: circle, step }, present: distinct.length };
+  const circle = Array.from({ length: perCircle }, (_, i) => first + i * exact);
+  for (const x of distinct) {
+    const i = Math.round((x - first) / exact);
+    if (i >= 0 && i < perCircle) circle[i] = x;
+  }
+  return { circle: { values: circle, step: exact }, present: distinct.length };
 }
 
 /** The sorted distinct values of one axis and their spacing, which must be even. */

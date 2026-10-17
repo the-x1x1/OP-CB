@@ -14,13 +14,22 @@ export function responseOrigin(res: { stale: boolean; fromCache: boolean }): 'li
   return res.stale || res.fromCache ? 'cached' : 'live';
 }
 
-/** One log line for the records the mapping refused, with the first three reasons as a sample. */
-export function warnRejected(logger: ProviderContext['logger'], rejected: readonly { reason: string }[]): void {
-  if (rejected.length)
-    logger.warn('rejected records', {
-      count: rejected.length,
-      sample: rejected.slice(0, 3).map((r) => r.reason),
-    });
+/**
+ * One log line for the records the mapping refused, with the first three reasons as a sample;
+ * and, when any was a record left out (not a repeat of one kept), the poll's answer is said to
+ * be partial (ProviderContext.incomplete), so what it lacks is not read as no longer listed.
+ */
+export function warnRejected(
+  context: Pick<ProviderContext, 'logger' | 'incomplete'>,
+  rejected: readonly { reason: string }[],
+): void {
+  if (!rejected.length) return;
+  context.logger.warn('rejected records', {
+    count: rejected.length,
+    sample: rejected.slice(0, 3).map((r) => r.reason),
+  });
+  const lost = rejected.find((r) => !r.reason.startsWith('duplicate id'));
+  if (lost) context.incomplete?.(`a record was refused: ${lost.reason}`);
 }
 
 /**

@@ -155,6 +155,12 @@ interface Hosted {
   waitingForKey: boolean;
   /** Its settings changed while a poll was running: poll again once it ends. */
   settingsChangedInPoll: boolean;
+  /** Bumped on every settings change: a poll under new settings is not compared with the last. */
+  settingsGeneration: number;
+  /** The settings generation of the last poll that returned, or -1 before one has. */
+  lastPolledGeneration: number;
+  /** Why the running poll's answer is partial (ProviderContext.incomplete), when it said so. */
+  incompleteReason: string | undefined;
   /**
    * A device on this machine (a local receiver) was not found and that has been said once.
    * An operator without a readsb receiver is the ordinary case, not a fault: the probe backs
@@ -295,6 +301,9 @@ export class ProviderHost {
       dueAt: undefined,
       waitingForSetup: false,
       settingsChangedInPoll: false,
+      settingsGeneration: 0,
+      lastPolledGeneration: -1,
+      incompleteReason: undefined,
       waitingForKey: false,
       deviceAbsentLogged: false,
       polling: false,
@@ -315,6 +324,7 @@ export class ProviderHost {
     const hosted = this.hosted.get(manifest.id)!;
     disposers.push(
       this.deps.settingsStore(manifest.id).onChange(() => {
+        hosted.settingsGeneration++;
         if (!hosted.running || hosted.waitingForKey) return;
         if (hosted.polling) hosted.settingsChangedInPoll = true;
         else this.schedule(hosted, 250);
@@ -819,6 +829,9 @@ export class ProviderHost {
       providerId: manifest.id,
       clock: this.clock,
       logger: h.logger,
+      incomplete: (reason) => {
+        if (h.polling && h.incompleteReason === undefined) h.incompleteReason = String(reason).slice(0, 200);
+      },
       http: h.http,
       sockets,
       credentials: { has: (key) => this.deps.credentials.has(key) } satisfies ProviderCredentials,
@@ -997,6 +1010,8 @@ export class ProviderHost {
     h.abort = abort;
     const budget = pollBudgetMs(h.manifest.refreshPolicy);
     const timeout = setTimeout(() => abort.abort(new ProviderError('TIMEOUT', `poll exceeded ${budget}ms`)), budget);
+    h.incompleteReason = undefined;
+    const generation = h.settingsGeneration;
     try {
       const observations = await h.provider.query({
         signal: abort.signal,
@@ -1006,8 +1021,15 @@ export class ProviderHost {
           ? { center: this.viewportCenter }
           : {}),
       });
+      // All the source lists, under the same settings as the last poll: what it leaves out is
+      // no longer listed. Not a read of the view, not an answer the provider said is partial,
+      // not the first poll after its settings changed (a narrower area asked for), nor one
+      // whose settings changed while it ran.
       const bounded = Boolean(this.viewport && h.manifest.capabilities.boundsQuery);
-      const batch = this.admit(h, observations, true, !bounded);
+      const sameSettings = generation === h.lastPolledGeneration && generation === h.settingsGeneration;
+      const complete = !bounded && sameSettings && h.incompleteReason === undefined;
+      h.lastPolledGeneration = generation;
+      const batch = this.admit(h, observations, true, complete);
       h.consecutiveFailures = 0;
       h.waitingForSetup = false;
       h.waitingForKey = false;
@@ -1102,7 +1124,9 @@ export class ProviderHost {
       providerId: h.manifest.id,
       observations,
       snapshot,
-      ...(snapshot && complete && sliced.length === raw.length ? { complete: true } : {}),
+      ...(snapshot && complete && sliced.length === raw.length && rejected.length === 0 && wrongProvider === 0
+        ? { complete: true }
+        : {}),
       receivedAt: new Date(this.clock.now()).toISOString(),
       rejected: rejected.length + wrongProvider + (raw.length - sliced.length),
       ...(h.manifest.refreshPolicy.freshness ? { freshness: h.manifest.refreshPolicy.freshness } : {}),

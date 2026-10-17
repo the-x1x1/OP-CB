@@ -163,6 +163,11 @@ health bookkeeping, error mapping and rolling error rate. Patterns worth copying
   error, counts against the error rate, and the status reads STALE (RATE_LIMITED for a
   refusal). CelesTrak does this because element sets stay useful for days, and without it an
   outage at startup left the sky empty.
+- A poll's answer is read as everything the source lists: what it leaves out is removed, and
+  an alert whose object is left out of such a read is ended (EVENT-RULES "Withdrawn"). When
+  your answer is not all of it — records you refused, a page limit reached, a layer the server
+  truncated — call `context.incomplete(reason)` during the poll, and nothing is ended for its
+  absence. The shared connector helpers (`warnRejected`, the paging loops) already do.
 - Credentials: declare `credential: { key, as: 'query' | 'header' | 'bearer' }` on
   the request; the provider never sees the secret. Keep URL building in one module
   (FIRMS: `src/url.ts`) so a change of attachment style is one line.

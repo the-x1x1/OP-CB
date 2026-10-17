@@ -300,7 +300,12 @@ export class WorldState {
         if (validUntil) obj.validUntil = validUntil;
         this.insert(obj);
         this.pushTrack(objectId, obs);
-        this.pending.added.add(objectId);
+        // Removed earlier in this batch and back now: listeners knew it, so it is a change of
+        // it, not an addition, and not withdrawn after all.
+        if (this.pending.removed.delete(objectId)) {
+          this.pending.withdrawn.delete(objectId);
+          this.pending.updated.add(objectId);
+        } else this.pending.added.add(objectId);
         result.added++;
         continue;
       }
@@ -467,8 +472,6 @@ export class WorldState {
       refreshed: new Set(),
       withdrawn: new Set(),
     };
-    // Withdrawn and then seen again within one batch is not withdrawn.
-    for (const id of p.withdrawn) if (!p.removed.has(id)) p.withdrawn.delete(id);
     for (const id of p.removed) {
       p.added.delete(id);
       p.updated.delete(id);

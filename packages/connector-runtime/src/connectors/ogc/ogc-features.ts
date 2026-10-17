@@ -229,6 +229,7 @@ export class OgcFeaturesProvider extends PollingProvider {
     }
     if (url && pages >= this.config.maxPages)
       this.lastStop = `stopped at maxPages (${this.config.maxPages}) with more pages left`;
+    if (this.lastStop) this.context.incomplete?.(this.lastStop);
     this.lastRejected = state.rejected;
     return { observations: state.observations, cacheAgeMs };
   }

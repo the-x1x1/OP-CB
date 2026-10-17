@@ -531,11 +531,16 @@ function episodeShown(ev: WorldEvent, shownAtMs: number | undefined): boolean {
   return !(start > shownAtMs) && !(end <= shownAtMs);
 }
 
-/** Whether a storm's or an alert's event is in force at `atMs` (undefined: drawn regardless). */
-function alertShown(ev: WorldEvent, atMs: number | undefined): boolean {
+/**
+ * Whether a storm's or an alert's event is in force at `atMs` (undefined: drawn regardless):
+ * not ended by then, and, at a moment replayed (`past`), begun by then. Live, an alert issued
+ * for later (a watch for tomorrow) is drawn now.
+ */
+function alertShown(ev: WorldEvent, atMs: number | undefined, past: boolean): boolean {
   if (atMs === undefined) return true;
   const end = ev.endAt ? Date.parse(ev.endAt) : Number.POSITIVE_INFINITY;
-  return !(end <= atMs);
+  if (end <= atMs) return false;
+  return !(past && Date.parse(ev.startAt) > atMs);
 }
 
 /** Width in px of a storm's past-track line (drawn in its category colour). */
@@ -883,7 +888,12 @@ export function presentObjects(input: PresentationInput): PresentationResult {
     const pointEvent = ev.geometry.type === 'Point';
     // Ended, or not begun, at the time shown: an alert the source stopped listing (a volcano
     // back to normal, a gauge below flood stage) stayed drawn while its event was kept.
-    if (!selected && DRAWN_AS_OBJECTS.has(ev.type) && !alertShown(ev, input.shownAtMs ?? input.nowMs)) continue;
+    if (
+      !selected &&
+      DRAWN_AS_OBJECTS.has(ev.type) &&
+      !alertShown(ev, input.shownAtMs ?? input.nowMs, input.shownAtMs !== undefined)
+    )
+      continue;
     if (
       !selected &&
       DRAWN_AS_OBJECTS.has(ev.type) &&

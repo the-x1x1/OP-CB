@@ -252,6 +252,7 @@ export abstract class FileBackedProvider extends PollingProvider {
         count: rejected.length,
         sample: rejected.slice(0, 3),
       });
+    if (rejected.length) this.context.incomplete?.('records in the file were refused');
     const total = mapped.total + read.skipped.length;
     if (total > 0 && mapped.observations.length === 0 && mapped.filtered === 0)
       throw new ProviderError(

@@ -118,6 +118,45 @@ test('bounds and where to fly', () => {
     { geometry: { type: 'Point', coordinates: [-178.5, -18.1] } },
   ]);
   assert.deepEqual(fiji, { west: 177.4, south: -18.1, east: -178.5, north: -16.2 });
+  // Split at 180° into two parts that meet there: still the box across it.
+  const split = shapesBounds([
+    {
+      geometry: {
+        type: 'MultiLineString',
+        coordinates: [
+          [
+            [178, -17],
+            [180, -16.8],
+          ],
+          [
+            [-180, -16.8],
+            [-179, -16.5],
+          ],
+        ],
+      },
+    },
+  ]);
+  assert.deepEqual(split, { west: 178, south: -17, east: -179, north: -16.5 });
+  // One ring from −180° to 180°: the whole width, not a sliver at 180°.
+  const world = shapesBounds([
+    {
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [-180, -60],
+            [180, -60],
+            [180, 75],
+            [-180, 75],
+            [-180, -60],
+          ],
+        ],
+      },
+    },
+  ]);
+  assert.deepEqual(world, { west: -180, south: -60, east: 180, north: 75 });
+  // Where to fly for the Fiji box: on 180°'s side.
+  assert.ok(Math.abs(importedTarget({ ...file('f'), bounds: fiji! })!.position.longitude) > 179);
   const t = importedTarget({ ...file('a'), bounds: b! });
   assert.deepEqual(t?.bounds, b);
   assert.equal(importedTarget({ ...file('a'), shapes: [] }), undefined);

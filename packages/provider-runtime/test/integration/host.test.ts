@@ -1031,7 +1031,7 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   t.mock.timers.tick(0);
   await flush();
   assert.equal(polls.length, 1, 'the first poll');
-  assert.equal(batches.at(-1)?.complete, true, 'no view yet: the whole of what the source lists');
+  assert.equal(batches.at(-1)?.complete, undefined, 'a first poll has nothing to compare with');
   const view = (w: number) => host.setViewport({ west: w, south: 10, east: w + 20, north: 30 });
   view(0);
   view(10); // panning: each move asks again
@@ -1650,4 +1650,54 @@ test('field profile: a source on this computer is never slowed', async () => {
   } finally {
     await host.dispose();
   }
+});
+
+test('a poll is complete only when it is all the source lists, under the settings of the last one', async () => {
+  const clock = new testing.VirtualClock(Date.parse('2026-09-21T08:05:00.000Z'));
+  const settings = new testing.MemorySettings({});
+  const host = new ProviderHost({
+    clock,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [new RingBufferSink()] }),
+    fetchImpl: fakeFetch(() => new Response('{}')),
+    manualScheduling: true,
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock, allowed),
+    settingsStore: () => settings,
+  });
+  const usgs = createProvider();
+  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let partial = false;
+  host.register({
+    ...usgs,
+    manifest: { ...usgs.manifest, id: 'complete-test', enabledByDefault: true },
+    initialize: async (c) => {
+      ctx = c;
+    },
+    start: async () => {},
+    stop: async () => {},
+    query: async () => {
+      if (partial) ctx!.incomplete?.('stopped at 10 page(s) with more left');
+      return [];
+    },
+    health: async () => ({
+      providerId: 'complete-test',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+  });
+  await host.start();
+  const poll = async () => (await host.pollNow('complete-test'))?.complete;
+  assert.equal(await poll(), undefined, 'the first poll');
+  assert.equal(await poll(), true, 'the same settings again');
+  partial = true;
+  assert.equal(await poll(), undefined, 'the provider said its answer is partial');
+  partial = false;
+  assert.equal(await poll(), true);
+  settings.update({ areas: 'HI' });
+  assert.equal(await poll(), undefined, 'the first poll under new settings (a narrower area asked for)');
+  assert.equal(await poll(), true);
+  await host.dispose();
 });

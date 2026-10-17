@@ -312,7 +312,7 @@ export class StacProvider extends PollingProvider {
     });
     stats.filtered += mapped.filtered;
     stats.rejected += mapped.rejected.length;
-    warnRejected(this.context.logger, mapped.rejected);
+    warnRejected(this.context, mapped.rejected);
     addUnseen(mapped.observations, into.seen, into.observations);
     return { total: mapped.total, usable: mapped.observations.length + mapped.filtered };
   }
@@ -358,6 +358,7 @@ export class StacProvider extends PollingProvider {
       for (let page = 0; req; page++) {
         if (page >= maxPages) {
           stats.truncated = true;
+          this.context.incomplete?.(`stopped at ${maxPages} page(s); more scenes match`);
           break;
         }
         const key = requestKey(req);

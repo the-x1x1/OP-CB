@@ -50,15 +50,23 @@ export function shapesBounds(shapes: readonly GeodataShape[]): GeoBounds | undef
   let south = Infinity;
   let north = -Infinity;
   const lons: number[] = [];
+  // One ring or line running from −180° to 180° goes round the world; parts split at 180°
+  // (one ending at 180°, the next starting at −180°) do not.
+  let wholeWidth = false;
   const visit = (v: unknown): void => {
     if (!Array.isArray(v)) return;
     if (typeof v[0] === 'number' && typeof v[1] === 'number') {
       const [lon, lat] = v as [number, number];
       if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
-      lons.push(lon >= -180 && lon <= 180 ? lon : ((((lon + 180) % 360) + 360) % 360) - 180);
+      // 180° is −180°: the same meridian, not two points either side of a gap.
+      lons.push(lon > -180 && lon < 180 ? lon : ((((lon + 180) % 360) + 360) % 360) - 180);
       if (lat < south) south = lat;
       if (lat > north) north = lat;
       return;
+    }
+    if (Array.isArray(v[0]) && typeof (v[0] as unknown[])[0] === 'number') {
+      const ring = v as unknown[][];
+      if (ring.some((p) => (p[0] as number) <= -180) && ring.some((p) => (p[0] as number) >= 180)) wholeWidth = true;
     }
     for (const x of v) visit(x);
   };
@@ -68,6 +76,7 @@ export function shapesBounds(shapes: readonly GeodataShape[]): GeoBounds | undef
   // between neighbouring longitudes, the gap across 180° included. Shapes either side of 180°
   // (Fiji, the Aleutians) give a box across it (west > east), not one round the whole world.
   lons.sort((a, b) => a - b);
+  if (wholeWidth) return { west: -180, south, east: 180, north };
   let gap = lons[0]! + 360 - lons[lons.length - 1]!;
   let west = lons[0]!;
   let east = lons[lons.length - 1]!;
@@ -196,7 +205,13 @@ export function importedTarget(
   file: ImportedFile,
 ): { position: { latitude: number; longitude: number }; bounds?: GeoBounds } | undefined {
   const b = file.bounds;
-  if (b) return { position: { latitude: (b.north + b.south) / 2, longitude: (b.east + b.west) / 2 }, bounds: b };
+  if (b) {
+    // The middle of a box across 180° (west > east) is on 180°'s side, not the world's far side.
+    const east = b.west > b.east ? b.east + 360 : b.east;
+    let longitude = (b.west + east) / 2;
+    if (longitude > 180) longitude -= 360;
+    return { position: { latitude: (b.north + b.south) / 2, longitude }, bounds: b };
+  }
   const first = file.shapes[0];
   const at = first ? geometryCentroid(first.geometry) : undefined;
   return at ? { position: { latitude: at.latitude, longitude: at.longitude } } : undefined;

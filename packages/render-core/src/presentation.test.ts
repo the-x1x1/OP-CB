@@ -325,6 +325,20 @@ test('presentation: an alert keeps its polygon at every detail level, and its ev
   assert.equal(drawn({ nowMs: after, selectedId: ended.id }), true, 'the selection');
   assert.equal(drawn({ nowMs: Date.parse('2026-10-03T19:59:00.000Z') }), true, 'not yet ended');
   assert.equal(drawn({}), true, 'no clock given: as before');
+  // Replayed to before it began: not drawn.
+  const later = { ...ended, startAt: '2026-10-03T19:00:00.000Z' } as unknown as WorldEvent;
+  assert.equal(
+    presentObjects({
+      objects: [],
+      events: [later],
+      view,
+      cullToView: false,
+      nowMs: after,
+      shownAtMs: Date.parse('2026-10-03T18:00:00.000Z'),
+    }).upsert.some((f) => f.id === 'event:weather-alert:nws:w'),
+    false,
+    'not begun at the moment replayed',
+  );
 });
 
 test('presentation: a tight crowd stays 200 separate points by default; clustering is opt-in; lens visibility', () => {

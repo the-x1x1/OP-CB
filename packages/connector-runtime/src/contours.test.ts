@@ -224,3 +224,13 @@ test('a grid with a column missing in the middle is still not a grid', () => {
     malformed: 'longitudes: not evenly spaced',
   });
 });
+
+test('a regional grid across 180° on a step not exact at six decimals (1/3°) keeps every column', () => {
+  const coordinates: number[][] = [];
+  for (let i = 0; i <= 60; i++) for (let lat = 50; lat <= 52; lat++) coordinates.push([170 + i / 3, lat, 50]);
+  const r = contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [10] });
+  assert.ok('records' in r, 'malformed' in r ? r.malformed : '');
+  const xs = r.records[0]!.geometry.coordinates.flat(2).map((p) => p[0]!);
+  assert.ok(Math.min(...xs.filter((x) => x > 0)) <= 170.0001, 'from 170° E');
+  assert.ok(Math.max(...xs.filter((x) => x < 0)) >= -170.0001, 'to 170° W');
+});

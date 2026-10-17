@@ -72,9 +72,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 - **An alert the source stops listing ends.** A volcano back to normal, a river gauge below flood
   stage or an aurora level no longer reached stayed drawn on the map, its event never ended.
-  Such an event now ends when a complete read of the source leaves it out (not when a read of
-  an area does, nor when a source is turned off), and the map draws an alert's or a storm's
-  event only while it is in force.
+  Such an event now ends when a complete read of the source leaves it out (not a read of an
+  area, an answer the source cut short or whose records were refused, the first read after its
+  settings changed, nor a source turned off), and the map draws an alert's or a storm's event
+  only while it is in force. An ended event raises no watch-zone notice. An alert with its own
+  end (an SPC outlook) ends then, not when its reading would go stale.
 - **Volcano and flood alerts keep their start.** A volcano alert starts when its colour code was
   raised (USGS `colorDate`), not at each read; a gauge in flood keeps the start it was first
   seen with instead of restarting at every reading. Neither states an "until" the source never

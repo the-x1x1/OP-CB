@@ -167,7 +167,7 @@ export class RestJsonProvider extends PollingProvider {
       filtered += mapped.filtered;
       rejected += mapped.rejected.length;
       addUnseen(mapped.observations, seen, observations);
-      warnRejected(this.context.logger, mapped.rejected);
+      warnRejected(this.context, mapped.rejected);
       if (mapped.total > 0 && mapped.observations.length === 0 && mapped.filtered === 0) {
         // Everything unusable: the mapping does not fit this feed. Say so rather than serve nothing quietly.
         res.invalidate();
@@ -176,6 +176,8 @@ export class RestJsonProvider extends PollingProvider {
       this.lastPages = i + 1;
       page = this.paginator.next(body.body, mapped.total, i, res.headers);
     }
+    // Pages left when the page limit was reached: the answer is not all the source lists.
+    if (page) this.context.incomplete?.(`stopped at ${this.paginator.maxPages} page(s) with more left`);
     this.lastRejected = rejected;
     this.lastFiltered = filtered;
     if (total > 0)

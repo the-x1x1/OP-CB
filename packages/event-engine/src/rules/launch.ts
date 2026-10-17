@@ -65,26 +65,26 @@ const MONTHS = [
  */
 export function netText(at: string, precision: string | undefined): string {
   const d = new Date(at);
-  if (!precision || ['Second', 'Minute', 'Hour'].includes(precision) || !Number.isFinite(d.getTime()))
-    return shortUtc(at);
+  if (!precision || ['Second', 'Minute'].includes(precision) || !Number.isFinite(d.getTime())) return shortUtc(at);
+  const iso = d.toISOString();
+  const day = iso.slice(0, 10);
   const year = d.getUTCFullYear();
-  const day = at.slice(0, 10);
-  switch (precision) {
-    case 'Year':
-      return `${year} (the year only)`;
-    case 'Quarter':
-      return `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${year} (the quarter only)`;
-    case 'Month':
-      return `${MONTHS[d.getUTCMonth()]} ${year} (the month only)`;
-    case 'Week':
-      return `the week of ${day} (the week only)`;
-    case 'Morning':
-      return `${day}, some time in the morning`;
-    case 'Afternoon':
-      return `${day}, some time in the afternoon`;
-    default:
-      return `${day} (the day only)`;
-  }
+  if (precision === 'Hour') return `${day} ${iso.slice(11, 13)}:00 UTC (the hour only)`;
+  if (precision === 'Day') return `${day} (the day only)`;
+  if (precision === 'Morning') return `${day}, some time in the morning`;
+  if (precision === 'Afternoon') return `${day}, some time in the afternoon`;
+  if (precision === 'Week') return `the week of ${day} (the week only)`;
+  if (precision === 'Month') return `${MONTHS[d.getUTCMonth()]} ${year} (the month only)`;
+  // LL2's /config/netprecision: "Quarter 1"…"Quarter 4", "Year Half 1"/"2", "Year", "Fiscal
+  // Year", "Decade" — the time it holds is the start of that span.
+  if (precision.startsWith('Quarter')) return `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${year} (the quarter only)`;
+  if (precision.startsWith('Year Half'))
+    return `${d.getUTCMonth() < 6 ? 'first' : 'second'} half of ${year} (the half-year only)`;
+  if (precision === 'Year') return `${year} (the year only)`;
+  if (precision === 'Fiscal Year') return `fiscal year ${year} (only)`;
+  if (precision === 'Decade') return `the ${Math.floor(year / 10) * 10}s (the decade only)`;
+  // A name not known here: the date, and the source's own word for how precise it is.
+  return `${day} (${precision.slice(0, 40)})`;
 }
 
 function launchEvent(o: WorldObject, ctx: RuleContext): WorldEvent | undefined {

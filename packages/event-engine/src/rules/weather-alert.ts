@@ -20,8 +20,9 @@ import { derivedProvenance, refsOf, shortUtc, stringProp, type ObjectRule, type 
  *   severity  properties.severity (Extreme/Severe/Moderate/Minor/Unknown, CAP style) → class; unknown → INFO
  *   startAt   properties.effectiveFrom | onset | effective; else the open event's start for the
  *             same id (a source with no start of its own), else observedAt
- *   endAt     object.validUntil | properties.expires | ends; the summary's "until" only from the
- *             source's own end. Ended when the source stops listing it (endsWhenWithdrawn).
+ *   endAt     properties.ends | expires | validUntil (the source's own end), else
+ *             object.validUntil (freshness: endFromFreshness); the summary's "until" only from
+ *             the source's own end. Ended when the source stops listing it (endsWhenWithdrawn).
  *   issuedAt  properties.sent | issued, when known (event properties)
  *   title     labels.title | properties.headline | properties.event | "Weather alert"
  *
@@ -147,9 +148,11 @@ function alertEvent(
     (stillOpen && Date.parse(previous.startAt) <= Date.parse(o.observedAt) ? previous.startAt : o.observedAt);
   // The end the source gives, and the one the summary states. Without one the event still
   // ends when the report goes stale (object.validUntil), but "until" would be invented.
+  // The source's own end wins over the freshness window (a connector's validUntil is only
+  // observedAt + expireSeconds: an SPC outlook valid 12 h was drawn for 30).
   const ownEnd = isoProp(o, 'ends', 'expires', 'validUntil');
-  const endAt = o.validUntil ?? ownEnd;
-  const statedEnd = ownEnd ? endAt : undefined;
+  const endAt = ownEnd ?? o.validUntil;
+  const statedEnd = ownEnd;
   const severityText = stringProp(o, 'severity');
   const messageType = stringProp(o, 'messageType');
   const references = Array.isArray(o.properties['references'])
