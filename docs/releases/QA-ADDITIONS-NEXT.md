@@ -30,7 +30,10 @@ are deleted too.
       Southern Ocean, split at 180° in 2D; selected: "Aurora: 10% chance or more", event Aurora
       forecast, NOAA Space Weather Prediction Center. No northern area that hour; feed not checked)
 - [ ] Sky tab, middle of the map over Fairbanks (64.8° N, 147.7° W) with the source on: a green
-      "Aurora: …% chance overhead at HH:MM UTC" above the plot; over Honolulu, no line
+      "Aurora: …% chance overhead at HH:MM UTC" above the plot; over Honolulu, no line (partly
+      seen 2026-10-17 06:12Z, build `f236262`: no line over Fairbanks that hour, which was
+      outside the 10% area; centred on the southern area, 71.6° S 145.4° W, the line read
+      "Aurora: 10–30% chance overhead at 06:59 UTC · the sky is not dark here now")
 - [ ] Spin the globe across 180°: the oval meets itself there, no gap and no line across the map
 
 ## Air quality, Canada
