@@ -58,17 +58,19 @@ export function geodataWorkerReader(
       worker.on('message', (m: { ready?: boolean; read?: GeodataRead; error?: string }) => {
         if (m?.ready) {
           online = true;
+          // The file goes over only now, so any failure from here is surely the file's: a
+          // worker's error can otherwise arrive before its "ready" (seen on Windows, Node 24).
+          try {
+            const copy = bytes.slice();
+            worker.postMessage({ name, bytes: copy }, [copy.buffer]);
+          } catch (err) {
+            failed(err instanceof Error ? err.message : String(err), err);
+          }
           return;
         }
         finish(() => resolve(m?.read ?? unread(m?.error ?? 'no answer from the reader')));
       });
       worker.once('error', (err) => failed(err instanceof Error ? err.message : String(err), err));
       worker.once('exit', (code) => failed(`the reader stopped (exit ${code})`));
-      try {
-        const copy = bytes.slice();
-        worker.postMessage({ name, bytes: copy }, [copy.buffer]);
-      } catch (err) {
-        failed(err instanceof Error ? err.message : String(err), err);
-      }
     });
 }
