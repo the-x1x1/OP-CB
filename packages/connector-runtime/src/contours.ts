@@ -62,9 +62,19 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
   if ('malformed' in lats) return { malformed: `latitudes: ${lats.malformed}` };
   if (lons.values.length > MAX_CONTOUR_DIMENSION || lats.values.length > MAX_CONTOUR_DIMENSION)
     return { malformed: `a grid wider than ${MAX_CONTOUR_DIMENSION} points` };
-  const wraps = Math.abs(lons.values.length * lons.step - 360) < 1e-6;
+  // The grid the points span must be mostly there: a few thousand points along two lines
+  // would otherwise make millions of empty cells (and seconds of work on every poll).
+  const cells = lons.values.length * lats.values.length;
+  if (cells > MAX_CONTOUR_POINTS || cells > 4 * triples.length) return { malformed: 'the points do not fill a grid' };
+  const wraps = Math.abs(lons.values.length * lons.step - 360) < lons.values.length * STEP_TOLERANCE;
 
-  const xs = wraps ? [...lons.values, lons.values[0]! + 360] : lons.values;
+  // Round the circle, the columns either side of the seam are repeated across it: the first
+  // after the last (+360°) and, for a grid offset from 180° (0.5°, 1.5° …), the last before the
+  // first (−360°), so the area up to ±180° is covered on both sides. Outlines are cut at ±180°.
+  const lead = wraps && lons.values[0]! > -180 + STEP_TOLERANCE ? 1 : 0;
+  const xs = wraps
+    ? [...(lead ? [lons.values[lons.values.length - 1]! - 360] : []), ...lons.values, lons.values[0]! + 360]
+    : lons.values;
   const ys = lats.values;
   const nx = xs.length;
   const ny = ys.length;
@@ -72,14 +82,15 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
   const W = nx + 2;
   const H = ny + 2;
   const grid = new Float64Array(W * H).fill(Number.NEGATIVE_INFINITY);
-  const xIndex = new Map(lons.values.map((x, i) => [key(x), i]));
+  const xIndex = new Map(lons.values.map((x, i) => [key(x), i + lead]));
   const yIndex = new Map(ys.map((y, j) => [key(y), j]));
   for (const [x, y, v] of triples) {
     const i = xIndex.get(key(x));
     const j = yIndex.get(key(y));
     if (i === undefined || j === undefined || Number.isNaN(v)) continue;
     grid[(j + 1) * W + (i + 1)] = v;
-    if (wraps && i === 0) grid[(j + 1) * W + nx] = v;
+    if (wraps && i === lead) grid[(j + 1) * W + nx] = v;
+    if (lead && i === nx - 2) grid[(j + 1) * W + 1] = v;
   }
   const gx = (i: number) => xs[Math.min(nx - 1, Math.max(0, i - 1))]!;
   const gy = (j: number) => ys[Math.min(ny - 1, Math.max(0, j - 1))]!;
@@ -109,6 +120,8 @@ export function contourRecords(body: unknown, spec: ContourSpec): { records: Con
 }
 
 const key = (n: number) => n.toFixed(6);
+/** How far two steps may differ and still be one spacing: values are compared at six decimals. */
+const STEP_TOLERANCE = 3e-6;
 
 /** The sorted distinct values of one axis and their spacing, which must be even. */
 function axis(values: number[]): { values: number[]; step: number } | { malformed: string } {
@@ -116,7 +129,7 @@ function axis(values: number[]): { values: number[]; step: number } | { malforme
   if (distinct.length < 2) return { malformed: 'one value only' };
   const step = distinct[1]! - distinct[0]!;
   for (let i = 2; i < distinct.length; i++)
-    if (Math.abs(distinct[i]! - distinct[i - 1]! - step) > 1e-6) return { malformed: 'not evenly spaced' };
+    if (Math.abs(distinct[i]! - distinct[i - 1]! - step) > STEP_TOLERANCE) return { malformed: 'not evenly spaced' };
   return { values: distinct, step };
 }
 
@@ -144,7 +157,7 @@ function traceLevel(
       const t = Number.isFinite(a) && Number.isFinite(b) && a !== b ? (level - a) / (b - a) : 0.5;
       const x = gx(i0) + (gx(i1) - gx(i0)) * t;
       const y = gy(j0) + (gy(j1) - gy(j0)) * t;
-      points.set(k, [round(x), round(y)]);
+      points.set(k, [round(Math.max(-180, Math.min(180, x))), round(y)]);
     }
     return k;
   };

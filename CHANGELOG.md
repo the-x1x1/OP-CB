@@ -58,8 +58,9 @@ Versioning: [semantic versioning](https://semver.org/).
   credited).
 
 - **Search takes a geo URI.** `geo:21.3069,-157.8583` (with `;u=` metres of uncertainty and
-  `;crs=wgs84`), as a phone shares a location, flies there; one with an altitude, a query or
-  another CRS is declined with the reason. After God's Eye View (11bc2ec).
+  `;crs=wgs84`, or Android's `?z=` and `geo:0,0?q=lat,lon(Label)`), as a phone shares a
+  location, flies there; one with an altitude, a place named in words or another CRS is declined
+  with the reason. After God's Eye View (11bc2ec).
 
 ### Changed
 

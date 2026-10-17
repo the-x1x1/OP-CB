@@ -262,3 +262,23 @@ test('valueNames and valueUnits: name=text pairs, checked', () => {
   assert.match(bad.errors.join(' '), /valueUnits "dBZ" is not name=text pairs/);
   assert.ok(with_(base).ok);
 });
+
+test("a value the service calls by an Object method's name is not renamed by it", async () => {
+  const odd = JSON.stringify({
+    type: 'FeatureCollection',
+    features: [{ type: 'Feature', geometry: null, properties: { constructor: 3, toString: 4, Band1: 35 } }],
+  });
+  const { provider } = await radar((req) => (isCaps(req) ? { status: 200, body: CAPS } : { status: 200, body: odd }));
+  const [overlay] = await provider.overlays();
+  const answer = await provider.overlayValue({
+    overlayId: overlay!.id,
+    position: OKLAHOMA_CITY,
+    signal: new AbortController().signal,
+  });
+  assert.deepEqual(answer?.values, [
+    { name: 'constructor', value: 3 },
+    { name: 'toString', value: 4 },
+    { name: 'Reflectivity', value: 35, unit: 'dBZ' },
+  ]);
+  assert.doesNotThrow(() => structuredClone(answer));
+});

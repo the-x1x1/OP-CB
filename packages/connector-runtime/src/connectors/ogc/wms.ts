@@ -445,13 +445,13 @@ export class WmsProvider extends OgcOverlayProvider implements OverlayValueSourc
       maxBytes: FEATURE_INFO_MAX_BYTES,
       signal: request.signal,
     });
-    const names = this.config.valueNames ?? {};
-    const units = this.config.valueUnits ?? {};
-    const values = parseFeatureInfo(res.text(), info.format).map((v) => ({
-      name: names[v.name] ?? v.name,
-      value: v.value,
-      ...(units[v.name] ? { unit: units[v.name]! } : {}),
-    }));
+    // Own entries only: a value the service calls "constructor" must not find Object's.
+    const own = (table: Record<string, string> | undefined, name: string) =>
+      table && Object.hasOwn(table, name) ? table[name] : undefined;
+    const values = parseFeatureInfo(res.text(), info.format).map((v) => {
+      const unit = own(this.config.valueUnits, v.name);
+      return { name: own(this.config.valueNames, v.name) ?? v.name, value: v.value, ...(unit ? { unit } : {}) };
+    });
     if (values.length === 0) return undefined;
     const answer: OverlayValueAnswer = { label: info.label, values, attribution: this.definition.attribution.text };
     if (info.frame) answer.frame = info.frame;

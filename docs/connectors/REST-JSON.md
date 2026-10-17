@@ -69,7 +69,8 @@ booleans, so a time the body carries once is `source["Observation Time"]`. A poi
 `[longitude, latitude, value]` unless `lon`, `lat` and `value` give paths within it. Longitudes
 and latitudes must each be evenly spaced; a grid whose longitudes go once round the circle wraps,
 so an area across 180° is two polygons meeting there. The outlines are interpolated between grid
-points (marching squares); up to 2,000,000 points. `itemsPath` and `csv` do not apply. Used by
+points (marching squares); up to 2,000,000 points, which must mostly fill the grid they span (no
+more than four cells a point). A regional grid across 180° is not read. `itemsPath` and `csv` do not apply. Used by
 `swpc-aurora` (connectors/enabled).
 
 ## `pagination`

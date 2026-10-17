@@ -119,6 +119,13 @@ test('view: fly targets prefer bounds, then altitude, then zoom, then a sensible
   });
   assert.deepEqual(padBounds({ west: -10, south: 80, east: 10, north: 88.9 }).north, 89, 'not past the pole');
   assert.equal(padBounds({ west: -170, south: 0, east: 170, north: 1 }).west, -180, 'nearly the whole way: all of it');
+  for (const b of [
+    { west: 0, south: 89.5, east: 1, north: 89.9 },
+    { west: 0, south: -89.9, east: 1, north: -89.5 },
+  ]) {
+    const p = padBounds(b);
+    assert.ok(p.south <= p.north && p.south >= -89 && p.north <= 89, `never upside down: ${JSON.stringify(p)}`);
+  }
   assert.equal(
     (resolveFlyTarget({ position: { latitude: 1, longitude: 2 }, altitudeM: 300 }, current) as { height: number })
       .height,

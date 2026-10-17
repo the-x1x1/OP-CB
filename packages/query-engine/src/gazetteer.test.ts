@@ -152,6 +152,18 @@ test('parseCoordinates reads a geo URI (RFC 5870, two dimensions) and says why i
     'geo URI not read: it has an altitude, and only a place on the ground is taken',
   );
   assert.equal(say('geo:0,0?q=Honolulu'), 'geo URI not read: its query (?q=Honolulu) is not read');
+  assert.equal(say('geo:21.3,-157.8;u='), 'geo URI not read: its uncertainty is not a distance in metres');
+  // Android: a zoom is ignored; a point named in the query of geo:0,0 is read.
+  const zoomed = parseCoordinates('geo:21.3069,-157.8583?z=15');
+  assert.ok(zoomed && zoomed.kind === 'geo' && zoomed.latitude === 21.3069);
+  const named = parseCoordinates('geo:0,0?q=21.3069,-157.8583(Ala%20Moana)');
+  assert.ok(named && named.kind === 'geo');
+  assert.deepEqual([named.latitude, named.longitude], [21.3069, -157.8583]);
+  assert.equal(
+    say('geo:21,-157?q=22,-158'),
+    'geo URI not read: its query (?q=22,-158) is not read',
+    'two places: which?',
+  );
   assert.equal(say('geo:21.3,-157.8;crs=nad27'), 'geo URI not read: its CRS nad27 is not WGS 84');
   assert.equal(say('geo:21.3,-157.8;z=12'), 'geo URI not read: its parameter z is not read');
   assert.equal(say('geo:95,10'), 'geo URI not read: latitude or longitude out of range');

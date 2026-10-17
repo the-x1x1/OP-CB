@@ -122,16 +122,13 @@ export const FLY_BOUNDS_PAD = 0.12;
 
 export function padBounds(b: GeoBounds): GeoBounds {
   const width = b.east >= b.west ? b.east - b.west : b.east + 360 - b.west;
-  const height = b.north - b.south;
+  const height = Math.max(0, b.north - b.south);
   const dx = width * FLY_BOUNDS_PAD;
   const dy = height * FLY_BOUNDS_PAD;
   const wrap = (lon: number) => (lon > 180 ? lon - 360 : lon < -180 ? lon + 360 : lon);
-  if (width + 2 * dx >= 360)
-    return { west: -180, south: Math.max(-89, b.south - dy), east: 180, north: Math.min(89, b.north + dy) };
-  return {
-    west: wrap(b.west - dx),
-    south: Math.max(-89, b.south - dy),
-    east: wrap(b.east + dx),
-    north: Math.min(89, b.north + dy),
-  };
+  // Within ±89° and never upside down: a box against a pole keeps its height on the other side.
+  const south = Math.min(89, Math.max(-89, b.south - dy));
+  const north = Math.max(south, Math.min(89, Math.max(-89, b.north + dy)));
+  if (width + 2 * dx >= 360) return { west: -180, south, east: 180, north };
+  return { west: wrap(b.west - dx), south, east: wrap(b.east + dx), north };
 }

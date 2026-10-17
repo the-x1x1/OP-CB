@@ -351,6 +351,8 @@ export class MapStackController {
   private getImageryProvider(stack: StackDescriptor, visited: Set<string> = new Set()): Promise<ImageryResolution> {
     if (visited.has(stack.id)) return Promise.reject(new Error('Map source fallback cycle'));
     return this.cached(this.imageryProviders, stack.id, async () => {
+      // This attempt's own cache entry (set before this runs), so that only it is removed below.
+      const mine = this.imageryProviders.get(stack.id);
       const source = this.sources.get(stack.id)!;
       try {
         const provider = await source.imagery!({ signal: this.abort.signal });
@@ -365,7 +367,8 @@ export class MapStackController {
         // while its stand-in is on screen it is retried in the background (retryStandIn).
         // Cached, one failure at start-up — a network still coming up — showed Natural Earth
         // for "Satellite HD" for the whole session (God's Eye View d6c1ea0 found the same).
-        this.imageryProviders.delete(stack.id);
+        // Only this attempt's entry: a background retry may have put a built provider there.
+        if (this.imageryProviders.get(stack.id) === mine) this.imageryProviders.delete(stack.id);
         // Carry the reason. This used to report only "X is unavailable; showing Natural
         // Earth II", which tells an operator that something failed and nothing about
         // what — and it cost a long session to work out that two different online
@@ -463,6 +466,8 @@ export class MapStackController {
   private async retryStandIn(): Promise<void> {
     const standIn = this.standIn;
     if (!standIn || this.destroyed) return;
+    // Already answered (a retry that finished while a choice of the stack was failing): use it.
+    if (this.imageryProviders.has(standIn.forId)) return this.recoverFrom(standIn);
     const source = this.sources.get(standIn.forId);
     let provider: ImageryProviderLike | undefined;
     try {
@@ -470,8 +475,10 @@ export class MapStackController {
     } catch {
       provider = undefined;
     }
-    if (this.destroyed) {
+    if (this.destroyed || (provider && (this.standIn !== standIn || this.imageryProviders.has(standIn.forId)))) {
+      // Destroyed, or the stack was chosen again and answered meanwhile: this one is not needed.
       if (provider) this.dispose(provider);
+      if (!this.destroyed && this.standIn === standIn) await this.recoverFrom(standIn);
       return;
     }
     if (!provider) {
@@ -483,8 +490,18 @@ export class MapStackController {
       standIn.forId,
       Promise.resolve({ provider, effectiveStackId: standIn.forId, fallbackMessage: null }),
     );
-    if (this.standIn === standIn && this.activeId === standIn.shownId && !this.isSwitching)
-      await this.setStack(standIn.forId);
+    await this.recoverFrom(standIn);
+  }
+
+  /** Switch from the stand-in to the stack's built provider, if the stand-in is still what is shown. */
+  private async recoverFrom(standIn: { forId: string; shownId: string }): Promise<void> {
+    if (this.standIn !== standIn || this.activeId !== standIn.shownId) return;
+    // A switch in progress settles first; the stand-in, if it is still shown then, is retried again.
+    if (this.isSwitching) {
+      this.scheduleRetry();
+      return;
+    }
+    await this.setStack(standIn.forId);
   }
 
   destroy(): void {

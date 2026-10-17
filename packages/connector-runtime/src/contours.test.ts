@@ -155,3 +155,36 @@ test('points as objects, by paths', () => {
   assert.ok('records' in r);
   assert.equal(r.records.length, 1);
 });
+
+test('points along two lines are not a grid to fill (a sparse body must not cost millions of cells)', () => {
+  const coordinates: number[][] = [];
+  for (let i = 0; i < 3000; i++) coordinates.push([i * 0.01, 0, 1], [0, i * 0.01 - 15, 1]);
+  const started = Date.now();
+  assert.deepEqual(contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [1, 2, 3, 4, 5, 6, 7, 8] }), {
+    malformed: 'the points do not fill a grid',
+  });
+  assert.ok(Date.now() - started < 2000);
+});
+
+test('a global grid offset from 180° (0.5°, 1.5° …) is covered up to ±180° on both sides, never past', () => {
+  // 10° grid, longitudes 5…355 (−175…175), latitudes −20…20; high values at the seam (±175).
+  const coordinates: number[][] = [];
+  for (let lon = 5; lon < 360; lon += 10)
+    for (let lat = -20; lat <= 20; lat += 10)
+      coordinates.push([lon, lat, lat === 0 && (lon === 175 || lon === 185) ? 50 : 0]);
+  const r = contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [10] });
+  assert.ok('records' in r);
+  const xs = r.records[0]!.geometry.coordinates.flat(2).map((p) => p[0]!);
+  assert.equal(Math.max(...xs), 180, 'reaches 180° on the east side');
+  assert.equal(Math.min(...xs), -180, 'and −180° on the west');
+  assert.ok(xs.every((x) => x >= -180 && x <= 180));
+});
+
+test('a grid whose step is not exact at six decimals (1/3°) is still a grid', () => {
+  const coordinates: number[][] = [];
+  for (let i = 0; i < 1080; i++)
+    for (const lat of [0, 1 / 3, 2 / 3]) coordinates.push([i / 3, lat, i === 10 && lat > 0.3 && lat < 0.4 ? 9 : 0]);
+  const r = contourRecords({ coordinates }, { pointsPath: 'coordinates', levels: [5] });
+  assert.ok('records' in r, 'malformed' in r ? r.malformed : '');
+  assert.equal(r.records.length, 1);
+});
