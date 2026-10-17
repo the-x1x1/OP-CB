@@ -84,6 +84,9 @@ Versioning: [semantic versioning](https://semver.org/).
   month or quarter is summarised as such ("NET October 2026 (the month only)"), not as a minute.
 - **Buoys.** A wave period of 0 (no period measured) is left out rather than read "every 0 s",
   and gusts are labelled without a 10-minute period buoys do not use.
+- **An event's end in the panel** reads "Ended" only once it is past: "Ends" before then, and
+  "Kept until … (unless read again)" for an alert whose end is only how long its reading stays
+  fresh (a volcano, a flooding gauge), where it read "Ended" two days ahead.
 - **What's here** no longer shows the previous point's overlay values for a moment.
 - **A dropped file either side of 180°** (Fiji, the Aleutians) is flown to as one box across
   180°, not a view of the whole world between its two halves.

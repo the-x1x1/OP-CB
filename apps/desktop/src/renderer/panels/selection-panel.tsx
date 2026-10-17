@@ -17,6 +17,7 @@ import { displaySettings } from '../store/display.js';
 import { aftershockSequence, eventHistory, eventLinks, eventSeries, seriesPath } from './event-links.js';
 import { ownVesselFor } from '../context/cpa.js';
 import { pastShownAtMs } from '../store/shown-time.js';
+import { endRow } from './event-end.js';
 
 /** Selection panel: composed from the context registry for objects; event details for events. */
 export function SelectionPanel() {
@@ -80,7 +81,7 @@ export function SelectionPanel() {
           <FieldList
             rows={[
               { label: 'Started', value: formatUtcDateTime(ev.startAt) },
-              { label: 'Ended', value: ev.endAt ? formatUtcDateTime(ev.endAt) : undefined },
+              endRow(ev, nowMs),
               { label: 'Identifier', value: ev.id, mono: true },
             ]}
           />

@@ -221,6 +221,7 @@ test('weatherAlertRule: a source with no start or end of its own — the start i
   const [first] = weatherAlertRule.evaluate([gauge(iso(-HOUR))], ctxAt(T0, store));
   assert.equal(first!.startAt, iso(-HOUR));
   assert.equal(first!.endAt, iso(DAY - HOUR), 'it still ends when the reading goes stale');
+  assert.equal(first!.properties?.['endFromFreshness'], true, 'an end the source did not give');
   assert.equal(first!.summary, 'Minor flooding for Atkinson from 2026-09-21 11:00 UTC. Severity: Minor.');
   store.upsert(first!);
   // The next reading, fifteen minutes on: the same flood, not a new one.
@@ -270,6 +271,7 @@ test('weatherAlertRule: severity from payload, endAt from validUntil, geometry p
   assert.equal(e!.title, 'High Surf Warning issued September 21');
   assert.equal(e!.startAt, iso(-HOUR));
   assert.equal(e!.endAt, iso(5 * HOUR));
+  assert.equal(e!.properties?.['endFromFreshness'], undefined);
   assert.deepEqual(e!.geometry, polygon);
   assert.equal(
     e!.summary,

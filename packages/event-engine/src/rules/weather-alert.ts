@@ -178,6 +178,9 @@ function alertEvent(
   const issuedAt = isoProp(o, 'sent', 'issued');
   if (issuedAt) properties['issuedAt'] = issuedAt;
   if (messageType) properties['messageType'] = messageType;
+  // An end that is only how long the reading stays fresh, not one the source gave: the panel
+  // says "kept until", not "ends".
+  if (endAt && !ownEnd) properties['endFromFreshness'] = true;
   if (references.length)
     properties['supersedes'] = references.map((r) => makeEventId(EventTypes.WeatherAlert, parsed.namespace, r));
   const event: WorldEvent = {
