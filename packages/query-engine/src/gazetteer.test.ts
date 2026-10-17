@@ -133,3 +133,28 @@ test('parseCoordinates reads MGRS and UTM grid references, and says why when one
   // Decimal and DMS still read as before.
   assert.equal(parseCoordinates('21.3, -157.9')?.kind, 'decimal');
 });
+
+test('parseCoordinates reads a geo URI (RFC 5870, two dimensions) and says why it declines one', () => {
+  const honolulu = parseCoordinates('geo:21.3069,-157.8583');
+  assert.ok(honolulu && honolulu.kind === 'geo');
+  assert.deepEqual([honolulu.latitude, honolulu.longitude], [21.3069, -157.8583]);
+  assert.equal(honolulu.label, '21.3069° N, 157.8583° W');
+  const shared = parseCoordinates('GEO:21.3069,-157.8583;crs=WGS84;u=35');
+  assert.ok(shared && shared.kind === 'geo');
+  assert.equal(shared.precisionM, 35);
+  assert.equal(shared.label, '21.3069° N, 157.8583° W ±35 m');
+  const say = (text: string) => {
+    const r = parseCoordinates(text);
+    return r && r.kind === 'unsupported' ? r.note : JSON.stringify(r);
+  };
+  assert.equal(
+    say('geo:21.3069,-157.8583,120'),
+    'geo URI not read: it has an altitude, and only a place on the ground is taken',
+  );
+  assert.equal(say('geo:0,0?q=Honolulu'), 'geo URI not read: its query (?q=Honolulu) is not read');
+  assert.equal(say('geo:21.3,-157.8;crs=nad27'), 'geo URI not read: its CRS nad27 is not WGS 84');
+  assert.equal(say('geo:21.3,-157.8;z=12'), 'geo URI not read: its parameter z is not read');
+  assert.equal(say('geo:95,10'), 'geo URI not read: latitude or longitude out of range');
+  assert.equal(say('geo:Honolulu'), 'geo URI not read: it needs latitude,longitude in decimal degrees');
+  assert.equal(parseCoordinates('geography 101'), undefined, 'not a URI');
+});

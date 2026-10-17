@@ -57,6 +57,10 @@ Versioning: [semantic versioning](https://semver.org/).
   History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
   credited).
 
+- **Search takes a geo URI.** `geo:21.3069,-157.8583` (with `;u=` metres of uncertainty and
+  `;crs=wgs84`), as a phone shares a location, flies there; one with an altitude, a query or
+  another CRS is declined with the reason. After God's Eye View (11bc2ec).
+
 ### Changed
 
 - **Thin cloud on the infrared layers.** Each geostationary infrared source has a Thin cloud
