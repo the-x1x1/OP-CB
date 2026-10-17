@@ -137,6 +137,11 @@ function fadeTile(
   if (!ctx) return image;
   ctx.drawImage(image as CanvasImageSource, 0, 0);
   const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // The decoded tile is ours from here: Cesium never sees it again and never closes a bitmap,
+  // and an unclosed ImageBitmap holds its pixels outside the JS heap until a collection that
+  // the heap alone does not prompt. Close it now; the bitmap made below is the one uploaded.
+  const sourceIsBitmap = isImageBitmap(image);
+  if (sourceIsBitmap) (image as { close?: () => void }).close?.();
   if (feather) mendAntimeridianColumn(data.data, canvas.width, { z: feather.level, x: feather.x });
   // The globe's WMTS tiles are Web Mercator (x from 180° W, 2^level columns), whatever their pixels.
   const weights = feather
@@ -148,7 +153,7 @@ function fadeTile(
           { level: feather.level, y: feather.y },
           canvas.height,
           { south: feather.slice.south, north: feather.slice.north },
-          isImageBitmap(image),
+          sourceIsBitmap,
         )
       : undefined;
   applyBrightnessFade(data.data, ramp, weights, canvas.width, rows);
@@ -166,7 +171,13 @@ function fadeTile(
   // every faded tile (the infrared slices, true colour) lay upside down within its own square,
   // so neighbouring tiles did not meet — the "seams" seen on 2026-09-29 at tile edges such as
   // 41° N. A bitmap made from the canvas keeps the orientation Cesium chose.
-  if (isImageBitmap(image) && typeof createImageBitmap === 'function') return createImageBitmap(canvas);
+  if (sourceIsBitmap && typeof createImageBitmap === 'function')
+    return createImageBitmap(canvas).then((bitmap) => {
+      // The canvas was only the workbench: give its backing store back at once.
+      canvas.width = 0;
+      canvas.height = 0;
+      return bitmap;
+    });
   return canvas;
 }
 

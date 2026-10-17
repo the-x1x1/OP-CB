@@ -219,11 +219,15 @@ test('a faded tile goes back to Cesium as the kind of picture it came as (a bitm
   const g = globalThis as unknown as { ImageBitmap?: unknown; createImageBitmap?: unknown };
   const saved = { ImageBitmap: g.ImageBitmap, createImageBitmap: g.createImageBitmap };
   class FakeBitmap {
+    closed = false;
     constructor(
       readonly width: number,
       readonly height: number,
       readonly from?: unknown,
     ) {}
+    close() {
+      this.closed = true;
+    }
   }
   g.ImageBitmap = FakeBitmap;
   g.createImageBitmap = async (source: { width: number; height: number }) =>
@@ -239,11 +243,15 @@ test('a faded tile goes back to Cesium as the kind of picture it came as (a bitm
         putImageData: () => undefined,
       }),
     };
-    const provider = { requestImage: async () => new FakeBitmap(2, 2) as unknown };
+    const decoded = new FakeBitmap(2, 2);
+    const provider = { requestImage: async () => decoded as unknown };
     withBrightnessFade(provider, { from: 10, to: 20 }, () => canvas as unknown as HTMLCanvasElement);
     const out = await provider.requestImage();
     assert.ok(out instanceof FakeBitmap, 'a bitmap in, a bitmap out');
     assert.equal((out as FakeBitmap).from, canvas, 'made from the faded canvas');
+    assert.equal(decoded.closed, true, 'the decoded tile is closed once drawn');
+    assert.equal((out as FakeBitmap).closed, false, 'the one handed to Cesium is not');
+    assert.equal(canvas.width, 0, 'the workbench canvas gives its pixels back');
     const elementProvider = { requestImage: async () => ({ width: 2, height: 2 }) as unknown };
     withBrightnessFade(elementProvider, { from: 10, to: 20 }, () => canvas as unknown as HTMLCanvasElement);
     assert.equal(await elementProvider.requestImage(), canvas, 'an image element in, the canvas out');

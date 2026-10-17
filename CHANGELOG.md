@@ -73,6 +73,11 @@ Versioning: [semantic versioning](https://semver.org/).
   "This object was destroyed" when the 3D view came back, which stopped rendering until the app
   was restarted (seen on the test laptop). Layers are now taken off without being destroyed;
   Cesium's destroy freed nothing anyway.
+- **Infrared tiles on the globe give their memory back.** Each faded tile left its decoded
+  bitmap open and its work canvas full, as the 2D map's path did not; both are released now.
+  On the test laptop the window's memory rose from about 0.5 GB to 6.7 GB within a few minutes
+  of zooming over Alaska with every weather layer on; whether this was the whole of it is still
+  to be measured.
 
 ## [0.4.0] — 2026-10-12
 
