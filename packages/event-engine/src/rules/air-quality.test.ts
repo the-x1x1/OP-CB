@@ -157,3 +157,11 @@ test('AQHI: raised at 7, followed, ended at 5 or below; never read as a US AQI',
   assert.equal(ended!.endAt, at(240));
   assert.match(ended!.summary ?? '', /Cleared at AQHI 4\.6/);
 });
+
+test('AQHI: compared on its own whole-number scale — 6.6 is reported as 7 and raises; 5.3 as 5 and ends', () => {
+  const r = runner();
+  const [raised] = r.step([station(6.6, 0)], 0);
+  assert.ok(raised, '6.6 is "High risk" 7');
+  const [ended] = r.step([station(5.3, 60)], 60);
+  assert.equal(ended!.endAt, at(60), '5.3 is 5');
+});

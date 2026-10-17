@@ -88,13 +88,27 @@ export function parseWhitespaceRows(text: string): string[][] {
 
 export function parseCsv(text: string, opts: CsvOptions = {}): CsvResult {
   let rows: string[][];
+  const comment = opts.comment;
+  // Comment lines go before the rows are read: a quote in one would otherwise open a field
+  // that swallows the rest of the file. (A line that starts with the character inside a
+  // quoted field spanning lines would go too; no source this is used for writes one.)
+  const body = comment
+    ? text
+        .split(/\r?\n/)
+        .filter(
+          (line) =>
+            !line
+              .replace(/^\uFEFF/, '')
+              .trimStart()
+              .startsWith(comment),
+        )
+        .join('\n')
+    : text;
   try {
-    rows = opts.delimiter === 'whitespace' ? parseWhitespaceRows(text) : parseCsvRows(text, opts.delimiter ?? ',');
+    rows = opts.delimiter === 'whitespace' ? parseWhitespaceRows(body) : parseCsvRows(body, opts.delimiter ?? ',');
   } catch (err) {
     return { records: [], columns: [], dropped: 0, malformed: err instanceof Error ? err.message : String(err) };
   }
-  const comment = opts.comment;
-  if (comment) rows = rows.filter((r) => !(r[0] ?? '').trimStart().startsWith(comment));
   const header = opts.header ?? true;
   let columns = opts.columns ? [...opts.columns] : [];
   let start = 0;

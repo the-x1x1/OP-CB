@@ -389,7 +389,9 @@ export function launchRows(p: Props, nowMs: number): Row[] {
   const netText = Number.isFinite(netMs)
     ? [
         formatUtcDateTime(net),
-        precision ? `(${NET_PRECISION[precision] ?? precision})` : undefined,
+        precision
+          ? `(${(Object.hasOwn(NET_PRECISION, precision) ? NET_PRECISION[precision] : undefined) ?? precision})`
+          : undefined,
         // A countdown to a time known only to the week would claim more than is known.
         coarse ? undefined : `· ${countdownText(netMs, nowMs)}`,
       ]

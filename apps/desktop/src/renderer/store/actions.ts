@@ -1224,17 +1224,28 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           notify('Nothing to draw', `${file.name}: ${read.issues.join('; ') || 'no shapes in the file'}.`, 'MINOR');
           continue;
         }
+        // The list as it is now, not as it was before the read: another drop may have added a
+        // file, or the card removed one, while this one was being read.
+        const latest = getState().ui.importedFiles;
+        if (latest.length >= MAX_IMPORTED_FILES) {
+          notify(
+            'Not imported',
+            `${file.name}: at most ${MAX_IMPORTED_FILES} files are drawn at once; remove one first.`,
+            'MINOR',
+          );
+          break;
+        }
         const bounds = shapesBounds(read.shapes);
         const imported: ImportedFile = {
           id: `file-${now()}-${Math.random().toString(36).slice(2, 7)}`,
           name: file.name,
-          color: nextImportColour(current),
+          color: nextImportColour(latest),
           visible: true,
           shapes: read.shapes,
           issues: read.issues,
           ...(bounds ? { bounds } : {}),
         };
-        dispatch({ type: 'ui/importedFiles', files: [...current, imported] });
+        dispatch({ type: 'ui/importedFiles', files: [...latest, imported] });
         last = imported;
       }
       const target = last ? importedTarget(last) : undefined;

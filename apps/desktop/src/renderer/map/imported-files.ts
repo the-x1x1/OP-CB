@@ -107,7 +107,10 @@ export function nameAnchor(g: RenderGeometry): { latitude: number; longitude: nu
   if (g.kind !== 'polygon') return undefined;
   const ring = g.rings[0];
   if (!ring || ring.length === 0) return undefined;
-  const n = ring.length > 1 && ring[0]!.latitude === ring[ring.length - 1]!.latitude ? ring.length - 1 : ring.length;
+  const first = ring[0]!;
+  const last = ring[ring.length - 1]!;
+  const closed = ring.length > 1 && first.latitude === last.latitude && first.longitude === last.longitude;
+  const n = closed ? ring.length - 1 : ring.length;
   let lat = 0;
   let lon = 0;
   for (let i = 0; i < n; i++) {

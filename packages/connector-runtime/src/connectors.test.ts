@@ -481,3 +481,12 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
     false,
   );
 });
+
+test('csv: a comment line with a quote in it does not open a field', () => {
+  const r = parseCsv('﻿# exported "today\nid,lat\nA,1\n# done, "really"\nB,2\n', { comment: '#' });
+  assert.equal(r.malformed, undefined);
+  assert.deepEqual(r.records, [
+    { id: 'A', lat: '1' },
+    { id: 'B', lat: '2' },
+  ]);
+});

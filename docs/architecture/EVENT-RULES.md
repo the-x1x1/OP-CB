@@ -174,7 +174,7 @@ Scope: the vessels that changed in the batch; one event per episode of one beaco
 | end      | a report no longer active (stopped), or not heard for 10 min (ended when last heard)      |
 | reopens  | heard active again within 30 min of a quiet end: the same event                           |
 
-## gnss-interference (`event:gnss-interference:worldview:<south>_<west>`)
+## gnss-interference (`event:gnss-interference:worldview:<south>_<west>-<start second>`)
 
 Where aircraft report degraded satellite navigation — GPS jamming or spoofing, as gpsjam.org
 maps it — from the navigation integrity aircraft broadcast: NIC and NACp
@@ -182,19 +182,20 @@ maps it — from the navigation integrity aircraft broadcast: NIC and NACp
 `readsb-local` whatever the position's source but TIS-B. An aircraft that has lost GPS still
 broadcasts, with NIC 0 and often no NACp, and is placed by MLAT: it counts (seen on adsb.lol over
 the Gulf of Finland on 2026-10-16, four such aircraft among 47). Scope: all airborne aircraft
-heard in the last ten minutes that report any of the three; ADS-B version 0 left out.
-Stateless: the same aircraft give the same cells.
+heard in the last ten minutes that report any of the three; ADS-B version 0 left out. The same
+aircraft give the same cells; whether an open cell is kept is read from its own event
+(`lastQualifiedAt`), so the rule holds no state of its own.
 
-| rule     | value                                                                           |
-| -------- | ------------------------------------------------------------------------------- |
-| degraded | NIC < 7 · NACp < 8 · GPS fix lost within 10 min of the report                   |
-| cell     | 0.5° × 0.5° by the aircraft's position; the event's geometry is the square      |
-| raised   | ≥ 2 degraded aircraft that are ≥ 2 % of the aircraft with integrity in the cell |
-| severity | MINOR at 2–10 % (gpsjam yellow) · MODERATE above 10 % (red)                     |
-| title    | `GNSS interference likely near <lat>°N <lon>°E` (the cell's centre)             |
-| summary  | how many of how many aircraft, the thresholds, and that it is a sign, not proof |
-| objects  | the degraded aircraft (up to 32); confidence LOW                                |
-| end      | the cell no longer qualifies                                                    |
+| rule     | value                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| degraded | NIC < 7 · NACp < 8 · GPS fix lost within 10 min of the report                                   |
+| cell     | 0.5° × 0.5° by the aircraft's position; the event's geometry is the square                      |
+| raised   | ≥ 2 degraded aircraft that are ≥ 2 % of the aircraft with integrity in the cell                 |
+| severity | MINOR at 2–10 % (gpsjam yellow) · MODERATE above 10 % (red)                                     |
+| title    | `GNSS interference likely near <lat>°N <lon>°E` (the cell's centre)                             |
+| summary  | how many of how many aircraft, the thresholds, and that it is a sign, not proof                 |
+| objects  | the degraded aircraft (up to 32); confidence LOW                                                |
+| end      | the cell has not qualified for 10 minutes (GNSS_HOLD_MS); qualifying again later is a new event |
 
 ## launch (`event:launch:<namespace>:<value>`)
 

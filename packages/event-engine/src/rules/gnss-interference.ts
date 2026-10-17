@@ -27,8 +27,11 @@ import { derivedProvenance, refsOf, type ObjectRule, type RuleContext } from './
  *   raised    a cell with at least GNSS_MIN_DEGRADED degraded aircraft that are at least 2 %
  *             of the aircraft with integrity in it — MINOR (gpsjam's yellow band, 2–10 %) or
  *             MODERATE (red, above 10 %). One degraded aircraft is a faulty unit, not a jammer.
- *   identity  event:gnss-interference:worldview:<south>_<west> of the cell; ended when the cell
- *             no longer qualifies.
+ *   identity  event:gnss-interference:worldview:<south>_<west>-<start second>: one event per
+ *             episode of a cell, so an ended one stays in history when the cell qualifies again.
+ *   ends      once the cell has not qualified for GNSS_HOLD_MS: a cell at the threshold (two
+ *             degraded aircraft of forty) would otherwise end and be raised again on every
+ *             batch as one of them came and went.
  *   geometry  the cell's square.
  *
  * A sign of interference, not proof: an aircraft's receiver can fault, and integrity drops
@@ -44,6 +47,8 @@ export const GNSS_HIGH_FRACTION = 0.1;
 export const GNSS_NIC_DEGRADED_BELOW = 7;
 export const GNSS_NACP_DEGRADED_BELOW = 8;
 const GPS_LOSS_WINDOW_MS = 10 * 60_000;
+/** An open cell that stops qualifying is kept this long before it is ended. */
+export const GNSS_HOLD_MS = 10 * 60_000;
 /** Aircraft heard longer ago than this are not counted (the state's own aircraft expiry). */
 export const GNSS_WINDOW_MS = 10 * 60_000;
 /** Degraded aircraft named on one event at most. */
@@ -111,17 +116,29 @@ export const gnssInterferenceRule: ObjectRule = {
       if (degraded) cell.degraded.push(o);
     }
     const out: WorldEvent[] = [];
+    const open = new Map<string, WorldEvent>();
+    for (const e of ctx.existing(EventTypes.GnssInterference)) {
+      const s = e.properties?.['cellSouth'];
+      const w = e.properties?.['cellWest'];
+      if (!e.endAt && typeof s === 'number' && typeof w === 'number') open.set(cellKey(s, w), e);
+    }
     const raised = new Set<string>();
     for (const cell of [...cells.values()].sort((a, b) => a.south - b.south || a.west - b.west)) {
       const severity = cellSeverity(cell.degraded.length, cell.total);
       if (!severity) continue;
-      const id = makeEventId(EventTypes.GnssInterference, 'worldview', cellKey(cell.south, cell.west));
-      raised.add(id);
-      const existing = ctx.existing(EventTypes.GnssInterference).find((e) => e.id === id && !e.endAt);
+      const key = cellKey(cell.south, cell.west);
+      const existing = open.get(key);
+      const startSec = Math.floor(Date.parse(existing?.startAt ?? ctx.nowIso) / 1000);
+      const id = existing?.id ?? makeEventId(EventTypes.GnssInterference, 'worldview', `${key}-${startSec}`);
+      raised.add(key);
       out.push(cellEvent(id, cell, severity, ctx, existing));
     }
-    for (const e of ctx.existing(EventTypes.GnssInterference))
-      if (!e.endAt && !raised.has(e.id)) out.push({ ...e, endAt: ctx.nowIso });
+    // Not qualifying now: kept for GNSS_HOLD_MS after it last did, then ended.
+    for (const [key, e] of open) {
+      if (raised.has(key)) continue;
+      const last = Date.parse(String(e.properties?.['lastQualifiedAt'] ?? e.startAt));
+      if (ctx.now - last >= GNSS_HOLD_MS) out.push({ ...e, endAt: ctx.nowIso });
+    }
     return out;
   },
 };
@@ -177,6 +194,7 @@ function cellEvent(
     cellSouth: south,
     cellWest: west,
     cellSizeDeg: GNSS_CELL_DEG,
+    lastQualifiedAt: ctx.nowIso,
   };
   return {
     id,

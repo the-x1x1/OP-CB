@@ -128,6 +128,7 @@ export function parseFeatureInfo(text: string, format: FeatureInfoFormat): Overl
   } catch {
     return [];
   }
+  if (!doc || typeof doc !== 'object') return [];
   const features = (doc as { features?: unknown }).features;
   const first = Array.isArray(features) ? (features[0] as { properties?: unknown } | undefined) : undefined;
   const props = first?.properties;

@@ -103,14 +103,16 @@ export const airQualityRule: ObjectRule = {
         // No US AQI: Canada's AQHI on its own scale, when the source gives one.
         const aqhi = numberProp(o, 'aqhi');
         if (aqhi === undefined || !(aqhi >= 0)) continue;
+        // On ECCC's own scale, whole numbers: 6.6 is reported as 7 ("High risk") and 5.3 as 5.
+        const level = Math.round(aqhi);
         if (!previous) {
-          if (aqhi < AQHI_RAISE) continue;
+          if (level < AQHI_RAISE) continue;
           const startSec = Math.floor(Date.parse(o.observedAt) / 1000);
           const id = makeEventId(EventTypes.AirQuality, parsed.namespace, `${parsed.value}-${startSec}`);
           out.push(aqhiEvent(id, o, aqhi, undefined, ctx));
           continue;
         }
-        if (aqhi <= AQHI_CLEAR) {
+        if (level <= AQHI_CLEAR) {
           out.push({
             ...previous,
             endAt: o.observedAt,

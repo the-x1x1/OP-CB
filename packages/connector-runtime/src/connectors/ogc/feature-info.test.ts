@@ -282,3 +282,7 @@ test("a value the service calls by an Object method's name is not renamed by it"
   ]);
   assert.doesNotThrow(() => structuredClone(answer));
 });
+
+test('a JSON answer that is null, a number or a string is nothing there, not a throw', () => {
+  for (const body of ['null', '3', '"x"', 'true']) assert.deepEqual(parseFeatureInfo(body, 'application/json'), []);
+});

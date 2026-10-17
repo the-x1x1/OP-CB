@@ -16,7 +16,11 @@ export const GEODATA_MAX_BYTES = 25 * 1024 * 1024;
 export const GEODATA_MAX_FEATURES = 20_000;
 /** Coordinates in all of a file's shapes, at most. */
 export const GEODATA_MAX_COORDINATES = 1_000_000;
-const KMZ_MAX_UNCOMPRESSED = 64 * 1024 * 1024;
+/**
+ * The KML inside a KMZ, unpacked, at most: the same as a plain file. A KMZ compresses repeated
+ * placemarks some 500 to 1; at 64 MB, a 134 KB file took the main process 5 s and 1 GB.
+ */
+const KMZ_MAX_UNCOMPRESSED = GEODATA_MAX_BYTES;
 
 export type GeodataFormat = 'geojson' | 'topojson' | 'kml' | 'kmz' | 'gpx';
 
@@ -91,9 +95,15 @@ export function readGeodata(name: string, bytes: Uint8Array): GeodataRead {
   let coordinates = 0;
   let noShape = 0;
   let dropped = 0;
+  let droppedForCoordinates = 0;
   for (const f of read.features) {
     if (!f.geometry) {
       noShape++;
+      continue;
+    }
+    // Past the shape limit nothing more is checked: counting is all that is left to do.
+    if (features.length >= GEODATA_MAX_FEATURES) {
+      dropped++;
       continue;
     }
     const checked = geometrySchema.parse(f.geometry);
@@ -102,8 +112,8 @@ export function readGeodata(name: string, bytes: Uint8Array): GeodataRead {
       continue;
     }
     const n = countCoordinates(checked.value);
-    if (features.length >= GEODATA_MAX_FEATURES || coordinates + n > GEODATA_MAX_COORDINATES) {
-      dropped++;
+    if (coordinates + n > GEODATA_MAX_COORDINATES) {
+      droppedForCoordinates++;
       continue;
     }
     coordinates += n;
@@ -113,6 +123,10 @@ export function readGeodata(name: string, bytes: Uint8Array): GeodataRead {
   if (noShape) issues.push(`${noShape} feature(s) without a usable shape`);
   if (dropped)
     issues.push(`${dropped} feature(s) past the limit of ${GEODATA_MAX_FEATURES.toLocaleString('en-US')} shapes`);
+  if (droppedForCoordinates)
+    issues.push(
+      `${droppedForCoordinates} feature(s) past the limit of ${GEODATA_MAX_COORDINATES.toLocaleString('en-US')} points`,
+    );
   if (features.length === 0 && !issues.length) issues.push('no shapes in the file');
   return { format, features, issues };
 }

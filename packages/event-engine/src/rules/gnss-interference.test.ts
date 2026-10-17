@@ -4,6 +4,7 @@ import type { WorldEvent, WorldObject } from '@worldview/world-model';
 import { DEFAULT_RULES } from '../engine.js';
 import {
   GNSS_CELL_DEG,
+  GNSS_HOLD_MS,
   cellSeverity,
   gnssCellOf,
   gnssInterferenceRule,
@@ -102,7 +103,7 @@ test('a cell with degraded aircraft is raised with its square, kept while it qua
   const first = r.step([...baghdad, ...honolulu], 0);
   assert.equal(first.length, 1);
   const e = first[0]!;
-  assert.equal(e.id, 'event:gnss-interference:worldview:33.0_44.0');
+  assert.equal(e.id, `event:gnss-interference:worldview:33.0_44.0-${T0 / 1000}`, 'the cell and when it began');
   assert.equal(e.type, 'gnss-interference');
   assert.equal(e.severity, 'MODERATE');
   assert.equal(e.title, 'GNSS interference likely near 33.25°N 44.25°E');
@@ -128,10 +129,29 @@ test('a cell with degraded aircraft is raised with its square, kept while it qua
   assert.equal(second[0]!.startAt, at(0), 'an open cell keeps its start');
   assert.equal(second[0]!.endAt, undefined);
 
-  const cleared = r.step([good(33.3, 44.3), good(33.4, 44.2)], 120);
+  // Below the threshold: kept for GNSS_HOLD_MS after it last qualified (60 s), then ended.
+  assert.equal(r.step([good(33.3, 44.3), good(33.4, 44.2)], 120).length, 0, 'held');
+  const cleared = r.step([good(33.3, 44.3), good(33.4, 44.2)], 60 + GNSS_HOLD_MS / 1000);
   assert.equal(cleared.length, 1);
-  assert.equal(cleared[0]!.endAt, at(120));
-  assert.equal(r.step([], 180).length, 0, 'an ended cell is not ended again');
+  assert.equal(cleared[0]!.endAt, at(60 + GNSS_HOLD_MS / 1000));
+  assert.equal(r.step([], 60 + GNSS_HOLD_MS / 1000 + 60).length, 0, 'an ended cell is not ended again');
+  // Qualifying again later is a new episode: a new id, the old one left as it ended.
+  const fresh = (lat: number, lon: number) => aircraft(lat, lon, { navIntegrity: 0, navAccuracy: 0 }, 2000);
+  const again = r.step([fresh(33.3, 44.3), fresh(33.4, 44.2), fresh(33.2, 44.4)], 2000);
+  assert.equal(again.length, 1);
+  assert.notEqual(again[0]!.id, e.id);
+  assert.equal(again[0]!.startAt, at(2000));
+});
+
+test('a cell at the threshold does not flap: one aircraft coming and going keeps one event', () => {
+  const r = runner();
+  const base = Array.from({ length: 38 }, (_, i) => good(33.01 + i * 0.01, 44.1));
+  const two = [...base, bad(33.3, 44.3), bad(33.4, 44.2)];
+  const one = [...base, bad(33.3, 44.3)];
+  const ids = new Set<string>();
+  for (let sec = 0; sec < 600; sec += 30) for (const e of r.step(sec % 60 ? one : two, sec)) ids.add(e.id);
+  assert.equal(ids.size, 1);
+  assert.equal([...r.store.values()].filter((e) => !e.endAt).length, 1, 'still open');
 });
 
 test('MLAT, TIS-B and old aircraft carry no integrity and are not counted', () => {
