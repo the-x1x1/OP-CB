@@ -451,3 +451,29 @@ test('contributors: every provider that fed an object is remembered, past the ca
   state.removeProvider('b');
   assert.deepEqual(state.contributors(id), [], 'gone with the object');
 });
+
+test('motion: a report that leaves out heading or speed keeps the last one; a zero replaces it', () => {
+  const clock = new VirtualClock(T0);
+  const state = new WorldState({ clock, flushDelayMs: 0 });
+  const report = (at: string, payload: Record<string, number | string>) =>
+    state.ingest(
+      [
+        obs({
+          providerId: 'adsb-lol',
+          objectType: 'aircraft',
+          externalId: 'a1b2c3',
+          observedAt: at,
+          position: { latitude: 21.3, longitude: -157.9, altitudeM: 3000 },
+          payload: { icao24: 'a1b2c3', ...payload },
+        }),
+      ],
+      { snapshot: false, providerId: 'adsb-lol' },
+    );
+  report('2026-09-21T00:00:00.000Z', { speedMps: 200, headingDegrees: 270 });
+  const id = state.ofType('aircraft')[0]!.id;
+  // adsb.lol sometimes sends a row without `track`: the aircraft must not turn to north.
+  report('2026-09-21T00:00:10.000Z', { speedMps: 210 });
+  assert.deepEqual(state.get(id)!.motion, { speedMps: 210, headingDegrees: 270 });
+  report('2026-09-21T00:00:20.000Z', { speedMps: 0, headingDegrees: 0 });
+  assert.deepEqual(state.get(id)!.motion, { speedMps: 0, headingDegrees: 0 }, 'zero is a value');
+});

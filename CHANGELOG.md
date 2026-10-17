@@ -69,6 +69,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **An aircraft no longer turns to north when a report leaves out its heading.** adsb.lol sends
+  the odd row without `track`; the object's motion was replaced by the report's, so the heading
+  went while the speed stayed. A report now keeps the last heading or speed it leaves out; a value
+  it carries, zero included, replaces it (as God's Eye View found, 557d3bb).
+
 - **A hurricane advisory released early stays on the map.** NHC sometimes publishes an
   advisory up to about an hour before its nominal time; the allowance is now ninety minutes
   (it was one hour, the edge of what happens), as God's Eye View found too.

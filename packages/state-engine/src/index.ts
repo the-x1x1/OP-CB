@@ -316,8 +316,12 @@ export class WorldState {
       if (newer && position) updated.position = position;
       if (newer && obs.geometry) updated.geometry = obs.geometry;
       if (newer) {
+        // A report that leaves out heading or speed keeps the last one, as `properties` keeps
+        // the last of every field: an adsb.lol row without `track` turned the aircraft to north
+        // while its speed still moved it (God's Eye View 557d3bb found the same). A value the
+        // report does carry, zero included, replaces it.
         const m = extractMotion(obs.payload);
-        if (m) updated.motion = m;
+        if (m) updated.motion = { ...(existing.motion ?? {}), ...m };
       }
       if (newer) {
         const media = extractMedia(obs.payload);
