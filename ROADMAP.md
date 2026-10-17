@@ -385,6 +385,9 @@ God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
       declined with the reason (on feature/roadmap-2, `d8b7d35`).
 - [x] **Hold the last heading and speed when a report omits them** (GEV `557d3bb`): the state
       engine replaced an object's motion whole (on feature/roadmap-2, `94121d4`).
+- [x] **Retry the real basemap behind its fallback** (GEV `d6c1ea0`, `759c796`, `f0d43a6`): the
+      globe cached Natural Earth under the failed stack's name for the session (on
+      feature/roadmap-2, `fa163aa`).
 - Already so here: perimeter queries across 180° (GEV `8d37661`; the ArcGIS connector splits the
   envelope), unknown numbers kept unknown rather than zero (GEV `4399feb`, `9bee985`; NDBC's `MM`).
 - A decision first: **the interface in other languages** (GEV ships Spanish and Russian, some
