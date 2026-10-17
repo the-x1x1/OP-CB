@@ -16,8 +16,9 @@ export function responseOrigin(res: { stale: boolean; fromCache: boolean }): 'li
 
 /**
  * One log line for the records the mapping refused, with the first three reasons as a sample;
- * and, when any was a record left out (not a repeat of one kept), the poll's answer is said to
- * be partial (ProviderContext.incomplete), so what it lacks is not read as no longer listed.
+ * and, when any was a record left out (not a repeat of one kept, not one without a place), the
+ * poll's answer is said to be partial (ProviderContext.incomplete), so what it lacks is not read
+ * as no longer listed.
  */
 export function warnRejected(
   context: Pick<ProviderContext, 'logger' | 'incomplete'>,
@@ -28,7 +29,10 @@ export function warnRejected(
     count: rejected.length,
     sample: rejected.slice(0, 3).map((r) => r.reason),
   });
-  const lost = rejected.find((r) => !r.reason.startsWith('duplicate id'));
+  // Not a repeat of a record kept, nor one with no place: a record the source lists without a
+  // position (NHC lists a wind field with null geometry) is never drawn, so it was not listed
+  // before either, and must not keep every poll from being complete.
+  const lost = rejected.find((r) => !r.reason.startsWith('duplicate id') && r.reason !== 'no position');
   if (lost) context.incomplete?.(`a record was refused: ${lost.reason}`);
 }
 

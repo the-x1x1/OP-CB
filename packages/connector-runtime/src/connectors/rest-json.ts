@@ -127,6 +127,8 @@ export class RestJsonProvider extends PollingProvider {
     let total = 0;
     let cacheAgeMs = 0;
     let page: PageRequest | undefined = this.paginator.first();
+    // The answer said "none right now" (emptyStatus): complete, though a page was pending.
+    let emptyAnswer = false;
     for (let i = 0; i < this.paginator.maxPages && page; i++) {
       const req = this.buildRequest(page, request.bounds, request.center);
       let res;
@@ -143,6 +145,7 @@ export class RestJsonProvider extends PollingProvider {
         const status = err instanceof ProviderError ? err.httpStatus : undefined;
         if (status !== undefined && this.definition.endpoint?.emptyStatus?.includes(status)) {
           this.lastPages = i + 1;
+          emptyAnswer = true;
           break;
         }
         throw err;
@@ -177,7 +180,7 @@ export class RestJsonProvider extends PollingProvider {
       page = this.paginator.next(body.body, mapped.total, i, res.headers);
     }
     // Pages left when the page limit was reached: the answer is not all the source lists.
-    if (page) this.context.incomplete?.(`stopped at ${this.paginator.maxPages} page(s) with more left`);
+    if (page && !emptyAnswer) this.context.incomplete?.(`stopped at ${this.paginator.maxPages} page(s) with more left`);
     this.lastRejected = rejected;
     this.lastFiltered = filtered;
     if (total > 0)

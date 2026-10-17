@@ -454,11 +454,15 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
     mapping: { externalId: 'properties.eventid' },
     attribution: { text: 'GDACS' },
   };
+  const partial: string[] = [];
   const run = async (definition: unknown, status: number) => {
     const v = defaultConnectorRegistry.validate(definition);
     assert.ok(v.ok && v.definition, JSON.stringify(v.errors));
     const provider = defaultConnectorRegistry.createProvider(v.definition!);
-    const ctx = testing.createFixtureContext({ providerId: 'gdacs-sample', responder: () => ({ status, body: '' }) });
+    const ctx = {
+      ...testing.createFixtureContext({ providerId: 'gdacs-sample', responder: () => ({ status, body: '' }) }),
+      incomplete: (reason: string) => partial.push(reason),
+    };
     await provider.initialize(ctx);
     await provider.start();
     return provider;
@@ -466,6 +470,8 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
   const empty = await run(doc, 404);
   assert.deepEqual(await empty.query!({ signal: new AbortController().signal, background: true }), []);
   assert.notEqual((await empty.health()).status, 'ERROR');
+  // "None right now" is the whole answer: what was listed before is no longer listed.
+  assert.deepEqual(partial, []);
   // Another client error is still an error, and so is a 404 for a source that did not say so.
   await assert.rejects(
     (await run(doc, 410)).query!({ signal: new AbortController().signal, background: true }),

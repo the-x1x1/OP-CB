@@ -324,14 +324,15 @@ export class RuntimeCore {
 
   /**
    * A dropped file read into shapes (`geodata.read`): off the main thread when main gave a
-   * reader, else here. A reader that fails to run (its worker would not start or died) is
-   * logged and the file is read here instead; a file it read is its answer, bad or not.
+   * reader, else here. A reader that could not run at all (its worker never started) is logged
+   * and the file is read here instead; once it ran, its answer stands, a failure included. The
+   * reader copies the bytes it hands on, so they are still here for that.
    */
   async readGeodataFile(name: string, bytes: Uint8Array): Promise<GeodataRead> {
     const off = this.deps.geodataReader;
     if (off) {
       try {
-        return await off(name, bytes.slice());
+        return await off(name, bytes);
       } catch (err) {
         this.log.warn('geodata reader failed; reading in-process', {
           message: err instanceof Error ? err.message : String(err),

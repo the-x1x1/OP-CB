@@ -18,6 +18,7 @@ test('a dropped file is read on a worker: its answer, the bytes handed over as a
     createWorker: evalWorker(`
       const { parentPort } = require('node:worker_threads');
       parentPort.on('message', (m) => parentPort.postMessage({ read: { format: 'geojson', features: [], issues: [m.name + ':' + m.bytes.length] } }));
+      parentPort.postMessage({ ready: true });
     `),
   });
   const bytes = new Uint8Array([1, 2, 3]);
@@ -26,16 +27,37 @@ test('a dropped file is read on a worker: its answer, the bytes handed over as a
   assert.equal(bytes.length, 3, 'the caller keeps its bytes (a copy was transferred)');
 });
 
-test('a worker that cannot run rejects, so the runtime reads the file itself', async () => {
-  const crash = geodataWorkerReader('unused', {
-    createWorker: evalWorker(`throw new Error('boom')`),
-  });
-  await assert.rejects(crash('a.kml', new Uint8Array(1)), /boom/);
-  const silent = geodataWorkerReader('unused', {
-    timeoutMs: 200,
-    createWorker: evalWorker(`setInterval(() => {}, 1000)`),
-  });
-  await assert.rejects(silent('a.kml', new Uint8Array(1)), /not read within/);
+test('a worker that never runs rejects (read in-process); one that ran answers, a failure included', async () => {
   const missing = geodataWorkerReader('/nowhere/geodata-worker.cjs');
-  await assert.rejects(missing('a.kml', new Uint8Array(1)));
+  await assert.rejects(missing('a.kml', new Uint8Array(1)), 'no script: the runtime reads it itself');
+  const neverReady = geodataWorkerReader('unused', { createWorker: evalWorker(`throw new Error('load failed')`) });
+  await assert.rejects(neverReady('a.kml', new Uint8Array(1)), /load failed/);
+  const crash = geodataWorkerReader('unused', {
+    createWorker: evalWorker(`
+      const { parentPort } = require('node:worker_threads');
+      parentPort.on('message', () => { throw new Error('boom'); });
+      parentPort.postMessage({ ready: true });
+    `),
+  });
+  assert.deepEqual(await crash('a.kml', new Uint8Array(1)), { features: [], issues: ['could not be read: boom'] });
+  const silent = geodataWorkerReader('unused', {
+    timeoutMs: 300,
+    createWorker: evalWorker(`
+      require('node:worker_threads').parentPort.postMessage({ ready: true });
+      setInterval(() => {}, 1000);
+    `),
+  });
+  const slow = await silent('a.kml', new Uint8Array(1));
+  assert.match(slow.issues[0] ?? '', /not read within/, 'not parsed again on the main thread');
+  const refused = geodataWorkerReader('unused', {
+    createWorker: evalWorker(`
+      const { parentPort } = require('node:worker_threads');
+      parentPort.on('message', () => parentPort.postMessage({ error: 'bad file' }));
+      parentPort.postMessage({ ready: true });
+    `),
+  });
+  assert.deepEqual(await refused('a.kml', new Uint8Array(1)), {
+    features: [],
+    issues: ['could not be read: bad file'],
+  });
 });

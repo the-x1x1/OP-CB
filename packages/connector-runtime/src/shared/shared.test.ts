@@ -81,6 +81,6 @@ test('mapping: origin, one observation per object and time, the rejected line an
   assert.deepEqual(lines, [['rejected records', { count: 4, sample: ['r1', 'r2', 'r3'] }]]);
   // A record left out makes the poll's answer partial; a repeat of one kept does not.
   assert.deepEqual(partial, ['a record was refused: r1']);
-  warnRejected(context, [{ reason: 'duplicate id x' }]);
-  assert.equal(partial.length, 1);
+  warnRejected(context, [{ reason: 'duplicate id x' }, { reason: 'no position' }]);
+  assert.equal(partial.length, 1, 'a repeat, or a record with no place, leaves the answer whole');
 });

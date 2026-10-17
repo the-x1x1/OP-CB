@@ -61,6 +61,17 @@ test('WatchZoneEvaluator: circle + polygon intersection, severity gate, enter on
   });
   // An event already ended (an alert its source stopped listing) is not announced.
   assert.equal(ev.evaluateEvent({ ...quakeOahu, id: 'event:earthquake:usgs:ended', endAt: iso(0) }).length, 0);
+  // Withdrawn before it began: its end is still ahead, and it is not announced either.
+  assert.equal(
+    ev.evaluateEvent({
+      ...quakeOahu,
+      id: 'event:earthquake:usgs:withdrawn',
+      startAt: iso(12 * HOUR),
+      endAt: iso(12 * HOUR),
+      properties: { withdrawnAt: iso(0) },
+    }).length,
+    0,
+  );
   const first = ev.evaluateEvent(quakeOahu);
   assert.equal(first.length, 1);
   const hit = first[0]!;

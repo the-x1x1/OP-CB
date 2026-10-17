@@ -356,6 +356,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.4.0 (unreleased)
 
+- A record a source lists without a position is left out without making the read partial; any
+  other record refused makes it partial, and while a feed keeps refusing one, what that feed
+  stops listing is not ended until its reading goes stale.
 - An alert from a source read by area (wildfire perimeters, which follow the view) is not ended
   when the view moves away from it: only a complete read of a source ends what it leaves out.
   Such an alert ends when its reading goes stale.
@@ -379,8 +382,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   descriptions are not used, a KML ground overlay or 3D model is not drawn, and its shapes cannot
   be selected. At most 12 files and 50,000 shapes, 25 MB a file (a KMZ's KML unpacked too); they
   are gone when the app closes. A large file is read on a worker thread, so the app keeps going
-  while it is read (a 17 MB GeoJSON: about 1.6 s in the container); if that thread cannot run,
-  the file is read in the main process as before, and the app waits for it.
+  while it is read (a 17 MB GeoJSON: about 1.6 s in the container); a file it cannot read in a
+  minute is reported as not read. Only if the thread cannot start is the file read in the main
+  process, as before, and the app waits for it.
 - GPS interference squares cover only where aircraft fly with ADS-B version 1 or 2 and are
   heard; at night over an ocean there may be one aircraft in a square, and it takes two degraded
   ones to raise it. adsb.lol's view query is shared with everything else asked of it, so a square

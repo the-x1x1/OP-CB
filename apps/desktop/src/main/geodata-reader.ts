@@ -19,8 +19,10 @@ export function geodataWorkerPath(appDir: string): string {
 
 /**
  * A reader that parses each dropped file on its own worker thread, ended when it answers.
- * It rejects only when the worker cannot run (no script, a crash, the time limit): the
- * runtime then reads the file in-process, as before (RuntimeCore.readGeodataFile).
+ * It rejects only when the worker never ran (no script, failed before it came online): the
+ * runtime then reads the file in-process (RuntimeCore.readGeodataFile). Once it ran, whatever
+ * happens is the file's answer — a time limit, a crash, running out of memory — so a file that
+ * defeated the worker is not parsed again on the main thread.
  */
 export function geodataWorkerReader(
   workerPath: string,
@@ -28,6 +30,7 @@ export function geodataWorkerReader(
 ): GeodataReader {
   const create = options.createWorker ?? ((file: string) => new Worker(file));
   const timeoutMs = options.timeoutMs ?? GEODATA_WORKER_TIMEOUT_MS;
+  const unread = (why: string): GeodataRead => ({ features: [], issues: [`could not be read: ${why}`] });
   return (name, bytes) =>
     new Promise<GeodataRead>((resolve, reject) => {
       let worker: Worker;
@@ -38,6 +41,7 @@ export function geodataWorkerReader(
         return;
       }
       let settled = false;
+      let online = false;
       const finish = (fn: () => void) => {
         if (settled) return;
         settled = true;
@@ -45,16 +49,26 @@ export function geodataWorkerReader(
         void worker.terminate();
         fn();
       };
-      const timer = setTimeout(
-        () => finish(() => reject(new Error(`the file was not read within ${timeoutMs / 1000} s`))),
-        timeoutMs,
-      );
-      worker.once('message', (m: { read?: GeodataRead; error?: string }) =>
-        finish(() => (m?.read ? resolve(m.read) : reject(new Error(m?.error ?? 'no answer from the reader')))),
-      );
-      worker.once('error', (err) => finish(() => reject(err)));
-      worker.once('exit', (code) => finish(() => reject(new Error(`the reader stopped (exit ${code})`))));
-      const copy = bytes.slice();
-      worker.postMessage({ name, bytes: copy }, [copy.buffer]);
+      // Before it is ready a failure is the worker's (read in-process instead); after, the file's.
+      const failed = (why: string, err?: unknown) =>
+        finish(() => (online ? resolve(unread(why)) : reject(err instanceof Error ? err : new Error(why))));
+      const timer = setTimeout(() => failed(`not read within ${timeoutMs / 1000} s`), timeoutMs);
+      // The script says it is loaded ({ ready }) before anything else: Node's own 'online' comes
+      // before the script is loaded, so a missing script would read as the file's failure.
+      worker.on('message', (m: { ready?: boolean; read?: GeodataRead; error?: string }) => {
+        if (m?.ready) {
+          online = true;
+          return;
+        }
+        finish(() => resolve(m?.read ?? unread(m?.error ?? 'no answer from the reader')));
+      });
+      worker.once('error', (err) => failed(err instanceof Error ? err.message : String(err), err));
+      worker.once('exit', (code) => failed(`the reader stopped (exit ${code})`));
+      try {
+        const copy = bytes.slice();
+        worker.postMessage({ name, bytes: copy }, [copy.buffer]);
+      } catch (err) {
+        failed(err instanceof Error ? err.message : String(err), err);
+      }
     });
 }

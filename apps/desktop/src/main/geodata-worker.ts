@@ -15,3 +15,5 @@ parentPort?.on('message', (message: { name?: unknown; bytes?: unknown }) => {
     parentPort?.postMessage({ error: err instanceof Error ? err.message : String(err) });
   }
 });
+// Loaded: from here a failure is the file's (geodata-reader.ts).
+parentPort?.postMessage({ ready: true });
