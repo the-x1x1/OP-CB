@@ -133,8 +133,11 @@ export function importedFeatures(files: readonly ImportedFile[]): RenderFeature[
   for (const file of files) {
     if (!file.visible) continue;
     for (const [i, shape] of file.shapes.entries()) {
-      if (shapes++ >= MAX_IMPORTED_SHAPES) return out;
-      parts(shape.geometry).forEach((geometry, part) => {
+      // Counted by what is drawn: one MultiPoint of 100,000 points is 100,000 features.
+      if (shapes >= MAX_IMPORTED_SHAPES) return out;
+      const drawn = parts(shape.geometry).slice(0, MAX_IMPORTED_SHAPES - shapes);
+      shapes += Math.max(1, drawn.length);
+      drawn.forEach((geometry, part) => {
         out.push({
           id: `imported:${file.id}:${i}${part ? `:${part}` : ''}`,
           geometry,

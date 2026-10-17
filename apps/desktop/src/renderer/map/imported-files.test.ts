@@ -128,3 +128,18 @@ test('a named line or area is named on it: a line at its middle vertex, an area 
   assert.deepEqual(anchor, at(0, 0));
   assert.equal(nameAnchor({ kind: 'point', position: at(1, 1) }), undefined);
 });
+
+test('the limit counts what is drawn: one MultiPoint of many points is many features', () => {
+  const many = file('mp', {
+    shapes: [
+      {
+        geometry: {
+          type: 'MultiPoint' as const,
+          coordinates: Array.from({ length: MAX_IMPORTED_SHAPES + 10 }, () => [0, 0] as [number, number]),
+        },
+      },
+      { geometry: { type: 'Point' as const, coordinates: [1, 1] as [number, number] } },
+    ],
+  });
+  assert.equal(importedFeatures([many]).length, MAX_IMPORTED_SHAPES);
+});
