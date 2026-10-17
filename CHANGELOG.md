@@ -90,6 +90,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - **A gridded field across 180°.** A REST JSON definition's `response.contour` now reads a
   regional grid that crosses 180° (the Bering Sea, Fiji), cutting its areas there, where it
   was refused as unevenly spaced.
+- **What's here on a WMS 1.1.1 layer that lists only CRS:84** asks in CRS:84, not in an
+  EPSG:4326 the layer does not list.
 - **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
   map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
   as the map's answer for the rest of the session. It is now retried in the background — after

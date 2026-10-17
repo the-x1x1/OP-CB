@@ -62,6 +62,12 @@ test('the query box is centred on the point, in the axis order each CRS and vers
     crs: 'EPSG:4326',
     bbox: [-155.005, 19.995, -154.995, 20.005],
   });
+  // A 1.1.1 layer listing only CRS:84 is asked in CRS:84, not an EPSG:4326 it does not list.
+  assert.deepEqual(queryBox('1.1.1', ['CRS:84'], p), {
+    crs: 'CRS:84',
+    bbox: [-155.005, 19.995, -154.995, 20.005],
+  });
+  assert.equal(queryBox('1.1.1', ['CRS:84', 'EPSG:4326'], p)?.crs, 'EPSG:4326');
   const mercator = queryBox('1.3.0', ['EPSG:3857'], { latitude: 0, longitude: 0 });
   assert.equal(mercator?.crs, 'EPSG:3857');
   assert.deepEqual(

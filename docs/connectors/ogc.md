@@ -235,8 +235,8 @@ GetFeatureInfo request (`feature-info.ts`), through its gated HTTP like the capa
   GeoServer's `text/plain` (in that order of preference) and every layer is `queryable`; HTML and GML are
   never asked for. Otherwise the overlay has no value to show and nothing is sent.
 - The box is 101 × 101 pixels round the point (about 1.1 km across at the equator), the point at pixel
-  (50, 50) — `I`/`J` in 1.3.0, `X`/`Y` in 1.1.1 — in CRS:84 when the layers list it, else EPSG:4326 in the
-  axis order the version uses, else EPSG:3857; a layer that offers none of these is not asked. `LAYERS` and
+  (50, 50) — `I`/`J` in 1.3.0, `X`/`Y` in 1.1.1 — in 1.3.0 in CRS:84 when the layers list it, else EPSG:4326
+  (latitude first); in 1.1.1 in EPSG:4326, else CRS:84 (longitude first either way); else EPSG:3857; a layer that offers none of these is not asked. `LAYERS` and
   `QUERY_LAYERS` are the definition's, with its styles, vendor parameters and the `TIME` of the frame being
   drawn, `FEATURE_COUNT=1`, and an answer cap of 64 KiB.
 - The answer is the first feature's scalar properties in the service's own names and order (nowCOAST's

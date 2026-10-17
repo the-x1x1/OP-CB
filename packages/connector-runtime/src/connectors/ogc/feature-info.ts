@@ -94,9 +94,12 @@ export function queryBox(
     // EPSG:4326 in 1.3.0 is latitude first.
     if (kinds.some((k) => k.info.kind === 'epsg4326'))
       return { crs: 'EPSG:4326', bbox: [lat - HALF_DEG, lon - HALF_DEG, lat + HALF_DEG, lon + HALF_DEG] };
-  } else if (kinds.some((k) => k.info.kind === 'epsg4326' || k.info.kind === 'crs84')) {
-    // 1.1.1's EPSG:4326 is longitude first.
-    return { crs: 'EPSG:4326', bbox: lonLat };
+  } else {
+    // 1.1.1's EPSG:4326 is longitude first. A layer that lists only CRS:84 is asked in CRS:84
+    // (also longitude first): a server answers in a CRS the layer lists, not one it does not.
+    if (kinds.some((k) => k.info.kind === 'epsg4326')) return { crs: 'EPSG:4326', bbox: lonLat };
+    const crs84 = kinds.find((k) => k.info.kind === 'crs84');
+    if (crs84) return { crs: crs84.crs, bbox: lonLat };
   }
   const mercator = kinds.find((k) => k.info.kind === 'webmercator');
   if (!mercator || Math.abs(position.latitude) > MERCATOR_MAX_LAT) return undefined;
