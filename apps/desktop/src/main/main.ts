@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { geodataWorkerPath, geodataWorkerReader } from './geodata-reader.js';
 import { promises as fs } from 'node:fs';
 import {
   app,
@@ -256,6 +257,8 @@ async function bootstrap(): Promise<void> {
     // Development loads the page from Vite, which cannot serve it; only the packaged scheme can.
     ...(DEV ? {} : { offlineBasemapUrl: `${APP_ORIGIN}${PACK_BASEMAP_ROUTE}` }),
     resourcesDir: bundledResourcesDir(appDir),
+    // A dropped file is parsed on a worker thread; if that cannot run, in-process as before.
+    geodataReader: geodataWorkerReader(geodataWorkerPath(appDir)),
     // The label file the map draws place names from; the same file makes them searchable.
     referenceLabelsPath: DEV
       ? path.join(appDir, 'assets', 'reference', 'labels.json')

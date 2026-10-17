@@ -1,3 +1,4 @@
+import { readGeodata, type GeodataRead } from './support/geodata-import.js';
 import os from 'node:os';
 import path from 'node:path';
 import { existsSync, promises as fs } from 'node:fs';
@@ -320,6 +321,25 @@ export class RuntimeCore {
   private detach: Array<() => void> = [];
   private started = false;
   private stopped = false;
+
+  /**
+   * A dropped file read into shapes (`geodata.read`): off the main thread when main gave a
+   * reader, else here. A reader that fails to run (its worker would not start or died) is
+   * logged and the file is read here instead; a file it read is its answer, bad or not.
+   */
+  async readGeodataFile(name: string, bytes: Uint8Array): Promise<GeodataRead> {
+    const off = this.deps.geodataReader;
+    if (off) {
+      try {
+        return await off(name, bytes.slice());
+      } catch (err) {
+        this.log.warn('geodata reader failed; reading in-process', {
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    return readGeodata(name, bytes);
+  }
 
   constructor(private readonly deps: WorldRuntimeDeps) {
     this.clock = deps.clock ?? systemClock;

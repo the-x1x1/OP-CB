@@ -90,6 +90,9 @@ Versioning: [semantic versioning](https://semver.org/).
   "Kept until … (unless read again)" for an alert whose end is only how long its reading stays
   fresh (a volcano, a flooding gauge), where it read "Ended" two days ahead.
 - **What's here** no longer shows the previous point's overlay values for a moment.
+- **A large dropped file no longer holds the app.** It is read on a worker thread; a 17 MB
+  GeoJSON took 1.6 s, during which every window had stood still. If the thread cannot run, the
+  file is read as before.
 - **A dropped file either side of 180°** (Fiji, the Aleutians) is flown to as one box across
   180°, not a view of the whole world between its two halves.
 - **A gridded field across 180°.** A REST JSON definition's `response.contour` now reads a

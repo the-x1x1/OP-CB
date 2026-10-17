@@ -378,8 +378,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - A dropped file is drawn with its shapes and names only: its own colours, icons, line widths and
   descriptions are not used, a KML ground overlay or 3D model is not drawn, and its shapes cannot
   be selected. At most 12 files and 50,000 shapes, 25 MB a file (a KMZ's KML unpacked too); they
-  are gone when the app closes. A large file is read in the main process and holds the whole app
-  for the seconds it takes (a 25 MB KML: about 2.5 s on the build machine).
+  are gone when the app closes. A large file is read on a worker thread, so the app keeps going
+  while it is read (a 17 MB GeoJSON: about 1.6 s in the container); if that thread cannot run,
+  the file is read in the main process as before, and the app waits for it.
 - GPS interference squares cover only where aircraft fly with ADS-B version 1 or 2 and are
   heard; at night over an ocean there may be one aircraft in a square, and it takes two degraded
   ones to raise it. adsb.lol's view query is shared with everything else asked of it, so a square

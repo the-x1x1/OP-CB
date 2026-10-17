@@ -25,7 +25,6 @@ import {
 } from '@worldview/query-engine';
 import { whatChanged } from '@worldview/event-engine';
 import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@worldview/offline';
-import { readGeodata } from './support/geodata-import.js';
 import { exportBundle } from '@worldview/diagnostics';
 import {
   EVENT_TYPE_LABELS,
@@ -388,7 +387,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const bytes = Buffer.from(data, 'base64');
       if (bytes.byteLength > GEODATA_MAX_FILE_BYTES)
         return { shapes: [], issues: [`larger than ${GEODATA_MAX_FILE_BYTES / 1024 / 1024} MB`] };
-      const read = readGeodata(name, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
+      const read = await core.readGeodataFile(name, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength));
       return { ...(read.format ? { format: read.format } : {}), shapes: read.features, issues: read.issues };
     },
     'overlays.valueAt': async ({ position, overlayIds }) => {

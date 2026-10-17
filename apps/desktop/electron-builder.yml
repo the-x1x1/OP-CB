@@ -48,6 +48,8 @@ asar: true
 asarUnpack:
   - '**/node_modules/@duckdb/node-bindings*/**'
   - '**/*.node'
+  # The dropped-file reader's worker thread loads its script from a real path.
+  - 'dist/main/geodata-worker.cjs'
 
 extraResources:
   # Read-only bundled data granted to filesystem providers at runtime. `pnpm stage:resources`
