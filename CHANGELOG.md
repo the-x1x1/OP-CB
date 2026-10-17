@@ -73,15 +73,13 @@ Versioning: [semantic versioning](https://semver.org/).
   "This object was destroyed" when the 3D view came back, which stopped rendering until the app
   was restarted (seen on the test laptop). Layers are now taken off without being destroyed;
   Cesium's destroy freed nothing anyway.
-- **Infrared tiles on the globe give their memory back.** Each faded tile left its decoded
-  bitmap open and its work canvas full, as the 2D map's path did not; both are released now.
-  On the test laptop the window's memory rose from about 0.5 GB to 6.7 GB within a few minutes
-  of zooming over Alaska with every weather layer on; whether this was the whole of it is still
-  to be measured.
-- **Infrared tiles are faded in slices on the globe.** Tiles arriving together were faded one
-  after another in a single task (tasks of 0.7–1 s and 3 fps on the test laptop, zooming in with
-  every infrared layer on); they are now faded 8 ms at a time with frames drawn in between. Not
-  yet measured on the laptop.
+- **Infrared tiles on the globe give their memory back, and are faded in slices.** Each faded
+  tile left its decoded bitmap open and its work canvas full (the 2D map's path did not), and
+  tiles arriving together were faded back to back in one task. Both are fixed: bitmaps are
+  closed, canvases emptied, and fading runs 8 ms at a time with frames drawn in between. On the
+  test laptop with every weather layer on over Alaska, before: JavaScript heap 3–4.4 GB, window
+  6.7 GB, 3–4 fps, tasks up to 1 s; after: heap peaking at 1.7 GB while zooming and settling at
+  about 0.4 GB, window under 1 GB, 60 fps once tiles are in, the longest task 0.3 s.
 
 ## [0.4.0] — 2026-10-12
 
