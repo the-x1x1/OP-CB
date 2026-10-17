@@ -26,6 +26,9 @@ are deleted too.
 - [ ] Sources → Aurora forecast on: within ten minutes, a faint green oval round the north
       magnetic pole (and one round the south); select it: "Aurora: 10% chance or more", the time
       it is for, credit "NOAA Space Weather Prediction Center (OVATION)"; nothing in the feed
+      (partly seen 2026-10-17 00:32Z, build `33b471c`: Live within seconds, one area, over the
+      Southern Ocean, split at 180° in 2D; selected: "Aurora: 10% chance or more", event Aurora
+      forecast, NOAA Space Weather Prediction Center. No northern area that hour; feed not checked)
 - [ ] Sky tab, middle of the map over Fairbanks (64.8° N, 147.7° W) with the source on: a green
       "Aurora: …% chance overhead at HH:MM UTC" above the plot; over Honolulu, no line
 - [ ] Spin the globe across 180°: the oval meets itself there, no gap and no line across the map
@@ -91,9 +94,13 @@ are deleted too.
 - [ ] Centre here, Measure from here, Watch here (delete the zone), Collect (into the active
       collection)
 - [ ] With the ISS selected, the card gives its next pass over the point
-- [ ] With Weather radar drawn, right-click inside an echo over the US: a "Weather radar" row with
-      the value nowCOAST gives (note its name and whether it reads as dBZ), the credit and the frame
-      time; right-click clear air: no row, or no value. With Work offline on: no row.
+- [x] With Weather radar drawn, right-click inside an echo over the US: a row named as the layer
+      ("CONUS Weather Radar Base Reflectivity") reading "Reflectivity … dBZ", the credit and the
+      frame time — seen 2026-10-17 01:23Z, build `e14073a`, central Florida: "Reflectivity 27
+      dBZ · Radar: NOAA nowCOAST, NWS/OAR MRMS · frame 01:12 UTC", with a lightning row
+      "Strike density 0" under it
+- [ ] Right-click clear air inside the radar's area: "Reflectivity 0 dBZ" (nowCOAST answers 0
+      there); outside it, no radar row. With Work offline on: no row.
 - [ ] Palette "What's here? (the middle of the view)" on a tilted globe describes the ground in
       the middle, not under the camera
 
