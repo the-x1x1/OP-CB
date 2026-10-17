@@ -393,6 +393,12 @@ God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
 - A decision first: **the interface in other languages** (GEV ships Spanish and Russian, some
   60 commits) — a translation layer over every string, and who translates; **bike share in
   Barcelona, Bogotá and Santiago** (GEV `194595e`, `7e9b8d9`) — each feed's licence.
+- Checked again 2026-10-16 evening: nothing new on GEV `main` after `1df2a27`. Of its open
+  branches, `feat/global-radar` is RainViewer (personal and educational use only; refused in
+  DATA-SOURCE-LICENSES) and `german/street-level-slim` is Mapillary street-level imagery (on the
+  decision list above: keys and licences); the voice branches (OpenAI realtime, or Gemma, Whisper
+  and Kokoro models downloaded to the device) need speech models and a
+  microphone permission, a decision of their own.
 
 ## 1.10.0 — Deferred options from the OSIRIS review (each needs a decision first)
 
