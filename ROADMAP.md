@@ -379,6 +379,18 @@ Each needs a decision of the operator's first:
 - **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
   licence review; the recon tools stay under 1.10.0 below.
 
+God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
+
+- [x] **geo URIs in search** (GEV `11bc2ec`): `geo:lat,lon` with `;u=` and `;crs=wgs84`, the rest
+      declined with the reason (on feature/roadmap-2, `d8b7d35`).
+- [x] **Hold the last heading and speed when a report omits them** (GEV `557d3bb`): the state
+      engine replaced an object's motion whole (on feature/roadmap-2, `94121d4`).
+- Already so here: perimeter queries across 180° (GEV `8d37661`; the ArcGIS connector splits the
+  envelope), unknown numbers kept unknown rather than zero (GEV `4399feb`, `9bee985`; NDBC's `MM`).
+- A decision first: **the interface in other languages** (GEV ships Spanish and Russian, some
+  60 commits) — a translation layer over every string, and who translates; **bike share in
+  Barcelona, Bogotá and Santiago** (GEV `194595e`, `7e9b8d9`) — each feed's licence.
+
 ## 1.10.0 — Deferred options from the OSIRIS review (each needs a decision first)
 
 OSIRIS (osirisai.live) ships these; the operator asked for them to be recorded as possible
