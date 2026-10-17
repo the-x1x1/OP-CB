@@ -23,6 +23,7 @@ import {
   graphicsProfile,
   modelCreditLines,
   resolveGraphicsQuality,
+  SharpnessGovernor,
   withModels,
   type ImagerySplit,
   type ModelKind,
@@ -304,6 +305,9 @@ export function MapHost() {
    */
   const governor = useRef<PerformanceGovernor | null>(null);
   governor.current ??= new PerformanceGovernor();
+  /** Auto's sharpness steps (render-core graphics.ts); undefined when a quality is chosen. */
+  const sharpness = useRef<SharpnessGovernor | undefined>(undefined);
+  const models3dRef = useRef<boolean | undefined>(undefined);
   const [budget, setBudget] = useState<PerformanceBudget>(() => governor.current!.budget);
   const budgetRef = useRef(budget);
   budgetRef.current = budget;
@@ -450,6 +454,7 @@ export function MapHost() {
         // one being left say nothing about the one arriving.
         syncCeiling();
         governor.current!.resetRuns();
+        sharpness.current?.resetRuns();
         setBudget(governor.current!.budget);
       }),
     );
@@ -477,9 +482,20 @@ export function MapHost() {
           // that keeps objects from one that holds textures or native memory.
           const heap = (performance as { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
           if (typeof heap === 'number' && heap > 0) summary.jsHeapMB = Math.round(heap / 1024 / 1024);
+          const sharp = sharpness.current;
+          if (sharp) summary.sharpness = sharp.step;
+          if (typeof devicePixelRatio === 'number') summary.dpr = Math.round(devicePixelRatio * 100) / 100;
           console.info(`[perf] ${JSON.stringify(summary)}`);
           reportRenderer(typeof summary.fpsAvg === 'number' ? summary.fpsAvg : undefined);
           perf.current = newPerfWindow(now);
+          if (
+            sharp &&
+            h.setGraphics &&
+            typeof summary.fpsAvg === 'number' &&
+            typeof summary.fpsMin === 'number' &&
+            sharp.sample({ fpsAvg: summary.fpsAvg, fpsMin: summary.fpsMin })
+          )
+            h.setGraphics(withModels(sharp.profile(), models3dRef.current));
         }
         if (!governor.current!.sample(sample)) return;
         setBudget(governor.current!.budget);
@@ -694,7 +710,15 @@ export function MapHost() {
   const models3d = session.settings?.display?.models3d;
   useEffect(() => {
     if (!host?.setGraphics || !graphicsSetting) return;
-    host.setGraphics(withModels(graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer())), models3d));
+    const base = graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer()));
+    // On Auto the profile is a floor: the sharpness governor draws finer while the frame
+    // rate allows (render-core graphics.ts). A quality the operator chose is kept as chosen.
+    sharpness.current =
+      graphicsSetting === 'auto'
+        ? new SharpnessGovernor(base, typeof devicePixelRatio === 'number' ? devicePixelRatio : 1)
+        : undefined;
+    models3dRef.current = models3d;
+    host.setGraphics(withModels(base, models3d));
   }, [host, graphicsSetting, models3d]);
 
   // ---- display: visual style and day/night (saved settings), orbit and follow (session) ----
