@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+import { noteShellCommit } from './map/delta-marks.js';
 import { ErrorState, LoadingState } from '@worldview/ui';
 import { useAppState } from './store/store.js';
 import { TopBar } from './components/top-bar.js';
@@ -24,6 +25,8 @@ import './shell.css';
  */
 export function Shell() {
   const { session, ui } = useAppState();
+  // After every commit: how long the shell took to render a world change (perf log `shellMs`).
+  useLayoutEffect(() => noteShellCommit());
 
   // Text scale and reduced motion are applied at the root so every token-based size follows.
   useEffect(() => {

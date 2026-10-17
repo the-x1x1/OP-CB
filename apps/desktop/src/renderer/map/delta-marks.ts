@@ -59,8 +59,36 @@ export function takeDecodeMax(): number {
   return ms;
 }
 
+let dispatchedAt: number | undefined;
+let renderMaxMs = 0;
+
+/**
+ * A world change was handed to the store (store/sync.ts): the shell renders it next. With
+ * `noteShellCommit`, the time from there to React's commit — the shell's own render of a
+ * delta, the part no other timer here covers.
+ */
+export function noteWorldDispatch(at: number = clock()): void {
+  dispatchedAt ??= at;
+}
+
+/** The shell committed (shell.tsx, a layout effect after every commit). */
+export function noteShellCommit(at: number = clock()): void {
+  if (dispatchedAt === undefined) return;
+  renderMaxMs = Math.max(renderMaxMs, at - dispatchedAt);
+  dispatchedAt = undefined;
+}
+
+/** The longest dispatch-to-commit since the last call — one perf window's worth. */
+export function takeRenderMax(): number {
+  const ms = renderMaxMs;
+  renderMaxMs = 0;
+  return ms;
+}
+
 /** Tests only. */
 export function clearDeltaMarks(): void {
+  dispatchedAt = undefined;
+  renderMaxMs = 0;
   marks.length = 0;
   decodeMaxMs = 0;
 }
