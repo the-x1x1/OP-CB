@@ -25,8 +25,8 @@ Versioning: [semantic versioning](https://semver.org/).
   risk category; at 7 ("High risk") it is an air-quality event, read on its own scale and never
   as a US AQI (`eccc-aqhi`, ECCC's data licence, credited; every half hour).
 - **Drop a file on the map.** GeoJSON, TopoJSON, KML, KMZ or GPX, dropped on the map or chosen
-  from the palette, drawn for the session in a colour per file, with a card to hide, go to or
-  remove each. Only shapes and names are read; nothing in the file is fetched and nothing is kept.
+  from the palette, drawn for the session in a colour per file, named where the file names its
+  points, lines and areas, with a card to hide, go to or remove each. Only shapes and names are read; nothing in the file is fetched and nothing is kept.
 - **GPS interference from the aircraft.** Squares of 0.5° where aircraft report degraded
   satellite navigation (NIC below 7, NACp below 8, or a lost GPS fix) in the last ten minutes,
   in gpsjam.org's bands, as events under the Overview and Aviation lenses and for watch zones.

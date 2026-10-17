@@ -7,6 +7,7 @@ import {
   importedFeatures,
   importedKey,
   importedTarget,
+  nameAnchor,
   nextImportColour,
   shapesBounds,
   toBase64,
@@ -66,6 +67,7 @@ test('features: a point with its name, a line, each polygon of a multipolygon; t
       ['imported:a:0', 'point', 'Hilo'],
       ['imported:a:1', 'line', undefined],
       ['imported:a:2', 'polygon', undefined],
+      ['imported:a:2:name', 'point', 'Two boxes'],
       ['imported:a:2:1', 'polygon', undefined],
     ],
   );
@@ -110,4 +112,19 @@ test('base64 of bytes, in chunks', () => {
   assert.equal(toBase64(new TextEncoder().encode('<gpx/>')), 'PGdweC8+');
   const big = new Uint8Array(100_000).fill(65);
   assert.equal(atob(toBase64(big)).length, 100_000);
+});
+
+test('a named line or area is named on it: a line at its middle vertex, an area inside its outline', () => {
+  const at = (lat: number, lon: number) => ({ latitude: lat, longitude: lon });
+  assert.deepEqual(nameAnchor({ kind: 'line', positions: [at(0, 0), at(1, 1), at(2, 2)] }), at(1, 1));
+  assert.deepEqual(
+    nameAnchor({ kind: 'polygon', rings: [[at(0, 0), at(0, 2), at(2, 2), at(2, 0), at(0, 0)]] }),
+    at(1, 1),
+    'a box: its middle',
+  );
+  // A C shape whose average vertex falls in its mouth: the name goes on a corner instead.
+  const c = [at(0, 0), at(0, 3), at(1, 3), at(1, 1), at(2, 1), at(2, 3), at(3, 3), at(3, 0), at(0, 0)];
+  const anchor = nameAnchor({ kind: 'polygon', rings: [c] })!;
+  assert.deepEqual(anchor, at(0, 0));
+  assert.equal(nameAnchor({ kind: 'point', position: at(1, 1) }), undefined);
 });

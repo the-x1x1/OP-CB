@@ -1,5 +1,5 @@
 import type { GeoBounds, WorldGeometry } from '@worldview/world-model';
-import { geometryCentroid } from '@worldview/world-model';
+import { geometryCentroid, pointInPolygon } from '@worldview/world-model';
 import type { GeodataShape } from '@worldview/ipc-contract';
 import type { RenderFeature, RenderGeometry } from '@worldview/render-core';
 
@@ -98,8 +98,31 @@ function polygon(rings: ReadonlyArray<ReadonlyArray<readonly number[]>>): Render
 }
 
 /**
+ * Where a named line or area shows its name: a line's middle vertex; an area's average
+ * vertex when that lies inside its outer ring, else its first vertex. A label anchor, not a
+ * centre of mass — enough to say which shape is which, as Google Earth names its placemarks.
+ */
+export function nameAnchor(g: RenderGeometry): { latitude: number; longitude: number } | undefined {
+  if (g.kind === 'line') return g.positions[Math.floor((g.positions.length - 1) / 2)];
+  if (g.kind !== 'polygon') return undefined;
+  const ring = g.rings[0];
+  if (!ring || ring.length === 0) return undefined;
+  const n = ring.length > 1 && ring[0]!.latitude === ring[ring.length - 1]!.latitude ? ring.length - 1 : ring.length;
+  let lat = 0;
+  let lon = 0;
+  for (let i = 0; i < n; i++) {
+    lat += ring[i]!.latitude;
+    lon += ring[i]!.longitude;
+  }
+  const mid = { latitude: lat / n, longitude: lon / n };
+  const coords = ring.map((p) => [p.longitude, p.latitude] as [number, number]);
+  return pointInPolygon(mid, coords) ? mid : ring[0];
+}
+
+/**
  * The features of every visible file: points with their names, lines and outlines in the
- * file's colour, under everything else on the map. At most MAX_IMPORTED_SHAPES shapes.
+ * file's colour, under everything else on the map, and a named line or area's name at a dot
+ * on it (nameAnchor). At most MAX_IMPORTED_SHAPES shapes.
  */
 export function importedFeatures(files: readonly ImportedFile[]): RenderFeature[] {
   const out: RenderFeature[] = [];
@@ -122,6 +145,17 @@ export function importedFeatures(files: readonly ImportedFile[]): RenderFeature[
           priority: 15,
           layer: IMPORTED_LAYER,
         });
+        const name = shape.name;
+        const at = name && part === 0 && geometry.kind !== 'point' ? nameAnchor(geometry) : undefined;
+        if (at && name)
+          out.push({
+            id: `imported:${file.id}:${i}:name`,
+            geometry: { kind: 'point', position: at },
+            style: { styleClass: 'imported', color: file.color, opacity: 0.9, size: 4, label: name },
+            interactive: false,
+            priority: 15,
+            layer: IMPORTED_LAYER,
+          });
       });
     }
   }

@@ -268,7 +268,8 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
   (Ctrl+K) for the middle of the view.
 - **Files on the map.** Drop a GeoJSON, TopoJSON, KML, KMZ or GPX file onto the map (or
   "Draw a file on the map…" in the command palette) and its shapes are drawn for this session,
-  each file in a colour of its own, with point names as labels; the view goes to it. A card at
+  each file in a colour of its own, with names as labels — a point's beside it, a named line's
+  or area's at a small dot on it; the view goes to it. A card at
   the lower left lists the files: tick one off to hide it, go to it, or remove it. Only shapes
   and names are read — a KML's network links, remote icons, overlays and balloons are left out,
   so a file never makes the app fetch anything — and nothing is kept when the app closes. To
