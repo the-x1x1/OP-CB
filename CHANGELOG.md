@@ -69,6 +69,12 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
+  map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
+  as the map's answer for the rest of the session. It is now retried in the background — after
+  30 s, doubling to 10 minutes — and replaces the stand-in once it loads; choosing it again asks
+  again. As God's Eye View found (d6c1ea0).
+
 - **An aircraft no longer turns to north when a report leaves out its heading.** adsb.lol sends
   the odd row without `track`; the object's motion was replaced by the report's, so the heading
   went while the speed stayed. A report now keeps the last heading or speed it leaves out; a value
