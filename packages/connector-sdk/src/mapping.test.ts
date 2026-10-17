@@ -513,6 +513,24 @@ test('a line or an area is placed on itself: half-way along a line, inside an ar
   })!;
   assert.equal(Math.abs(across.longitude), 180);
   assert.equal(across.latitude, 0);
+  // A band round the South Pole drawn along 180° (an aurora area, -180° to 180°) spans the
+  // circle without crossing it: its marker is inside the band, not tied in a knot.
+  const band = at({
+    type: 'Polygon',
+    coordinates: [
+      [
+        [-180, -70],
+        [-180, -60],
+        [0, -58],
+        [180, -60],
+        [180, -70],
+        [0, -72],
+        [-180, -70],
+      ],
+    ],
+  })!;
+  assert.ok(band.latitude < -60 && band.latitude > -70, JSON.stringify(band));
+  assert.ok(Math.abs(band.longitude) < 180, `not its first corner on 180°: ${JSON.stringify(band)}`);
   // A point keeps its altitude only when asked; a line or an area has none.
   assert.deepEqual(at({ type: 'Point', coordinates: [5, 6, 100] }), { latitude: 6, longitude: 5, altitudeM: 100 });
 });

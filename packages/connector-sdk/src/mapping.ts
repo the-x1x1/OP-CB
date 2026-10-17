@@ -396,14 +396,17 @@ function points(v: unknown): Pt[] {
 }
 
 /** Longitudes of a part crossing the antimeridian made continuous (east of 180 rather than west of -180). */
+/**
+ * Points of a line or ring that crosses 180° moved onto one side of it (west longitudes
+ * +360), so lengths and areas are measured the short way. Crossing means a step of more than
+ * 180° between neighbours, not merely a span that wide: a ring drawn along the antimeridian
+ * itself (an aurora band round a pole, from −180° to 180°, `response.contour`) spans the whole
+ * circle without crossing it, and shifting it tied it in a knot whose middle lay outside it.
+ */
 function unwrap(pts: Pt[]): Pt[] {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const [x] of pts) {
-    if (x < min) min = x;
-    if (x > max) max = x;
-  }
-  return max - min > 180 ? pts.map(([x, y]) => [x < 0 ? x + 360 : x, y]) : pts;
+  let crosses = false;
+  for (let i = 1; i < pts.length && !crosses; i++) if (Math.abs(pts[i]![0] - pts[i - 1]![0]) > 180) crosses = true;
+  return crosses ? pts.map(([x, y]) => [x < 0 ? x + 360 : x, y]) : pts;
 }
 
 function wrapLon(x: number): number {
