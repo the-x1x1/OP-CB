@@ -54,7 +54,9 @@ are deleted too.
       NetworkLink (`Downloads\wv-qa\qa-shapes.kml`, made up): the three drawn in one colour, each
       named (the line and the area at a dot), the card "qa-shapes.kml · 3 · some left out", Remove
       clears them — seen 2026-10-17 01:44Z, build `0943d44`, 3D. The view went to them but cut the
-      line's ends off (padded since)
+      line's ends off (padded since). Again 2026-10-17 06:34Z, build `9e545b4`, read on the worker
+      thread (app.log: "geodata worker" at app.asar.unpacked at start, no fallback warning): the
+      same three drawn and named, the whole line in view
 - [ ] A KMZ, a GPX track and a GeoJSON the same way; untick, Go to and Remove on the card
 - [ ] A KML with a NetworkLink: drawn without it, the card's row says some were left out
 - [ ] A .txt or a 30 MB file: refused with a toast; dropping a file outside the map does nothing
