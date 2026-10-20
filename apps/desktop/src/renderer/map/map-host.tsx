@@ -53,7 +53,7 @@ import { ErrorToastGate } from './error-toasts.js';
 import { describeError } from '../store/sync.js';
 import { throttleLatest, type Throttled } from './throttle.js';
 import { FeatureFeed } from './feature-feed.js';
-import { attributeLongTask, markDelta, takeDecodeMax, takeRenderMax } from './delta-marks.js';
+import { attributeLongTask, markDelta, takeDecodeMax, takeRenderMax, takeRenderParts } from './delta-marks.js';
 import { observeLongFrames } from './long-frames.js';
 import { SNAPSHOT_PAGE_SIZE, nextSubscriptionBounds, pinnedSelection } from './subscription-bounds.js';
 import { withSelection } from './selection-objects.js';
@@ -485,6 +485,8 @@ export function MapHost() {
           const sharp = sharpness.current;
           // A world change, from the store to React's commit of the shell (delta-marks.ts).
           summary.shellMs = Math.round(takeRenderMax());
+          const parts = takeRenderParts();
+          if (parts) summary.shellParts = parts;
           if (sharp) summary.sharpness = sharp.step;
           if (typeof devicePixelRatio === 'number') summary.dpr = Math.round(devicePixelRatio * 100) / 100;
           console.info(`[perf] ${JSON.stringify(summary)}`);

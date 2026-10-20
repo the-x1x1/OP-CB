@@ -4,9 +4,11 @@ import {
   attributeLongTask,
   clearDeltaMarks,
   markDelta,
+  noteRenderMark,
   noteShellCommit,
   noteWorldDispatch,
   takeRenderMax,
+  takeRenderParts,
 } from './delta-marks.js';
 
 test('delta marks: a long task is attributed to the delta that arrived inside it', () => {
@@ -46,4 +48,19 @@ test('shell render time: from a world dispatch to the next commit, the longest p
   noteShellCommit(55);
   assert.equal(takeRenderMax(), 30, 'from the first dispatch the commit took in');
   assert.equal(takeRenderMax(), 0);
+});
+
+test('shell render parts: the time to each mark, for the slowest commit of the window', () => {
+  clearDeltaMarks();
+  noteRenderMark('top', 1); // no world change pending: not kept
+  noteWorldDispatch(10);
+  noteRenderMark('top', 12);
+  noteRenderMark('ctx', 15);
+  noteShellCommit(75);
+  noteWorldDispatch(100);
+  noteRenderMark('top', 101);
+  noteShellCommit(105);
+  assert.equal(takeRenderMax(), 65);
+  assert.equal(takeRenderParts(), 'wait:2 top:3 ctx:60', 'the slow commit, not the later quick one');
+  assert.equal(takeRenderParts(), '');
 });
