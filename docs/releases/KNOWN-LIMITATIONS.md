@@ -356,6 +356,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.4.0 (unreleased)
 
+- When a source that listed alerts answers nothing, its alerts are ended only by a second empty
+  answer in a row (up to one poll interval late: 30 minutes for volcanoes).
 - A record a source lists without a position is left out without making the read partial; any
   other record refused makes it partial, and while a feed keeps refusing one, what that feed
   stops listing is not ended until its reading goes stale.

@@ -101,7 +101,7 @@ export function noteShellCommit(at: number = clock()): void {
       before = t;
     }
     parts.push(`${label}:${Math.round(at - before)}`);
-    slowestParts = parts.join(' ').slice(0, 40);
+    slowestParts = parts.join(' ').slice(0, 80);
   }
   renderMaxMs = Math.max(renderMaxMs, took);
   dispatchedAt = undefined;

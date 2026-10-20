@@ -77,7 +77,7 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [swpc-aurora.json](../../connectors/enabled/swpc-aurora.json)                                     | `rest-json`      | Aurora forecast (NOAA SWPC OVATION, 30–90 minutes ahead)              | no            |
 | [usgs-volcanoes.json](../../connectors/enabled/usgs-volcanoes.json)                               | `geojson`        | Volcano alerts, US (USGS Volcano Hazards Program)                     | yes           |
 
-**Launch Library 2** (`launch-library-2`, Space layer): the next thirty orbital launches from The
+**Launch Library 2** (`launch-library-2`, Space layer): the next thirty launches (orbital and suborbital) from The
 Space Devs' `GET /2.3.0/launches/upcoming/?limit=30&mode=normal`, every thirty minutes — two of
 the fifteen calls an hour the API allows without a key. Each launch is a `launch` object at its
 pad with the rocket, provider, mission, orbit, status, NET and window; the event engine's launch

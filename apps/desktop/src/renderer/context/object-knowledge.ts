@@ -375,6 +375,35 @@ const NET_PRECISION: Record<string, string> = {
   Year: 'the year only',
 };
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+/** A launch time known to the day or coarser, said no finer (as event-engine launch.ts netText). */
+function coarseNet(d: Date, precision: string): string {
+  const iso = d.toISOString();
+  const day = iso.slice(0, 10);
+  const year = d.getUTCFullYear();
+  if (precision === 'Month') return `${MONTH_NAMES[d.getUTCMonth()]} ${year}`;
+  if (precision.startsWith('Quarter')) return `Q${Math.floor(d.getUTCMonth() / 3) + 1} ${year}`;
+  if (precision.startsWith('Year Half')) return `${d.getUTCMonth() < 6 ? 'first' : 'second'} half of ${year}`;
+  if (precision === 'Year' || precision === 'Fiscal Year') return String(year);
+  if (precision === 'Decade') return `the ${Math.floor(year / 10) * 10}s`;
+  if (precision === 'Week') return `the week of ${day}`;
+  return day;
+}
+
 /**
  * A launch (the `launch-library-2` definition's payload, or any launch source using the launch
  * rule's names): the mission, the rocket and who flies it, the pad, the orbit, the status, the
@@ -388,7 +417,9 @@ export function launchRows(p: Props, nowMs: number): Row[] {
   const coarse = precision !== undefined && !['Second', 'Minute', 'Hour'].includes(precision);
   const netText = Number.isFinite(netMs)
     ? [
-        formatUtcDateTime(net),
+        // The time LL2 holds for a launch known to the day or coarser is a placeholder (the
+        // month's last minute, a quarter's first day): only what is known is shown.
+        coarse ? coarseNet(new Date(netMs), precision!) : formatUtcDateTime(net),
         precision
           ? `(${(Object.hasOwn(NET_PRECISION, precision) ? NET_PRECISION[precision] : undefined) ?? precision})`
           : undefined,

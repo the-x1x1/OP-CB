@@ -25,7 +25,8 @@
         "gaugeId": "ATKG1",
         "stage": 13.39,
         "stageUnits": "ft",
-        "flowKcfs": 6.37,
+        "flow": 6.37,
+        "flowUnits": "kcfs",
         "actionStage": 11,
         "floodStage": 13,
         "moderateStage": 19,
@@ -46,7 +47,7 @@
     },
     {
       "externalId": "QUEP4",
-      "payload": { "areaDesc": null, "moderateStage": null, "flowKcfs": null, "name": "Lago Guajataca" }
+      "payload": { "areaDesc": null, "moderateStage": null, "flow": null, "name": "Lago Guajataca" }
     }
   ]
 }

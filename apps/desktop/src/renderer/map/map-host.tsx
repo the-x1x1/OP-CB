@@ -454,7 +454,8 @@ export function MapHost() {
         // one being left say nothing about the one arriving.
         syncCeiling();
         governor.current!.resetRuns();
-        sharpness.current?.resetRuns();
+        if (sharpness.current?.resetRuns() && h.setGraphics)
+          h.setGraphics(withModels(sharpness.current.profile(), models3dRef.current));
         setBudget(governor.current!.budget);
       }),
     );
@@ -492,17 +493,30 @@ export function MapHost() {
           console.info(`[perf] ${JSON.stringify(summary)}`);
           reportRenderer(typeof summary.fpsAvg === 'number' ? summary.fpsAvg : undefined);
           perf.current = newPerfWindow(now);
+          // The globe only: its tile error is what the steps sharpen, and only its frames say
+          // what a sharper frame costs (`drawn`).
           if (
             sharp &&
             h.setGraphics &&
+            h.activeMode() === '3D' &&
             typeof summary.fpsAvg === 'number' &&
             typeof summary.fpsMin === 'number' &&
-            sharp.sample({ fpsAvg: summary.fpsAvg, fpsMin: summary.fpsMin })
+            sharp.sample({ fpsAvg: summary.fpsAvg, fpsMin: summary.fpsMin, drawn: w.drawn, atMs: now })
           )
             h.setGraphics(withModels(sharp.profile(), models3dRef.current));
         }
         if (!governor.current!.sample(sample)) return;
-        setBudget(governor.current!.budget);
+        const before = budgetRef.current;
+        const after = governor.current!.budget;
+        // Giving up detail or features while the map is drawn sharper than its profile: the
+        // sharpness goes first, all of it, in the same breath.
+        if (
+          (after.detail > before.detail || after.maxFeatures < before.maxFeatures) &&
+          h.setGraphics &&
+          sharpness.current?.yieldAll(now)
+        )
+          h.setGraphics(withModels(sharpness.current.profile(), models3dRef.current));
+        setBudget(after);
       }),
     );
     const toastGate = new ErrorToastGate();
@@ -712,6 +726,7 @@ export function MapHost() {
   // The operator's "3D models when close" switch rides on the profile (`withModels`).
   const graphicsSetting = session.settings?.display?.graphics;
   const models3d = session.settings?.display?.models3d;
+  models3dRef.current = models3d;
   useEffect(() => {
     if (!host?.setGraphics || !graphicsSetting) return;
     const base = graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer()));
@@ -721,9 +736,16 @@ export function MapHost() {
       graphicsSetting === 'auto'
         ? new SharpnessGovernor(base, typeof devicePixelRatio === 'number' ? devicePixelRatio : 1)
         : undefined;
-    models3dRef.current = models3d;
-    host.setGraphics(withModels(base, models3d));
-  }, [host, graphicsSetting, models3d]);
+    host.setGraphics(withModels(base, models3dRef.current));
+  }, [host, graphicsSetting]);
+  // The 3D-model switch rides on whatever profile is in force, without starting the steps over.
+  useEffect(() => {
+    if (!host?.setGraphics || !graphicsSetting) return;
+    const profile =
+      sharpness.current?.profile() ?? graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer()));
+    host.setGraphics(withModels(profile, models3d));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- graphicsSetting is the other effect's
+  }, [host, models3d]);
 
   // ---- display: visual style and day/night (saved settings), orbit and follow (session) ----
   // The host keeps the style and the shading for a renderer built later, so these need no

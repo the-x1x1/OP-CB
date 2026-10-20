@@ -186,19 +186,36 @@ export interface SharpnessSample {
   /** The window's average and lowest frame rate (the shell's 10 s perf window). */
   fpsAvg: number;
   fpsMin: number;
+  /**
+   * Frames the engine actually drew in the window. The globe's frame rate is its loop's, about
+   * 60 while it rests whatever it costs to draw; only a window that drew enough says anything
+   * about the cost of a sharper frame.
+   */
+  drawn: number;
+  /** When the window closed (ms): failures are forgotten after a while. */
+  atMs: number;
 }
+
+/** Frames a window must have drawn (of ~600) to count as evidence for a step up. */
+export const SHARPNESS_MIN_DRAWN = 200;
+/** How long a failed step is held against itself. */
+export const SHARPNESS_FAILURE_MS = 10 * 60_000;
 
 /**
  * Walks the sharpness steps on the frame rate, like the presentation governor
- * (performance.ts): up slowly — three good windows in a row, more for each time a step
- * failed — and down at once. The window after a change is not judged: it holds the new
- * tiles arriving. A step that has failed twice is not tried again.
+ * (performance.ts): up slowly — three good windows in a row that drew enough to tell, more
+ * for each recent failure of the next step — and down at once on a slow average, or on two
+ * windows in a row with a deep dip (one alone is a fly-to's tiles, at any sharpness). The
+ * window after a change is not judged: it holds the new tiles arriving. Failures are
+ * forgotten after ten minutes; a step that failed twice in that time waits. `yieldAll` hands
+ * every step back at once, for the presentation governor stepping down.
  */
 export class SharpnessGovernor {
   private stepNow = 0;
   private good = 0;
+  private dips = 0;
   private settle = 1;
-  private readonly failures = new Map<number, number>();
+  private readonly failures = new Map<number, number[]>();
   private readonly maxStep: number;
 
   constructor(
@@ -217,6 +234,21 @@ export class SharpnessGovernor {
     return sharperProfile(this.base, this.stepNow, this.devicePixelRatio);
   }
 
+  private recentFailures(step: number, atMs: number): number {
+    const list = (this.failures.get(step) ?? []).filter((t) => atMs - t < SHARPNESS_FAILURE_MS);
+    this.failures.set(step, list);
+    return list.length;
+  }
+
+  private stepDown(atMs: number): true {
+    this.failures.set(this.stepNow, [...(this.failures.get(this.stepNow) ?? []), atMs]);
+    this.stepNow--;
+    this.good = 0;
+    this.dips = 0;
+    this.settle = 1;
+    return true;
+  }
+
   /** A closed window; true when the step changed (apply `profile()`). */
   sample(s: SharpnessSample): boolean {
     if (!Number.isFinite(s.fpsAvg) || !Number.isFinite(s.fpsMin)) return false;
@@ -224,23 +256,23 @@ export class SharpnessGovernor {
       this.settle--;
       return false;
     }
-    const bad = s.fpsAvg < (this.opts.badAvg ?? 50) || s.fpsMin < (this.opts.badMin ?? 30);
-    if (bad) {
+    const slow = s.fpsAvg < (this.opts.badAvg ?? 50);
+    const dip = s.fpsMin < (this.opts.badMin ?? 30);
+    this.dips = dip ? this.dips + 1 : 0;
+    if (slow || this.dips >= 2) {
       this.good = 0;
-      if (this.stepNow === 0) return false;
-      this.failures.set(this.stepNow, (this.failures.get(this.stepNow) ?? 0) + 1);
-      this.stepNow--;
-      this.settle = 1;
-      return true;
+      return this.stepNow > 0 ? this.stepDown(s.atMs) : false;
     }
-    const good = s.fpsAvg >= (this.opts.goodAvg ?? 58) && s.fpsMin >= (this.opts.goodMin ?? 45);
+    const good =
+      s.fpsAvg >= (this.opts.goodAvg ?? 58) && s.fpsMin >= (this.opts.goodMin ?? 45) && s.drawn >= SHARPNESS_MIN_DRAWN;
     if (!good) {
-      this.good = 0;
+      // A resting view is no evidence either way: it neither builds nor breaks a run.
+      if (s.drawn >= SHARPNESS_MIN_DRAWN) this.good = 0;
       return false;
     }
     this.good++;
     const next = this.stepNow + 1;
-    const failed = this.failures.get(next) ?? 0;
+    const failed = this.recentFailures(next, s.atMs);
     if (next > this.maxStep || failed >= 2 || this.good < 3 + 3 * failed) return false;
     this.stepNow = next;
     this.good = 0;
@@ -248,9 +280,24 @@ export class SharpnessGovernor {
     return true;
   }
 
-  /** The mode changed: frames from the one left say nothing about the one arriving. */
-  resetRuns(): void {
+  /** Every step back at once (the presentation governor is giving up detail); true if any. */
+  yieldAll(atMs: number): boolean {
+    if (this.stepNow === 0) return false;
+    this.failures.set(this.stepNow, [...(this.failures.get(this.stepNow) ?? []), atMs]);
+    this.stepNow = 0;
     this.good = 0;
+    this.dips = 0;
     this.settle = 1;
+    return true;
+  }
+
+  /** The mode changed: back to the profile, and frames from the one left say nothing. */
+  resetRuns(): boolean {
+    const changed = this.stepNow !== 0;
+    this.stepNow = 0;
+    this.good = 0;
+    this.dips = 0;
+    this.settle = 1;
+    return changed;
   }
 }

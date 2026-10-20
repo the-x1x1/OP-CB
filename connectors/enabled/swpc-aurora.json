@@ -43,6 +43,7 @@
       }
     },
     "properties": {
+      "startFromFirstSeen": { "literal": true },
       "title": {
         "path": "level",
         "map": {

@@ -51,7 +51,7 @@ Versioning: [semantic versioning](https://semver.org/).
   domain, every thirty minutes).
 - **A lookup table in a definition's mapping** (`map`): a code a source publishes, named as
   WORLDVIEW names it — the volcano colour code as a severity. A closed table, not an expression.
-- **Rocket launches, worldwide.** The next thirty orbital launches from The Space Devs' Launch
+- **Rocket launches, worldwide.** The next thirty launches (orbital and suborbital) from The Space Devs' Launch
   Library 2, each at its pad on the Space layer, with the rocket, who launches it, the mission and
   its orbit, the status and the scheduled time and window; each is a launch event in the feed and
   History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
@@ -64,17 +64,34 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
-- **A sharper map on Auto.** The quality Auto picks is now a floor: while the frame rate holds
-  at 60, the globe and the 2D map draw at more of the display's pixel density (to 2×) and
-  fetch finer imagery tiles, a step at a time, and step back at once when frames slow. On a
-  2× laptop screen Balanced had drawn the globe at 0.625 of the display's pixels. A quality
-  chosen in Settings is kept as chosen.
+- **A sharper globe on Auto.** The quality Auto picks is now a floor: while the globe draws at
+  60 frames a second, it steps up a quarter of a device pixel at a time (to the display's own
+  density, 2× at most) and fetches finer imagery tiles; a slow stretch steps it back, and when
+  the map has to give up detail the sharpness goes first, all of it. A resting globe is not
+  counted (it ticks at 60 whatever a frame costs). A quality chosen in Settings is kept.
 - **Thin cloud on the infrared layers.** Each geostationary infrared source has a Thin cloud
   setting in Sources that moves where cloud starts to be drawn: up for only the coldest tops,
   down for thinner, warmer cloud too.
 
 ### Fixed
 
+- **A gauge's stage, and a volcano's colour code, in the panel.** A river gauge in flood shows
+  its stage, its action, flood, moderate and major stages and its flow; a volcano its aviation
+  colour code with when it was set, and its threat ranking. The volcano notice is no longer
+  shown twice.
+- **NHC forecast cones and tracks** are dated by their own advisory again, not by the first one
+  seen (the first-seen start is for sources that ask for it: river gauges, the aurora).
+- **A source that suddenly answers nothing** is believed only on its second empty answer in a
+  row: a layer that answered nothing while it reloaded ended every alert it had.
+- **What's here leaves the radar its requests.** Clicks asked the WMS source through the poll's
+  own budget, and four a minute made nowCOAST radar's next poll fail.
+- **GNSS interference squares** are sent again only when they change (or once a minute), not
+  with every aircraft batch.
+- **Dropped files:** a TopoJSON file's names are kept; an over-large KML inside a KMZ says so;
+  the reader's thread has its own memory limit and gives up at 45 s, inside the request's 60.
+- **Launches** are in the feed, and a launch known only to the month reads "December 2026" in
+  the panel, not a minute in it.
+- **What's here** stops "asking" after 12 s when a source never answers.
 - **An alert the source stops listing ends.** A volcano back to normal, a river gauge below flood
   stage or an aurora level no longer reached stayed drawn on the map, its event never ended.
   Such an event now ends when a complete read of the source leaves it out (not a read of an

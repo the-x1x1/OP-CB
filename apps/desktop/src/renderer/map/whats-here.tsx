@@ -8,6 +8,9 @@ import { useNow } from '../hooks/use-now.js';
 import { mergeDetails } from '../context/satellite-details.js';
 import { cardPlacement, nearestPlaceText, nextPassRows, overlayValueRows, whatsHereRows } from './whats-here-text.js';
 
+/** How long What's here waits for the overlays' sources (the main process gives each 8 s). */
+const OVERLAY_VALUE_WAIT_MS = 12_000;
+
 export interface WhatsHereProps {
   host: RendererHostLike | undefined;
   position: GeoPosition;
@@ -93,11 +96,18 @@ export function WhatsHere({
     const ids = overlayKey ? overlayKey.split('\n') : [];
     if (ids.length === 0) return undefined;
     let live = true;
+    // An answer that never comes is no answer: after OVERLAY_VALUE_WAIT_MS the card stops
+    // saying "asking", as it does when every source answers nothing.
+    const timer = setTimeout(() => {
+      if (live) setOverlayAnswer({ for: askedFor, values: [] });
+    }, OVERLAY_VALUE_WAIT_MS);
     void actions.overlayValues(position, ids).then((answers) => {
+      clearTimeout(timer);
       if (live) setOverlayAnswer({ for: askedFor, values: answers });
     });
     return () => {
       live = false;
+      clearTimeout(timer);
     };
   }, [actions, overlayKey, position, askedFor]);
 

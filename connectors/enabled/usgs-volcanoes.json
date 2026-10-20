@@ -29,7 +29,6 @@
       "colorCode": { "path": "properties.colorCode", "transform": ["trim", "uppercase", "emptyToNone"] },
       "alertLevel": { "path": "properties.alertLevel", "transform": ["trim", "uppercase", "emptyToNone"] },
       "headline": { "path": "properties.noticeSynopsis", "transform": ["trim", "emptyToNone"] },
-      "description": { "path": "properties.noticeSynopsis", "transform": ["trim", "emptyToNone"] },
       "areaDesc": { "path": "properties.region", "transform": ["trim", "emptyToNone"] },
       "senderName": {
         "path": "properties.obs",

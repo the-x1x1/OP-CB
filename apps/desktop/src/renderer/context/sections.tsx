@@ -334,10 +334,44 @@ export function hazardRows(
   const hail = str(object, 'maxHailSize');
   const category = str(object, 'spcCategory');
   const reported = str(object, 'reportedAt');
+  // A river or tide gauge in flood (nwps-river-flooding): its stage against its own thresholds.
+  const stage = num(object, 'stage');
+  const stageUnits = str(object, 'stageUnits') ?? 'ft';
+  const thresholds: string[] = [];
+  for (const [name, key] of [
+    ['action', 'actionStage'],
+    ['flood', 'floodStage'],
+    ['moderate', 'moderateStage'],
+    ['major', 'majorStage'],
+  ] as const) {
+    const v = num(object, key);
+    if (v !== undefined && v > -999) thresholds.push(`${name} ${v}`);
+  }
+  // NWPS writes -999 for no flow measured.
+  const flowValue = num(object, 'flow');
+  const flow = flowValue !== undefined && flowValue >= 0 ? flowValue : undefined;
+  const flowUnits = str(object, 'flowUnits');
+  // A volcano's aviation colour code (usgs-volcanoes), with when it was set, and its threat rank.
+  const colour = str(object, 'colorCode');
+  const colourSince = str(object, 'colourSince');
   return [
     {
       label: 'Alert level',
       value: level ? (episode && episode !== level ? `${level} (this episode ${episode})` : level) : undefined,
+    },
+    {
+      label: 'Aviation colour code',
+      value: colour ? `${colour}${colourSince ? ` since ${formatUtcDateTime(colourSince)}` : ''}` : undefined,
+    },
+    { label: 'Threat', value: str(object, 'threat') },
+    { label: 'Stage', value: stage !== undefined && stage > -999 ? `${stage} ${stageUnits}` : undefined },
+    { label: 'Stages', value: thresholds.length ? `${thresholds.join(' · ')} ${stageUnits}` : undefined },
+    {
+      label: 'Flow',
+      value:
+        flow !== undefined
+          ? `${flow} ${flowUnits === 'kcfs' ? 'kcfs (thousand cubic feet a second)' : (flowUnits ?? '')}`.trim()
+          : undefined,
     },
     { label: 'Impact', value: str(object, 'severityText') },
     // GDACS's figure is the most the storm has reached, not its wind now.
@@ -1066,8 +1100,12 @@ export function stationWaves(
   fromDeg: number | undefined,
 ): string | undefined {
   const parts: string[] = [];
-  // A period of zero is no period measured (NDBC 22101 and 22102 send DPD 0), not waves every 0 s.
-  if (dominantS !== undefined && !(dominantS > 0)) dominantS = undefined;
+  // A period of zero is no period measured (NDBC 22101 and 22102 send DPD 0), not waves every 0 s;
+  // a height of zero with it is no measurement either, not a flat sea.
+  if (dominantS !== undefined && !(dominantS > 0)) {
+    dominantS = undefined;
+    if (heightM === 0) heightM = undefined;
+  }
   if (averageS !== undefined && !(averageS > 0)) averageS = undefined;
   if (heightM !== undefined) parts.push(`${heightM.toFixed(1)} m (${(heightM / 0.3048).toFixed(1)} ft)`);
   if (dominantS !== undefined)

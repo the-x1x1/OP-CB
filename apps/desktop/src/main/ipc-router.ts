@@ -50,6 +50,9 @@ export const DEFAULT_RATE_LIMITS: readonly IpcRateLimitRule[] = Object.freeze([
   { prefix: 'sources.definitions.save', max: 10, windowMs: 60_000 },
   // Each may reach a public geocoder (place-search.ts paces those itself; this caps the page).
   { prefix: 'search.places', max: 30, windowMs: 60_000 },
+  // Each starts a worker over up to 25 MB; each asks up to eight overlays' sources.
+  { prefix: 'geodata.read', max: 20, windowMs: 60_000 },
+  { prefix: 'overlays.valueAt', max: 30, windowMs: 60_000 },
 ]);
 
 export interface IpcRouterOptions {

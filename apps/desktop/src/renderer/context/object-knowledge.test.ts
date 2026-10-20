@@ -292,7 +292,7 @@ test('a launch: an instantaneous window, a coarse NET without a countdown, a flo
   );
   assert.equal(value(mmx, 'Window'), 'Instantaneous');
   const someday = launchRows({ net: '2026-12-01T00:00:00Z', netPrecision: 'Month', probabilityPercent: 70 }, now);
-  assert.equal(value(someday, 'No earlier than'), '2026-12-01 00:00:00 UTC (the month only)');
+  assert.equal(value(someday, 'No earlier than'), 'December 2026 (the month only)');
   assert.equal(value(someday, 'Weather'), '70 % favourable');
   const flown = launchRows({ net: '2026-10-16T00:01:05Z', status: 'Launch Successful', webcastLive: true }, now);
   assert.equal(value(flown, 'No earlier than'), '2026-10-16 00:01:05 UTC · 5 h 28 m ago');

@@ -167,3 +167,26 @@ test('too many shapes: the first are kept and the rest counted', () => {
   assert.equal(r.features.length, GEODATA_MAX_FEATURES);
   assert.ok(r.issues.some((i) => /^3 feature\(s\) past the limit/.test(i)));
 });
+
+test('a TopoJSON file keeps the names in its properties', () => {
+  const topo = {
+    type: 'Topology',
+    arcs: [
+      [
+        [0, 0],
+        [1, 1],
+      ],
+    ],
+    objects: {
+      things: {
+        type: 'GeometryCollection',
+        geometries: [
+          { type: 'LineString', arcs: [0], properties: { name: 'tp' } },
+          { type: 'Point', coordinates: [2, 2], properties: { NAME: 'tpt' } },
+        ],
+      },
+    },
+  };
+  const read = readGeodata('t.topojson', new TextEncoder().encode(JSON.stringify(topo)));
+  assert.deepEqual(read.features.map((f) => f.name).sort(), ['tp', 'tpt']);
+});

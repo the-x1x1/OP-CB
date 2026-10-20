@@ -39,6 +39,7 @@
         "transform": ["trim", "lowercase"],
         "map": { "minor": "Minor", "moderate": "Moderate", "major": "Severe" }
       },
+      "startFromFirstSeen": { "literal": true },
       "floodCategory": { "path": "properties.status", "transform": ["trim", "lowercase", "emptyToNone"] },
       "areaDesc": { "path": "properties.location", "transform": ["trim", "emptyToNone"] },
       "state": { "path": "properties.state", "transform": ["trim", "uppercase", "emptyToNone"] },
@@ -47,7 +48,8 @@
       "gaugeId": { "path": "properties.gaugelid", "transform": ["trim", "uppercase"] },
       "stage": { "path": "properties.observed", "transform": "number" },
       "stageUnits": { "path": "properties.units", "transform": ["trim", "emptyToNone"] },
-      "flowKcfs": { "path": "properties.secvalue", "transform": "number" },
+      "flow": { "path": "properties.secvalue", "transform": "number" },
+      "flowUnits": { "path": "properties.secunit", "transform": ["trim", "emptyToNone"] },
       "actionStage": { "path": "properties.action", "transform": "number" },
       "floodStage": { "path": "properties.flood", "transform": "number" },
       "moderateStage": { "path": "properties.moderate", "transform": "number" },

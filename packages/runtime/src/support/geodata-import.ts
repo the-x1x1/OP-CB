@@ -117,7 +117,12 @@ export function readGeodata(name: string, bytes: Uint8Array): GeodataRead {
       continue;
     }
     coordinates += n;
-    const label = typeof f.name === 'string' && f.name.trim() ? f.name.trim().slice(0, 120) : undefined;
+    // A TopoJSON reader leaves the name in the properties, as GeoJSON does.
+    const props = (f as { properties?: Record<string, unknown> }).properties ?? {};
+    const named = [f.name, props['name'], props['Name'], props['NAME'], props['title']].find(
+      (v): v is string => typeof v === 'string' && v.trim().length > 0,
+    );
+    const label = named ? named.trim().slice(0, 120) : undefined;
     features.push(label ? { geometry: checked.value, name: label } : { geometry: checked.value });
   }
   if (noShape) issues.push(`${noShape} feature(s) without a usable shape`);
@@ -221,7 +226,10 @@ export function kmlInKmz(bytes: Uint8Array): { text: string } | { error: string 
     if (!raw)
       return { error: `the KML in the KMZ is compressed in a way this reader does not take (method ${entry.method})` };
     return { text: new TextDecoder('utf-8').decode(raw) };
-  } catch {
+  } catch (err) {
+    // A KMZ whose directory understates the KML's size is stopped by the inflate limit.
+    if ((err as { code?: unknown })?.code === 'ERR_BUFFER_TOO_LARGE' || err instanceof RangeError)
+      return { error: `the KML in the KMZ is larger than ${KMZ_MAX_UNCOMPRESSED / 1024 / 1024} MB unpacked` };
     return { error: 'the KML in the KMZ could not be decompressed' };
   }
 }

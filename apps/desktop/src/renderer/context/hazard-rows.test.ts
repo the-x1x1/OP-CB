@@ -168,3 +168,36 @@ test('an alert says until when its hazard ends, with the message expiry beside i
     { label: 'Expires', value: '2026-10-03 19:00:00 UTC (expired 40m ago)' },
   ]);
 });
+
+test('a gauge in flood shows its stage, its stages and its flow; a volcano its colour code and threat', () => {
+  assert.deepEqual(
+    shown(
+      alert({
+        stage: 13.39,
+        stageUnits: 'ft',
+        actionStage: 11,
+        floodStage: 13,
+        moderateStage: 19,
+        majorStage: 22,
+        flow: 6.37,
+        flowUnits: 'kcfs',
+      }),
+    ),
+    [
+      { label: 'Stage', value: '13.39 ft' },
+      { label: 'Stages', value: 'action 11 · flood 13 · moderate 19 · major 22 ft' },
+      { label: 'Flow', value: '6.37 kcfs (thousand cubic feet a second)' },
+    ],
+  );
+  // NWPS's missing markers (-999 flow, -9999 stage) are no value.
+  assert.deepEqual(shown(alert({ stage: 49.97, actionStage: -9999, flow: -999, flowUnits: 'kcfs' })), [
+    { label: 'Stage', value: '49.97 ft' },
+  ]);
+  assert.deepEqual(
+    shown(alert({ colorCode: 'ORANGE', colourSince: '2026-10-15T20:10:46.000Z', threat: 'Very High Threat' })),
+    [
+      { label: 'Aviation colour code', value: 'ORANGE since 2026-10-15 20:10:46 UTC' },
+      { label: 'Threat', value: 'Very High Threat' },
+    ],
+  );
+});

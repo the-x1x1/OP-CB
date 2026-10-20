@@ -215,7 +215,7 @@ test('weatherAlertRule: a source with no start or end of its own — the start i
       observedAt,
       validUntil: new Date(Date.parse(observedAt) + DAY).toISOString(),
       labels: { title: 'Satilla River' },
-      properties: { event: 'Minor flooding', areaDesc: 'Atkinson', severity: 'Minor' },
+      properties: { event: 'Minor flooding', areaDesc: 'Atkinson', severity: 'Minor', startFromFirstSeen: true },
     });
   const store = new EventStore();
   const [first] = weatherAlertRule.evaluate([gauge(iso(-HOUR))], ctxAt(T0, store));
@@ -231,6 +231,10 @@ test('weatherAlertRule: a source with no start or end of its own — the start i
   store.upsert({ ...next!, endAt: iso(-1) });
   const [again] = weatherAlertRule.evaluate([gauge(iso(0))], ctxAt(T0, store));
   assert.equal(again!.startAt, iso(0));
+  // Without the definition asking (NHC's cones), each reading dates its own advisory.
+  const cone = { ...gauge(iso(-HOUR + 15 * 60_000)), properties: { event: 'Forecast cone', areaDesc: 'Atlantic' } };
+  store.upsert({ ...first! });
+  assert.equal(weatherAlertRule.evaluate([cone], ctxAt(T0, store))[0]!.startAt, iso(-HOUR + 15 * 60_000));
 });
 
 test('weatherAlertRule: severity from payload, endAt from validUntil, geometry passthrough', () => {

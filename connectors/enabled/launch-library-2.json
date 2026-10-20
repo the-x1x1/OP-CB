@@ -2,7 +2,7 @@
   "schema": "oneview.connector.v1",
   "id": "launch-library-2",
   "name": "Rocket launches, worldwide (Launch Library 2)",
-  "description": "The next thirty orbital launches anywhere in the world from The Space Devs' Launch Library 2, each at its launch pad: the rocket, who launches it, the mission and its orbit, the scheduled time (NET, no earlier than) and window, how precise that time is, and the launch status (Go, TBD, TBC, Hold, Success, Failure). A launch that has just flown stays listed for a while with its outcome. Schedules move: a time is what Launch Library holds when it was read, every thirty minutes.",
+  "description": "The next thirty launches (orbital and suborbital) anywhere in the world from The Space Devs' Launch Library 2, each at its launch pad: the rocket, who launches it, the mission and its orbit, the scheduled time (NET, no earlier than) and window, how precise that time is, and the launch status (Go, TBD, TBC, Hold, Success, Failure). A launch that has just flown stays listed for a while with its outcome. Schedules move: a time is what Launch Library holds when it was read, every thirty minutes.",
   "connector": "rest-json",
   "objectType": "launch",
   "categories": ["space"],

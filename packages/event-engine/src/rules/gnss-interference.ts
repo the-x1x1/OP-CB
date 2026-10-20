@@ -131,17 +131,39 @@ export const gnssInterferenceRule: ObjectRule = {
       const startSec = Math.floor(Date.parse(existing?.startAt ?? ctx.nowIso) / 1000);
       const id = existing?.id ?? makeEventId(EventTypes.GnssInterference, 'worldview', `${key}-${startSec}`);
       raised.add(key);
-      out.push(cellEvent(id, cell, severity, ctx, existing));
+      const next = cellEvent(id, cell, severity, ctx, existing);
+      // Each aircraft batch (every few seconds) would otherwise send the same square again as a
+      // change and a feed item: re-sent only when what it says changed, or once a minute to
+      // move its hold on (lastQualifiedAt).
+      if (existing && sameCell(existing, next) && ctx.now - lastQualified(existing) < GNSS_REFRESH_MS) continue;
+      out.push(next);
     }
     // Not qualifying now: kept for GNSS_HOLD_MS after it last did, then ended.
     for (const [key, e] of open) {
       if (raised.has(key)) continue;
-      const last = Date.parse(String(e.properties?.['lastQualifiedAt'] ?? e.startAt));
-      if (ctx.now - last >= GNSS_HOLD_MS) out.push({ ...e, endAt: ctx.nowIso });
+      if (ctx.now - lastQualified(e) >= GNSS_HOLD_MS) out.push({ ...e, endAt: ctx.nowIso });
     }
     return out;
   },
 };
+
+/** How often an unchanged open square is re-sent, to keep its hold (GNSS_HOLD_MS) current. */
+export const GNSS_REFRESH_MS = 60_000;
+
+function lastQualified(e: WorldEvent): number {
+  return Date.parse(String(e.properties?.['lastQualifiedAt'] ?? e.startAt));
+}
+
+function sameCell(a: WorldEvent, b: WorldEvent): boolean {
+  const p = (e: WorldEvent, k: string) => e.properties?.[k];
+  return (
+    a.severity === b.severity &&
+    p(a, 'aircraftCount') === p(b, 'aircraftCount') &&
+    p(a, 'degradedCount') === p(b, 'degradedCount') &&
+    a.objectIds.length === b.objectIds.length &&
+    a.objectIds.every((id, i) => id === b.objectIds[i])
+  );
+}
 
 /** MINOR or MODERATE for a cell that qualifies; undefined for one that does not. */
 export function cellSeverity(degraded: number, total: number): SeverityClass | undefined {

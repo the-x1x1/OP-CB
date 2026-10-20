@@ -5,8 +5,15 @@ import type { WorldRuntimeDeps } from '@worldview/runtime';
 type GeodataReader = NonNullable<WorldRuntimeDeps['geodataReader']>;
 type GeodataRead = Awaited<ReturnType<GeodataReader>>;
 
-/** Longer than any file under the 25 MB cap takes; past it the worker is stopped. */
-export const GEODATA_WORKER_TIMEOUT_MS = 60_000;
+/**
+ * Longer than any file under the 25 MB cap takes (2.4 s measured for 24 MB); past it the worker
+ * is stopped. Under the IPC request's own 60 s, so the operator reads "not read within" rather
+ * than a timed-out request.
+ */
+export const GEODATA_WORKER_TIMEOUT_MS = 45_000;
+
+/** The worker's own heap: a hostile file runs it out of memory, not the main process. */
+export const GEODATA_WORKER_HEAP_MB = 1024;
 
 /**
  * The bundled worker (build-main.mjs builds dist/main/geodata-worker.cjs). Inside an asar
@@ -28,7 +35,9 @@ export function geodataWorkerReader(
   workerPath: string,
   options: { timeoutMs?: number; createWorker?: (file: string) => Worker } = {},
 ): GeodataReader {
-  const create = options.createWorker ?? ((file: string) => new Worker(file));
+  const create =
+    options.createWorker ??
+    ((file: string) => new Worker(file, { resourceLimits: { maxOldGenerationSizeMb: GEODATA_WORKER_HEAP_MB } }));
   const timeoutMs = options.timeoutMs ?? GEODATA_WORKER_TIMEOUT_MS;
   const unread = (why: string): GeodataRead => ({ features: [], issues: [`could not be read: ${why}`] });
   return (name, bytes) =>

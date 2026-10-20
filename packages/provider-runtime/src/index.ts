@@ -161,6 +161,8 @@ interface Hosted {
   lastPolledGeneration: number;
   /** Why the running poll's answer is partial (ProviderContext.incomplete), when it said so. */
   incompleteReason: string | undefined;
+  /** How many observations the last poll that returned gave, or -1 before one has. */
+  lastPollObservations: number;
   /**
    * A device on this machine (a local receiver) was not found and that has been said once.
    * An operator without a readsb receiver is the ordinary case, not a fault: the probe backs
@@ -304,6 +306,7 @@ export class ProviderHost {
       settingsGeneration: 0,
       lastPolledGeneration: -1,
       incompleteReason: undefined,
+      lastPollObservations: -1,
       waitingForKey: false,
       deviceAbsentLogged: false,
       polling: false,
@@ -1027,8 +1030,13 @@ export class ProviderHost {
       // whose settings changed while it ran.
       const bounded = Boolean(this.viewport && h.manifest.capabilities.boundsQuery);
       const sameSettings = generation === h.lastPolledGeneration && generation === h.settingsGeneration;
-      const complete = !bounded && sameSettings && h.incompleteReason === undefined;
+      // An empty answer after one that listed things is not taken at its word: a layer that
+      // answers nothing while it reloads would otherwise end every alert it had (GDACS's 404
+      // "none right now" is believed on the second empty read in a row).
+      const emptyAfterSome = observations.length === 0 && h.lastPollObservations > 0;
+      const complete = !bounded && sameSettings && h.incompleteReason === undefined && !emptyAfterSome;
       h.lastPolledGeneration = generation;
+      h.lastPollObservations = observations.length;
       const batch = this.admit(h, observations, true, complete);
       h.consecutiveFailures = 0;
       h.waitingForSetup = false;

@@ -18,8 +18,9 @@ import { derivedProvenance, refsOf, shortUtc, stringProp, type ObjectRule, type 
  *
  *   id        event:weather-alert:<namespace>:<value>
  *   severity  properties.severity (Extreme/Severe/Moderate/Minor/Unknown, CAP style) → class; unknown → INFO
- *   startAt   properties.effectiveFrom | onset | effective; else the open event's start for the
- *             same id (a source with no start of its own), else observedAt
+ *   startAt   properties.effectiveFrom | onset | effective; else, where the source asks
+ *             (properties.startFromFirstSeen), the open event's start for the same id; else
+ *             observedAt
  *   endAt     properties.ends | expires | validUntil (the source's own end), else
  *             object.validUntil (freshness: endFromFreshness); the summary's "until" only from
  *             the source's own end. Ended when the source stops listing it (endsWhenWithdrawn).
@@ -141,7 +142,10 @@ function alertEvent(
   // dates each report by its latest reading: the alert began when it was first seen, so an
   // open event for the same id keeps its start rather than restarting with every poll.
   const ownStart = isoProp(o, 'effectiveFrom', 'onset', 'effective');
-  const previous = ownStart ? undefined : storedEvent(id);
+  // Only where the definition asks (`startFromFirstSeen`): NHC's cones and tracks carry no start
+  // field either, but each advisory is new and dated by its own reading.
+  const keepsStart = o.properties['startFromFirstSeen'] === true;
+  const previous = ownStart || !keepsStart ? undefined : storedEvent(id);
   const stillOpen = previous && (!previous.endAt || Date.parse(previous.endAt) > ctx.now);
   const startAt =
     ownStart ??

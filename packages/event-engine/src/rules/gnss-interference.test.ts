@@ -184,3 +184,13 @@ test('aircraft heard more than ten minutes ago are not counted', () => {
   ];
   assert.equal(r.step(fresh, 0).length, 1);
 });
+
+test('an unchanged square is not sent again with every aircraft batch, only once a minute', () => {
+  const r = runner();
+  const fleet = [bad(60.1, 25.1), bad(60.2, 25.2), good(60.3, 25.3)];
+  assert.equal(r.step(fleet, 0).length, 1, 'raised');
+  assert.equal(r.step(fleet, 5).length, 0, 'the same square five seconds on: nothing new');
+  assert.equal(r.step(fleet, 30).length, 0);
+  assert.equal(r.step(fleet, 61).length, 1, 'a minute on: its hold moved on');
+  assert.equal(r.step([...fleet, bad(60.4, 25.4)], 65).length, 1, 'a change: sent at once');
+});

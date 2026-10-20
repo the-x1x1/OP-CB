@@ -747,6 +747,7 @@ test('Launch Library 2: each launch at its pad, a launch event with the rocket, 
   assert.equal(bandwagon.endAt, '2026-10-19T11:30:00.000Z', 'the window closes an hour after it opens');
   const flown = events.find((e) => e.title === 'Launch — USSF-481')!;
   assert.match(flown.summary ?? '', /Status: Launch Successful\.$/);
+  assert.equal(feed.isRelevant(flown), true, 'a launch is in the feed (INFO, a launch)');
 });
 
 test('USGS volcanoes: only the elevated ones, each a volcano alert at its summit, its colour code as the severity', async () => {

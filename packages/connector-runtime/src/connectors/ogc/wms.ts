@@ -47,6 +47,9 @@ export const WMS_CONNECTOR_ID = 'wms';
 export const WMS_VERSIONS = ['1.3.0', '1.1.1'] as const;
 /** GetMap formats both renderers draw (the overlay contract's list). */
 export const WMS_FORMATS = ['image/png', 'image/jpeg', 'image/webp'] as const;
+/** GetFeatureInfo requests a minute What's here may make, beyond the poll's own budget. */
+export const WHATS_HERE_PER_MINUTE = 30;
+
 /** A GetFeatureInfo answer for one pixel is a few hundred bytes; anything past this is not one. */
 export const FEATURE_INFO_MAX_BYTES = 64 * 1024;
 /** Keys the renderers set per tile, or the connector sets itself. */
@@ -264,6 +267,9 @@ export class WmsProvider extends OgcOverlayProvider implements OverlayValueSourc
     if ('errors' in r) throw new Error(`${definition.id}: ${r.errors.join('; ')}`);
     this.config = r.config;
     this.manifest = manifestWithBudget(definition, 'OGC WMS', 1);
+    // What's here asks GetFeatureInfo through the same client as the poll; without room of its
+    // own, four clicks a minute used up nowCOAST radar's budget and its next poll failed.
+    this.manifest.refreshPolicy.maxRequestsPerMinute += WHATS_HERE_PER_MINUTE;
   }
 
   capabilitiesUrl(): string {

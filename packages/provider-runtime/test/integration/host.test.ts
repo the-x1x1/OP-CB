@@ -1668,6 +1668,7 @@ test('a poll is complete only when it is all the source lists, under the setting
   const usgs = createProvider();
   let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
   let partial = false;
+  let answer: unknown[] = [];
   host.register({
     ...usgs,
     manifest: { ...usgs.manifest, id: 'complete-test', enabledByDefault: true },
@@ -1678,7 +1679,7 @@ test('a poll is complete only when it is all the source lists, under the setting
     stop: async () => {},
     query: async () => {
       if (partial) ctx!.incomplete?.('stopped at 10 page(s) with more left');
-      return [];
+      return answer;
     },
     health: async () => ({
       providerId: 'complete-test',
@@ -1699,5 +1700,29 @@ test('a poll is complete only when it is all the source lists, under the setting
   settings.update({ areas: 'HI' });
   assert.equal(await poll(), undefined, 'the first poll under new settings (a narrower area asked for)');
   assert.equal(await poll(), true);
+  // An empty answer right after one that listed something is not believed; a second is.
+  answer = [
+    {
+      id: 'complete-test:a:2026-09-21T08:05:00.000Z',
+      providerId: 'complete-test',
+      externalId: 'a',
+      objectType: 'weather-alert',
+      observedAt: '2026-09-21T08:05:00.000Z',
+      receivedAt: '2026-09-21T08:05:00.000Z',
+      position: { latitude: 1, longitude: 1 },
+      payload: {},
+      quality: { complete: true, sourceQuality: 'authoritative' },
+      provenance: {
+        providerId: 'complete-test',
+        sourceName: 'x',
+        origin: 'live',
+        receivedAt: '2026-09-21T08:05:00.000Z',
+      },
+    },
+  ];
+  assert.equal(await poll(), true);
+  answer = [];
+  assert.equal(await poll(), undefined, 'empty after some: not taken at its word');
+  assert.equal(await poll(), true, 'empty twice: believed');
   await host.dispose();
 });

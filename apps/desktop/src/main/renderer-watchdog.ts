@@ -21,7 +21,7 @@ export interface RendererReport {
 const LEVELS = ['debug', 'info', 'warning', 'error'];
 const MAX_REPORTS = 200;
 const PERF_PREFIX = '[perf] ';
-// The map host's summary is 29 fields; room for a few more before any is dropped.
+// The map host's summary is up to 40 fields (map-host.tsx summarisePerf and the extras after it).
 const PERF_MAX_FIELDS = 48;
 
 /**
@@ -46,7 +46,7 @@ export function parsePerfLine(message: string): Record<string, number | string> 
   for (const [k, v] of Object.entries(raw as Record<string, unknown>).slice(0, PERF_MAX_FIELDS)) {
     if (!/^[a-zA-Z][a-zA-Z0-9]{0,23}$/.test(k)) continue;
     if (typeof v === 'number' && Number.isFinite(v)) out[k] = v;
-    else if (typeof v === 'string' && v.length <= 40) out[k] = v;
+    else if (typeof v === 'string' && v.length <= 80) out[k] = v;
   }
   return Object.keys(out).length ? out : undefined;
 }
