@@ -10,8 +10,9 @@ import type {
   GeoRegion,
   SeverityClass,
   RasterOverlay,
+  WorldGeometry,
 } from '@worldview/world-model';
-import type { ObjectDetailsAnswer, ProviderManifest } from '@worldview/provider-sdk';
+import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '@worldview/provider-sdk';
 import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
 import type { StateChange, TrackPoint } from '@worldview/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
@@ -52,6 +53,36 @@ export interface WorldTrackPoint extends TrackPoint {
 export interface WorldObjectDetails extends ObjectDetailsAnswer {
   providerId: string;
 }
+
+/**
+ * What a drawn overlay's source says lies under it at one point (`overlays.valueAt`,
+ * provider-sdk overlay-value.ts), with the overlay and provider it came from: `label` and
+ * `attribution` are shown with the values.
+ */
+export interface OverlayValueResult extends OverlayValueAnswer {
+  overlayId: string;
+  providerId: string;
+}
+
+/** A shape from a file the operator dropped on the map (`geodata.read`): drawn for the session only. */
+export interface GeodataShape {
+  geometry: WorldGeometry;
+  name?: string;
+}
+
+/** What `geodata.read` made of a dropped file. */
+export interface GeodataReadResult {
+  format?: 'geojson' | 'topojson' | 'kml' | 'kmz' | 'gpx';
+  shapes: GeodataShape[];
+  /** What was left out or could not be read, for the operator. */
+  issues: string[];
+}
+
+/** The largest file `geodata.read` takes, before base64 (25 MiB). */
+export const GEODATA_MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+/** The most overlays one `overlays.valueAt` asks about. */
+export const MAX_OVERLAY_VALUE_OVERLAYS = 8;
 
 /**
  * What is known of the selected aircraft's flight (`world.flight`, 2026-09-28): the airline
@@ -284,6 +315,23 @@ export interface SkyOverheadAnswer {
   sunElevationDeg: number;
   /** Highest first: those the request's filters keep, up to its limit. */
   satellites: SkySatellite[];
+  /**
+   * The aurora forecast at the place, when a source that forecasts it is on (additive,
+   * 2026-10-16): the highest level of chance whose area holds the place — `swpc-aurora`'s
+   * weather-alert areas, which carry `auroraChancePct`. Absent when no such area is held.
+   */
+  aurora?: SkyAurora;
+}
+
+export interface SkyAurora {
+  /** The place is where the chance of aurora overhead is at least this, percent. */
+  chancePct: number;
+  /** …and below this, when a higher level exists and the place is outside its area. */
+  belowPct?: number;
+  /** The time the forecast is for. */
+  forecastFor?: string;
+  /** The source's credit. */
+  attribution?: string;
 }
 
 export interface CollectionItem {
@@ -725,6 +773,7 @@ export const EVENT_TYPE_LABELS: Readonly<Record<string, string>> = Object.freeze
   'air-quality': 'Unhealthy air',
   'reading-limit': 'A reading passes its limit',
   'aircraft-emergency': 'An aircraft broadcasts an emergency',
+  'gnss-interference': 'Aircraft report degraded GPS',
   'distress-beacon': 'A distress beacon is heard (AIS-SART, MOB, EPIRB)',
   launch: 'Launches',
   'satellite-decay': 'Satellite decay',
@@ -910,6 +959,22 @@ export interface WorldRequests {
   'sources.list': { request: void; response: SourceHealthEntry[] };
   /** Raster overlays every running provider publishes (ADR-008 amendment 2026-09-23). */
   'overlays.list': { request: void; response: RasterOverlay[] };
+  /**
+   * Additive, 2026-10-15: what the sources of the overlays the shell is drawing say lies under
+   * them at one point (What's here), in the order asked; an overlay whose source has nothing
+   * there, cannot be asked, or is a network source while working offline is left out. At most
+   * MAX_OVERLAY_VALUE_OVERLAYS overlays.
+   */
+  'overlays.valueAt': {
+    request: { position: { latitude: number; longitude: number }; overlayIds: string[] };
+    response: OverlayValueResult[];
+  };
+  /**
+   * Additive, 2026-10-15: a file the operator dropped on the map (GeoJSON, TopoJSON, KML, KMZ or
+   * GPX by its name), as shapes and names to draw for the session. The bytes come base64; at most
+   * GEODATA_MAX_FILE_BYTES. Nothing in the file is followed or fetched, and nothing is kept.
+   */
+  'geodata.read': { request: { name: string; data: string }; response: GeodataReadResult };
   'sources.manifest': { request: { providerId: string }; response: ProviderManifest | null };
   'sources.setEnabled': { request: { providerId: string; enabled: boolean }; response: void };
   'sources.refresh': { request: { providerId: string }; response: void };
@@ -1214,6 +1279,8 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'sources.definitions.draft',
   'sources.definitions.save',
   'overlays.list',
+  'overlays.valueAt',
+  'geodata.read',
   'credentials.has',
   'credentials.set',
   'credentials.delete',

@@ -5,6 +5,7 @@ import { isParsed, parseProblem, parseWmsCapabilities, type WmsCapabilities, typ
 import { classifyCrs, isWgs84 } from './crs.js';
 import {
   KvpParams,
+  getRequest,
   clipExtent,
   LATEST_TIME,
   isTimeValue,
@@ -18,6 +19,8 @@ import {
   stringSetting,
 } from './common.js';
 import { OgcOverlayProvider, overlayIdFor, overlayName, overlayRole } from './overlay-provider.js';
+import { featureInfoUrl, parseFeatureInfo, pickFeatureInfoFormat, type FeatureInfoQuery } from './feature-info.js';
+import type { OverlayValueAnswer, OverlayValueRequest, OverlayValueSource } from '@worldview/provider-sdk';
 
 /**
  * WMS 1.3.0 and 1.1.1 as a raster overlay (`RasterOverlay`, kind `wms`).
@@ -44,10 +47,27 @@ export const WMS_CONNECTOR_ID = 'wms';
 export const WMS_VERSIONS = ['1.3.0', '1.1.1'] as const;
 /** GetMap formats both renderers draw (the overlay contract's list). */
 export const WMS_FORMATS = ['image/png', 'image/jpeg', 'image/webp'] as const;
+/** GetFeatureInfo requests a minute What's here may make, beyond the poll's own budget. */
+export const WHATS_HERE_PER_MINUTE = 30;
+
+/** A GetFeatureInfo answer for one pixel is a few hundred bytes; anything past this is not one. */
+export const FEATURE_INFO_MAX_BYTES = 64 * 1024;
 /** Keys the renderers set per tile, or the connector sets itself. */
 const OWNED = ['service', 'request', 'bbox', 'width', 'height', 'crs', 'srs'];
 /** GetMap keys the overlay carries in its own fields (not in `parameters`). */
-const OVERLAY_FIELDS = ['layers', 'styles', 'format', 'transparent', 'version', 'time', 'extent', 'role', 'opacity'];
+const OVERLAY_FIELDS = [
+  'layers',
+  'styles',
+  'format',
+  'transparent',
+  'version',
+  'time',
+  'extent',
+  'role',
+  'opacity',
+  'valuenames',
+  'valueunits',
+];
 /** The overlay contract's limits on `parameters`. */
 const PARAMETER_KEY = /^[A-Za-z_][A-Za-z0-9_:-]{0,63}$/;
 const MAX_PARAMETERS = 16;
@@ -69,6 +89,26 @@ export interface WmsConfig {
   vendor: Record<string, string>;
   /** The definition's own opacity (`opacity` in the query, 0–1), which the operator's setting overrides. */
   opacity?: number;
+  /**
+   * What the service's values are called and measured in, for What's here (`valueNames` and
+   * `valueUnits` in the query, each `name=text` pairs separated by commas): a raster's band is
+   * `Band1` to GeoServer and reflectivity in dBZ to its reader. Only the definition can say so.
+   */
+  valueNames?: Record<string, string>;
+  valueUnits?: Record<string, string>;
+}
+
+/** `Band1=Reflectivity,Band2=Echo top` → a table; an error for a pair that is not one. */
+function parsePairs(key: string, raw: string | undefined): Record<string, string> | string | undefined {
+  if (raw === undefined) return undefined;
+  const out: Record<string, string> = {};
+  for (const part of raw.split(',')) {
+    const m = /^\s*([^=]+?)\s*=\s*(.+?)\s*$/.exec(part);
+    if (!m || m[2]!.length > 40)
+      return `${key} "${raw.slice(0, 60)}" is not name=text pairs (text up to 40 characters)`;
+    out[m[1]!] = m[2]!;
+  }
+  return Object.keys(out).length > 12 ? `${key} names more than 12 values` : out;
 }
 
 /**
@@ -119,6 +159,10 @@ export function readWmsConfig(d: ConnectorProviderDefinition): { config: WmsConf
   if (extent && 'error' in extent) errors.push(extent.error);
   const opacity = parseOpacity(q.get('opacity'));
   if (typeof opacity === 'string') errors.push(opacity);
+  const valueNames = parsePairs('valueNames', q.get('valueNames'));
+  if (typeof valueNames === 'string') errors.push(valueNames);
+  const valueUnits = parsePairs('valueUnits', q.get('valueUnits'));
+  if (typeof valueUnits === 'string') errors.push(valueUnits);
   const transparent = (q.get('transparent') ?? 'true').toLowerCase() !== 'false';
   const vendor: Record<string, string> = {};
   for (const k of q.keys()) if (![...OWNED, ...OVERLAY_FIELDS].includes(k.toLowerCase())) vendor[k] = q.get(k)!;
@@ -135,6 +179,8 @@ export function readWmsConfig(d: ConnectorProviderDefinition): { config: WmsConf
   if (time !== undefined) config.time = time;
   if (extent && 'bounds' in extent) config.extent = extent.bounds;
   if (typeof opacity === 'number') config.opacity = opacity;
+  if (valueNames && typeof valueNames === 'object') config.valueNames = valueNames;
+  if (valueUnits && typeof valueUnits === 'object') config.valueUnits = valueUnits;
   return { config };
 }
 
@@ -208,9 +254,11 @@ export function frameOverlayId(base: string, frame: string): string {
   return `${base.slice(0, 127 - stamp.length)}:${stamp}`;
 }
 
-export class WmsProvider extends OgcOverlayProvider {
+export class WmsProvider extends OgcOverlayProvider implements OverlayValueSource {
   readonly manifest: ProviderManifest;
   readonly config: WmsConfig;
+  /** How to ask about a point of the published overlay; undefined when the service cannot be asked. */
+  private featureInfo: (Omit<FeatureInfoQuery, 'position'> & { label: string; frame?: string }) | undefined;
 
   constructor(definition: ConnectorProviderDefinition) {
     super(definition);
@@ -219,6 +267,9 @@ export class WmsProvider extends OgcOverlayProvider {
     if ('errors' in r) throw new Error(`${definition.id}: ${r.errors.join('; ')}`);
     this.config = r.config;
     this.manifest = manifestWithBudget(definition, 'OGC WMS', 1);
+    // What's here asks GetFeatureInfo through the same client as the poll; without room of its
+    // own, four clicks a minute used up nowCOAST radar's budget and its next poll failed.
+    this.manifest.refreshPolicy.maxRequestsPerMinute += WHATS_HERE_PER_MINUTE;
   }
 
   capabilitiesUrl(): string {
@@ -350,8 +401,67 @@ export class WmsProvider extends OgcOverlayProvider {
       notes.push(
         `the service answered WMS ${caps.version} to a ${this.config.version} request; ${caps.version} is used`,
       );
+    this.featureInfo = this.featureInfoFor(caps, layers, overlay, styles, parameters);
     this.notes = notes;
     return overlay;
+  }
+
+  /**
+   * GetFeatureInfo for the published overlay, when the service offers it in a format
+   * feature-info.ts reads and every layer is queryable; undefined otherwise.
+   */
+  private featureInfoFor(
+    caps: WmsCapabilities,
+    layers: WmsLayer[],
+    overlay: WmsOverlay,
+    styles: string[],
+    parameters: Record<string, string>,
+  ): WmsProvider['featureInfo'] {
+    const format = pickFeatureInfoFormat(caps.getFeatureInfoFormats);
+    if (!format || !layers.every((l) => l.queryable)) return undefined;
+    const crs = layers[0]!.crs.filter((c) => layers.every((l) => l.crs.includes(c)));
+    const info: NonNullable<WmsProvider['featureInfo']> = {
+      base: overlay.url,
+      version: caps.version,
+      layers: this.config.layers,
+      crs,
+      format,
+      parameters,
+      label: overlay.name,
+    };
+    if (styles.some(Boolean)) info.styles = styles;
+    if (overlay.frame) info.frame = overlay.frame;
+    return info;
+  }
+
+  /**
+   * What the service says lies under the published overlay at one point (provider-sdk
+   * overlay-value.ts): one GetFeatureInfo request through the provider's own gated HTTP, for
+   * the frame being drawn. Undefined when the service cannot be asked, the layers offer no
+   * CRS to ask in, or nothing is there.
+   */
+  async overlayValue(request: OverlayValueRequest): Promise<OverlayValueAnswer | undefined> {
+    const info = this.featureInfo;
+    if (!info) return undefined;
+    const url = featureInfoUrl({ ...info, position: request.position });
+    if (!url) return undefined;
+    const accept = info.format === 'text/plain' ? 'text/plain, */*;q=0.1' : 'application/json, */*;q=0.1';
+    const res = await this.context.http.request({
+      ...getRequest(this.definition, this.manifest, url, accept),
+      maxBytes: FEATURE_INFO_MAX_BYTES,
+      signal: request.signal,
+    });
+    // Own entries only: a value the service calls "constructor" must not find Object's.
+    const own = (table: Record<string, string> | undefined, name: string) =>
+      table && Object.hasOwn(table, name) ? table[name] : undefined;
+    const values = parseFeatureInfo(res.text(), info.format).map((v) => {
+      const unit = own(this.config.valueUnits, v.name);
+      return { name: own(this.config.valueNames, v.name) ?? v.name, value: v.value, ...(unit ? { unit } : {}) };
+    });
+    if (values.length === 0) return undefined;
+    const answer: OverlayValueAnswer = { label: info.label, values, attribution: this.definition.attribution.text };
+    if (info.frame) answer.frame = info.frame;
+    return answer;
   }
 
   protected describe(o: RasterOverlay): string {

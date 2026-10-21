@@ -34,6 +34,7 @@ A field is a path string, or an object:
 | `concat`    | 2–8 paths read and joined with `separator` (default `:`) into one text; nothing if any part is missing. For an id no single field carries (NHC's storm slot and forecast hour, stable across advisories where the row number is not). A part may be a list of up to 4 paths, the first holding a text, number or boolean used: `["geometry.coordinates[0][0]", "geometry.coordinates[0][0][0]"]` is a line's or a multi-line's first longitude. |
 | `separator` | The text between `concat` parts.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `transform` | One transform name or a list applied in order; a transform that yields nothing makes the field absent.                                                                                                                                                                                                                                                                                                                                          |
+| `map`       | A lookup table applied after the transforms: the value, as text, is looked up (exact, case and all) and the entry's value taken; a value with no entry is absent, so `default` applies. 1–64 entries. For a code a source publishes that WORLDVIEW names differently: `{"path": "properties.colorCode", "map": {"RED": "Extreme", "ORANGE": "Severe", "YELLOW": "Moderate"}}`.                                                                  |
 | `default`   | Used when the paths read nothing (before transforms are considered done).                                                                                                                                                                                                                                                                                                                                                                       |
 | `required`  | The record is rejected when the field is absent (default: the field is simply left out).                                                                                                                                                                                                                                                                                                                                                        |
 
@@ -98,9 +99,9 @@ The same conditions serve `mapping.filter` (per record) and `websocket.filter` (
 The registry is closed. A source that needs a conversion the table lacks gets it added to
 `packages/connector-sdk/src/transforms.ts` with a test — the transform then serves every
 definition — rather than a definition-level expression. Things a mapping cannot do on
-purpose: arithmetic between two fields, string concatenation, conditional values, one
-record → many observations. Those are on the roadmap as named, reviewed steps (`explode`,
-`concat`), not as an expression language.
+purpose: arithmetic between two fields, conditional values beyond a lookup table, one record →
+many observations. Those are on the roadmap as named, reviewed steps (`explode`); `concat` and
+`map` (a closed lookup table, 2026-10-15) are two such steps, not an expression language.
 
 ## What happens to a record
 

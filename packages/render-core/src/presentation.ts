@@ -102,6 +102,11 @@ export const WEATHER_ALERT_SUFFIXES: Readonly<Record<string, string>> = Object.f
   ENH: 'spc-enh',
   MDT: 'spc-mdt',
   HIGH: 'spc-high',
+  // SWPC aurora forecast areas (`auroraBand`).
+  'aurora-10': 'aurora-10',
+  'aurora-30': 'aurora-30',
+  'aurora-50': 'aurora-50',
+  'aurora-70': 'aurora-70',
   // NWS severity; GDACS alert level.
   EXTREME: 'extreme',
   SEVERE: 'severe',
@@ -284,10 +289,10 @@ export const DEFAULT_RULES: RenderingRule[] = [
     // thunderstorm, flash flood, hurricane, extreme wind — by the NWS provider's `alertKind`,
     // each in its own colour and with a bolder edge (theme.ts), so a tornado warning cannot be
     // mistaken for a frost advisory of the same severity. Then storm reports by type and SPC
-    // outlook areas by category, in SPC's own colours. Everything else by NWS severity or
-    // GDACS alert level, as before.
+    // outlook areas by category, in SPC's own colours, and aurora forecast areas by their
+    // chance. Everything else by NWS severity or GDACS alert level, as before.
     classBy: {
-      property: ['alertKind', 'reportType', 'spcCategory', 'severity', 'alertLevel'],
+      property: ['alertKind', 'reportType', 'spcCategory', 'auroraBand', 'severity', 'alertLevel'],
       suffixes: WEATHER_ALERT_SUFFIXES,
     },
   },
@@ -372,6 +377,11 @@ export interface PresentationInput {
    * back); undefined: now. Only the events that follow a moving object (EPISODE_EVENTS) use it.
    */
   shownAtMs?: number;
+  /**
+   * Now, for the shell's live view: a storm's or an alert's event that has ended by the time
+   * shown (shownAtMs, else this) is not drawn. Undefined: ended ones are drawn as before.
+   */
+  nowMs?: number;
   view: ViewState;
   rules?: RenderingRule[];
   /** Object types visible in the active lens (undefined = all). */
@@ -519,6 +529,18 @@ function episodeShown(ev: WorldEvent, shownAtMs: number | undefined): boolean {
   const start = Date.parse(ev.startAt);
   const end = ev.endAt ? Date.parse(ev.endAt) : Infinity;
   return !(start > shownAtMs) && !(end <= shownAtMs);
+}
+
+/**
+ * Whether a storm's or an alert's event is in force at `atMs` (undefined: drawn regardless):
+ * not ended by then, and, at a moment replayed (`past`), begun by then. Live, an alert issued
+ * for later (a watch for tomorrow) is drawn now.
+ */
+function alertShown(ev: WorldEvent, atMs: number | undefined, past: boolean): boolean {
+  if (atMs === undefined) return true;
+  const end = ev.endAt ? Date.parse(ev.endAt) : Number.POSITIVE_INFINITY;
+  if (end <= atMs) return false;
+  return !(past && Date.parse(ev.startAt) > atMs);
 }
 
 /** Width in px of a storm's past-track line (drawn in its category colour). */
@@ -864,6 +886,14 @@ export function presentObjects(input: PresentationInput): PresentationResult {
     // one with a shape adds nothing only where the object's own shape is drawn — a mirror
     // copy of an alert without its geometry must not hide the event's polygon too.
     const pointEvent = ev.geometry.type === 'Point';
+    // Ended, or not begun, at the time shown: an alert the source stopped listing (a volcano
+    // back to normal, a gauge below flood stage) stayed drawn while its event was kept.
+    if (
+      !selected &&
+      DRAWN_AS_OBJECTS.has(ev.type) &&
+      !alertShown(ev, input.shownAtMs ?? input.nowMs, input.shownAtMs !== undefined)
+    )
+      continue;
     if (
       !selected &&
       DRAWN_AS_OBJECTS.has(ev.type) &&

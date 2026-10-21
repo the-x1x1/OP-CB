@@ -16,6 +16,7 @@ import type {
   TileProviderErrorLike,
   ViewerLike,
 } from './cesium-like.js';
+import { detachImageryLayer } from './detach-layer.js';
 
 /**
  * Raster overlays (ADR-008 amendment) on the globe: one imagery layer per overlay, kept
@@ -103,16 +104,54 @@ export function withBrightnessFade<P extends object>(
     const pending = original(x, y, level, request);
     if (!pending) return pending;
     return pending.then((image) =>
-      fadeTile(
-        image as TileImage | undefined,
-        ramp,
-        createCanvas,
-        feather ? { x, y, level, ...feather } : undefined,
-        onFaded,
+      inFadeSlices(() =>
+        fadeTile(
+          image as TileImage | undefined,
+          ramp,
+          createCanvas,
+          feather ? { x, y, level, ...feather } : undefined,
+          onFaded,
+        ),
       ),
     );
   };
   return provider;
+}
+
+/**
+ * How long tiles are faded in one go before the frame gets the thread back. Each faded tile
+ * reads and writes every pixel on the main thread; tiles arriving together (a zoom into a
+ * region with every infrared slice on) used to be faded back to back as one task, and the
+ * test laptop logged tasks of 0.7–1 s and 3 fps there (2026-10-17). In slices, a burst is
+ * spread over frames instead.
+ */
+export const FADE_SLICE_MS = 8;
+const fadeQueue: Array<() => void> = [];
+let fadeScheduled = false;
+
+/** Run `work` in the next fade slice; at least one job runs in each slice. */
+export function inFadeSlices<T>(work: () => T): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    fadeQueue.push(() => {
+      try {
+        resolve(work());
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
+    if (!fadeScheduled) {
+      fadeScheduled = true;
+      setTimeout(drainFades, 0);
+    }
+  });
+}
+
+function drainFades(): void {
+  const until = performance.now() + FADE_SLICE_MS;
+  do fadeQueue.shift()!();
+  while (fadeQueue.length && performance.now() < until);
+  if (fadeQueue.length) setTimeout(drainFades, 0);
+  else fadeScheduled = false;
 }
 
 function fadeTile(
@@ -136,6 +175,11 @@ function fadeTile(
   if (!ctx) return image;
   ctx.drawImage(image as CanvasImageSource, 0, 0);
   const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // The decoded tile is ours from here: Cesium never sees it again and never closes a bitmap,
+  // and an unclosed ImageBitmap holds its pixels outside the JS heap until a collection that
+  // the heap alone does not prompt. Close it now; the bitmap made below is the one uploaded.
+  const sourceIsBitmap = isImageBitmap(image);
+  if (sourceIsBitmap) (image as { close?: () => void }).close?.();
   if (feather) mendAntimeridianColumn(data.data, canvas.width, { z: feather.level, x: feather.x });
   // The globe's WMTS tiles are Web Mercator (x from 180° W, 2^level columns), whatever their pixels.
   const weights = feather
@@ -147,7 +191,7 @@ function fadeTile(
           { level: feather.level, y: feather.y },
           canvas.height,
           { south: feather.slice.south, north: feather.slice.north },
-          isImageBitmap(image),
+          sourceIsBitmap,
         )
       : undefined;
   applyBrightnessFade(data.data, ramp, weights, canvas.width, rows);
@@ -165,7 +209,13 @@ function fadeTile(
   // every faded tile (the infrared slices, true colour) lay upside down within its own square,
   // so neighbouring tiles did not meet — the "seams" seen on 2026-09-29 at tile edges such as
   // 41° N. A bitmap made from the canvas keeps the orientation Cesium chose.
-  if (isImageBitmap(image) && typeof createImageBitmap === 'function') return createImageBitmap(canvas);
+  if (sourceIsBitmap && typeof createImageBitmap === 'function')
+    return createImageBitmap(canvas).then((bitmap) => {
+      // The canvas was only the workbench: give its backing store back at once.
+      canvas.width = 0;
+      canvas.height = 0;
+      return bitmap;
+    });
   return canvas;
 }
 
@@ -545,7 +595,7 @@ export class RasterOverlays3D {
       next.push(held);
     }
     // Whatever is left was dropped from the list: gone at once.
-    for (const h of byKey.values()) this.viewer.imageryLayers.remove(h.layer, true);
+    for (const h of byKey.values()) detachImageryLayer(this.viewer.imageryLayers, h.layer);
     // Order: index 0 is the basemap; overlays follow in list order, beneath whatever came
     // after (the reference borders). Detach and re-add the kept ones so the order is exact.
     for (const h of [...next, ...replaced]) if (this.held.includes(h)) this.viewer.imageryLayers.remove(h.layer, false);
@@ -642,14 +692,14 @@ export class RasterOverlays3D {
         this.retire(old, FRAME_HANDOVER_CHECK_MS, waited + FRAME_HANDOVER_CHECK_MS);
         return;
       }
-      this.viewer.imageryLayers.remove(old.layer, true);
+      detachImageryLayer(this.viewer.imageryLayers, old.layer);
       this.viewer.scene.requestRender();
     }, wait);
     this.retiring.set(timer, old);
   }
 
   private removeAll(): void {
-    for (const h of this.held) this.viewer.imageryLayers.remove(h.layer, true);
+    for (const h of this.held) detachImageryLayer(this.viewer.imageryLayers, h.layer);
     this.held = [];
   }
 

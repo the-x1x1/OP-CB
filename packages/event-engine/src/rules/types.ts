@@ -29,6 +29,12 @@ export interface ObjectRule {
    * nothing until another object of its types reports.
    */
   endsWhenQuiet?: boolean;
+  /**
+   * The rule's events end when their source stops listing their object: when every object an
+   * open event is about is withdrawn (StateChange.withdrawn — left out of its provider's own
+   * full snapshot), the engine ends the event then. An event whose own end is earlier keeps it.
+   */
+  endsWhenWithdrawn?: boolean;
   evaluate(objects: readonly WorldObject[], ctx: RuleContext): WorldEvent[];
 }
 

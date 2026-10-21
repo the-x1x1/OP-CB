@@ -66,6 +66,16 @@
       "max": 1,
       "step": 0.05,
       "defaultLabel": "85%"
+    },
+    {
+      "key": "fadeShift",
+      "label": "Thin cloud",
+      "description": "Moves the point below which cloud is faded out, in levels of the picture's brightness: up (to 100) leaves only the coldest, highest tops; down (to -100) draws thinner, warmer cloud too. 0 is the definition's own.",
+      "kind": "number",
+      "min": -100,
+      "max": 100,
+      "step": 5,
+      "defaultLabel": "0 (as defined)"
     }
   ]
 }

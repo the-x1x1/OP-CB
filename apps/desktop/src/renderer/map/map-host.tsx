@@ -6,6 +6,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type DragEvent,
 } from 'react';
 import { loadReferenceData } from './reference-data.js';
 import { modelsField } from './perf-fields.js';
@@ -22,6 +23,7 @@ import {
   graphicsProfile,
   modelCreditLines,
   resolveGraphicsQuality,
+  SharpnessGovernor,
   withModels,
   type ImagerySplit,
   type ModelKind,
@@ -51,7 +53,7 @@ import { ErrorToastGate } from './error-toasts.js';
 import { describeError } from '../store/sync.js';
 import { throttleLatest, type Throttled } from './throttle.js';
 import { FeatureFeed } from './feature-feed.js';
-import { attributeLongTask, markDelta, takeDecodeMax } from './delta-marks.js';
+import { attributeLongTask, markDelta, takeDecodeMax, takeRenderMax, takeRenderParts } from './delta-marks.js';
 import { observeLongFrames } from './long-frames.js';
 import { SNAPSHOT_PAGE_SIZE, nextSubscriptionBounds, pinnedSelection } from './subscription-bounds.js';
 import { withSelection } from './selection-objects.js';
@@ -65,6 +67,8 @@ import { AIRCRAFT_HORIZON_MIN_M, footprintFeatures, radioHorizonFeatures } from 
 import { graticuleExtent, graticuleFeatures } from './graticule.js';
 import { rangeRingFeatures, ringSpacingM } from './range-rings.js';
 import { NO_TOOL_LAYER, selectionPosition, sendToolLayer, type ToolLayerShown } from './tool-layers.js';
+import { importedFeatures, importedKey } from './imported-files.js';
+import { ImportedFilesCard } from './imported-files-card.js';
 import { MeasurePanel } from './measure-panel.js';
 import { WhatsHere } from './whats-here.js';
 import { displayName } from '../context/props.js';
@@ -301,6 +305,9 @@ export function MapHost() {
    */
   const governor = useRef<PerformanceGovernor | null>(null);
   governor.current ??= new PerformanceGovernor();
+  /** Auto's sharpness steps (render-core graphics.ts); undefined when a quality is chosen. */
+  const sharpness = useRef<SharpnessGovernor | undefined>(undefined);
+  const models3dRef = useRef<boolean | undefined>(undefined);
   const [budget, setBudget] = useState<PerformanceBudget>(() => governor.current!.budget);
   const budgetRef = useRef(budget);
   budgetRef.current = budget;
@@ -447,6 +454,8 @@ export function MapHost() {
         // one being left say nothing about the one arriving.
         syncCeiling();
         governor.current!.resetRuns();
+        if (sharpness.current?.resetRuns() && h.setGraphics)
+          h.setGraphics(withModels(sharpness.current.profile(), models3dRef.current));
         setBudget(governor.current!.budget);
       }),
     );
@@ -474,12 +483,40 @@ export function MapHost() {
           // that keeps objects from one that holds textures or native memory.
           const heap = (performance as { memory?: { usedJSHeapSize?: number } }).memory?.usedJSHeapSize;
           if (typeof heap === 'number' && heap > 0) summary.jsHeapMB = Math.round(heap / 1024 / 1024);
+          const sharp = sharpness.current;
+          // A world change, from the store to React's commit of the shell (delta-marks.ts).
+          summary.shellMs = Math.round(takeRenderMax());
+          const parts = takeRenderParts();
+          if (parts) summary.shellParts = parts;
+          if (sharp) summary.sharpness = sharp.step;
+          if (typeof devicePixelRatio === 'number') summary.dpr = Math.round(devicePixelRatio * 100) / 100;
           console.info(`[perf] ${JSON.stringify(summary)}`);
           reportRenderer(typeof summary.fpsAvg === 'number' ? summary.fpsAvg : undefined);
           perf.current = newPerfWindow(now);
+          // The globe only: its tile error is what the steps sharpen, and only its frames say
+          // what a sharper frame costs (`drawn`).
+          if (
+            sharp &&
+            h.setGraphics &&
+            h.activeMode() === '3D' &&
+            typeof summary.fpsAvg === 'number' &&
+            typeof summary.fpsMin === 'number' &&
+            sharp.sample({ fpsAvg: summary.fpsAvg, fpsMin: summary.fpsMin, drawn: w.drawn, atMs: now })
+          )
+            h.setGraphics(withModels(sharp.profile(), models3dRef.current));
         }
         if (!governor.current!.sample(sample)) return;
-        setBudget(governor.current!.budget);
+        const before = budgetRef.current;
+        const after = governor.current!.budget;
+        // Giving up detail or features while the map is drawn sharper than its profile: the
+        // sharpness goes first, all of it, in the same breath.
+        if (
+          (after.detail > before.detail || after.maxFeatures < before.maxFeatures) &&
+          h.setGraphics &&
+          sharpness.current?.yieldAll(now)
+        )
+          h.setGraphics(withModels(sharpness.current.profile(), models3dRef.current));
+        setBudget(after);
       }),
     );
     const toastGate = new ErrorToastGate();
@@ -689,10 +726,26 @@ export function MapHost() {
   // The operator's "3D models when close" switch rides on the profile (`withModels`).
   const graphicsSetting = session.settings?.display?.graphics;
   const models3d = session.settings?.display?.models3d;
+  models3dRef.current = models3d;
   useEffect(() => {
     if (!host?.setGraphics || !graphicsSetting) return;
-    host.setGraphics(withModels(graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer())), models3d));
-  }, [host, graphicsSetting, models3d]);
+    const base = graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer()));
+    // On Auto the profile is a floor: the sharpness governor draws finer while the frame
+    // rate allows (render-core graphics.ts). A quality the operator chose is kept as chosen.
+    sharpness.current =
+      graphicsSetting === 'auto'
+        ? new SharpnessGovernor(base, typeof devicePixelRatio === 'number' ? devicePixelRatio : 1)
+        : undefined;
+    host.setGraphics(withModels(base, models3dRef.current));
+  }, [host, graphicsSetting]);
+  // The 3D-model switch rides on whatever profile is in force, without starting the steps over.
+  useEffect(() => {
+    if (!host?.setGraphics || !graphicsSetting) return;
+    const profile =
+      sharpness.current?.profile() ?? graphicsProfile(resolveGraphicsQuality(graphicsSetting, gpuRenderer()));
+    host.setGraphics(withModels(profile, models3d));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- graphicsSetting is the other effect's
+  }, [host, models3d]);
 
   // ---- display: visual style and day/night (saved settings), orbit and follow (session) ----
   // The host keeps the style and the shading for a renderer built later, so these need no
@@ -860,6 +913,7 @@ export function MapHost() {
         zones: zs,
         animate: an,
         ...(shownAtMs !== undefined ? { shownAtMs } : {}),
+        nowMs: Date.now(),
         maxFeatures: budget.maxFeatures,
         detail: budget.detail,
         cullToView: false,
@@ -973,6 +1027,26 @@ export function MapHost() {
     });
   }, [host, mounted, footprintKey]);
 
+  // ---- files dropped on the map (imported-files.ts): a tool layer of their own ----
+  const importedShown = useRef<ToolLayerShown>(NO_TOOL_LAYER);
+  const importedNow = useRef(ui.importedFiles);
+  importedNow.current = ui.importedFiles;
+  const importKey = mounted === 'ready' ? importedKey(ui.importedFiles) : '';
+  useEffect(() => {
+    if (!host || mounted !== 'ready' || !host.setFeatures) return;
+    sendToolLayer(host, importedShown, importKey, () => importedFeatures(importedNow.current));
+  }, [host, mounted, importKey]);
+  const fileChooser = useRef<HTMLInputElement | null>(null);
+  const [dropping, setDropping] = useState(false);
+  // The palette's "Draw a file on the map…": open the chooser (a new request, not the first render).
+  const importAsked = useRef(ui.importRequest);
+  useEffect(() => {
+    if (ui.importRequest === importAsked.current) return;
+    importAsked.current = ui.importRequest;
+    fileChooser.current?.click();
+  }, [ui.importRequest]);
+  const carriesFiles = (e: DragEvent<HTMLDivElement>) => Array.from(e.dataTransfer?.types ?? []).includes('Files');
+
   // ---- hover: restyle the (at most two) features it touches, not the frame ----
   // The cursor crosses a dot every few frames on a busy overview, and each crossing used to
   // cost a full presentation pass. `restyleHover` gives the same two features a full pass
@@ -1045,7 +1119,47 @@ export function MapHost() {
   // The globe's keyboard move still in the air (keyboard-nav.ts `chainedKeyView`).
   const keyFlight = useRef<KeyFlight | undefined>(undefined);
   return (
-    <div ref={mapRef} className="wv-map" role="region" aria-label="Map">
+    <div
+      ref={mapRef}
+      className="wv-map"
+      role="region"
+      aria-label="Map"
+      onDragOver={(e) => {
+        if (!carriesFiles(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        if (!dropping) setDropping(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        setDropping(false);
+      }}
+      onDrop={(e) => {
+        if (!carriesFiles(e)) return;
+        // Not the browser's: a file dropped on the window would otherwise be opened in it.
+        e.preventDefault();
+        setDropping(false);
+        void actions.importGeodataFiles(Array.from(e.dataTransfer.files));
+      }}
+    >
+      <input
+        ref={fileChooser}
+        type="file"
+        multiple
+        hidden
+        aria-label="Choose a GeoJSON, TopoJSON, KML, KMZ or GPX file to draw on the map"
+        accept=".geojson,.json,.topojson,.kml,.kmz,.gpx"
+        onChange={(e) => {
+          const chosen = Array.from(e.currentTarget.files ?? []);
+          e.currentTarget.value = '';
+          if (chosen.length) void actions.importGeodataFiles(chosen);
+        }}
+      />
+      {dropping ? (
+        <div className="wv-map__drop" aria-hidden="true">
+          Drop a GeoJSON, KML, KMZ or GPX file to draw it on the map
+        </div>
+      ) : null}
       {/* The globe has no keyboard control of its own: focused, it takes the arrow keys, + and −
           (keyboard-nav.ts). The 2D map's canvas takes them itself (MapLibre), so the surface is
           not a second tab stop there. */}
@@ -1188,6 +1302,7 @@ export function MapHost() {
             : ''}
       </p>
       {ui.measure ? <MeasurePanel points={ui.measure.points} area={ui.measure.area ?? false} /> : null}
+      <ImportedFilesCard files={ui.importedFiles} />
       {ui.whatsHere ? (
         <WhatsHere
           host={host ?? undefined}
@@ -1205,6 +1320,7 @@ export function MapHost() {
           {...(selectionAt ? { selection: { name: 'the selection', position: selectionAt } } : {})}
           {...(activeCollection ? { collection: { id: activeCollection.id, name: activeCollection.name } } : {})}
           {...(pastAtMs === undefined ? {} : { shownAtMs: pastAtMs })}
+          overlayIds={drawnOverlays.filter((o) => o.role !== 'basemap').map((o) => o.id)}
           {...(selectedNow?.type === 'satellite'
             ? { satellite: { id: selectedNow.id, name: displayName(selectedNow) } }
             : {})}

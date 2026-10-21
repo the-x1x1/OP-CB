@@ -36,6 +36,8 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'world.viewport': { bounds: { west: -160, south: 18, east: -154, north: 23 }, zoom: 7 },
   'sources.list': undefined,
   'overlays.list': undefined,
+  'geodata.read': { name: 'x.geojson', data: '' },
+  'overlays.valueAt': { position: { latitude: 21.3, longitude: -157.85 }, overlayIds: ['nowcoast-radar:x'] },
   'sources.manifest': { providerId: 'usgs-earthquakes' },
   'sources.setEnabled': { providerId: 'usgs-earthquakes', enabled: true },
   'sources.refresh': { providerId: 'usgs-earthquakes' },

@@ -59,8 +59,74 @@ export function takeDecodeMax(): number {
   return ms;
 }
 
+let dispatchedAt: number | undefined;
+let renderMaxMs = 0;
+
+/**
+ * A world change was handed to the store (store/sync.ts): the shell renders it next. With
+ * `noteShellCommit`, the time from there to React's commit — the shell's own render of a
+ * delta, the part no other timer here covers.
+ */
+export function noteWorldDispatch(at: number = clock()): void {
+  dispatchedAt ??= at;
+}
+
+/**
+ * Where the shell's render of a world change went: each part of the shell (shell.tsx) marks
+ * when React reaches it, so the time between two marks is the part before rendering. Kept for
+ * the slowest commit of the window, as "top:2 lens:30 map:4 ctx:55 time:3 end:6".
+ */
+let renderMarks: Array<[string, number]> = [];
+let slowestParts = '';
+
+/** React reached this part of the shell (a mark rendered just before it). */
+export function noteRenderMark(name: string, at: number = clock()): void {
+  if (dispatchedAt === undefined) return;
+  renderMarks.push([name, at]);
+}
+
+/** The shell committed (shell.tsx, a layout effect after every commit). */
+export function noteShellCommit(at: number = clock()): void {
+  const marks = renderMarks;
+  renderMarks = [];
+  if (dispatchedAt === undefined) return;
+  const took = at - dispatchedAt;
+  if (took >= renderMaxMs && marks.length) {
+    const parts: string[] = [];
+    let before = dispatchedAt;
+    let label = 'wait';
+    for (const [name, t] of marks) {
+      parts.push(`${label}:${Math.round(t - before)}`);
+      label = name;
+      before = t;
+    }
+    parts.push(`${label}:${Math.round(at - before)}`);
+    slowestParts = parts.join(' ').slice(0, 80);
+  }
+  renderMaxMs = Math.max(renderMaxMs, took);
+  dispatchedAt = undefined;
+}
+
+/** The longest dispatch-to-commit since the last call — one perf window's worth. */
+export function takeRenderMax(): number {
+  const ms = renderMaxMs;
+  renderMaxMs = 0;
+  return ms;
+}
+
+/** The parts of that slowest commit (see `noteRenderMark`); empty when there was none. */
+export function takeRenderParts(): string {
+  const p = slowestParts;
+  slowestParts = '';
+  return p;
+}
+
 /** Tests only. */
 export function clearDeltaMarks(): void {
+  dispatchedAt = undefined;
+  renderMaxMs = 0;
+  renderMarks = [];
+  slowestParts = '';
   marks.length = 0;
   decodeMaxMs = 0;
 }

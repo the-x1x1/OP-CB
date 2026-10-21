@@ -57,3 +57,21 @@ transforms type the fields you use. Positions accept numeric strings directly.
 `maxRows` (default 100,000) drops and counts the rest; more than 512 fields in a row, or an
 unterminated quote, is MALFORMED. A row with more cells than columns keeps the extras as
 `_<index>`.
+
+A column-aligned text table (2026-10-15) is read with `"delimiter": "whitespace"`: each line split
+on runs of spaces and tabs, no quoting. `"comment": "#"` skips every row whose first field starts
+with that character, in either form. NOAA NDBC's `latest_obs.txt` is the first
+(`connectors/enabled/ndbc-observations.json`): two `#` header lines, then one station a line,
+`MM` where a value is missing — which the `number` transform turns into no value:
+
+```json
+"response": {
+  "format": "csv",
+  "csv": { "delimiter": "whitespace", "comment": "#", "header": false, "columns": ["STN", "LAT", "LON", "YYYY", "MM", "DD", "hh", "mm", "WDIR", "WSPD"] }
+},
+"mapping": {
+  "externalId": "STN",
+  "observedAt": { "concat": ["YYYY", "MM", "DD", "hh", "mm"], "separator": "-", "transform": "timestamp:YYYY-MM-DD-HH-mm" },
+  "position": { "lat": { "path": "LAT", "transform": "number" }, "lon": { "path": "LON", "transform": "number" } }
+}
+```

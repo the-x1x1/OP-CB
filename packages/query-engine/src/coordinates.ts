@@ -9,6 +9,9 @@ import { readGridReference } from '@worldview/world-model';
  * DMS (basic):     "21°18'25\"N 157°51'30\"W", "21 18 25 N, 157 51 30 W".
  * MGRS:            "4QFJ1234567890", "4Q FJ 12345 67890" (2 to 10 figures) — the middle of the square.
  * UTM:             "4Q 612345 2358765", "4Q 612345mE 2358765mN" — zone, latitude band, easting, northing.
+ * geo URI:         "geo:21.3069,-157.8583", with ";crs=wgs84" and ";u=35" (metres) — RFC 5870, two
+ *                  dimensions only — and Android's "?z=15" and "geo:0,0?q=21.3,-157.8(Label)" (what a
+ *                  phone's "share location" gives; after God's Eye View 11bc2ec).
  * Grid references go through world-model's grid-reference.ts (WGS84, checked against
  * GeographicLib). One that cannot be right — square letters outside their band, a point
  * outside its band, "S" that could be a band or the southern hemisphere — returns
@@ -17,7 +20,7 @@ import { readGridReference } from '@worldview/world-model';
  * Adapted from gods-eye-view src/search/coordinateParser.js (MIT) — decimal component rules.
  */
 export interface ParsedCoordinate {
-  kind: 'decimal' | 'dms' | 'mgrs' | 'utm';
+  kind: 'decimal' | 'dms' | 'mgrs' | 'utm' | 'geo';
   latitude: number;
   longitude: number;
   label: string;
@@ -114,9 +117,75 @@ function gridReferenceNote(kind: 'mgrs' | 'utm', error: string): string {
   return `${kind === 'mgrs' ? 'MGRS' : 'UTM'} reference not read: ${error}`;
 }
 
+/**
+ * An RFC 5870 geo URI in WGS 84: latitude and longitude, `;crs=wgs84` and `;u=<metres>` (the
+ * uncertainty, kept as the precision). Anything it cannot place exactly — an altitude, another
+ * CRS, a query (`?q=`), other parameters — is said rather than half read.
+ */
+const GEO_URI = /^geo:([+-]?\d{1,3}(?:\.\d+)?),([+-]?\d{1,3}(?:\.\d+)?)((?:,[^;?]*)?)((?:;[^;?]*)*)(\?.*)?$/i;
+
+function decodeURIComponentSafe(v: string): string {
+  try {
+    return decodeURIComponent(v.replace(/\+/g, ' '));
+  } catch {
+    return v;
+  }
+}
+
+function geoUri(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
+  if (!/^geo:/i.test(t)) return undefined;
+  const no = (why: string): UnsupportedCoordinate => ({ kind: 'unsupported', note: `geo URI not read: ${why}` });
+  const m = GEO_URI.exec(t);
+  if (!m) return no('it needs latitude,longitude in decimal degrees');
+  const [, latText, lonText, altitude, params, query] = m;
+  if (altitude) return no('it has an altitude, and only a place on the ground is taken');
+  let latitude = Number(latText);
+  let longitude = Number(lonText);
+  // Android's forms: `?z=15` is a zoom (nothing to place; ignored), and `geo:0,0?q=lat,lon(Label)`
+  // names the point in its query. A query naming a place by words is the online search's.
+  for (const part of (query ?? '').replace(/^\?/, '').split('&').filter(Boolean)) {
+    const [rawKey, rawValue = ''] = part.split('=');
+    const k = rawKey!.trim().toLowerCase();
+    const value = decodeURIComponentSafe(rawValue);
+    if (k === 'z') continue;
+    const at =
+      k === 'q' ? /^\s*([+-]?\d{1,3}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)\s*(?:\(.*\))?\s*$/.exec(value) : null;
+    if (at && latitude === 0 && longitude === 0) {
+      latitude = Number(at[1]);
+      longitude = Number(at[2]);
+      continue;
+    }
+    return no(`its query (${(query ?? '').slice(0, 30)}) is not read`);
+  }
+  if (!(Math.abs(latitude) <= 90) || !(Math.abs(longitude) <= 180)) return no('latitude or longitude out of range');
+  let precisionM: number | undefined;
+  for (const p of (params ?? '').split(';').filter(Boolean)) {
+    const [key, value = ''] = p.split('=');
+    const k = key!.trim().toLowerCase();
+    if (k === 'crs') {
+      if (value.trim().toLowerCase() !== 'wgs84') return no(`its CRS ${value.slice(0, 20)} is not WGS 84`);
+    } else if (k === 'u') {
+      const u = value.trim() === '' ? Number.NaN : Number(value);
+      if (!(u >= 0) || !Number.isFinite(u)) return no('its uncertainty is not a distance in metres');
+      precisionM = u;
+    } else return no(`its parameter ${k.slice(0, 20)} is not read`);
+  }
+  const lat = latitude === 0 ? 0 : latitude;
+  const lon = longitude === 0 ? 0 : longitude;
+  return {
+    kind: 'geo',
+    latitude: lat,
+    longitude: lon,
+    label: `${formatCoordinateLabel(lat, lon)}${precisionM !== undefined ? ` ±${Math.round(precisionM).toLocaleString('en-US')} m` : ''}`,
+    ...(precisionM !== undefined ? { precisionM } : {}),
+  };
+}
+
 export function parseCoordinates(text: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
   const t = text.trim();
   if (!t) return undefined;
+  const uri = geoUri(t);
+  if (uri) return uri;
   const grid = gridReference(t);
   if (grid) return grid;
   for (const pair of splitCandidates(t)) {

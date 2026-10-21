@@ -1,0 +1,61 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/space/ll2-launches-upcoming.json",
+  "empty": "fixtures/connectors/space/ll2-launches-empty.json",
+  "malformed": [
+    { "inline": "not json" },
+    { "inline": "{\"detail\":\"Request was throttled. Expected available in 900 seconds.\"}" },
+    { "inline": "{\"count\":3,\"results\":\"none\"}" }
+  ],
+  "expectObservations": 3,
+  "expectIds": [
+    "df88cfbf-f504-4e11-8370-e33dd6280b5b",
+    "3b430f81-0ff1-4d85-8a1a-cef0de326198",
+    "69ebbcd2-b257-4070-9ef9-21e7d1f8a883"
+  ],
+  "expect": [
+    {
+      "externalId": "3b430f81-0ff1-4d85-8a1a-cef0de326198",
+      "position": { "latitude": 28.56194122, "longitude": -80.57735736 },
+      "payload": {
+        "name": "Bandwagon 5 (Dedicated Mid-Inclination Rideshare)",
+        "title": "Falcon 9 Block 5 | Bandwagon 5 (Dedicated Mid-Inclination Rideshare)",
+        "missionType": "Dedicated Rideshare",
+        "orbit": "Low Earth Orbit",
+        "vehicle": "Falcon 9 Block 5",
+        "launchProvider": "SpaceX",
+        "launchProviderType": "Commercial",
+        "pad": "Space Launch Complex 40",
+        "site": "Cape Canaveral SFS, FL, USA",
+        "countryCode": "US",
+        "status": "Go for Launch",
+        "statusAbbrev": "Go",
+        "net": "2026-10-19T10:30:00.000Z",
+        "netPrecision": "Minute",
+        "windowStart": "2026-10-19T10:30:00.000Z",
+        "windowEnd": "2026-10-19T11:30:00.000Z",
+        "probabilityPercent": null,
+        "weatherConcerns": null,
+        "failReason": null,
+        "webcastLive": false,
+        "lastUpdated": "2026-10-13T17:28:28.000Z"
+      },
+      "attribution": "Launch Library 2 — The Space Devs",
+      "flags": ["fetch-time"]
+    },
+    {
+      "externalId": "69ebbcd2-b257-4070-9ef9-21e7d1f8a883",
+      "position": { "latitude": 30.400938, "longitude": 130.97564 },
+      "payload": {
+        "vehicle": "H3-24",
+        "launchProvider": "Mitsubishi Heavy Industries",
+        "orbit": "Mars Orbit",
+        "countryCode": "JP"
+      }
+    },
+    {
+      "externalId": "df88cfbf-f504-4e11-8370-e33dd6280b5b",
+      "payload": { "status": "Launch Successful", "statusAbbrev": "Success", "netPrecision": "Second" }
+    }
+  ]
+}

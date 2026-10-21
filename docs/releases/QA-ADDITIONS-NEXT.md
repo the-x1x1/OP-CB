@@ -21,6 +21,79 @@ are deleted too.
 - [ ] Range rings (R) round a selection; grid (G) drawn and named in 2D and 3D
 - [ ] Day and night (N): the Sun-overhead and Moon-overhead points, moved within a minute
 
+## Aurora forecast
+
+- [ ] Sources → Aurora forecast on: within ten minutes, a faint green oval round the north
+      magnetic pole (and one round the south); select it: "Aurora: 10% chance or more", the time
+      it is for, credit "NOAA Space Weather Prediction Center (OVATION)"; nothing in the feed
+      (partly seen 2026-10-17 00:32Z, build `33b471c`: Live within seconds, one area, over the
+      Southern Ocean, split at 180° in 2D; selected: "Aurora: 10% chance or more", event Aurora
+      forecast, NOAA Space Weather Prediction Center. No northern area that hour; feed not checked)
+- [ ] Sky tab, middle of the map over Fairbanks (64.8° N, 147.7° W) with the source on: a green
+      "Aurora: …% chance overhead at HH:MM UTC" above the plot; over Honolulu, no line (partly
+      seen 2026-10-17 06:12Z, build `f236262`: no line over Fairbanks that hour, which was
+      outside the 10% area; centred on the southern area, 71.6° S 145.4° W, the line read
+      "Aurora: 10–30% chance overhead at 06:59 UTC · the sky is not dark here now")
+- [ ] Spin the globe across 180°: the oval meets itself there, no gap and no line across the map
+
+## Air quality, Canada
+
+- [ ] Environment lens over Canada: AQHI stations; select one: "AQHI (Canada) 1.8 · low risk
+      (1–10+ scale)", no US AQI row; credit "Data Source: Environment and Climate Change Canada"
+
+## Thin cloud
+
+- [ ] Sources → GOES-East infrared → Thin cloud 60: after the next read, only the storm tops
+      remain over the Americas; −60: haze and low cloud drawn; 0: as before
+
+## Files on the map
+
+- [ ] Drag a KML from Google Earth onto the map: a dashed frame while dragging; the shapes in
+      a new colour, point names shown, the view moves to them; the card lists it with a count
+- [x] Palette → "Draw a file on the map…" with a KML of a point, a line, an area and a
+      NetworkLink (`Downloads\wv-qa\qa-shapes.kml`, made up): the three drawn in one colour, each
+      named (the line and the area at a dot), the card "qa-shapes.kml · 3 · some left out", Remove
+      clears them — seen 2026-10-17 01:44Z, build `0943d44`, 3D. The view went to them but cut the
+      line's ends off (padded since). Again 2026-10-17 06:34Z, build `9e545b4`, read on the worker
+      thread (app.log: "geodata worker" at app.asar.unpacked at start, no fallback warning): the
+      same three drawn and named, the whole line in view
+- [ ] A KMZ, a GPX track and a GeoJSON the same way; untick, Go to and Remove on the card
+- [ ] A KML with a NetworkLink: drawn without it, the card's row says some were left out
+- [ ] A .txt or a 30 MB file: refused with a toast; dropping a file outside the map does nothing
+
+## GPS interference
+
+- [ ] Overview lens over the eastern Mediterranean or the Baltic (where gpsjam.org shows
+      interference most days): amber squares appear; select one: how many aircraft of how many,
+      the degraded aircraft listed under Related
+- [ ] Over Hawaiʻi: no square (or explain any that appears from the aircraft listed)
+
+## River flooding
+
+- [ ] Disasters layer on: a marker at each gauge in flood (Devils Lake ND major on 2026-10-16);
+      select one: water body, place, stage against its thresholds, the hydrograph link opens
+
+## Ocean buoys
+
+- [ ] Weather layer on, zoomed to Hawaiʻi: markers for 51201, 51202, OOUH1 (Honolulu) and the
+      others; select one: wind, pressure, water temperature, waves
+- [ ] A buoy with no wind sensor (51202) shows no wind row rather than "0"
+
+## Volcano alerts
+
+- [ ] Disasters layer on: a marker at Kīlauea and at each elevated Alaskan volcano; select one:
+      colour code and alert level, the notice synopsis, the observatory, the notice link
+- [ ] The feed lists each as a volcano alert with ORANGE as severe; GDACS volcanoes (if turned
+      on) do not hide them
+
+## Rocket launches
+
+- [ ] Space layer on: launch markers at Cape Canaveral, Vandenberg, Tanegashima and the like;
+      select one: rocket, provider, mission, orbit, status, NET and window, credit "Launch
+      Library 2 — The Space Devs"
+- [ ] The feed and History list each as a launch event; the window is its span
+- [ ] Source Health: one request every 30 minutes, no rate-limit refusals
+
 ## What's here
 
 - [ ] Right-click the globe, then the 2D map: the card beside the point, nearest town and
@@ -31,6 +104,13 @@ are deleted too.
 - [ ] Centre here, Measure from here, Watch here (delete the zone), Collect (into the active
       collection)
 - [ ] With the ISS selected, the card gives its next pass over the point
+- [x] With Weather radar drawn, right-click inside an echo over the US: a row named as the layer
+      ("CONUS Weather Radar Base Reflectivity") reading "Reflectivity … dBZ", the credit and the
+      frame time — seen 2026-10-17 01:23Z, build `e14073a`, central Florida: "Reflectivity 27
+      dBZ · Radar: NOAA nowCOAST, NWS/OAR MRMS · frame 01:12 UTC", with a lightning row
+      "Strike density 0" under it
+- [ ] Right-click clear air inside the radar's area: "Reflectivity 0 dBZ" (nowCOAST answers 0
+      there); outside it, no radar row. With Work offline on: no row.
 - [ ] Palette "What's here? (the middle of the view)" on a tilted globe describes the ground in
       the middle, not under the camera
 

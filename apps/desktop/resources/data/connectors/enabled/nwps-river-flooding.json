@@ -1,0 +1,91 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "nwps-river-flooding",
+  "name": "River and coastal flooding, US (NOAA National Water Prediction Service gauges)",
+  "description": "Every river, lake and tide gauge the National Water Prediction Service watches that is in flood now: minor, moderate or major flood stage by the gauge's own thresholds, with the water body and place, the observed stage and flow, each category's stage, and a link to the hydrograph. A gauge whose flood stage is a placeholder (under 0.15 ft, as at Devils Lake, ND) is left out. Read every fifteen minutes.",
+  "connector": "arcgis-feature",
+  "objectType": "weather-alert",
+  "categories": ["disasters"],
+  "endpoint": {
+    "url": "https://mapservices.weather.noaa.gov/eventdriven/rest/services/water/riv_gauges/MapServer/0",
+    "query": {
+      "where": "status IN ('minor','moderate','major')",
+      "outFields": "gaugelid,status,location,waterbody,state,obstime,wfo,url,action,units,secvalue,secunit,flood,moderate,major,observed",
+      "geometryPrecision": 4,
+      "orderByFields": "gaugelid"
+    },
+    "intervalSeconds": 900,
+    "timeoutSeconds": 30
+  },
+  "mapping": {
+    "externalId": { "path": "properties.gaugelid", "transform": ["trim", "uppercase", "emptyToNone"] },
+    "observedAt": { "path": "properties.obstime", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
+    "position": { "geometry": "geometry" },
+    "labels": {
+      "name": {
+        "path": "properties.waterbody",
+        "transform": ["trim", "emptyToNone"]
+      }
+    },
+    "properties": {
+      "title": { "path": "properties.waterbody", "transform": ["trim", "emptyToNone"] },
+      "event": {
+        "path": "properties.status",
+        "transform": ["trim", "lowercase"],
+        "map": { "minor": "Minor flooding", "moderate": "Moderate flooding", "major": "Major flooding" }
+      },
+      "severity": {
+        "path": "properties.status",
+        "transform": ["trim", "lowercase"],
+        "map": { "minor": "Minor", "moderate": "Moderate", "major": "Severe" }
+      },
+      "startFromFirstSeen": { "literal": true },
+      "floodCategory": { "path": "properties.status", "transform": ["trim", "lowercase", "emptyToNone"] },
+      "areaDesc": { "path": "properties.location", "transform": ["trim", "emptyToNone"] },
+      "state": { "path": "properties.state", "transform": ["trim", "uppercase", "emptyToNone"] },
+      "office": { "path": "properties.wfo", "transform": ["trim", "uppercase", "emptyToNone"] },
+      "senderName": { "literal": "NOAA National Water Prediction Service" },
+      "gaugeId": { "path": "properties.gaugelid", "transform": ["trim", "uppercase"] },
+      "stage": { "path": "properties.observed", "transform": "number" },
+      "stageUnits": { "path": "properties.units", "transform": ["trim", "emptyToNone"] },
+      "flow": { "path": "properties.secvalue", "transform": "number" },
+      "flowUnits": { "path": "properties.secunit", "transform": ["trim", "emptyToNone"] },
+      "actionStage": { "path": "properties.action", "transform": "number" },
+      "floodStage": { "path": "properties.flood", "transform": "number" },
+      "moderateStage": { "path": "properties.moderate", "transform": "number" },
+      "majorStage": { "path": "properties.major", "transform": "number" },
+      "observedAt": { "path": "properties.obstime", "transform": "timestamp:YYYY-MM-DD HH:mm:ss" },
+      "detailUrl": { "path": "properties.url", "transform": ["trim", "emptyToNone"] }
+    },
+    "filter": [
+      { "path": "properties.status", "in": ["minor", "moderate", "major"] },
+      { "path": "properties.flood", "min": 0.15 }
+    ]
+  },
+  "freshness": {
+    "liveSeconds": 7200,
+    "recentSeconds": 21600,
+    "expireSeconds": 86400
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "River gauges: NOAA National Water Prediction Service",
+    "url": "https://water.noaa.gov/",
+    "licenseId": "US-PD"
+  },
+  "termsUrl": "https://www.weather.gov/disclaimer",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": true,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": true,
+    "offlinePackAllowed": true,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "River gauges: NOAA National Water Prediction Service",
+    "termsUrl": "https://www.weather.gov/disclaimer"
+  },
+  "review": "commercially-reviewed",
+  "enabled": true
+}

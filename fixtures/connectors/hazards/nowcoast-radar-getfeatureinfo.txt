@@ -1,0 +1,4 @@
+Results for FeatureType 'https://nowcoast.noaa.gov/geoserver/observations/weather_radar:conus_base_reflectivity_mosaic':
+--------------------------------------------
+Band1 = 35.0
+--------------------------------------------

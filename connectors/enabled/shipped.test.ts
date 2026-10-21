@@ -71,6 +71,10 @@ const PUBLIC_DOMAIN = [
   'nifc-wildfire-perimeters',
   'nws-storm-reports',
   'spc-day1-outlook',
+  'usgs-volcanoes',
+  'ndbc-observations',
+  'nwps-river-flooding',
+  'swpc-aurora',
 ];
 /** NASA GIBS: open, credit requested (and so required here); Himawari is JMA's, distributed openly by NOAA. */
 const GIBS = [
@@ -98,6 +102,10 @@ const TRUE_COLOUR = ['gibs-viirs-snpp-true-colour', 'gibs-viirs-noaa20-true-colo
 const LIGHTNING = ['nowcoast-strike-density'];
 /** Raster overlays: their switch is the source itself, not an object type. */
 const OVERLAY_CONNECTORS = ['wms', 'wmts'];
+/** The Space Devs' Launch Library 2: use and share freely, credit asked for and given; on by default. */
+const SPACE = ['launch-library-2'];
+/** Environment and Climate Change Canada: its data servers' end-use licence, credit required; on by default. */
+const CANADA = ['eccc-aqhi'];
 const GDACS = [
   'gdacs-earthquakes',
   'gdacs-tropical-cyclones',
@@ -110,7 +118,7 @@ const GDACS = [
 test('the shipped set is the hazard layers, and each passes the shared suite from its sidecar', async () => {
   assert.deepEqual(
     [...byId.keys()].sort(),
-    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...GDACS].sort(),
+    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...SPACE, ...CANADA, ...GDACS].sort(),
   );
   for (const file of files) {
     const r = await runConnectorSuite(docOf(file), loadSidecar(sidecarPathFor(file), root), defaultConnectorRegistry);
@@ -133,8 +141,9 @@ test('licence: the public-domain US sources start enabled and open their policy;
     assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
     assert.equal(m.dataPolicy.redistributionAllowed, true, id);
     assert.equal(m.attribution.licenseId, 'US-PD', id);
-    // GOES infrared is off by choice (it covers the map under it), not for its licence.
-    assert.equal(m.enabledByDefault, id !== 'nowcoast-goes-infrared', id);
+    // GOES infrared is off by choice (it covers the map under it), not for its licence; so is
+    // the aurora forecast, an area across the high latitudes at any hour, turned on for a purpose.
+    assert.equal(m.enabledByDefault, id !== 'nowcoast-goes-infrared' && id !== 'swpc-aurora', id);
   }
   for (const id of GIBS) {
     const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
@@ -186,6 +195,27 @@ test('licence: the public-domain US sources start enabled and open their policy;
     );
     assert.deepEqual(m.allowedHosts, ['nowcoast.noaa.gov'], id);
   }
+  for (const id of SPACE) {
+    const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
+    assert.equal(m.commercialReview, 'approved', id);
+    assert.equal(m.enabledByDefault, true, id);
+    assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
+    assert.equal(m.dataPolicy.redistributionAllowed, true, id);
+    assert.equal(m.dataPolicy.attributionRequired, false, `${id}: credit encouraged, not required`);
+    assert.equal(m.attribution.text, 'Launch Library 2 — The Space Devs', id);
+    assert.deepEqual(m.allowedHosts, ['ll.thespacedevs.com'], id);
+    // Fifteen calls an hour without a key: one poll every thirty minutes uses two.
+    assert.equal(m.refreshPolicy.intervalMs, 1_800_000, id);
+  }
+  for (const id of CANADA) {
+    const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
+    assert.equal(m.commercialReview, 'approved', id);
+    assert.equal(m.enabledByDefault, true, id);
+    assert.equal(m.dataPolicy.commercialUseAllowed, true, id);
+    assert.equal(m.dataPolicy.attributionRequired, true, `${id}: the licence prescribes the credit`);
+    assert.equal(m.attribution.text, 'Data Source: Environment and Climate Change Canada', id);
+    assert.deepEqual(m.allowedHosts, ['api.weather.gc.ca'], id);
+  }
   for (const id of GDACS) {
     const m = defaultConnectorRegistry.createProvider(definition(id)).manifest;
     assert.equal(m.commercialReview, 'conditional', id);
@@ -201,13 +231,13 @@ test('licence: the public-domain US sources start enabled and open their policy;
   }
 });
 
-test('Overview: each is filed under the Weather or Disasters layer, and that layer shows its object type', () => {
+test('Overview: each is filed under the Weather, Disasters, Space or Environment layer, and that layer shows its object type', () => {
   const lenses = new Map(BUILT_IN_LENSES.map((l) => [l.id, l]));
   for (const id of byId.keys()) {
     const d = definition(id);
     assert.ok(d.categories?.length, id);
     for (const c of d.categories!) {
-      assert.ok(c === 'weather' || c === 'disasters', `${id}: ${c}`);
+      assert.ok(c === 'weather' || c === 'disasters' || c === 'space' || c === 'environment', `${id}: ${c}`);
       // An overlay is not an object: its switch is the source itself. The rest must be drawn by their layer.
       if (!OVERLAY_CONNECTORS.includes(d.connector))
         assert.ok(lenses.get(c)!.objectTypes.includes(d.objectType), `${id} in ${c}`);
@@ -249,17 +279,30 @@ test('nowCOAST radar: the newest frame is the TIME of every tile, a new frame re
 });
 
 /** Observations of one definition over its fixture, through the state and event engines as the runtime runs them. */
-async function eventsOf(id: string, fixture: string, nowIso: string) {
+async function eventsOf(
+  id: string,
+  fixture: string,
+  nowIso: string,
+  eventType = 'weather-alert',
+  then?: { fixture: string; nowIso: string },
+) {
   const def = definition(id);
   const observations = await poll(def, read(fixture), nowIso);
-  const clock = { now: () => Date.parse(nowIso) };
+  let now = Date.parse(nowIso);
+  const clock = { now: () => now };
   const state = new WorldState({ clock, flushDelayMs: 0 });
   const engine = new EventEngine({ clock });
   engine.attach(state);
   const freshness = defaultConnectorRegistry.createProvider(def).manifest.refreshPolicy.freshness;
-  state.ingest(observations, { snapshot: true, providerId: def.id, ...(freshness ? { freshness } : {}) });
+  const meta = { snapshot: true, withdraws: true, providerId: def.id, ...(freshness ? { freshness } : {}) };
+  state.ingest(observations, meta);
   state.flush();
-  const events = engine.store.ofType('weather-alert');
+  if (then) {
+    now = Date.parse(then.nowIso);
+    state.ingest(await poll(def, read(then.fixture), then.nowIso), meta);
+    state.flush();
+  }
+  const events = engine.store.ofType(eventType);
   engine.dispose();
   return { observations, events };
 }
@@ -679,4 +722,143 @@ test('NHC storm layers: forecast positions with time and wind, past track by str
   );
   assert.ok(wind.observations.every((o) => o.geometry?.type === 'Polygon'));
   assert.ok(wind.events.every((e) => !feed.isRelevant(e)));
+});
+
+test('Launch Library 2: each launch at its pad, a launch event with the rocket, provider, pad and NET, its window as the event span', async () => {
+  const { observations, events } = await eventsOf(
+    'launch-library-2',
+    'fixtures/connectors/space/ll2-launches-upcoming.json',
+    '2026-10-16T05:30:00.000Z',
+    'launch',
+  );
+  assert.equal(observations.length, 3);
+  assert.ok(observations.every((o) => o.objectType === 'launch'));
+  assert.equal(events.length, 3);
+  const mmx = events.find((e) => e.title === 'Launch — Martian Moons eXploration (MMX)')!;
+  assert.ok(mmx, events.map((e) => e.title).join(', '));
+  assert.equal(mmx.startAt, '2026-10-19T19:41:03.000Z');
+  assert.equal(mmx.severity, 'INFO');
+  assert.equal(
+    mmx.summary,
+    'H3-24 by Mitsubishi Heavy Industries from Yoshinobu Launch Complex LP-2 NET 2026-10-19 19:41 UTC. Status: Go for Launch.',
+  );
+  assert.deepEqual(mmx.geometry, { type: 'Point', coordinates: [130.97564, 30.400938] });
+  const bandwagon = events.find((e) => e.title.startsWith('Launch — Bandwagon 5'))!;
+  assert.equal(bandwagon.endAt, '2026-10-19T11:30:00.000Z', 'the window closes an hour after it opens');
+  const flown = events.find((e) => e.title === 'Launch — USSF-481')!;
+  assert.match(flown.summary ?? '', /Status: Launch Successful\.$/);
+  assert.equal(feed.isRelevant(flown), true, 'a launch is in the feed (INFO, a launch)');
+});
+
+test('USGS volcanoes: only the elevated ones, each a volcano alert at its summit, its colour code as the severity', async () => {
+  const { observations, events } = await eventsOf(
+    'usgs-volcanoes',
+    'fixtures/connectors/hazards/usgs-volcanoes-vhp-status.geojson',
+    '2026-10-16T06:00:00.000Z',
+  );
+  assert.deepEqual(observations.map((o) => o.payload['name']).sort(), [
+    'Ahyi Seamount',
+    'Great Sitkin',
+    'Kilauea',
+    'Shishaldin',
+  ]);
+  const kilauea = events.find((e) => e.title === 'Kilauea')!;
+  assert.ok(kilauea, events.map((e) => e.title).join(', '));
+  assert.equal(kilauea.severity, 'SEVERE', 'ORANGE');
+  assert.equal(kilauea.properties?.['issuedAt'], '2026-10-15T20:10:46.000Z');
+  assert.equal(kilauea.properties?.['senderName'], 'Hawaiian Volcano Observatory');
+  // Since its colour was raised (colorDate), not since the poll; USGS gives no end.
+  assert.equal(kilauea.startAt, '2026-10-15T20:10:46.000Z');
+  assert.equal(
+    kilauea.summary,
+    'Volcano alert for Hawaii from 2026-10-15 20:10 UTC. Severity: Severe. Issued by Hawaiian Volcano Observatory.',
+  );
+  assert.deepEqual(kilauea.geometry, { type: 'Point', coordinates: [-155.287, 19.421] });
+  assert.equal(events.find((e) => e.title === 'Shishaldin')!.severity, 'MODERATE', 'YELLOW');
+  assert.equal(feed.isRelevant(kilauea), true);
+});
+
+test('USGS volcanoes: a volcano back to normal (left out of the next read) ends its alert then', async () => {
+  const { events } = await eventsOf(
+    'usgs-volcanoes',
+    'fixtures/connectors/hazards/usgs-volcanoes-vhp-status.geojson',
+    '2026-10-16T06:00:00.000Z',
+    'weather-alert',
+    {
+      fixture: 'fixtures/connectors/hazards/usgs-volcanoes-vhp-status-empty.geojson',
+      nowIso: '2026-10-16T06:30:00.000Z',
+    },
+  );
+  assert.equal(events.length, 4);
+  for (const e of events) {
+    assert.equal(e.endAt, '2026-10-16T06:30:00.000Z', e.title);
+    assert.equal(e.properties?.['withdrawnAt'], '2026-10-16T06:30:00.000Z');
+  }
+});
+
+test('NDBC: every station a weather station at its position, its own report time, the missing (MM) values absent', async () => {
+  const def = definition('ndbc-observations');
+  const observations = await poll(
+    def,
+    read('fixtures/connectors/marine/ndbc-latest-obs.txt'),
+    '2026-09-23T06:00:00.000Z',
+  );
+  assert.equal(observations.length, 22);
+  assert.ok(observations.every((o) => o.objectType === 'weather-station'));
+  const kaneohe = observations.find((o) => o.externalId === '51202')!;
+  assert.equal(kaneohe.observedAt, '2026-09-23T04:56:00.000Z', 'its own report time, not the read');
+  assert.equal(kaneohe.payload['waveHeightM'], 1.7);
+  assert.equal(kaneohe.payload['windSpeedMps'], undefined, 'MM is no value');
+  const honolulu = observations.find((o) => o.externalId === 'OOUH1')!;
+  assert.deepEqual(honolulu.position, { latitude: 21.303, longitude: -157.865 });
+  assert.equal(honolulu.payload['pressureSeaLevelHpa'], 1016.3);
+});
+
+test('NWPS: gauges in flood as flood alerts at the gauge, the category as the severity; action stage and placeholder stages left out', async () => {
+  const { observations, events } = await eventsOf(
+    'nwps-river-flooding',
+    'fixtures/connectors/hazards/nwps-river-gauges-flooding.geojson',
+    '2026-09-23T06:00:00.000Z',
+  );
+  assert.equal(observations.length, 14);
+  assert.ok(!observations.some((o) => o.externalId === 'AMRL1'), 'action stage is not flooding');
+  // Devils Lake and Stump Lake carry flood stages of 0.1/0.2/0.3 ft against a lake near 50 ft.
+  assert.ok(!observations.some((o) => o.externalId === 'DCBN8' || o.externalId === 'ESLN8'), 'placeholder stages');
+  const atkinson = events.find((e) => e.objectIds[0]?.endsWith('ATKG1'))!;
+  assert.equal(atkinson.title, 'Satilla River');
+  assert.equal(atkinson.severity, 'MINOR');
+  // NWPS gives no end: the summary does not invent one from how long a reading stays fresh.
+  assert.equal(
+    atkinson.summary,
+    'Minor flooding for Atkinson from 2026-09-23 04:45 UTC. Severity: Minor. Issued by NOAA National Water Prediction Service.',
+  );
+});
+
+test('SWPC aurora: the OVATION grid read as areas, one per level reached, each a weather alert with its outline', async () => {
+  const { observations, events } = await eventsOf(
+    'swpc-aurora',
+    'fixtures/connectors/space/swpc-ovation-aurora.json',
+    '2026-09-23T20:00:00.000Z',
+  );
+  // A quiet evening: the recorded slice (180°–270° E, 50°–80° N) peaks at 17%, so only the 10% level is reached.
+  assert.deepEqual(
+    observations.map((o) => o.externalId),
+    ['aurora-10'],
+  );
+  const [o] = observations;
+  assert.equal(o!.observedAt, '2026-09-23T19:05:00.000Z', 'the time of the solar wind it was run from');
+  assert.equal(o!.payload['forecastFor'], '2026-09-23T20:08:00.000Z');
+  assert.equal(o!.payload['auroraBand'], 'aurora-10', 'its colour on the map (render-core WEATHER_ALERT_SUFFIXES)');
+  assert.equal(o!.geometry?.type, 'MultiPolygon');
+  const rings = o!.geometry?.type === 'MultiPolygon' ? o!.geometry.coordinates.flat(2) : [];
+  assert.ok(
+    rings.every(([lon, lat]) => lon! >= -180 && lon! <= -90 && lat! >= 50 && lat! <= 80),
+    'within the slice, in −180…180',
+  );
+  const [e] = events;
+  assert.equal(events.length, 1);
+  assert.equal(e!.title, 'Aurora: 10% chance or more');
+  assert.equal(e!.severity, 'INFO');
+  assert.equal(shape(e), 'MultiPolygon');
+  assert.equal(feed.isRelevant(e!), false, 'drawn, not news');
 });

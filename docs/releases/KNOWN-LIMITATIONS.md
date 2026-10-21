@@ -354,6 +354,59 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
+## After 0.4.0 (unreleased)
+
+- When a source that listed alerts answers nothing, its alerts are ended only by a second empty
+  answer in a row (up to one poll interval late: 30 minutes for volcanoes).
+- A record a source lists without a position is left out without making the read partial; any
+  other record refused makes it partial, and while a feed keeps refusing one, what that feed
+  stops listing is not ended until its reading goes stale.
+- An alert from a source read by area (wildfire perimeters, which follow the view) is not ended
+  when the view moves away from it: only a complete read of a source ends what it leaves out.
+  Such an alert ends when its reading goes stale.
+- A river gauge in flood is dated from when WORLDVIEW first saw it in flood (NWPS gives no
+  onset); after a restart, from the first reading then.
+- River gauges whose flood stage is under 0.15 ft are left out as placeholders; a real gauge with
+  a flood stage that low would be left out too.
+- What's here shows an overlay's value as the service gives it, named and with a unit only where
+  the source's definition says: radar as "Reflectivity 35 dBZ" (nowCOAST's layer description
+  says its colours are dBZ, and its answers, seen 2026-10-16, are whole numbers from 0 to the
+  mid 30s under `Band1`), lightning as "Strike density" with no unit (none is published), and
+  GOES infrared as the service's `Band1`, a scaled number (63–123 seen) that is not a temperature.
+  WMTS overlays (the GIBS imagery, Night lights) have no value at a point.
+- The aurora forecast is drawn as areas at four fixed levels (10, 30, 50, 70%), not as a
+  continuous field, and its outlines follow a 1° grid. The planetary K index is not shown: it
+  has no place on the map, and where it should live is an open decision (ROADMAP).
+- Canada's AQHI is the observed hourly index at about 120 stations, not the forecast and not
+  a map between them; ECCC lists a station as latest even when its last reading is days old, and
+  such a station is left off. The AQHI and the US AQI are different scales and are never compared.
+- A dropped file is drawn with its shapes and names only: its own colours, icons, line widths and
+  descriptions are not used, a KML ground overlay or 3D model is not drawn, and its shapes cannot
+  be selected. At most 12 files and 50,000 shapes, 25 MB a file (a KMZ's KML unpacked too); they
+  are gone when the app closes. A large file is read on a worker thread, so the app keeps going
+  while it is read (a 17 MB GeoJSON: about 1.6 s in the container); a file it cannot read in a
+  minute is reported as not read. Only if the thread cannot start is the file read in the main
+  process, as before, and the app waits for it.
+- GPS interference squares cover only where aircraft fly with ADS-B version 1 or 2 and are
+  heard; at night over an ocean there may be one aircraft in a square, and it takes two degraded
+  ones to raise it. adsb.lol's view query is shared with everything else asked of it, so a square
+  away from the view is seen only when its aircraft are in another answer. The thresholds are
+  gpsjam.org's, over ten minutes rather than its day.
+- A buoy is named by its station id (`51202`), not its place: NDBC's latest-observations file
+  carries no names. Each report is as old as the station's last transmission; a buoy that has
+  stopped reporting leaves when NDBC drops it from the file, or a day after its last report,
+  whichever comes first (how long NDBC keeps a silent station listed is not known here).
+- Volcano alerts are the USGS's for US volcanoes (Alaska, the Cascades, California, Hawaii, the
+  Northern Mariana Islands, Yellowstone); elsewhere GDACS's volcano alerts (off by default) are
+  the only source. The status service says it is meant for USGS applications, with no promise
+  it stays.
+- A launch's time is what Launch Library 2 held when it was read, every thirty minutes; a scrub
+  or a slip shows at the next read. Only the next thirty launches are listed, which is about six
+  weeks ahead. Launch Library is kept by volunteers from public sources; without a key it allows
+  fifteen requests an hour from one address, and the app uses two.
+- The question is one request to the overlay's source counted against its own rate budget; asked
+  right after a poll, it can be refused and the row is simply absent.
+
 ## 0.4.0
 
 - The selected aircraft's and satellite's trail, predicted path and route are drawn at their

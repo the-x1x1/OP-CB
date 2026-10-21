@@ -17,6 +17,8 @@ import {
   withFallbackTiles,
   overlaySeries,
   withBrightnessFade,
+  inFadeSlices,
+  FADE_SLICE_MS,
 } from './raster-overlays.js';
 
 const radar = (time: string): RasterOverlay =>
@@ -110,11 +112,23 @@ test('the old frame waits for the globe to load the new one, and not past the ca
   assert.equal(checks, 1 + (FRAME_HANDOVER_MAX_MS - FRAME_HANDOVER_MS) / FRAME_HANDOVER_CHECK_MS);
 });
 
-test('a dropped overlay is removed at once', () => {
-  const { viewer, overlays } = setup();
+test('a dropped overlay is removed at once, and never destroyed', () => {
+  const { viewer, overlays, timers } = setup();
   overlays.set([topo, radar('a')]);
+  const dropped = viewer.imageryLayers.layers[2]!;
   overlays.set([topo]);
   assert.equal(viewer.imageryLayers.layers.length, 2);
+  // A globe tile may still hold its imagery; a destroyed layer would stop rendering for good
+  // (seen on the test laptop, 2026-10-17). Nor is a retired frame or a cleared stack destroyed.
+  assert.equal(dropped.isDestroyed(), false);
+  overlays.set([topo, radar('b')]);
+  overlays.set([topo, radar('c')]);
+  const retired = viewer.imageryLayers.layers[2]!;
+  for (const t of timers.splice(0)) t();
+  assert.equal(retired.isDestroyed(), false);
+  const kept = viewer.imageryLayers.layers.slice(1);
+  overlays.dispose();
+  assert.ok(kept.every((l) => !l.isDestroyed()));
 });
 
 test('imagery comparison: each source on its side of the divider, a new frame keeps its side, null draws all whole', () => {
@@ -207,11 +221,15 @@ test('a faded tile goes back to Cesium as the kind of picture it came as (a bitm
   const g = globalThis as unknown as { ImageBitmap?: unknown; createImageBitmap?: unknown };
   const saved = { ImageBitmap: g.ImageBitmap, createImageBitmap: g.createImageBitmap };
   class FakeBitmap {
+    closed = false;
     constructor(
       readonly width: number,
       readonly height: number,
       readonly from?: unknown,
     ) {}
+    close() {
+      this.closed = true;
+    }
   }
   g.ImageBitmap = FakeBitmap;
   g.createImageBitmap = async (source: { width: number; height: number }) =>
@@ -227,11 +245,15 @@ test('a faded tile goes back to Cesium as the kind of picture it came as (a bitm
         putImageData: () => undefined,
       }),
     };
-    const provider = { requestImage: async () => new FakeBitmap(2, 2) as unknown };
+    const decoded = new FakeBitmap(2, 2);
+    const provider = { requestImage: async () => decoded as unknown };
     withBrightnessFade(provider, { from: 10, to: 20 }, () => canvas as unknown as HTMLCanvasElement);
     const out = await provider.requestImage();
     assert.ok(out instanceof FakeBitmap, 'a bitmap in, a bitmap out');
     assert.equal((out as FakeBitmap).from, canvas, 'made from the faded canvas');
+    assert.equal(decoded.closed, true, 'the decoded tile is closed once drawn');
+    assert.equal((out as FakeBitmap).closed, false, 'the one handed to Cesium is not');
+    assert.equal(canvas.width, 0, 'the workbench canvas gives its pixels back');
     const elementProvider = { requestImage: async () => ({ width: 2, height: 2 }) as unknown };
     withBrightnessFade(elementProvider, { from: 10, to: 20 }, () => canvas as unknown as HTMLCanvasElement);
     assert.equal(await elementProvider.requestImage(), canvas, 'an image element in, the canvas out');
@@ -370,4 +392,36 @@ test('tileRowWeights: the latitude fade follows the picture, upside down for a b
   assert.equal(flipped[0], 1, 'flipped: the first row is the equator');
   assert.equal(flipped[63], 0);
   assert.equal(tileRowWeights({ level: 3, y: 3 }, 64, { south: -60, north: 60 }, true), undefined);
+});
+
+test('tiles are faded in slices: a burst is spread over tasks, in order, never as one long task', async () => {
+  const busy = (ms: number) => {
+    const end = performance.now() + ms;
+    while (performance.now() < end) {
+      /* a tile's worth of pixels */
+    }
+  };
+  // Another task queued just after the burst: in slices, it gets a turn before the burst ends.
+  let otherRan = false;
+  const sawOther: boolean[] = [];
+  const jobs = Array.from({ length: 12 }, (_, i) =>
+    inFadeSlices(() => {
+      busy(FADE_SLICE_MS / 2);
+      sawOther.push(otherRan);
+      return i;
+    }),
+  );
+  setTimeout(() => {
+    otherRan = true;
+  }, 0);
+  assert.deepEqual(sawOther, [], 'nothing runs before the slice');
+  assert.deepEqual(await Promise.all(jobs), [...Array(12).keys()], 'each answered, in order');
+  assert.equal(sawOther[0], false, 'the first slice runs first');
+  assert.equal(sawOther[11], true, 'the rest wait while other work has its turn');
+  await assert.rejects(
+    inFadeSlices(() => {
+      throw new Error('bad tile');
+    }),
+    /bad tile/,
+  );
 });

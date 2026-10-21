@@ -332,7 +332,7 @@ export class ArcGisFeatureProvider extends PollingProvider {
         filtered += mapped.filtered;
         rejected += mapped.rejected.length;
         addUnseen(mapped.observations, seen, observations);
-        warnRejected(this.context.logger, mapped.rejected);
+        warnRejected(this.context, mapped.rejected);
         const more = wantsNextPage(set.features.length, set.exceededTransferLimit, pageSize);
         if (!more) break;
         if (!plan.paged) {
@@ -365,7 +365,10 @@ export class ArcGisFeatureProvider extends PollingProvider {
     this.lastRejected = rejected;
     this.lastFiltered = filtered;
     this.truncatedReason = truncated[0];
-    if (truncated.length) this.context.logger.warn('arcgis layer truncated', { reason: truncated[0]! });
+    if (truncated.length) {
+      this.context.logger.warn('arcgis layer truncated', { reason: truncated[0]! });
+      this.context.incomplete?.(truncated[0]!);
+    }
     if (problems.length) this.context.logger.warn('arcgis geometries unreadable', { sample: problems });
     if (total > 0)
       this.context.logger.debug('connector fetch', {

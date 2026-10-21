@@ -34,6 +34,9 @@ test('a storm needs an id, a position and a time that has happened', () => {
   const early = stormToDraft({ ...base, lastUpdate: '2026-09-23T04:30:00Z' }, opts);
   assert.ok(typeof early === 'object');
   assert.equal(early.observedAt, '2026-09-23T04:00:00.000Z');
+  // Up to and including ninety minutes ahead; a millisecond more is refused.
+  assert.equal(typeof stormToDraft({ ...base, lastUpdate: '2026-09-23T05:30:00.000Z' }, opts), 'object');
+  assert.equal(stormToDraft({ ...base, lastUpdate: '2026-09-23T05:30:00.001Z' }, opts), 'lastUpdate in the future');
   assert.equal(stormToDraft({ ...base, latitudeNumeric: 95 }, opts), 'invalid position');
   assert.equal(stormToDraft({ ...base, lastUpdate: 'soon' }, opts), 'missing or invalid lastUpdate');
   // Numeric fields missing: the text ones are read instead.

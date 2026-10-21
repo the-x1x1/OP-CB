@@ -3,7 +3,7 @@ import type { WorldChangedEvent, WorldClient } from '@worldview/ipc-contract';
 import { isIpcError } from '@worldview/ipc-contract';
 import type { RootAction, RootState } from './types.js';
 import { lensById } from '@worldview/render-core';
-import { markDelta } from '../map/delta-marks.js';
+import { markDelta, noteWorldDispatch } from '../map/delta-marks.js';
 
 export interface SyncDeps {
   client: WorldClient;
@@ -85,6 +85,7 @@ export function bindClient({
     const changes = pendingDeltas;
     pendingDeltas = [];
     if (disposed || changes.length === 0) return;
+    noteWorldDispatch();
     if (changes.length === 1) dispatch({ type: 'world/changed', change: changes[0]! });
     else dispatch({ type: 'world/changedMany', changes });
   };

@@ -88,7 +88,7 @@ container's Ubuntu 24.04 apt metadata).
 - **GPU.** A virtual display has no GPU; Chromium blocks WebGL there and the map shows its error
   panel. Radeon 740M + Mesa behaviour is UNVERIFIED until run on the P16s.
 
-## Data flow for the later phases (design, not yet built)
+## Data flow (built in M2–M6; unverified on hardware, see READINESS.md)
 
 ```
 RTL-SDR ─USB─ readsb (separately installed, 127.0.0.1) ─HTTP aircraft.json─▶ readsb-local ─▶ Observation → WorldObject → WorldEvent

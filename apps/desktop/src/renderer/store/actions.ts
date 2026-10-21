@@ -38,7 +38,22 @@ import {
   type VisualStyleId,
 } from '@worldview/render-core';
 import { timelineReducer, type TimelineAction, type TimelineControlState, type TimelineSpeed } from '@worldview/ui';
-import type { NearbyPlaceResult, PassAlertSettings, SkyOverheadAnswer, WorldClient } from '@worldview/ipc-contract';
+import type {
+  NearbyPlaceResult,
+  OverlayValueResult,
+  PassAlertSettings,
+  SkyOverheadAnswer,
+  WorldClient,
+} from '@worldview/ipc-contract';
+import { GEODATA_MAX_FILE_BYTES, MAX_OVERLAY_VALUE_OVERLAYS } from '@worldview/ipc-contract';
+import {
+  MAX_IMPORTED_FILES,
+  importedTarget,
+  nextImportColour,
+  shapesBounds,
+  toBase64,
+  type ImportedFile,
+} from '../map/imported-files.js';
 import type { ContextTab, DialogId, RootAction, RootState } from './types.js';
 import { describeError } from './sync.js';
 import { isCollected } from './collections.js';
@@ -1175,6 +1190,85 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       }
       dispatch({ type: 'ui/imageryCompare', split });
     },
+    /**
+     * Files dropped on the map (or chosen from the palette): each read by the runtime
+     * (`geodata.read`) into shapes drawn for the session in a colour of its own; the view goes
+     * to the last one read. A file with nothing to draw, too large, or past the limit of files
+     * is said and left out.
+     */
+    async importGeodataFiles(files: readonly File[]): Promise<void> {
+      let last: ImportedFile | undefined;
+      for (const file of files) {
+        const current = getState().ui.importedFiles;
+        if (current.length >= MAX_IMPORTED_FILES) {
+          notify(
+            'Not imported',
+            `${file.name}: at most ${MAX_IMPORTED_FILES} files are drawn at once; remove one first.`,
+            'MINOR',
+          );
+          break;
+        }
+        if (file.size > GEODATA_MAX_FILE_BYTES) {
+          notify('Not imported', `${file.name} is larger than ${GEODATA_MAX_FILE_BYTES / 1024 / 1024} MB.`, 'MINOR');
+          continue;
+        }
+        let read;
+        try {
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          read = await client.request('geodata.read', { name: file.name, data: toBase64(bytes) });
+        } catch (err) {
+          fail(`${file.name} not imported`, err);
+          continue;
+        }
+        if (read.shapes.length === 0) {
+          notify('Nothing to draw', `${file.name}: ${read.issues.join('; ') || 'no shapes in the file'}.`, 'MINOR');
+          continue;
+        }
+        // The list as it is now, not as it was before the read: another drop may have added a
+        // file, or the card removed one, while this one was being read.
+        const latest = getState().ui.importedFiles;
+        if (latest.length >= MAX_IMPORTED_FILES) {
+          notify(
+            'Not imported',
+            `${file.name}: at most ${MAX_IMPORTED_FILES} files are drawn at once; remove one first.`,
+            'MINOR',
+          );
+          break;
+        }
+        const bounds = shapesBounds(read.shapes);
+        const imported: ImportedFile = {
+          id: `file-${now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: file.name,
+          color: nextImportColour(latest),
+          visible: true,
+          shapes: read.shapes,
+          issues: read.issues,
+          ...(bounds ? { bounds } : {}),
+        };
+        dispatch({ type: 'ui/importedFiles', files: [...latest, imported] });
+        last = imported;
+      }
+      const target = last ? importedTarget(last) : undefined;
+      if (target) void flyTo(target);
+    },
+    /** Ask the map to open the file chooser for an import (the palette). */
+    requestImport() {
+      dispatch({ type: 'ui/importRequest' });
+    },
+    setImportedVisible(id: string, visible: boolean) {
+      dispatch({
+        type: 'ui/importedFiles',
+        files: getState().ui.importedFiles.map((f) => (f.id === id ? { ...f, visible } : f)),
+      });
+    },
+    removeImported(id: string) {
+      dispatch({ type: 'ui/importedFiles', files: getState().ui.importedFiles.filter((f) => f.id !== id) });
+    },
+    flyToImported(id: string) {
+      const file = getState().ui.importedFiles.find((f) => f.id === id);
+      const target = file ? importedTarget(file) : undefined;
+      if (target) void flyTo(target);
+    },
     /** Range rings round the selected object on or off (R). */
     toggleRangeRings() {
       dispatch({ type: 'ui/rangeRings', on: !getState().ui.rangeRings });
@@ -1214,6 +1308,24 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         });
       } catch {
         return null;
+      }
+    },
+    /**
+     * What the sources of the drawn overlays say lies under them at a point (`overlays.valueAt`);
+     * empty when none answers or the request failed.
+     */
+    async overlayValues(position: GeoPosition, overlayIds: readonly string[]): Promise<OverlayValueResult[]> {
+      if (overlayIds.length === 0) return [];
+      try {
+        return await client.request('overlays.valueAt', {
+          position: {
+            latitude: Math.max(-90, Math.min(90, position.latitude)),
+            longitude: ((((position.longitude + 180) % 360) + 360) % 360) - 180,
+          },
+          overlayIds: overlayIds.slice(0, MAX_OVERLAY_VALUE_OVERLAYS),
+        });
+      } catch {
+        return [];
       }
     },
     /** The town nearest a point, from the offline gazetteer; null when none is known or the lookup failed. */

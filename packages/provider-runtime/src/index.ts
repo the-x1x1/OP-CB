@@ -37,6 +37,10 @@ import {
   type FlightRouteRequest,
   MAX_FLIGHT_ROUTE_AIRPORTS,
   isFlightRouteSource,
+  type OverlayValueAnswer,
+  MAX_OVERLAY_VALUES,
+  MAX_OVERLAY_VALUE_CHARS,
+  isOverlayValueSource,
 } from '@worldview/provider-sdk';
 import {
   HttpClient,
@@ -59,6 +63,11 @@ export interface ObservationBatch {
   providerId: string;
   observations: Observation[];
   snapshot: boolean;
+  /**
+   * A snapshot of everything the source lists, not of an area asked for (a boundsQuery poll)
+   * nor cut short: what it leaves out, the source no longer lists (StateChange.withdrawn).
+   */
+  complete?: boolean;
   receivedAt: string;
   /** Provider-declared freshness overrides. */
   freshness?: ProviderManifest['refreshPolicy']['freshness'];
@@ -146,6 +155,14 @@ interface Hosted {
   waitingForKey: boolean;
   /** Its settings changed while a poll was running: poll again once it ends. */
   settingsChangedInPoll: boolean;
+  /** Bumped on every settings change: a poll under new settings is not compared with the last. */
+  settingsGeneration: number;
+  /** The settings generation of the last poll that returned, or -1 before one has. */
+  lastPolledGeneration: number;
+  /** Why the running poll's answer is partial (ProviderContext.incomplete), when it said so. */
+  incompleteReason: string | undefined;
+  /** How many observations the last poll that returned gave, or -1 before one has. */
+  lastPollObservations: number;
   /**
    * A device on this machine (a local receiver) was not found and that has been said once.
    * An operator without a readsb receiver is the ordinary case, not a fault: the probe backs
@@ -286,6 +303,10 @@ export class ProviderHost {
       dueAt: undefined,
       waitingForSetup: false,
       settingsChangedInPoll: false,
+      settingsGeneration: 0,
+      lastPolledGeneration: -1,
+      incompleteReason: undefined,
+      lastPollObservations: -1,
       waitingForKey: false,
       deviceAbsentLogged: false,
       polling: false,
@@ -306,6 +327,7 @@ export class ProviderHost {
     const hosted = this.hosted.get(manifest.id)!;
     disposers.push(
       this.deps.settingsStore(manifest.id).onChange(() => {
+        hosted.settingsGeneration++;
         if (!hosted.running || hosted.waitingForKey) return;
         if (hosted.polling) hosted.settingsChangedInPoll = true;
         else this.schedule(hosted, 250);
@@ -697,6 +719,56 @@ export class ProviderHost {
     }
   }
 
+  /**
+   * Ask the provider that published a drawn overlay what lies under it at one point
+   * (ADR-003 amendment 2026-10-15, provider-sdk overlay-value.ts). Undefined — never a throw —
+   * when no running provider published that overlay, it does not implement `overlayValue`,
+   * the application is offline and it is a network source, it has nothing there, fails,
+   * answers late (`timeoutMs`, default 8 s) or answers something unusable (cleanOverlayValue).
+   * The caller (the runtime's `overlays.valueAt`) asks only when the operator asks about a point.
+   */
+  async overlayValue(
+    overlayId: string,
+    position: { latitude: number; longitude: number },
+    options: { timeoutMs?: number; signal?: AbortSignal } = {},
+  ): Promise<OverlayValueAnswer | undefined> {
+    let h: Hosted | undefined;
+    for (const candidate of this.hosted.values())
+      if (candidate.running && !candidate.removed && candidate.overlays.some((o) => o.id === overlayId)) {
+        h = candidate;
+        break;
+      }
+    if (!h || !isOverlayValueSource(h.provider)) return undefined;
+    if (!this.online && h.manifest.transport === 'http') return undefined;
+    const provider = h.provider;
+    const abort = new AbortController();
+    const onOuter = () => abort.abort();
+    options.signal?.addEventListener('abort', onOuter, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<undefined>((resolve) => {
+      timer = setTimeout(() => {
+        abort.abort();
+        resolve(undefined);
+      }, options.timeoutMs ?? 8_000);
+    });
+    try {
+      const answer = await Promise.race([
+        provider.overlayValue({ overlayId, position, signal: abort.signal }),
+        timeout,
+      ]);
+      return answer ? cleanOverlayValue(answer) : undefined;
+    } catch (err) {
+      h.logger.debug('overlay value unavailable', {
+        overlayId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return undefined;
+    } finally {
+      if (timer) clearTimeout(timer);
+      options.signal?.removeEventListener('abort', onOuter);
+    }
+  }
+
   async healthOf(providerId: string): Promise<ProviderHealth | undefined> {
     return this.hosted.get(providerId)?.provider.health();
   }
@@ -760,6 +832,9 @@ export class ProviderHost {
       providerId: manifest.id,
       clock: this.clock,
       logger: h.logger,
+      incomplete: (reason) => {
+        if (h.polling && h.incompleteReason === undefined) h.incompleteReason = String(reason).slice(0, 200);
+      },
       http: h.http,
       sockets,
       credentials: { has: (key) => this.deps.credentials.has(key) } satisfies ProviderCredentials,
@@ -938,6 +1013,8 @@ export class ProviderHost {
     h.abort = abort;
     const budget = pollBudgetMs(h.manifest.refreshPolicy);
     const timeout = setTimeout(() => abort.abort(new ProviderError('TIMEOUT', `poll exceeded ${budget}ms`)), budget);
+    h.incompleteReason = undefined;
+    const generation = h.settingsGeneration;
     try {
       const observations = await h.provider.query({
         signal: abort.signal,
@@ -947,7 +1024,20 @@ export class ProviderHost {
           ? { center: this.viewportCenter }
           : {}),
       });
-      const batch = this.admit(h, observations, true);
+      // All the source lists, under the same settings as the last poll: what it leaves out is
+      // no longer listed. Not a read of the view, not an answer the provider said is partial,
+      // not the first poll after its settings changed (a narrower area asked for), nor one
+      // whose settings changed while it ran.
+      const bounded = Boolean(this.viewport && h.manifest.capabilities.boundsQuery);
+      const sameSettings = generation === h.lastPolledGeneration && generation === h.settingsGeneration;
+      // An empty answer after one that listed things is not taken at its word: a layer that
+      // answers nothing while it reloads would otherwise end every alert it had (GDACS's 404
+      // "none right now" is believed on the second empty read in a row).
+      const emptyAfterSome = observations.length === 0 && h.lastPollObservations > 0;
+      const complete = !bounded && sameSettings && h.incompleteReason === undefined && !emptyAfterSome;
+      h.lastPolledGeneration = generation;
+      h.lastPollObservations = observations.length;
+      const batch = this.admit(h, observations, true, complete);
       h.consecutiveFailures = 0;
       h.waitingForSetup = false;
       h.waitingForKey = false;
@@ -1027,7 +1117,7 @@ export class ProviderHost {
     }
   }
 
-  private admit(h: Hosted, raw: unknown[], snapshot: boolean): ObservationBatch {
+  private admit(h: Hosted, raw: unknown[], snapshot: boolean, complete = false): ObservationBatch {
     const max = this.deps.maxBatch ?? 250_000;
     const sliced = raw.length > max ? raw.slice(0, max) : raw;
     const { accepted, rejected } = admitObservations(sliced);
@@ -1042,6 +1132,9 @@ export class ProviderHost {
       providerId: h.manifest.id,
       observations,
       snapshot,
+      ...(snapshot && complete && sliced.length === raw.length && rejected.length === 0 && wrongProvider === 0
+        ? { complete: true }
+        : {}),
       receivedAt: new Date(this.clock.now()).toISOString(),
       rejected: rejected.length + wrongProvider + (raw.length - sliced.length),
       ...(h.manifest.refreshPolicy.freshness ? { freshness: h.manifest.refreshPolicy.freshness } : {}),
@@ -1426,6 +1519,31 @@ export function cleanDetailsAnswer(
       /* not a URL: no link */
     }
   }
+  return out;
+}
+
+/**
+ * An overlay value the shell can show, or undefined: a label, at most MAX_OVERLAY_VALUES values
+ * each with a name and a finite number or a string (both cut to MAX_OVERLAY_VALUE_CHARS), and
+ * a frame only when it is a time. An answer with no usable value is no answer.
+ */
+export function cleanOverlayValue(answer: OverlayValueAnswer): OverlayValueAnswer | undefined {
+  if (!answer || typeof answer.label !== 'string' || !answer.label.trim()) return undefined;
+  const cut = (v: string) => (v.length > MAX_OVERLAY_VALUE_CHARS ? `${v.slice(0, MAX_OVERLAY_VALUE_CHARS - 1)}…` : v);
+  const values: OverlayValueAnswer['values'] = [];
+  for (const v of Array.isArray(answer.values) ? answer.values : []) {
+    if (values.length >= MAX_OVERLAY_VALUES) break;
+    if (!v || typeof v.name !== 'string' || !v.name.trim()) continue;
+    const name = cut(v.name.trim());
+    const unit = typeof v.unit === 'string' && v.unit.trim() ? { unit: v.unit.trim().slice(0, 24) } : {};
+    if (typeof v.value === 'number' && Number.isFinite(v.value)) values.push({ name, value: v.value, ...unit });
+    else if (typeof v.value === 'string' && v.value.trim()) values.push({ name, value: cut(v.value.trim()), ...unit });
+  }
+  if (values.length === 0) return undefined;
+  const out: OverlayValueAnswer = { label: answer.label.trim().slice(0, 200), values };
+  if (typeof answer.frame === 'string' && !Number.isNaN(Date.parse(answer.frame))) out.frame = answer.frame;
+  if (typeof answer.attribution === 'string' && answer.attribution.trim())
+    out.attribution = answer.attribution.trim().slice(0, 200);
   return out;
 }
 

@@ -67,6 +67,11 @@ jobs:
           pnpm sbom
           pnpm release:verify
 
+      # The dropped-file reader's worker thread loads its script from a real path.
+      - name: The geodata worker ships unpacked
+        shell: bash
+        run: test -f apps/desktop/release/win-unpacked/resources/app.asar.unpacked/dist/main/geodata-worker.cjs
+
       # Every artifact is this version and this commit — no earlier build's installer, zip or
       # SBOM rides along (rc.4 shipped with rc.3's). On a tag, the tag must be v<version>.
       - name: Assert release version
@@ -200,6 +205,8 @@ jobs:
           # The native history engine must ship unpacked, for this platform.
           find /tmp/wv-deb/opt/WorldView/resources/app.asar.unpacked -name duckdb.node | tee /tmp/duckdb-bindings.txt
           grep -q 'node-bindings-linux-x64/duckdb.node' /tmp/duckdb-bindings.txt
+          # The dropped-file reader's worker thread loads its script from a real path.
+          test -f /tmp/wv-deb/opt/WorldView/resources/app.asar.unpacked/dist/main/geodata-worker.cjs
           test -f /tmp/wv-deb/opt/WorldView/resources/apparmor-profile
 
       - name: Install the .deb as a user would

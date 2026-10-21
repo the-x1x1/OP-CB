@@ -58,6 +58,10 @@ export {
   aqiSeverity,
   AIR_QUALITY_RAISE_AQI,
   AIR_QUALITY_CLEAR_AQI,
+  aqhiCategoryName,
+  aqhiSeverity,
+  AQHI_RAISE,
+  AQHI_CLEAR,
 } from './rules/air-quality.js';
 export {
   readingLimitRule,
@@ -66,6 +70,19 @@ export {
   READING_LIMIT_CLEAR_MARGIN,
   type LimitedReading,
 } from './rules/reading-limit.js';
+export {
+  gnssInterferenceRule,
+  navigationDegraded,
+  gnssCellOf,
+  cellSeverity as gnssCellSeverity,
+  GNSS_CELL_DEG,
+  GNSS_WINDOW_MS,
+  GNSS_MIN_DEGRADED,
+  GNSS_LOW_FRACTION,
+  GNSS_HIGH_FRACTION,
+  GNSS_NIC_DEGRADED_BELOW,
+  GNSS_NACP_DEGRADED_BELOW,
+} from './rules/gnss-interference.js';
 export {
   aircraftEmergencyRule,
   emergencyOf,

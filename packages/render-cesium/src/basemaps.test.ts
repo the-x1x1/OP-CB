@@ -11,6 +11,8 @@ import {
   NATURAL_EARTH_STACK_ID,
   NONE_STACK_ID,
   OSM_STACK_ID,
+  FALLBACK_RETRY_MS,
+  FALLBACK_RETRY_MAX_MS,
   type MapStackRegistry,
   type MapStackSource,
   type MapStackState,
@@ -24,7 +26,11 @@ const settle = async () => {
   for (let i = 0; i < 30; i++) await Promise.resolve();
 };
 
-function harness(registry: MapStackRegistry, cesium: FakeCesium = createFakeCesium()) {
+function harness(
+  registry: MapStackRegistry,
+  cesium: FakeCesium = createFakeCesium(),
+  schedule?: (run: () => void, ms: number) => { cancel(): void },
+) {
   const viewer = new FakeViewer({} as Element, {});
   const changes: MapStackState[] = [];
   const errors: string[] = [];
@@ -51,6 +57,7 @@ function harness(registry: MapStackRegistry, cesium: FakeCesium = createFakeCesi
     credits,
     onChange: (s) => changes.push(s),
     onError: (m) => errors.push(m),
+    ...(schedule ? { schedule } : {}),
   });
   return { viewer, controller, changes, errors, created, credits, cesium };
 }
@@ -314,7 +321,8 @@ test('controller: destroy removes the layer, credits and disposes cached provide
   h.controller.destroy();
   await settle();
   assert.equal(h.viewer.imageryLayers.length, 0);
-  assert.equal(h.created[0]!.destroyed, true);
+  // Taken off, not destroyed: a tile still holding its imagery would throw (detach-layer.ts).
+  assert.equal(h.created[0]!.destroyed, false);
   assert.equal(ne.destroyed, true);
   assert.equal(h.credits.current, null);
   const after = await h.controller.setStack(OSM_STACK_ID);
@@ -339,4 +347,77 @@ test('imagery: Esri World Imagery is a deep tile template, built without a metad
   // "zoom in to see a building" case this basemap exists for does not work.
   assert.equal(provider.maximumLevel, ESRI_MAX_LEVEL);
   assert.ok(ESRI_MAX_LEVEL >= 19, 'a basemap that stops short of level 19 cannot resolve a building');
+});
+
+test('controller: a stack shown by its fallback is retried in the background, backing off, and comes back once it builds', async () => {
+  let esriUp = false;
+  let esriAsked = 0;
+  const cesium = createFakeCesium({
+    esri: () => {
+      esriAsked++;
+      if (!esriUp) throw new Error('esri down');
+      return fakeImageryProvider('esri');
+    },
+  });
+  const timers: Array<{ run: () => void; ms: number; cancelled: boolean }> = [];
+  const h = harness(buildCesiumStackRegistry(cesium), cesium, (run, ms) => {
+    const t = { run, ms, cancelled: false };
+    timers.push(t);
+    return { cancel: () => (t.cancelled = true) };
+  });
+  const fire = async () => {
+    const t = timers.filter((x) => !x.cancelled).at(-1)!;
+    t.cancelled = true;
+    t.run();
+    await settle();
+  };
+  const state = await h.controller.setStack(ESRI_STACK_ID);
+  assert.equal(state.activeId, NATURAL_EARTH_STACK_ID, 'the stand-in at once');
+  assert.deepEqual(
+    timers.map((t) => t.ms),
+    [FALLBACK_RETRY_MS],
+  );
+  await fire();
+  assert.equal(h.controller.getActiveId(), NATURAL_EARTH_STACK_ID, 'still down: the stand-in stays');
+  assert.equal(timers.at(-1)!.ms, FALLBACK_RETRY_MS * 2, 'and the next try waits twice as long');
+  for (let i = 0; i < 8; i++) await fire();
+  assert.equal(timers.at(-1)!.ms, FALLBACK_RETRY_MAX_MS, 'up to the cap');
+  esriUp = true;
+  await fire();
+  assert.equal(h.controller.getActiveId(), ESRI_STACK_ID, 'back on the real imagery');
+  assert.equal(h.controller.getState().lastError, null);
+  assert.match(h.credits.current ?? '', /Esri/);
+  assert.equal(timers.filter((t) => !t.cancelled).length, 0, 'no more tries');
+  // The answer it built is kept: choosing it again asks nothing more.
+  const asked = esriAsked;
+  await h.controller.setStack(NATURAL_EARTH_STACK_ID);
+  await h.controller.setStack(ESRI_STACK_ID);
+  assert.equal(esriAsked, asked);
+});
+
+test('controller: choosing another stack stops the retry; choosing the failed one again asks it again', async () => {
+  let esriAsked = 0;
+  const cesium = createFakeCesium({
+    esri: () => {
+      esriAsked++;
+      throw new Error('esri down');
+    },
+  });
+  const timers: Array<{ cancelled: boolean }> = [];
+  const h = harness(buildCesiumStackRegistry(cesium), cesium, () => {
+    const t = { cancelled: false };
+    timers.push(t);
+    return { cancel: () => (t.cancelled = true) };
+  });
+  await h.controller.setStack(ESRI_STACK_ID);
+  assert.equal(esriAsked, 1);
+  await h.controller.setStack(OSM_STACK_ID);
+  assert.ok(
+    timers.every((t) => t.cancelled),
+    'the operator moved on',
+  );
+  await h.controller.setStack(ESRI_STACK_ID);
+  assert.equal(esriAsked, 2, 'not answered from the stand-in cached under its name');
+  h.controller.destroy();
+  assert.ok(timers.every((t) => t.cancelled));
 });

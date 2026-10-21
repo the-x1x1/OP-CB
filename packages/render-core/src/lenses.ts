@@ -56,6 +56,7 @@ export const BUILT_IN_LENSES: LensDefinition[] = [
       'launch',
       'aircraft-emergency',
       'distress-beacon',
+      'gnss-interference',
     ],
     renderingRules: [],
     // What changed is a tab of the overview (roadmap 0.4: a first-class screen), not only a
@@ -67,7 +68,7 @@ export const BUILT_IN_LENSES: LensDefinition[] = [
     id: 'aviation',
     name: 'Aviation',
     objectTypes: ['aircraft', 'airport'],
-    eventTypes: ['aircraft-emergency'],
+    eventTypes: ['aircraft-emergency', 'gnss-interference'],
     providerPreferences: ['readsb-local', 'adsb-lol', 'opensky-network'],
     renderingRules: [],
     visiblePanels: ['selection', 'sources', 'timeline', 'related'],

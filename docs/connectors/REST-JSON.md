@@ -52,10 +52,27 @@ provider host as for any provider.
 | `itemsPath` | Path to the records: an array, or one object (a single record). Default: the body itself.                                               |
 | `itemsAs`   | `array` (default) or `entries` — the value at `itemsPath` is an object keyed by id; each value becomes a record with its key as `_key`. |
 | `format`    | `json` (default), `csv` (see [GEOJSON-CSV.md](GEOJSON-CSV.md)), `text` (one record `{ text, url }`).                                    |
+| `contour`   | A gridded field read as areas: see below.                                                                                               |
 
 A body that is not JSON, has nothing at `itemsPath`, or in which every record is rejected
 by the mapping is reported MALFORMED; the cached copy is invalidated so it is never served
 as a stale fallback, and Source Health shows the reason.
+
+### A gridded field: `response.contour`
+
+A source that answers a regular grid of values — a model's probability at every whole degree —
+is read as areas instead of records: `{ "pointsPath": "coordinates", "levels": [10, 30, 50, 70] }`
+makes one record per level reached, the area where the value is at least that level, as a
+MultiPolygon at `geometry`. Each record also has `level`, `upTo` (the next level, when there is
+one), `band` (1 for the lowest) and `source` — the body's own top-level texts, numbers and
+booleans, so a time the body carries once is `source["Observation Time"]`. A point is
+`[longitude, latitude, value]` unless `lon`, `lat` and `value` give paths within it. Longitudes
+and latitudes must each be evenly spaced; a grid whose longitudes go once round the circle wraps,
+so an area across 180° is two polygons meeting there. The outlines are interpolated between grid
+points (marching squares); up to 2,000,000 points, which must mostly fill the grid they span (no
+more than four cells a point). A regional grid across 180° (170° E to 170° W, in either longitude
+form) is read the same way and cut at 180°; a grid with columns missing elsewhere is not. `itemsPath` and `csv` do not apply. Used by
+`swpc-aurora` (connectors/enabled).
 
 ## `pagination`
 

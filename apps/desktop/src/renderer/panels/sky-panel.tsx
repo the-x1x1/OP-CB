@@ -6,7 +6,7 @@ import { moonPosition, sunPosition, type GeoPosition } from '@worldview/world-mo
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { pastShownAtMs } from '../store/shown-time.js';
-import { PLOT_RADIUS, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
+import { PLOT_RADIUS, auroraText, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
 
 /** How often the sky is asked for again while the tab is open. */
 const REFRESH_MS = 5_000;
@@ -49,7 +49,8 @@ const hhmm = (iso: string) => new Date(Date.parse(iso)).toISOString().slice(11, 
  * and the highest listed — each lit or in the Earth's shadow, and which could be seen with
  * the eye. Worked out by the runtime from the live satellites' propagated positions
  * (`sky.overhead`), with the filters applied there before anything is counted or cut; picking
- * one selects it. It is always the sky now: replaying, it says so.
+ * one selects it. It is always the sky now: replaying, it says so. With an aurora source on,
+ * the aurora forecast there is a line above the plot (`aurora`, runtime aurora-here.ts).
  */
 export function SkyPanel() {
   const { session, world, timeline } = useAppState();
@@ -152,6 +153,7 @@ export function SkyPanel() {
   const R = PLOT_RADIUS;
   const listed = showAll ? shown : shown.slice(0, LISTED);
   const replaying = pastShownAtMs(timeline.control) !== undefined;
+  const aurora = auroraText(answer);
 
   return frame(
     `Above ${place(seenFrom)} at ${hhmm(answer.at)} UTC · ${skySummary(answer)}`,
@@ -167,6 +169,11 @@ export function SkyPanel() {
           {answer.stale.toLocaleString('en-US')} more near this sky {answer.stale === 1 ? 'is' : 'are'} left out: the
           satellite source has not worked out {answer.stale === 1 ? 'its position' : 'their positions'} for over a
           minute (Sources).
+        </p>
+      ) : null}
+      {aurora ? (
+        <p className="wv-sky__aurora" title={answer.aurora?.attribution}>
+          {aurora}
         </p>
       ) : null}
       <svg

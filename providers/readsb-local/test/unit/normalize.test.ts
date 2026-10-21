@@ -92,3 +92,31 @@ test('duplicate normalizer stays in step with providers/adsb-remote (row rules a
     );
   assert.equal(rules(mine), rules(theirs), 'aircraft row rules diverged between readsb-local and adsb-remote');
 });
+
+test('normalize: the receiver’s own aircraft keep their navigation integrity, for the GNSS interference rule', () => {
+  const d = aircraftRowToDraft(
+    {
+      hex: 'a1b2c3',
+      type: 'adsb_icao',
+      lat: 21.4,
+      lon: -157.9,
+      alt_baro: 12000,
+      seen_pos: 0,
+      nic: 6,
+      nac_p: 7,
+      version: 2,
+    },
+    opts,
+  );
+  assert.ok(typeof d !== 'string');
+  assert.deepEqual(
+    [d.payload['navIntegrity'], d.payload['navAccuracy'], d.payload['adsbVersion'], d.payload['gpsLostAt']],
+    [6, 7, 2, undefined],
+  );
+  const tisb = aircraftRowToDraft(
+    { hex: 'a1b2c4', type: 'tisb_icao', lat: 21.4, lon: -157.9, seen_pos: 0, nic: 6, nac_p: 7 },
+    opts,
+  );
+  assert.ok(typeof tisb !== 'string');
+  assert.equal(tisb.payload['navIntegrity'], undefined);
+});

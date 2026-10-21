@@ -11,8 +11,8 @@ import { resolveTransform, type Transform } from './transforms.js';
  * A `Field` is a path string, or an object:
  *   { path, fallback?: path | path[], literal?, transform?: name | name[], default?, required? }
  * The first of `path` and `fallback`s that has a value is taken, `transform`s applied in
- * order; when nothing is found, `default` (a literal) is used; `required` makes a missing
- * value reject the record instead of leaving the field out.
+ * order, then `map` (a lookup table); when nothing is found, `default` (a literal) is used;
+ * `required` makes a missing value reject the record instead of leaving the field out.
  */
 export interface FieldSpec {
   path?: string;
@@ -28,6 +28,13 @@ export interface FieldSpec {
   concat?: Array<string | string[]>;
   separator?: string;
   transform?: string | string[];
+  /**
+   * A lookup table applied after the transforms: the value, as text, is looked up and the
+   * entry's value taken; a value with no entry is absent (so `default` applies). For a code a
+   * source publishes that WORLDVIEW names differently — a volcano's aviation colour code as a
+   * CAP severity. At most MAX_MAP_ENTRIES entries; keys are exact, case and all.
+   */
+  map?: Record<string, JsonValue>;
   default?: JsonValue;
   required?: boolean;
 }
@@ -80,6 +87,8 @@ export interface MappingSpec {
 }
 
 export const MAX_MAPPED_FIELDS = 128;
+/** The most entries one field's `map` may list. */
+export const MAX_MAP_ENTRIES = 64;
 const LABEL_KEY = /^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/;
 
 // ── compiled form ────────────────────────────────────────────────────────────
@@ -92,6 +101,8 @@ interface CompiledField {
   literal: JsonValue | undefined;
   hasLiteral: boolean;
   transforms: Transform[];
+  /** `map`: the lookup table, keyed by the value's text. */
+  lookup?: Map<string, JsonValue>;
   defaultValue: JsonValue | undefined;
   hasDefault: boolean;
   required: boolean;
@@ -174,6 +185,15 @@ function compileField(spec: Field | undefined, name: string, required = false): 
     transforms.push(fn);
   }
   if (transforms.length > 8) throw new MappingError('more than 8 transforms', name);
+  let lookup: Map<string, JsonValue> | undefined;
+  if (f.map !== undefined) {
+    if (typeof f.map !== 'object' || f.map === null || Array.isArray(f.map))
+      throw new MappingError('map must be an object of entries', name);
+    const entries = Object.entries(f.map);
+    if (entries.length === 0 || entries.length > MAX_MAP_ENTRIES)
+      throw new MappingError(`map lists 1 to ${MAX_MAP_ENTRIES} entries`, name);
+    lookup = new Map(entries);
+  }
   return {
     paths,
     ...(parts ? { parts } : {}),
@@ -181,6 +201,7 @@ function compileField(spec: Field | undefined, name: string, required = false): 
     literal: f.literal,
     hasLiteral,
     transforms,
+    ...(lookup ? { lookup } : {}),
     defaultValue: f.default,
     hasDefault: Object.prototype.hasOwnProperty.call(f, 'default'),
     required: f.required === true || required,
@@ -305,6 +326,8 @@ export function readField(record: unknown, f: CompiledField): JsonValue | undefi
       value = t(value);
       if (value === undefined || value === null) break;
     }
+  if (f.lookup && value !== undefined && value !== null)
+    value = typeof value === 'object' ? undefined : f.lookup.get(String(value));
   if (value === undefined || value === null) {
     if (f.hasDefault) return f.defaultValue;
     if (f.required) throw new FieldMissing(f.name);
@@ -373,14 +396,17 @@ function points(v: unknown): Pt[] {
 }
 
 /** Longitudes of a part crossing the antimeridian made continuous (east of 180 rather than west of -180). */
+/**
+ * Points of a line or ring that crosses 180° moved onto one side of it (west longitudes
+ * +360), so lengths and areas are measured the short way. Crossing means a step of more than
+ * 180° between neighbours, not merely a span that wide: a ring drawn along the antimeridian
+ * itself (an aurora band round a pole, from −180° to 180°, `response.contour`) spans the whole
+ * circle without crossing it, and shifting it tied it in a knot whose middle lay outside it.
+ */
 function unwrap(pts: Pt[]): Pt[] {
-  let min = Infinity;
-  let max = -Infinity;
-  for (const [x] of pts) {
-    if (x < min) min = x;
-    if (x > max) max = x;
-  }
-  return max - min > 180 ? pts.map(([x, y]) => [x < 0 ? x + 360 : x, y]) : pts;
+  let crosses = false;
+  for (let i = 1; i < pts.length && !crosses; i++) if (Math.abs(pts[i]![0] - pts[i - 1]![0]) > 180) crosses = true;
+  return crosses ? pts.map(([x, y]) => [x < 0 ? x + 360 : x, y]) : pts;
 }
 
 function wrapLon(x: number): number {

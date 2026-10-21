@@ -130,6 +130,26 @@ export function aircraftRowToDraft(raw: unknown, opts: AircraftNormalizeOptions)
   payload['seenPositionSeconds'] = seenPos;
   const rssi = num(row['rssi']);
   if (rssi !== undefined && rssi <= 0) payload['rssiDb'] = rssi;
+  // Navigation integrity (DO-260B NIC and NACp; readsb's gpsOkBefore, when the aircraft last
+  // had a good GPS fix before losing it): what the GNSS interference rule bins (event-engine
+  // gnss-interference.ts). The aircraft's own report, so kept whatever the position's source —
+  // and an aircraft that has lost GPS is the case that matters most: it still broadcasts, with
+  // NIC 0, so readsb places it by MLAT (`type: "mlat"`) and says when its fix was last good
+  // (seen on adsb.lol over the Gulf of Finland, 2026-10-16). Not TIS-B: a ground station's
+  // rebroadcast of a radar track, whose integrity is the station's, not the aircraft's.
+  if (!positionType?.startsWith('tisb')) {
+    const level = (v: number | undefined, max: number) =>
+      v !== undefined && Number.isInteger(v) && v >= 0 && v <= max ? v : undefined;
+    const nic = level(num(row['nic']), 11);
+    if (nic !== undefined) payload['navIntegrity'] = nic;
+    const nacp = level(num(row['nac_p']), 11);
+    if (nacp !== undefined) payload['navAccuracy'] = nacp;
+    const version = level(num(row['version']), 2);
+    if (version !== undefined) payload['adsbVersion'] = version;
+    const gpsOkBefore = num(row['gpsOkBefore']);
+    if (gpsOkBefore !== undefined && gpsOkBefore > 1e9 && gpsOkBefore < 1e10)
+      payload['gpsLostAt'] = new Date(Math.round(gpsOkBefore * 1000)).toISOString();
+  }
 
   const position: ObservationDraft['position'] = { latitude: lat, longitude: lon as number };
   if (onGround) {

@@ -200,7 +200,8 @@ nothing analyses their content.
 The box at the top searches as you type, on this machine only: objects on the map (callsign,
 registration, MMSI, name), events, places in the built-in gazetteer (cities, airports by
 name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, an MGRS reference
-such as `4QFJ1234567890` or a UTM one such as `4Q 612345 2358765`), your own places — the
+such as `4QFJ1234567890`, a UTM one such as `4Q 612345 2358765`, or a geo URI such as
+`geo:21.3069,-157.8583` as a phone shares a location), your own places — the
 locations in your collections, by title or tag ("Collected · Big Island trip"), and your watch
 zones by name — commands ("switch to 3D", "source health", "aviation lens") and queries ("M5+ earthquakes last 24 hours", "earthquakes near
 Japan"). Enter picks the first row: a command or query named in full runs (a query with one
@@ -266,13 +267,23 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
   2D map alike. `]` selects the next object out from the middle of the view and `[` the one
   before (a screen reader hears what was selected). What's here is in the command palette
   (Ctrl+K) for the middle of the view.
+- **Files on the map.** Drop a GeoJSON, TopoJSON, KML, KMZ or GPX file onto the map (or
+  "Draw a file on the map…" in the command palette) and its shapes are drawn for this session,
+  each file in a colour of its own, with names as labels — a point's beside it, a named line's
+  or area's at a small dot on it; the view goes to it. A card at
+  the lower left lists the files: tick one off to hide it, go to it, or remove it. Only shapes
+  and names are read — a KML's network links, remote icons, overlays and balloons are left out,
+  so a file never makes the app fetch anything — and nothing is kept when the app closes. To
+  keep a file as a source that updates, use a connector definition (docs/connectors/files.md).
 - **What's here** (right-click the map, or "What's here?" in the command palette for the
   middle of the view): a card beside the point naming the nearest town and how far and which
   way the point is from it ("41.4 km WNW of Hilo"), the point's coordinates in degrees and
   degrees-minutes-seconds and its MGRS (or UTM, as chosen for the HUD) — click one to select it
   whole, then Ctrl+C — how far it is from home and from the selection, and where the Sun and the
   Moon are there; with a satellite selected, its next pass over the point and whether it can be
-  seen with the eye. From it: **Centre here**, **Measure from here** (starts the measure tool at
+  seen with the eye; and with a WMS overlay drawn (weather radar, infrared, lightning density), what
+  its source says lies under the point ("Reflectivity 35 dBZ" for the radar; the service's own
+  name where nothing more is known), with its credit and the frame it is for. From it: **Centre here**, **Measure from here** (starts the measure tool at
   the point), **Watch here** (a 50 km watch zone round it) and **Collect** (into the active
   collection). Esc, its close button or a click on the map puts it away. The town comes from
   the lists bundled with the app (the built-in places and Natural Earth's 7,342 cities and
@@ -306,6 +317,12 @@ stopped working positions out — see Sources) is left out rather than drawn whe
 the tab says how many. From the middle of the map, the place is taken once the view has
 rested for a moment, and every five seconds while it keeps moving (following a satellite).
 It is always the sky now: with the timeline replaying, the tab says so.
+
+With the **Aurora forecast** source on (Sources; NOAA SWPC, off by default), a green line
+above the plot gives the chance of aurora overhead at the same place — "Aurora: 10–30% chance
+overhead at 20:08 UTC", the band of SWPC's forecast the place lies in and the time it is for —
+and says when the sky there is not dark enough to see it. The same areas are drawn faintly on
+the map. Outside every area, or with the source off, there is no line.
 
 ## Watch zones and notifications
 
@@ -346,6 +363,16 @@ has not been heard for fifteen minutes, and an aircraft heard again within half 
 carries on the same event. Tick **An aircraft broadcasts an emergency** in a zone to be told of
 one inside it. It is what the aircraft broadcasts: a squawk is set by hand and is sometimes
 set by mistake and cleared within minutes.
+
+**GPS interference.** Where aircraft report degraded satellite navigation — two or more in a
+0.5° square, at least 2 % of the aircraft there with a navigation integrity — the square is
+drawn in amber under the Overview and Aviation lenses: "GNSS interference likely near 33.25°N
+44.25°E", MINOR at 2–10 % and MODERATE above 10 %, gpsjam.org's bands, over the last ten minutes.
+It is read from what the aircraft broadcast (NIC and NACp, and when its GPS fix was last good —
+an aircraft that has lost GPS is still placed, by multilateration), so it covers only where
+aircraft fly with ADS-B, and an aircraft's own receiver can
+fault: a sign of jamming or spoofing, not proof. Tick **Aircraft report degraded GPS** in a
+zone to be told of one inside it.
 
 **Distress beacons.** An AIS-SART, a man-overboard device or an EPIRB-AIS that any AIS source
 hears transmitting as active is an event, SEVERE, under the Overview and Maritime lenses:

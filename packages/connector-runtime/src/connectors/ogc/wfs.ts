@@ -423,6 +423,7 @@ export class WfsProvider extends PollingProvider {
           total !== undefined ? ` of ${total}` : ''
         } features`;
     }
+    if (this.lastStop) this.context.incomplete?.(this.lastStop);
     this.lastAxis = axis;
     this.lastRejected = state.rejected;
     return { observations: state.observations, cacheAgeMs };

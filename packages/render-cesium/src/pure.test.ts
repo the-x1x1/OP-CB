@@ -8,6 +8,7 @@ import {
   normalizeHeadingDegrees,
   rectangleToBounds,
   resolveFlyTarget,
+  padBounds,
   viewStateToCamera,
 } from './view.js';
 import { pickAnchor, resolvePickedFeatureId, toPickResult } from './picking.js';
@@ -104,10 +105,27 @@ test('view: fly targets prefer bounds, then altitude, then zoom, then a sensible
     pitchDegrees: -90,
   };
   const bounds = { west: -1, south: -1, east: 1, north: 1 };
+  // Widened by 12 % a side: Cesium fits edge to edge, and the canvas has bars over its foot.
   assert.deepEqual(resolveFlyTarget({ position: { latitude: 0, longitude: 0 }, bounds }, current), {
     kind: 'bounds',
-    bounds,
+    bounds: { west: -1.24, south: -1.24, east: 1.24, north: 1.24 },
   });
+  // Across 180°: still the short way round, still across it.
+  assert.deepEqual(padBounds({ west: 170, south: 10, east: -170, north: 20 }), {
+    west: 167.6,
+    south: 8.8,
+    east: -167.6,
+    north: 21.2,
+  });
+  assert.deepEqual(padBounds({ west: -10, south: 80, east: 10, north: 88.9 }).north, 89, 'not past the pole');
+  assert.equal(padBounds({ west: -170, south: 0, east: 170, north: 1 }).west, -180, 'nearly the whole way: all of it');
+  for (const b of [
+    { west: 0, south: 89.5, east: 1, north: 89.9 },
+    { west: 0, south: -89.9, east: 1, north: -89.5 },
+  ]) {
+    const p = padBounds(b);
+    assert.ok(p.south <= p.north && p.south >= -89 && p.north <= 89, `never upside down: ${JSON.stringify(p)}`);
+  }
   assert.equal(
     (resolveFlyTarget({ position: { latitude: 1, longitude: 2 }, altitudeM: 300 }, current) as { height: number })
       .height,
@@ -435,4 +453,24 @@ test('area edges: a class with a bold edge (a tornado warning) draws it on the g
   assert.equal(width('weather-alert.tornado-warning'), 4);
   assert.equal(width('weather-alert.tornado-emergency'), 5);
   assert.equal(width('weather-alert.severe'), 1.5);
+});
+
+test('declutter: a later pass gives way to the boxes an earlier pass placed', () => {
+  const placed: import('./labelDeclutter.js').LabelBox[] = [];
+  const objects = declutterLabels(
+    [{ id: 'callsign', x: 100, y: 100, width: 60, height: 14, priority: 1 }],
+    { width: 400, height: 300 },
+    { placed },
+  );
+  assert.deepEqual([...objects], ['callsign']);
+  assert.equal(placed.length, 1);
+  const names = declutterLabels(
+    [
+      { id: 'sea', x: 110, y: 105, width: 90, height: 14, priority: 9, anchor: 'center' },
+      { id: 'far', x: 300, y: 250, width: 40, height: 14, priority: 1, anchor: 'center' },
+    ],
+    { width: 400, height: 300 },
+    { occupied: placed },
+  );
+  assert.deepEqual([...names], ['far'], 'the sea name under the callsign is hidden; one clear of it shows');
 });

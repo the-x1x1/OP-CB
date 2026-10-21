@@ -162,6 +162,8 @@ export interface WmsCapabilities extends ServiceInfo {
   version: '1.1.1' | '1.3.0';
   getMapUrl?: string;
   getMapFormats: string[];
+  /** The formats GetFeatureInfo answers in, as listed; empty when the service offers no GetFeatureInfo. */
+  getFeatureInfoFormats: string[];
   layers: WmsLayer[];
 }
 
@@ -186,12 +188,15 @@ export function parseWmsCapabilities(text: string): ParseResult<WmsCapabilities>
   const version = r.attrs['version']?.startsWith('1.3') ? '1.3.0' : r.name === 'WMS_Capabilities' ? '1.3.0' : '1.1.1';
   const service = child(r, 'Service');
   const getMap = at(r, 'Capability', 'Request', 'GetMap');
+  const formatsOf = (op: ReturnType<typeof at>) =>
+    childrenNamed(op, 'Format')
+      .map((f) => textOf(f))
+      .filter((f): f is string => f !== undefined);
   const out: WmsCapabilities = {
     service: 'WMS',
     version,
-    getMapFormats: childrenNamed(getMap, 'Format')
-      .map((f) => textOf(f))
-      .filter((f): f is string => f !== undefined),
+    getMapFormats: formatsOf(getMap),
+    getFeatureInfoFormats: formatsOf(at(r, 'Capability', 'Request', 'GetFeatureInfo')),
     layers: [],
   };
   const title = clean(childText(service, 'Title'));

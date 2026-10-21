@@ -312,7 +312,7 @@ export class StacProvider extends PollingProvider {
     });
     stats.filtered += mapped.filtered;
     stats.rejected += mapped.rejected.length;
-    warnRejected(this.context.logger, mapped.rejected);
+    warnRejected(this.context, mapped.rejected);
     addUnseen(mapped.observations, into.seen, into.observations);
     return { total: mapped.total, usable: mapped.observations.length + mapped.filtered };
   }
@@ -358,6 +358,7 @@ export class StacProvider extends PollingProvider {
       for (let page = 0; req; page++) {
         if (page >= maxPages) {
           stats.truncated = true;
+          this.context.incomplete?.(`stopped at ${maxPages} page(s); more scenes match`);
           break;
         }
         const key = requestKey(req);
@@ -408,7 +409,10 @@ export class StacProvider extends PollingProvider {
           assertAtomicAdmission(batch.total, 0, `${this.definition.id} items`);
         }
         const next = nextRequest(body, req, this.origin);
-        if (next.refused) stats.refused.push(next.refused);
+        if (next.refused) {
+          stats.refused.push(next.refused);
+          this.context.incomplete?.(`${next.refused} was not followed`);
+        }
         req = next.request;
       }
     }
@@ -439,6 +443,14 @@ export class StacProvider extends PollingProvider {
       skipped: walked.skipped.length,
       ...walked.notFollowed,
     };
+    // Part of the catalogue not read this time (a child that failed, the document budget or the
+    // depth reached): its items are not withdrawn for being absent.
+    if (walked.skipped.length || walked.notFollowed.budget || walked.notFollowed.depth)
+      this.context.incomplete?.(
+        walked.skipped.length
+          ? `${walked.skipped.length} catalogue document(s) skipped`
+          : 'the catalogue walk stopped early',
+      );
     if (walked.skipped.length)
       this.context.logger.warn('catalogue documents skipped', {
         count: walked.skipped.length,

@@ -373,6 +373,49 @@ test('csv: quoting, CRLF, BOM, named columns, extra cells, row cap', () => {
   assert.equal(parseCsv('a\n1\n2\n3\n', { maxRows: 2 }).dropped, 1);
 });
 
+test('csv: a column-aligned table split on whitespace, comment lines skipped', () => {
+  const table = [
+    '#STN       LAT      LON  YYYY MM DD hh mm WDIR WSPD',
+    '#text      deg      deg   yr mo day hr mn degT  m/s',
+    '51202    21.414 -157.681 2026 10 16 04 56  MM    MM',
+    '',
+    'OOUH1    21.303 -157.865 2026 10 16 05 30  30   1.5\t',
+  ].join('\r\n');
+  const columns = ['STN', 'LAT', 'LON', 'YYYY', 'MM', 'DD', 'hh', 'mm', 'WDIR', 'WSPD'];
+  const r = parseCsv(table, { delimiter: 'whitespace', comment: '#', header: false, columns });
+  assert.equal(r.malformed, undefined);
+  assert.deepEqual(r.records, [
+    {
+      STN: '51202',
+      LAT: '21.414',
+      LON: '-157.681',
+      YYYY: '2026',
+      MM: '10',
+      DD: '16',
+      hh: '04',
+      mm: '56',
+      WDIR: 'MM',
+      WSPD: 'MM',
+    },
+    {
+      STN: 'OOUH1',
+      LAT: '21.303',
+      LON: '-157.865',
+      YYYY: '2026',
+      MM: '10',
+      DD: '16',
+      hh: '05',
+      mm: '30',
+      WDIR: '30',
+      WSPD: '1.5',
+    },
+  ]);
+  // A comment character in an ordinary CSV skips the row it starts; quotes still hold.
+  assert.deepEqual(parseCsv('a,b\n# note\n1,"#2"\n', { comment: '#' }).records, [{ a: '1', b: '#2' }]);
+  // Without the comment option the header line is the header, '#STN' and all.
+  assert.deepEqual(parseCsv('#STN LAT\n1 2\n', { delimiter: 'whitespace' }).columns, ['#STN', 'LAT']);
+});
+
 test('every example definition loads from connectors/examples; a broken file is reported, not thrown', () => {
   const loaded = loadDefinitionsFrom(path.join(root, 'connectors', 'examples'));
   assert.deepEqual(loaded.problems, []);
@@ -411,11 +454,15 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
     mapping: { externalId: 'properties.eventid' },
     attribution: { text: 'GDACS' },
   };
+  const partial: string[] = [];
   const run = async (definition: unknown, status: number) => {
     const v = defaultConnectorRegistry.validate(definition);
     assert.ok(v.ok && v.definition, JSON.stringify(v.errors));
     const provider = defaultConnectorRegistry.createProvider(v.definition!);
-    const ctx = testing.createFixtureContext({ providerId: 'gdacs-sample', responder: () => ({ status, body: '' }) });
+    const ctx = {
+      ...testing.createFixtureContext({ providerId: 'gdacs-sample', responder: () => ({ status, body: '' }) }),
+      incomplete: (reason: string) => partial.push(reason),
+    };
     await provider.initialize(ctx);
     await provider.start();
     return provider;
@@ -423,6 +470,8 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
   const empty = await run(doc, 404);
   assert.deepEqual(await empty.query!({ signal: new AbortController().signal, background: true }), []);
   assert.notEqual((await empty.health()).status, 'ERROR');
+  // "None right now" is the whole answer: what was listed before is no longer listed.
+  assert.deepEqual(partial, []);
   // Another client error is still an error, and so is a 404 for a source that did not say so.
   await assert.rejects(
     (await run(doc, 410)).query!({ signal: new AbortController().signal, background: true }),
@@ -437,4 +486,13 @@ test('endpoint.emptyStatus: a 404 that means "none right now" is an empty poll, 
     defaultConnectorRegistry.validate({ ...doc, endpoint: { ...doc.endpoint, emptyStatus: [500] } }).ok,
     false,
   );
+});
+
+test('csv: a comment line with a quote in it does not open a field', () => {
+  const r = parseCsv('﻿# exported "today\nid,lat\nA,1\n# done, "really"\nB,2\n', { comment: '#' });
+  assert.equal(r.malformed, undefined);
+  assert.deepEqual(r.records, [
+    { id: 'A', lat: '1' },
+    { id: 'B', lat: '2' },
+  ]);
 });

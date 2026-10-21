@@ -457,3 +457,11 @@ test('pnpm dev on Ubuntu 24.04+ explains the sandbox fix instead of failing obsc
   assert.ok(linuxSandboxProblem({ restrictUserns: '1', sandboxPath, sandbox: { uid: 1000, mode: 0o104755 } }));
   assert.match(read('scripts/dev.mjs'), /linuxSandboxProblem\(/);
 });
+
+test('the dropped-file worker is built beside main and shipped outside the asar archive', () => {
+  // build-main.mjs builds it; electron-builder unpacks it; geodata-reader.ts loads it from there.
+  const buildMain = read('scripts/build-main.mjs');
+  assert.match(buildMain, /geodata-worker\.ts/);
+  assert.match(buildMain, /geodata-worker\.cjs/);
+  assert.match(builderYml, /^\s*-\s*'dist\/main\/geodata-worker\.cjs'\s*$/m);
+});

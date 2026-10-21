@@ -79,6 +79,13 @@ const targets = [
     outfile: path.join(appDir, 'dist', 'main', 'main.cjs'),
   },
   {
+    // The dropped-file reader's worker thread (src/main/geodata-reader.ts); unpacked from the
+    // asar archive (electron-builder.yml), since a worker loads its script from a real path.
+    ...common,
+    entryPoints: [path.join(appDir, 'src', 'main', 'geodata-worker.ts')],
+    outfile: path.join(appDir, 'dist', 'main', 'geodata-worker.cjs'),
+  },
+  {
     ...common,
     entryPoints: [path.join(appDir, 'src', 'preload', 'preload.ts')],
     outfile: path.join(appDir, 'dist', 'preload', 'preload.cjs'),

@@ -841,6 +841,7 @@ test("wms overlay: the endpoint's own query string travels as parameters; layers
     service: 'WMS',
     version: '1.3.0',
     getMapFormats: ['image/png'],
+    getFeatureInfoFormats: [],
     layers: [layer('a', ['EPSG:3857', 'EPSG:4326']), layer('b', ['EPSG:4326'])],
   };
   const built = (two.provider as WmsProvider).overlayFrom(caps, {});

@@ -111,6 +111,13 @@ export interface ProviderContext {
   readonly hash: { sha256Hex(input: string | Uint8Array): string };
   /** Reports whether the application currently believes it has connectivity. */
   readonly connectivity: { online(): boolean };
+  /**
+   * Say that the answer the running poll will return is not all the source lists: records the
+   * mapping refused, a page limit reached, a layer the server truncated. The host then does not
+   * read what the poll leaves out as no longer listed (ObservationBatch.complete). Optional:
+   * a host without it treats every poll as possibly partial.
+   */
+  readonly incomplete?: (reason: string) => void;
 }
 
 export interface ProviderLogger {

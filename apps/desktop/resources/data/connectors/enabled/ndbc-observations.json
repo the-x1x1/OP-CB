@@ -1,0 +1,105 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "ndbc-observations",
+  "name": "Ocean buoys and coastal stations, worldwide (NOAA NDBC latest observations)",
+  "description": "The latest report of each of the ~860 stations NOAA's National Data Buoy Center carries (moored buoys, C-MAN and coastal stations, tide gauges): wind and gusts, pressure and its 3-hour change, air and water temperature, dew point, wave height, period and direction, visibility and tide, whatever each measures. A report is as old as the station's last transmission (most hourly). Read every 15 minutes.",
+  "connector": "rest-json",
+  "objectType": "weather-station",
+  "categories": ["weather"],
+  "endpoint": {
+    "url": "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt",
+    "intervalSeconds": 900,
+    "timeoutSeconds": 30,
+    "maxBytes": 2097152
+  },
+  "response": {
+    "format": "csv",
+    "csv": {
+      "delimiter": "whitespace",
+      "comment": "#",
+      "header": false,
+      "columns": [
+        "STN",
+        "LAT",
+        "LON",
+        "YYYY",
+        "MM",
+        "DD",
+        "hh",
+        "mm",
+        "WDIR",
+        "WSPD",
+        "GST",
+        "WVHT",
+        "DPD",
+        "APD",
+        "MWD",
+        "PRES",
+        "PTDY",
+        "ATMP",
+        "WTMP",
+        "DEWP",
+        "VIS",
+        "TIDE"
+      ]
+    }
+  },
+  "mapping": {
+    "externalId": { "path": "STN", "transform": ["trim", "uppercase", "emptyToNone"] },
+    "observedAt": {
+      "concat": ["YYYY", "MM", "DD", "hh", "mm"],
+      "separator": "-",
+      "transform": "timestamp:YYYY-MM-DD-HH-mm"
+    },
+    "position": {
+      "lat": { "path": "LAT", "transform": "number" },
+      "lon": { "path": "LON", "transform": "number" }
+    },
+    "labels": {
+      "name": { "path": "STN", "transform": ["trim", "uppercase"] }
+    },
+    "properties": {
+      "stationId": { "path": "STN", "transform": ["trim", "uppercase"] },
+      "windDirDeg": { "path": "WDIR", "transform": "number" },
+      "windSpeedMps": { "path": "WSPD", "transform": "number" },
+      "windGustMps": { "path": "GST", "transform": "number" },
+      "waveHeightM": { "path": "WVHT", "transform": "number" },
+      "wavePeriodDominantS": { "path": "DPD", "transform": "number" },
+      "wavePeriodAverageS": { "path": "APD", "transform": "number" },
+      "waveDirDeg": { "path": "MWD", "transform": "number" },
+      "pressureSeaLevelHpa": { "path": "PRES", "transform": "number" },
+      "pressureTrend3hHpa": { "path": "PTDY", "transform": "number" },
+      "temperatureC": { "path": "ATMP", "transform": "number" },
+      "waterTempC": { "path": "WTMP", "transform": "number" },
+      "dewPointC": { "path": "DEWP", "transform": "number" },
+      "visibilityNmi": { "path": "VIS", "transform": "number" },
+      "tideFt": { "path": "TIDE", "transform": "number" }
+    }
+  },
+  "freshness": {
+    "liveSeconds": 7200,
+    "recentSeconds": 21600,
+    "expireSeconds": 86400
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "Buoys: NOAA National Data Buoy Center",
+    "url": "https://www.ndbc.noaa.gov/",
+    "licenseId": "US-PD"
+  },
+  "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": true,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": true,
+    "offlinePackAllowed": true,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "Buoys: NOAA National Data Buoy Center",
+    "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml"
+  },
+  "review": "commercially-reviewed",
+  "enabled": true
+}

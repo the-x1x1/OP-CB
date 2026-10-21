@@ -141,3 +141,163 @@ export function pixelRatioFor(profile: GraphicsProfile, devicePixelRatio: number
   const dpr = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1;
   return Math.min(dpr, profile.maxPixelRatio);
 }
+
+/**
+ * Sharpness on Auto: the profile Auto picks is a floor, not a ceiling. Balanced on an
+ * integrated GPU draws the globe at 1.25 device pixels and lets tiles show 3 px of error; on
+ * a 2× laptop screen that is a canvas at 0.625 of the display, upscaled, with imagery a
+ * level coarser than it could be — the map looked soft while the frame rate sat at 60. Each
+ * step up draws a quarter of a device pixel more (to the display's own density, at most 2)
+ * and asks half a pixel less of tile error (to Cesium's default of 2). MSAA is not touched:
+ * changing it rebuilds the WebGL context.
+ */
+export const SHARPNESS_PIXEL_STEP = 0.25;
+export const SHARPNESS_ERROR_STEP = 0.5;
+
+/** The profile `step` steps sharper than `base` on a display of `devicePixelRatio`. */
+export function sharperProfile(base: GraphicsProfile, step: number, devicePixelRatio: number): GraphicsProfile {
+  if (step <= 0) return base;
+  const dpr = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1;
+  const pixelCap = Math.max(base.maxPixelRatio, Math.min(dpr, 2));
+  return {
+    ...base,
+    maxPixelRatio: Math.min(pixelCap, base.maxPixelRatio + step * SHARPNESS_PIXEL_STEP),
+    maximumScreenSpaceError: Math.max(
+      Math.min(2, base.maximumScreenSpaceError),
+      base.maximumScreenSpaceError - step * SHARPNESS_ERROR_STEP,
+    ),
+  };
+}
+
+/** How many steps up from `base` still change something on this display. */
+export function maxSharpnessStep(base: GraphicsProfile, devicePixelRatio: number): number {
+  let step = 0;
+  while (step < 16) {
+    const here = sharperProfile(base, step, devicePixelRatio);
+    const next = sharperProfile(base, step + 1, devicePixelRatio);
+    if (next.maxPixelRatio === here.maxPixelRatio && next.maximumScreenSpaceError === here.maximumScreenSpaceError)
+      break;
+    step++;
+  }
+  return step;
+}
+
+export interface SharpnessSample {
+  /** The window's average and lowest frame rate (the shell's 10 s perf window). */
+  fpsAvg: number;
+  fpsMin: number;
+  /**
+   * Frames the engine actually drew in the window. The globe's frame rate is its loop's, about
+   * 60 while it rests whatever it costs to draw; only a window that drew enough says anything
+   * about the cost of a sharper frame.
+   */
+  drawn: number;
+  /** When the window closed (ms): failures are forgotten after a while. */
+  atMs: number;
+}
+
+/** Frames a window must have drawn (of ~600) to count as evidence for a step up. */
+export const SHARPNESS_MIN_DRAWN = 200;
+/** How long a failed step is held against itself. */
+export const SHARPNESS_FAILURE_MS = 10 * 60_000;
+
+/**
+ * Walks the sharpness steps on the frame rate, like the presentation governor
+ * (performance.ts): up slowly — three good windows in a row that drew enough to tell, more
+ * for each recent failure of the next step — and down at once on a slow average, or on two
+ * windows in a row with a deep dip (one alone is a fly-to's tiles, at any sharpness). The
+ * window after a change is not judged: it holds the new tiles arriving. Failures are
+ * forgotten after ten minutes; a step that failed twice in that time waits. `yieldAll` hands
+ * every step back at once, for the presentation governor stepping down.
+ */
+export class SharpnessGovernor {
+  private stepNow = 0;
+  private good = 0;
+  private dips = 0;
+  private settle = 1;
+  private readonly failures = new Map<number, number[]>();
+  private readonly maxStep: number;
+
+  constructor(
+    private readonly base: GraphicsProfile,
+    private readonly devicePixelRatio: number,
+    private readonly opts: { goodAvg?: number; goodMin?: number; badAvg?: number; badMin?: number } = {},
+  ) {
+    this.maxStep = maxSharpnessStep(base, devicePixelRatio);
+  }
+
+  get step(): number {
+    return this.stepNow;
+  }
+
+  profile(): GraphicsProfile {
+    return sharperProfile(this.base, this.stepNow, this.devicePixelRatio);
+  }
+
+  private recentFailures(step: number, atMs: number): number {
+    const list = (this.failures.get(step) ?? []).filter((t) => atMs - t < SHARPNESS_FAILURE_MS);
+    this.failures.set(step, list);
+    return list.length;
+  }
+
+  private stepDown(atMs: number): true {
+    this.failures.set(this.stepNow, [...(this.failures.get(this.stepNow) ?? []), atMs]);
+    this.stepNow--;
+    this.good = 0;
+    this.dips = 0;
+    this.settle = 1;
+    return true;
+  }
+
+  /** A closed window; true when the step changed (apply `profile()`). */
+  sample(s: SharpnessSample): boolean {
+    if (!Number.isFinite(s.fpsAvg) || !Number.isFinite(s.fpsMin)) return false;
+    if (this.settle > 0) {
+      this.settle--;
+      return false;
+    }
+    const slow = s.fpsAvg < (this.opts.badAvg ?? 50);
+    const dip = s.fpsMin < (this.opts.badMin ?? 30);
+    this.dips = dip ? this.dips + 1 : 0;
+    if (slow || this.dips >= 2) {
+      this.good = 0;
+      return this.stepNow > 0 ? this.stepDown(s.atMs) : false;
+    }
+    const good =
+      s.fpsAvg >= (this.opts.goodAvg ?? 58) && s.fpsMin >= (this.opts.goodMin ?? 45) && s.drawn >= SHARPNESS_MIN_DRAWN;
+    if (!good) {
+      // A resting view is no evidence either way: it neither builds nor breaks a run.
+      if (s.drawn >= SHARPNESS_MIN_DRAWN) this.good = 0;
+      return false;
+    }
+    this.good++;
+    const next = this.stepNow + 1;
+    const failed = this.recentFailures(next, s.atMs);
+    if (next > this.maxStep || failed >= 2 || this.good < 3 + 3 * failed) return false;
+    this.stepNow = next;
+    this.good = 0;
+    this.settle = 1;
+    return true;
+  }
+
+  /** Every step back at once (the presentation governor is giving up detail); true if any. */
+  yieldAll(atMs: number): boolean {
+    if (this.stepNow === 0) return false;
+    this.failures.set(this.stepNow, [...(this.failures.get(this.stepNow) ?? []), atMs]);
+    this.stepNow = 0;
+    this.good = 0;
+    this.dips = 0;
+    this.settle = 1;
+    return true;
+  }
+
+  /** The mode changed: back to the profile, and frames from the one left say nothing. */
+  resetRuns(): boolean {
+    const changed = this.stepNow !== 0;
+    this.stepNow = 0;
+    this.good = 0;
+    this.dips = 0;
+    this.settle = 1;
+    return changed;
+  }
+}

@@ -352,6 +352,10 @@ export class DemoClient implements WorldClient {
         return this.sources;
       case 'overlays.list':
         return []; // demo sources publish no raster overlays
+      case 'overlays.valueAt':
+        return []; // and so have no values under them
+      case 'geodata.read':
+        return { shapes: [], issues: ['files are not read in the demo'] };
       case 'sources.manifest':
         return null; // demo has no provider manifests loaded; the panel falls back to health meta
       case 'sources.setEnabled': {

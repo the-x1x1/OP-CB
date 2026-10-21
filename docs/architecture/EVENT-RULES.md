@@ -56,9 +56,22 @@ Scope: all live fire detections each run (grid-accelerated single linkage).
 
 Severity from `properties.severity` (CAP words Extreme/Severe/Moderate/Minor → classes,
 anything else INFO; numeric 1–4 also accepted). `startAt` = `properties.effectiveFrom |
-onset | effective | observedAt`; `endAt` = `object.validUntil | properties.expires | ends`.
-Title = `labels.title | properties.headline | properties.event | "Weather alert"`; geometry
-= alert polygon or point.
+onset | effective`; for a source with none of these (a river gauge in flood, an aurora area),
+the start of the open event with the same id, so a flood is not restarted by each reading;
+else `observedAt`. `endAt` = `properties.ends | expires` (the source's), else `object.validUntil`
+(freshness only: `properties.endFromFreshness`). The summary's
+"until" is stated only when the source gives an end of its own (`ends`, `expires`), not one
+taken from how long a reading stays fresh. Title = `labels.title | properties.headline |
+properties.event | "Weather alert"`; geometry = alert polygon or point.
+
+**Withdrawn.** When the source stops listing an alert's object — left out of a complete read
+of everything it lists (`StateChange.withdrawn`; not a read of an area only, an answer the
+provider said is partial — records refused, a page limit reached, a layer truncated
+(`ProviderContext.incomplete`) — the first read after its settings changed, a provider
+disabled, or an object expired) — the open event ends then (`endAt` = now,
+`properties.withdrawnAt`): a volcano back to normal, a gauge below flood stage, an aurora level
+no longer reached. The map draws a storm's or an alert's event only while it is in force at
+the time shown.
 
 **Supersession.** A message that updates or cancels earlier ones (CAP `references`, which
 the NWS provider keeps as `properties.references`, alert URNs) gets `properties.supersedes`
@@ -102,6 +115,12 @@ second bad afternoon is a new event.
 | summary  | the AQI, PM2.5, since when, the episode's peak                                                      |
 | end      | AQI ≤ **90** (hysteresis: a reading hovering at 100 does not flap), or the sensor is gone           |
 | ignored  | a reading whose laser channels disagree (`channels: 'disagree'`) neither raises, moves nor ends     |
+
+A station with no US AQI but Canada's Air Quality Health Index (`properties.aqhi`, the
+`eccc-aqhi` source) is read on that scale, never converted: raised at AQHI **7** ("High risk",
+MODERATE; over 10 "Very high risk", SEVERE), ended at **5** or below; the title is ECCC's risk
+category (`High risk air at Metro Vancouver - NW`), the summary names the AQHI, and the event
+carries `scale: 'aqhi'`, `aqhi` and `peakAqhi` instead of `aqi`.
 
 ## reading-limit (`event:reading-limit:<namespace>:<value>.<key>-<episode start, epoch s>`)
 
@@ -168,10 +187,36 @@ Scope: the vessels that changed in the batch; one event per episode of one beaco
 | end      | a report no longer active (stopped), or not heard for 10 min (ended when last heard)      |
 | reopens  | heard active again within 30 min of a quiet end: the same event                           |
 
+## gnss-interference (`event:gnss-interference:worldview:<south>_<west>-<start second>`)
+
+Where aircraft report degraded satellite navigation — GPS jamming or spoofing, as gpsjam.org
+maps it — from the navigation integrity aircraft broadcast: NIC and NACp
+(`navIntegrity`, `navAccuracy`) and readsb's GPS-loss time (`gpsLostAt`), kept by `adsb-lol` and
+`readsb-local` whatever the position's source but TIS-B. An aircraft that has lost GPS still
+broadcasts, with NIC 0 and often no NACp, and is placed by MLAT: it counts (seen on adsb.lol over
+the Gulf of Finland on 2026-10-16, four such aircraft among 47). Scope: all airborne aircraft
+heard in the last ten minutes that report any of the three; ADS-B version 0 left out. The same
+aircraft give the same cells; whether an open cell is kept is read from its own event
+(`lastQualifiedAt`), so the rule holds no state of its own.
+
+| rule     | value                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| degraded | NIC < 7 · NACp < 8 · GPS fix lost within 10 min of the report                                   |
+| cell     | 0.5° × 0.5° by the aircraft's position; the event's geometry is the square                      |
+| raised   | ≥ 2 degraded aircraft that are ≥ 2 % of the aircraft with integrity in the cell                 |
+| severity | MINOR at 2–10 % (gpsjam yellow) · MODERATE above 10 % (red)                                     |
+| title    | `GNSS interference likely near <lat>°N <lon>°E` (the cell's centre)                             |
+| summary  | how many of how many aircraft, the thresholds, and that it is a sign, not proof                 |
+| objects  | the degraded aircraft (up to 32); confidence LOW                                                |
+| end      | the cell has not qualified for 10 minutes (GNSS_HOLD_MS); qualifying again later is a new event |
+
 ## launch (`event:launch:<namespace>:<value>`)
 
 INFO. `startAt` = `properties.net | windowStart | launchAt | observedAt`, `endAt` =
 `properties.windowEnd`; title `Launch — <name>`; summary from vehicle, provider, pad, status.
+The time is said no more precisely than `properties.netPrecision` (LL2 `net_precision`): to the
+minute for Second, Minute and Hour; "2026-10-19 (the day only)", "October 2026 (the month
+only)", "Q4 2026 (the quarter only)" and so on otherwise.
 
 ## source-status-change (`event:source-status-change:<providerId>:<compact time>`)
 
@@ -230,6 +275,7 @@ tie-break.
 | `READING_LIMIT_CLEAR_MARGIN`                                               | 2 % of the limit (≥ 0.1)               |
 | `AIRCRAFT_EMERGENCY_QUIET_MS` / `_FOLLOW_MS` / `_REOPEN_MS`                | 15 min / 1 min / 30 min                |
 | `DISTRESS_BEACON_QUIET_MS` / `_FOLLOW_MS` / `_REOPEN_MS`                   | 10 min / 1 min / 30 min                |
+| `GNSS_CELL_DEG` / `GNSS_WINDOW_MS` / `GNSS_MIN_DEGRADED` / bands           | 0.5° / 10 min / 2 / 2 % · 10 %         |
 | `SOURCE_STATUS_THROTTLE_MS`                                                | 10 min                                 |
 | `WATCH_ZONE_DEDUPE_MS`                                                     | 6 h                                    |
 | `FEED_MAX_ITEMS`                                                           | 500                                    |

@@ -8,6 +8,7 @@ import {
   cleanFlightRoute,
   cleanTrackAnswer,
   cleanDetailsAnswer,
+  cleanOverlayValue,
   pollBudgetMs,
   subscribeFailureStatus,
   viewportPollGapMs,
@@ -1024,10 +1025,13 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   const flush = async () => {
     for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
   };
+  const batches: Array<{ complete?: boolean }> = [];
+  host.onObservations((b) => batches.push(b));
   await host.start();
   t.mock.timers.tick(0);
   await flush();
   assert.equal(polls.length, 1, 'the first poll');
+  assert.equal(batches.at(-1)?.complete, undefined, 'a first poll has nothing to compare with');
   const view = (w: number) => host.setViewport({ west: w, south: 10, east: w + 20, north: 30 });
   view(0);
   view(10); // panning: each move asks again
@@ -1038,6 +1042,7 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   t.mock.timers.tick(22_000);
   await flush();
   assert.equal(polls.length, 2, 'once the budget allows, one poll for the latest view');
+  assert.equal(batches.at(-1)?.complete, undefined, 'a read of the view: what it leaves out is not withdrawn');
   assert.ok(polls[1]! - polls[0]! >= 27_273);
   await host.dispose();
 });
@@ -1450,6 +1455,101 @@ test('cleanDetailsAnswer: a label, JSON under the size cap, and a link only to a
   );
 });
 
+test('overlayValue (ADR-003 amendment 2026-10-15): asked of the provider that published the overlay, bounded, cleaned, not offline', async () => {
+  const clock = new testing.VirtualClock(Date.parse('2026-10-15T08:00:00.000Z'));
+  const { host } = makeHost(
+    clock,
+    fakeFetch(() => new Response('{}')),
+  );
+  const usgs = createProvider();
+  let answer: 'ok' | 'slow' | 'throw' | 'nothing' = 'ok';
+  const asked: unknown[] = [];
+  const probe: import('@worldview/provider-sdk').WorldProvider & import('@worldview/provider-sdk').OverlayValueSource =
+    {
+      manifest: { ...usgs.manifest, id: 'overlay-probe', enabledByDefault: true },
+      initialize: async () => {},
+      start: async () => {},
+      stop: async () => {},
+      health: async () => ({
+        providerId: 'overlay-probe',
+        status: 'LIVE',
+        errorRate: 0,
+        rateLimitState: { limited: false },
+        credentialState: 'not-required',
+      }),
+      overlays: async () => [
+        {
+          id: 'overlay-probe:radar',
+          kind: 'wms',
+          name: 'Radar',
+          attribution: 'Example agency',
+          url: `https://${usgs.manifest.allowedHosts[0]}/wms`,
+          layers: 'radar',
+        },
+      ],
+      async overlayValue(request) {
+        asked.push(request.overlayId);
+        if (answer === 'throw') throw new Error('HTTP 400');
+        if (answer === 'slow') return new Promise<undefined>(() => undefined);
+        if (answer === 'nothing') return undefined;
+        return { label: ' Radar ', values: [{ name: 'GRAY_INDEX', value: 35.5 }], attribution: 'Example agency' };
+      },
+    };
+  host.register(probe);
+  const here = { latitude: 35.47, longitude: -97.52 };
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined, 'not running yet');
+  await host.start();
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(await host.overlayValue('overlay-probe:radar', here), {
+    label: 'Radar',
+    values: [{ name: 'GRAY_INDEX', value: 35.5 }],
+    attribution: 'Example agency',
+  });
+  assert.equal(await host.overlayValue('overlay-probe:other', here), undefined, 'an overlay no one published');
+  answer = 'nothing';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined);
+  answer = 'throw';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined, 'a throw is logged, not raised');
+  answer = 'slow';
+  assert.equal(await host.overlayValue('overlay-probe:radar', here, { timeoutMs: 10 }), undefined, 'late: dropped');
+  answer = 'ok';
+  const before = asked.length;
+  host.setOnline(false);
+  assert.equal(
+    await host.overlayValue('overlay-probe:radar', here),
+    undefined,
+    'a network source is not asked offline',
+  );
+  assert.equal(asked.length, before);
+  host.setOnline(true);
+  await host.dispose();
+});
+
+test('cleanOverlayValue: a label, at most twelve named values (finite numbers or text, cut), a frame only when it is a time', () => {
+  assert.equal(cleanOverlayValue({ label: ' ', values: [{ name: 'a', value: 1 }] }), undefined);
+  assert.equal(cleanOverlayValue({ label: 'x', values: [] }), undefined);
+  assert.equal(
+    cleanOverlayValue({
+      label: 'x',
+      values: [
+        { name: 'a', value: Number.NaN },
+        { name: ' ', value: 1 },
+      ],
+    }),
+    undefined,
+    'nothing usable is no answer',
+  );
+  const many = Array.from({ length: 20 }, (_, i) => ({ name: `v${i}`, value: i }));
+  assert.equal(cleanOverlayValue({ label: 'x', values: many })?.values.length, 12);
+  const long = cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 'y'.repeat(500) }] });
+  assert.equal(long?.values[0]?.value.toString().length, 120);
+  assert.equal(cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 1 }], frame: 'soon' })?.frame, undefined);
+  assert.equal(
+    cleanOverlayValue({ label: 'x', values: [{ name: 'a', value: 1 }], frame: '2026-10-15T08:00:00Z' })?.frame,
+    '2026-10-15T08:00:00Z',
+  );
+});
+
 test('offline: a source that answers from its cache keeps being polled — from its cache, with nothing sent', async () => {
   const clock = new testing.VirtualClock(Date.parse('2026-09-21T08:05:00.000Z'));
   let calls = 0;
@@ -1550,4 +1650,79 @@ test('field profile: a source on this computer is never slowed', async () => {
   } finally {
     await host.dispose();
   }
+});
+
+test('a poll is complete only when it is all the source lists, under the settings of the last one', async () => {
+  const clock = new testing.VirtualClock(Date.parse('2026-09-21T08:05:00.000Z'));
+  const settings = new testing.MemorySettings({});
+  const host = new ProviderHost({
+    clock,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [new RingBufferSink()] }),
+    fetchImpl: fakeFetch(() => new Response('{}')),
+    manualScheduling: true,
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock, allowed),
+    settingsStore: () => settings,
+  });
+  const usgs = createProvider();
+  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let partial = false;
+  let answer: unknown[] = [];
+  host.register({
+    ...usgs,
+    manifest: { ...usgs.manifest, id: 'complete-test', enabledByDefault: true },
+    initialize: async (c) => {
+      ctx = c;
+    },
+    start: async () => {},
+    stop: async () => {},
+    query: async () => {
+      if (partial) ctx!.incomplete?.('stopped at 10 page(s) with more left');
+      return answer;
+    },
+    health: async () => ({
+      providerId: 'complete-test',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+  });
+  await host.start();
+  const poll = async () => (await host.pollNow('complete-test'))?.complete;
+  assert.equal(await poll(), undefined, 'the first poll');
+  assert.equal(await poll(), true, 'the same settings again');
+  partial = true;
+  assert.equal(await poll(), undefined, 'the provider said its answer is partial');
+  partial = false;
+  assert.equal(await poll(), true);
+  settings.update({ areas: 'HI' });
+  assert.equal(await poll(), undefined, 'the first poll under new settings (a narrower area asked for)');
+  assert.equal(await poll(), true);
+  // An empty answer right after one that listed something is not believed; a second is.
+  answer = [
+    {
+      id: 'complete-test:a:2026-09-21T08:05:00.000Z',
+      providerId: 'complete-test',
+      externalId: 'a',
+      objectType: 'weather-alert',
+      observedAt: '2026-09-21T08:05:00.000Z',
+      receivedAt: '2026-09-21T08:05:00.000Z',
+      position: { latitude: 1, longitude: 1 },
+      payload: {},
+      quality: { complete: true, sourceQuality: 'authoritative' },
+      provenance: {
+        providerId: 'complete-test',
+        sourceName: 'x',
+        origin: 'live',
+        receivedAt: '2026-09-21T08:05:00.000Z',
+      },
+    },
+  ];
+  assert.equal(await poll(), true);
+  answer = [];
+  assert.equal(await poll(), undefined, 'empty after some: not taken at its word');
+  assert.equal(await poll(), true, 'empty twice: believed');
+  await host.dispose();
 });

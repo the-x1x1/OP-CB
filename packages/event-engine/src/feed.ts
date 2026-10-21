@@ -41,7 +41,8 @@ export class FeedBuilder {
   constructor(opts: FeedBuilderOptions = {}) {
     this.maxItems = Math.max(1, opts.maxItems ?? FEED_MAX_ITEMS);
     this.minimumSeverity = opts.minimumSeverity ?? 'MINOR';
-    this.infoTypes = new Set(opts.infoTypes ?? [EventTypes.SourceStatusChange]);
+    // A launch is news though it threatens nothing: INFO, and in the feed (Launch Library 2).
+    this.infoTypes = new Set(opts.infoTypes ?? [EventTypes.SourceStatusChange, EventTypes.Launch]);
   }
 
   get size(): number {

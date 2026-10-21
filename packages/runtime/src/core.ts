@@ -1,3 +1,4 @@
+import { readGeodata, type GeodataRead } from './support/geodata-import.js';
 import os from 'node:os';
 import path from 'node:path';
 import { existsSync, promises as fs } from 'node:fs';
@@ -13,6 +14,7 @@ import {
 import { HttpClient, LoggerHub, RingBufferSink, type Logger } from '@worldview/core';
 import {
   type ObjectDetailsAnswer,
+  type OverlayValueAnswer,
   type FlightRouteAnswer,
   type ObjectTrackAnswer,
   type ProviderDataPolicy,
@@ -319,6 +321,26 @@ export class RuntimeCore {
   private detach: Array<() => void> = [];
   private started = false;
   private stopped = false;
+
+  /**
+   * A dropped file read into shapes (`geodata.read`): off the main thread when main gave a
+   * reader, else here. A reader that could not run at all (its worker never started) is logged
+   * and the file is read here instead; once it ran, its answer stands, a failure included. The
+   * reader copies the bytes it hands on, so they are still here for that.
+   */
+  async readGeodataFile(name: string, bytes: Uint8Array): Promise<GeodataRead> {
+    const off = this.deps.geodataReader;
+    if (off) {
+      try {
+        return await off(name, bytes);
+      } catch (err) {
+        this.log.warn('geodata reader failed; reading in-process', {
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    return readGeodata(name, bytes);
+  }
 
   constructor(private readonly deps: WorldRuntimeDeps) {
     this.clock = deps.clock ?? systemClock;
@@ -1025,6 +1047,7 @@ export class RuntimeCore {
   private onBatch(batch: ObservationBatch): void {
     this.state.ingest(batch.observations, {
       snapshot: batch.snapshot,
+      ...(batch.complete ? { withdraws: true } : {}),
       providerId: batch.providerId,
       ...(batch.freshness ? { freshness: batch.freshness } : {}),
     });
@@ -1166,6 +1189,27 @@ export class RuntimeCore {
       }),
     );
     return answers.filter((a): a is ObjectDetailsAnswer & { providerId: string } => a !== undefined);
+  }
+
+  /**
+   * What the sources of the overlays the shell is drawing say lies under them at one point
+   * (`overlays.valueAt`, provider-sdk overlay-value.ts), in the order asked. Each overlay is
+   * asked of the running provider that published it, all at once, each bounded by the host's
+   * timeout; one that is not published now, or has nothing there, is left out.
+   */
+  async overlayValues(
+    position: { latitude: number; longitude: number },
+    overlayIds: readonly string[],
+  ): Promise<Array<OverlayValueAnswer & { overlayId: string; providerId: string }>> {
+    const published = new Map(this.providerHost.overlays().map((o) => [o.id, o.providerId]));
+    const asked = [...new Set(overlayIds)].filter((id) => published.has(id));
+    const answers = await Promise.all(
+      asked.map(async (overlayId) => {
+        const answer = await this.providerHost.overlayValue(overlayId, position);
+        return answer ? { ...answer, overlayId, providerId: published.get(overlayId)! } : undefined;
+      }),
+    );
+    return answers.filter((a): a is OverlayValueAnswer & { overlayId: string; providerId: string } => a !== undefined);
   }
 
   /** The bundled airline, type and airport tables (support/flight-info.ts), read once on first use. */

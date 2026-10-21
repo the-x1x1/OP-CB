@@ -1,0 +1,527 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -82.2889,
+          31.3753
+        ]
+      },
+      "properties": {
+        "gaugelid": "ABAG1",
+        "status": "minor",
+        "location": "GA Highway 203 near Blackshear",
+        "waterbody": "Alabaha River",
+        "state": "GA",
+        "obstime": "2026-09-23 04:30:00",
+        "wfo": "jax",
+        "url": "https://water.noaa.gov/gauges/abag1",
+        "action": "7",
+        "units": "ft",
+        "secvalue": "1.5",
+        "secunit": "kcfs",
+        "flood": "9",
+        "moderate": "12",
+        "major": "14",
+        "observed": "9.23",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.5222,
+          29.1667
+        ]
+      },
+      "properties": {
+        "gaugelid": "ASTF1",
+        "status": "minor",
+        "location": "Astor",
+        "waterbody": "St. Johns River",
+        "state": "FL",
+        "obstime": "2026-09-23 04:30:00",
+        "wfo": "mlb",
+        "url": "https://water.noaa.gov/gauges/astf1",
+        "action": "2",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "2.3",
+        "moderate": "3",
+        "major": "4",
+        "observed": "2.66",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.8675,
+          31.2206
+        ]
+      },
+      "properties": {
+        "gaugelid": "ATKG1",
+        "status": "minor",
+        "location": "Atkinson",
+        "waterbody": "Satilla River",
+        "state": "GA",
+        "obstime": "2026-09-23 04:45:00",
+        "wfo": "jax",
+        "url": "https://water.noaa.gov/gauges/atkg1",
+        "action": "11",
+        "units": "ft",
+        "secvalue": "6.37",
+        "secunit": "kcfs",
+        "flood": "13",
+        "moderate": "19",
+        "major": "22",
+        "observed": "13.39",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98.3178,
+          35.5437
+        ]
+      },
+      "properties": {
+        "gaugelid": "BRIO2",
+        "status": "minor",
+        "location": "Bridgeport",
+        "waterbody": "Canadian River",
+        "state": "OK",
+        "obstime": "2026-09-23 04:45:00",
+        "wfo": "oun",
+        "url": "https://water.noaa.gov/gauges/brio2",
+        "action": "12",
+        "units": "ft",
+        "secvalue": "12.5",
+        "secunit": "kcfs",
+        "flood": "14",
+        "moderate": "16",
+        "major": "17",
+        "observed": "15.85",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98.9028,
+          48.0994
+        ]
+      },
+      "properties": {
+        "gaugelid": "DCBN8",
+        "status": "major",
+        "location": "Devils Lake",
+        "waterbody": "Devils Lake",
+        "state": "ND",
+        "obstime": "2026-09-23 04:00:00",
+        "wfo": "fgf",
+        "url": "https://water.noaa.gov/gauges/dcbn8",
+        "action": "",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "0.1",
+        "moderate": "0.2",
+        "major": "0.3",
+        "observed": "50",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98.3575,
+          47.8686
+        ]
+      },
+      "properties": {
+        "gaugelid": "ESLN8",
+        "status": "major",
+        "location": "Lakota",
+        "waterbody": "Eastern Stump Lake",
+        "state": "ND",
+        "obstime": "2026-09-23 04:15:00",
+        "wfo": "fgf",
+        "url": "https://water.noaa.gov/gauges/esln8",
+        "action": "",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "0.1",
+        "moderate": "0.2",
+        "major": "0.3",
+        "observed": "49.92",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -99.1037,
+          34.6381
+        ]
+      },
+      "properties": {
+        "gaugelid": "HEAO2",
+        "status": "minor",
+        "location": "Headrick",
+        "waterbody": "North Fork of the Red River",
+        "state": "OK",
+        "obstime": "2026-09-23 04:00:00",
+        "wfo": "oun",
+        "url": "https://water.noaa.gov/gauges/heao2",
+        "action": "12",
+        "units": "ft",
+        "secvalue": "8.22",
+        "secunit": "kcfs",
+        "flood": "14",
+        "moderate": "16",
+        "major": "19",
+        "observed": "15.61",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.8083,
+          24.555
+        ]
+      },
+      "properties": {
+        "gaugelid": "KYWF1",
+        "status": "minor",
+        "location": "Key West Tide Station (in MHHW)",
+        "waterbody": "Tide Station",
+        "state": "FL",
+        "obstime": "2026-09-23 05:06:00",
+        "wfo": "key",
+        "url": "https://water.noaa.gov/gauges/kywf1",
+        "action": "1",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "1.1",
+        "moderate": "1.6",
+        "major": "2.1",
+        "observed": "1.11",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -82.3139,
+          27.2403
+        ]
+      },
+      "properties": {
+        "gaugelid": "MKCF1",
+        "status": "minor",
+        "location": "Myakka River State Park",
+        "waterbody": "Myakka River",
+        "state": "FL",
+        "obstime": "2026-09-23 05:00:00",
+        "wfo": "tbw",
+        "url": "https://water.noaa.gov/gauges/mkcf1",
+        "action": "6.5",
+        "units": "ft",
+        "secvalue": "0.949",
+        "secunit": "kcfs",
+        "flood": "7",
+        "moderate": "8.5",
+        "major": "10.5",
+        "observed": "7.18",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -88.0834,
+          33.5751
+        ]
+      },
+      "properties": {
+        "gaugelid": "MLLA1",
+        "status": "minor",
+        "location": "",
+        "waterbody": "Luxapallila Creek",
+        "state": "AL",
+        "obstime": "2026-09-23 05:00:00",
+        "wfo": "bmx",
+        "url": "https://water.noaa.gov/gauges/mlla1",
+        "action": "10",
+        "units": "ft",
+        "secvalue": "3.82",
+        "secunit": "kcfs",
+        "flood": "12",
+        "moderate": "13",
+        "major": "14",
+        "observed": "12.53",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -81.2501,
+          24.6733
+        ]
+      },
+      "properties": {
+        "gaugelid": "OBCF1",
+        "status": "minor",
+        "location": "",
+        "waterbody": "Tide Station",
+        "state": "FL",
+        "obstime": "2026-09-23 04:54:00",
+        "wfo": "key",
+        "url": "https://water.noaa.gov/gauges/obcf1",
+        "action": "1",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "1.1",
+        "moderate": "1.6",
+        "major": "2.1",
+        "observed": "1.12",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -66.9227,
+          18.3984
+        ]
+      },
+      "properties": {
+        "gaugelid": "QUEP4",
+        "status": "minor",
+        "location": "",
+        "waterbody": "Lago Guajataca",
+        "state": "PR",
+        "obstime": "2026-09-23 04:45:00",
+        "wfo": "sju",
+        "url": "https://water.noaa.gov/gauges/quep4",
+        "action": "644",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "644.6",
+        "moderate": "",
+        "major": "",
+        "observed": "654.87",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -82.0242,
+          30.7831
+        ]
+      },
+      "properties": {
+        "gaugelid": "SMTG1",
+        "status": "minor",
+        "location": "Traders Hill",
+        "waterbody": "St. Marys River",
+        "state": "GA",
+        "obstime": "2026-09-23 04:15:00",
+        "wfo": "jax",
+        "url": "https://water.noaa.gov/gauges/smtg1",
+        "action": "5",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "7",
+        "moderate": "12",
+        "major": "16",
+        "observed": "7.23",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100.0747,
+          33.7958
+        ]
+      },
+      "properties": {
+        "gaugelid": "TLPT2",
+        "status": "minor",
+        "location": "Guthrie 19NE",
+        "waterbody": "Middle Wichita River",
+        "state": "TX",
+        "obstime": "2026-09-23 04:00:00",
+        "wfo": "lub",
+        "url": "https://water.noaa.gov/gauges/tlpt2",
+        "action": "",
+        "units": "ft",
+        "secvalue": "5.78",
+        "secunit": "kcfs",
+        "flood": "15",
+        "moderate": "",
+        "major": "",
+        "observed": "16.08",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -82.5614,
+          31.3025
+        ]
+      },
+      "properties": {
+        "gaugelid": "TMOG1",
+        "status": "minor",
+        "location": "GA-158 above Millwood",
+        "waterbody": "Satilla River",
+        "state": "GA",
+        "obstime": "2026-09-23 04:30:00",
+        "wfo": "jax",
+        "url": "https://water.noaa.gov/gauges/tmog1",
+        "action": "11",
+        "units": "ft",
+        "secvalue": "3.4",
+        "secunit": "kcfs",
+        "flood": "14",
+        "moderate": "17",
+        "major": "19",
+        "observed": "14.43",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -83.3189,
+          30.8925
+        ]
+      },
+      "properties": {
+        "gaugelid": "VDRG1",
+        "status": "minor",
+        "location": "Valdosta at US 41",
+        "waterbody": "Withlacoochee River",
+        "state": "GA",
+        "obstime": "2026-09-23 04:30:00",
+        "wfo": "tae",
+        "url": "https://water.noaa.gov/gauges/vdrg1",
+        "action": "123",
+        "units": "ft",
+        "secvalue": "2.25",
+        "secunit": "kcfs",
+        "flood": "125",
+        "moderate": "133",
+        "major": "137",
+        "observed": "125.06",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -91.3381,
+          29.4494
+        ]
+      },
+      "properties": {
+        "gaugelid": "AMRL1",
+        "status": "action",
+        "location": "Amerada Pass",
+        "waterbody": "Tide Station (LCH)",
+        "state": "LA",
+        "obstime": "2026-09-23 05:24:00",
+        "wfo": "lch",
+        "url": "https://water.noaa.gov/gauges/amrl1",
+        "action": "2.57",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "4",
+        "moderate": "5",
+        "major": "6",
+        "observed": "2.63",
+        "idp_filedate": 1792130286000
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -76.48,
+          38.9831
+        ]
+      },
+      "properties": {
+        "gaugelid": "APAM2",
+        "status": "action",
+        "location": "Annapolis (IN MLLW)",
+        "waterbody": "Severn River",
+        "state": "MD",
+        "obstime": "2026-09-23 05:30:00",
+        "wfo": "lwx",
+        "url": "https://water.noaa.gov/gauges/apam2",
+        "action": "2",
+        "units": "ft",
+        "secvalue": "",
+        "secunit": "kcfs",
+        "flood": "2.6",
+        "moderate": "3.3",
+        "major": "5",
+        "observed": "2.19",
+        "idp_filedate": 1792130286000
+      }
+    }
+  ]
+}

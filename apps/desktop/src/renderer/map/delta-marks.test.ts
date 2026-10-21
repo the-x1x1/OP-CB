@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { attributeLongTask, clearDeltaMarks, markDelta } from './delta-marks.js';
+import {
+  attributeLongTask,
+  clearDeltaMarks,
+  markDelta,
+  noteRenderMark,
+  noteShellCommit,
+  noteWorldDispatch,
+  takeRenderMax,
+  takeRenderParts,
+} from './delta-marks.js';
 
 test('delta marks: a long task is attributed to the delta that arrived inside it', () => {
   clearDeltaMarks();
@@ -26,4 +35,32 @@ test('delta marks: only the recent past is kept', () => {
   for (let i = 0; i < 40; i++) markDelta(i, i * 1_000);
   assert.deepEqual(attributeLongTask({ startTime: 0, duration: 10 }), { kind: 'other' }, 'long gone');
   assert.equal(attributeLongTask({ startTime: 39_000, duration: 10 }).kind, 'delta');
+});
+
+test('shell render time: from a world dispatch to the next commit, the longest per window', () => {
+  clearDeltaMarks();
+  noteShellCommit(5);
+  assert.equal(takeRenderMax(), 0, 'a commit with no world change behind it is not counted');
+  noteWorldDispatch(10);
+  noteWorldDispatch(12);
+  noteShellCommit(40);
+  noteWorldDispatch(50);
+  noteShellCommit(55);
+  assert.equal(takeRenderMax(), 30, 'from the first dispatch the commit took in');
+  assert.equal(takeRenderMax(), 0);
+});
+
+test('shell render parts: the time to each mark, for the slowest commit of the window', () => {
+  clearDeltaMarks();
+  noteRenderMark('top', 1); // no world change pending: not kept
+  noteWorldDispatch(10);
+  noteRenderMark('top', 12);
+  noteRenderMark('ctx', 15);
+  noteShellCommit(75);
+  noteWorldDispatch(100);
+  noteRenderMark('top', 101);
+  noteShellCommit(105);
+  assert.equal(takeRenderMax(), 65);
+  assert.equal(takeRenderParts(), 'wait:2 top:3 ctx:60', 'the slow commit, not the later quick one');
+  assert.equal(takeRenderParts(), '');
 });

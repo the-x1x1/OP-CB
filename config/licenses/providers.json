@@ -1754,7 +1754,7 @@
       "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use",
       "license": "The Space Devs terms of use: data may be used and shared in any form; avoid forwarding it without added value; attribution encouraged, not mandatory (GEV DATA_SOURCES.md lines 26, 67). 15 unauthenticated calls/hour; optional token",
       "category": "space",
-      "plannedStatus": "deferred",
+      "plannedStatus": "default",
       "dataPolicy": {
         "cacheAllowed": true,
         "rawPayloadRetentionAllowed": true,
@@ -1768,7 +1768,7 @@
         "termsUrl": "https://github.com/TheSpaceDevs/Tutorials/blob/main/faqs/faq_TSD.md#terms-of-use"
       },
       "commercialReview": "approved",
-      "notes": "Deferred by the migration matrix (row 36), not by licence. Keep the courtesy credit when adopted. Some launch imagery in LL2 responses is third-party (agency/press photos) — do not display images without checking each image's credit field."
+      "notes": "Shipped 2026-10-15 as the connector definition connectors/enabled/launch-library-2.json (the migration matrix's row 36): the next 30 launches every 30 minutes, two of the 15 unauthenticated calls an hour; the courtesy credit is shown. No image from the responses is read or displayed: some are third-party (agency/press photos) under their own licences."
     },
     {
       "providerId": "radio-browser",
@@ -2409,6 +2409,121 @@
       },
       "commercialReview": "approved",
       "notes": "Added 2026-09-28 (worldwide weather). Definition connectors/enabled/nws-storm-reports.json (arcgis-feature). Chosen over SPC's today_*.csv files, which carry an HHMM time without a date and could not be read from the build machine (spc.noaa.gov refuses automated reading, robots.txt); SPC's preliminary storm reports are compiled from these same NWS local storm reports. Service description, fields and renderer values read live on 2026-09-28; the fixture holds recorded rows (times moved back five days) and one invented tornado row. Tornado, funnel cloud, waterspout, landspout, hail, marine hail and thunderstorm wind types only (server where and client filter). The service updates every 30 minutes; polled every 15. Object ids are the layer's objectid, which the service may renumber when it republishes: a report may be replaced by an identical one under a new id."
+    },
+    {
+      "providerId": "usgs-volcanoes",
+      "name": "USGS Volcano Hazards Program — US volcano status (VSC volcano API, GeoJSON)",
+      "sourceUrl": "https://volcanoes.usgs.gov/vsc/api/volcanoApi/geojson",
+      "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+      "license": "U.S. Government work — public domain (USGS copyrights and credits: USGS-authored information is in the public domain; credit requested)",
+      "category": "disasters",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Volcano alerts: USGS Volcano Hazards Program",
+        "termsUrl": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (volcano alerts). Definition connectors/enabled/usgs-volcanoes.json (geojson). The status service lists all 161 US volcanoes with position, aviation colour code, alert level, latest notice synopsis and link; the definition keeps YELLOW, ORANGE and RED. The service page says its items are freely available but designed to support USGS applications, with no guarantee of continuing support. The HANS API (volcanoes.usgs.gov/hans-public/api) carries the same codes without positions, so it was not used. Fixture recorded 2026-10-16 ~05:50 UTC by the built-in browser on the test laptop: 7 of 161 features (every elevated one, two GREEN, one UNASSIGNED), values untouched. Volcano images in the answer (some observatory photos) are not read."
+    },
+    {
+      "providerId": "ndbc-observations",
+      "name": "NOAA National Data Buoy Center — latest observations of every station (latest_obs.txt)",
+      "sourceUrl": "https://www.ndbc.noaa.gov/data/latest_obs/latest_obs.txt",
+      "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml",
+      "license": "U.S. Government work — public domain (NOAA/NDBC disclaimer). Partner stations' data are distributed by NDBC as part of the same product.",
+      "category": "weather",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Buoys: NOAA National Data Buoy Center",
+        "termsUrl": "https://www.ndbc.noaa.gov/disclaimer.shtml"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (ocean buoys). Definition connectors/enabled/ndbc-observations.json (rest-json, the column-aligned text read with response.csv delimiter whitespace and comment #). About 860 stations, ~100 KB, read every 15 minutes. ndbc.noaa.gov's robots.txt disallows only three named crawlers. Fixture recorded 2026-10-16 ~06:20 UTC by the built-in browser on the test laptop: the two header lines, two buoys off Korea and every Hawaii station, dates moved back to 2026-09-23 for the suite's clock (times of day as served). Partner stations (PacIOOS, NOS tide gauges) appear under NDBC's distribution; NDBC states no restriction on them."
+    },
+    {
+      "providerId": "nwps-river-flooding",
+      "name": "NOAA National Water Prediction Service — observed river stages (MapServer layer 0), gauges in flood",
+      "sourceUrl": "https://mapservices.weather.noaa.gov/eventdriven/rest/services/water/riv_gauges/MapServer/0",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "license": "U.S. Government work — public domain (NWS disclaimer; service copyright text NOAA/NWS/NWPS)",
+      "category": "disasters",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "River gauges: NOAA National Water Prediction Service",
+        "termsUrl": "https://www.weather.gov/disclaimer"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (river flooding). Definition connectors/enabled/nwps-river-flooding.json (arcgis-feature) with a server where for minor, moderate and major (16 of ~12,900 gauges on 2026-10-16; 44 more at action stage, not asked for). The NWPS JSON API (api.water.noaa.gov/nwps/v1/gauges) has no flood filter and its national list timed out in a browser, so the MapServer is used. obstime is UTC: ABAG1 read 04:30 / 9.23 ft here and 05:30Z / 9.22 ft from the API at the same moment. Fixture recorded 2026-10-16 ~06:40 UTC by the built-in browser on the test laptop: every gauge in flood and two at action stage, dates moved back to 2026-09-23 for the suite's clock."
+    },
+    {
+      "providerId": "eccc-aqhi",
+      "name": "Environment and Climate Change Canada — AQHI observations (MSC GeoMet OGC API, aqhi-observations-realtime)",
+      "sourceUrl": "https://api.weather.gc.ca/collections/aqhi-observations-realtime/items",
+      "termsUrl": "https://eccc-msc.github.io/open-data/licence/readme_en/",
+      "license": "Environment and Climate Change Canada Data Servers End-use Licence: use, copy, modify and distribute, commercially or not, with the attribution 'Data Source: Environment and Climate Change Canada' and no implied endorsement",
+      "category": "environment",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": true,
+        "attributionText": "Data Source: Environment and Climate Change Canada",
+        "termsUrl": "https://eccc-msc.github.io/open-data/licence/readme_en/"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-15 (air quality, Canada; God's Eye View 8887ca4 was the prompt). Definition connectors/enabled/eccc-aqhi.json (ogc-features, latest=true, 124 stations on 2026-10-16). The AQHI is carried as aqhi, never converted to a US AQI; the air-quality rule raises at AQHI 7 (High risk). Licence page read from the example definition already in the repo (connectors/examples/ogc/eccc-*); the attribution is the one the licence prescribes. Fixture recorded 2026-10-16 ~07:15 UTC by the built-in browser on the test laptop, 6 of 124 stations (including Tiverton, listed as latest but two days old), dates moved back 23 days for the suite's clock."
+    },
+    {
+      "providerId": "swpc-aurora",
+      "name": "NOAA Space Weather Prediction Center — OVATION aurora 30-minute forecast (json/ovation_aurora_latest.json)",
+      "sourceUrl": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+      "termsUrl": "https://www.weather.gov/disclaimer",
+      "license": "U.S. Government work — public domain (NOAA/NWS disclaimer)",
+      "category": "weather",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Aurora forecast: NOAA Space Weather Prediction Center (OVATION)",
+        "termsUrl": "https://www.weather.gov/disclaimer"
+      },
+      "commercialReview": "approved",
+      "notes": "Added 2026-10-16 (space weather; OSIRIS lists it). Definition connectors/enabled/swpc-aurora.json (rest-json with response.contour, ADR-013 amendment 2026-10-16): the 1° grid of 65,160 [lon, lat, %] points (919 KB) read as the areas of at least 10, 30, 50 and 70 percent. Off by default: an area across the high latitudes at any hour, turned on for a purpose. SWPC is part of NOAA's National Weather Service; its products are covered by the NWS disclaimer. Fixture recorded 2026-10-16 ~07:20 UTC by the built-in browser on the test laptop (a quiet evening, peak 17%), trimmed to 180°–270° E, 50°–80° N with every value as served, times moved back to 2026-09-23 for the suite's clock (the 63 minutes between observation and forecast kept)."
     },
     {
       "providerId": "spc-day1-outlook",

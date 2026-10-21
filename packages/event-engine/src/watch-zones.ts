@@ -126,6 +126,11 @@ export class WatchZoneEvaluator {
   evaluateEvent(event: WorldEvent): WatchZoneHit[] {
     if (event.type === EventTypes.WatchZoneEntry || !event.geometry) return [];
     const now = this.clock.now();
+    // An event that has ended (an alert its source stopped listing, ended now) is no news for
+    // a zone: its end must not be announced as the alert.
+    if (event.endAt && Date.parse(event.endAt) <= now) return [];
+    // Withdrawn before it began (endAt = startAt, still ahead): ended all the same.
+    if (event.properties?.['withdrawnAt'] !== undefined) return [];
     const hits: WatchZoneHit[] = [];
     for (const zone of this.zoneList) {
       if (!zone.enabled || !zoneAccepts(zone, event.type)) continue;

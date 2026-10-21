@@ -1,0 +1,44 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/marine/ndbc-latest-obs.txt",
+  "empty": "fixtures/connectors/marine/ndbc-latest-obs-empty.txt",
+  "malformed": [{ "inline": "\"unterminated" }],
+  "expectObservations": 22,
+  "expect": [
+    {
+      "externalId": "51003",
+      "observedAt": "2026-09-23T05:40:00.000Z",
+      "position": { "latitude": 19.151, "longitude": -160.617 },
+      "payload": {
+        "name": "51003",
+        "stationId": "51003",
+        "windDirDeg": 60,
+        "windSpeedMps": 8,
+        "windGustMps": 9,
+        "waveHeightM": 1.8,
+        "wavePeriodDominantS": null,
+        "wavePeriodAverageS": 6.4,
+        "waveDirDeg": 342,
+        "pressureSeaLevelHpa": 1014.1,
+        "pressureTrend3hHpa": null,
+        "temperatureC": 27.3,
+        "waterTempC": 27.6,
+        "dewPointC": 23.7,
+        "visibilityNmi": null,
+        "tideFt": null
+      },
+      "attribution": "Buoys: NOAA National Data Buoy Center"
+    },
+    {
+      "externalId": "OOUH1",
+      "observedAt": "2026-09-23T05:30:00.000Z",
+      "position": { "latitude": 21.303, "longitude": -157.865 },
+      "payload": { "windSpeedMps": 1.5, "windGustMps": 4.6, "pressureSeaLevelHpa": 1016.3, "waterTempC": 28.7 }
+    },
+    {
+      "externalId": "51202",
+      "observedAt": "2026-09-23T04:56:00.000Z",
+      "payload": { "windSpeedMps": null, "waveHeightM": 1.7, "wavePeriodDominantS": 6, "waveDirDeg": 69 }
+    }
+  ]
+}

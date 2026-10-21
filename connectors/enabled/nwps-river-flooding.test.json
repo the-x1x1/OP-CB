@@ -1,0 +1,53 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/hazards/nwps-river-gauges-flooding.geojson",
+  "empty": "fixtures/connectors/hazards/nwps-river-gauges-empty.geojson",
+  "malformed": [
+    { "inline": "not json" },
+    { "inline": "{\"error\":{\"code\":400,\"message\":\"Unable to complete operation.\",\"details\":[]}}" },
+    { "inline": "{\"type\":\"FeatureCollection\",\"features\":\"none\"}" }
+  ],
+  "expectObservations": 14,
+  "expect": [
+    {
+      "externalId": "ATKG1",
+      "observedAt": "2026-09-23T04:45:00.000Z",
+      "position": { "latitude": 31.2206, "longitude": -81.8675 },
+      "payload": {
+        "name": "Satilla River",
+        "title": "Satilla River",
+        "event": "Minor flooding",
+        "severity": "Minor",
+        "floodCategory": "minor",
+        "areaDesc": "Atkinson",
+        "state": "GA",
+        "office": "JAX",
+        "gaugeId": "ATKG1",
+        "stage": 13.39,
+        "stageUnits": "ft",
+        "flow": 6.37,
+        "flowUnits": "kcfs",
+        "actionStage": 11,
+        "floodStage": 13,
+        "moderateStage": 19,
+        "majorStage": 22,
+        "detailUrl": "https://water.noaa.gov/gauges/atkg1"
+      },
+      "attribution": "River gauges: NOAA National Water Prediction Service"
+    },
+    {
+      "externalId": "TLPT2",
+      "payload": {
+        "event": "Minor flooding",
+        "severity": "Minor",
+        "floodStage": 15,
+        "moderateStage": null,
+        "majorStage": null
+      }
+    },
+    {
+      "externalId": "QUEP4",
+      "payload": { "areaDesc": null, "moderateStage": null, "flow": null, "name": "Lago Guajataca" }
+    }
+  ]
+}

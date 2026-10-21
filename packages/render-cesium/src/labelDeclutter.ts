@@ -21,6 +21,13 @@ export interface DeclutterOptions {
   padding?: number;
   /** Spatial hash cell size in px. */
   cellPx?: number;
+  /**
+   * Boxes already taken by labels of another pass, which this pass's labels must not cover
+   * (the map's place names give way to its objects' labels).
+   */
+  occupied?: readonly LabelBox[];
+  /** When given, the boxes of the labels this pass shows are appended to it. */
+  placed?: LabelBox[];
 }
 
 export interface LabelBox {
@@ -73,6 +80,33 @@ export function declutterLabels(
   const ordered = [...candidates].sort((a, b) => b.priority - a.priority || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const grid = new Map<string, LabelBox[]>();
   const visible = new Set<string>();
+  const occupy = (box: LabelBox) => {
+    const c0 = Math.floor(box.left / cell),
+      c1 = Math.floor(box.right / cell),
+      r0 = Math.floor(box.top / cell),
+      r1 = Math.floor(box.bottom / cell);
+    for (let r = r0; r <= r1; r++)
+      for (let col = c0; col <= c1; col++) {
+        const key = `${r}:${col}`;
+        let bucket = grid.get(key);
+        if (!bucket) {
+          bucket = [];
+          grid.set(key, bucket);
+        }
+        bucket.push(box);
+      }
+  };
+  for (const box of options.occupied ?? []) {
+    // Off-screen boxes cannot collide, and a huge one must not make a huge loop.
+    if (box.right < 0 || box.bottom < 0 || box.left > viewport.width || box.top > viewport.height) continue;
+    occupy({
+      ...box,
+      left: Math.max(-cell, box.left),
+      top: Math.max(-cell, box.top),
+      right: Math.min(viewport.width + cell, box.right),
+      bottom: Math.min(viewport.height + cell, box.bottom),
+    });
+  }
   for (const c of ordered) {
     if (!Number.isFinite(c.x) || !Number.isFinite(c.y)) continue;
     const box = labelBox(c, padding);
@@ -94,16 +128,8 @@ export function declutterLabels(
       }
     if (blocked) continue;
     visible.add(c.id);
-    for (let r = r0; r <= r1; r++)
-      for (let col = c0; col <= c1; col++) {
-        const key = `${r}:${col}`;
-        let bucket = grid.get(key);
-        if (!bucket) {
-          bucket = [];
-          grid.set(key, bucket);
-        }
-        bucket.push(box);
-      }
+    occupy(box);
+    options.placed?.push(box);
   }
   return visible;
 }

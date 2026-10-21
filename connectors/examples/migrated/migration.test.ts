@@ -526,8 +526,11 @@ test('adsb-lol fixed point: ids, positions and motion match; ground, military, t
     assert.equal(d.position!.altitudeDatum, undefined);
     for (const k of Object.keys(d.payload))
       if (k in b.payload) assert.deepEqual(d.payload[k], b.payload[k], `${b.externalId}: payload.${k}`);
-    // Known gaps: onGround ("ground" as a boolean) and military (a bit of dbFlags) are not expressible.
-    const missing = keys(b).filter((k) => !(k in d.payload));
+    // Known gaps: onGround ("ground" as a boolean) and military (a bit of dbFlags) are not expressible;
+    // nor is the navigation integrity (2026-10-15), which the provider keeps only for a position the
+    // aircraft broadcast — a mapping cannot leave it out of an MLAT or TIS-B row.
+    const INTEGRITY = ['navIntegrity', 'navAccuracy', 'adsbVersion', 'gpsLostAt'];
+    const missing = keys(b).filter((k) => !(k in d.payload) && !INTEGRITY.includes(k));
     assert.deepEqual(missing, ['military', 'onGround'], `${b.externalId}: keys the definition lacks`);
     // Known gap: the provider's time is the snapshot's `now` minus `seen_pos`; the definition's is the fetch time.
     assert.deepEqual(d.quality.flags, ['fetch-time']);

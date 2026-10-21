@@ -7,7 +7,7 @@ import { testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
 import { overlaySeries, overlayTileTemplate, type JsonValue, type WmtsOverlay } from '@worldview/world-model';
 import { defaultConnectorRegistry } from '../../registry.js';
 import { newestInstant, parseOpacity } from './common.js';
-import { readTimeDomain, timeDomainTemplate } from './wmts.js';
+import { readTimeDomain, shiftFade, timeDomainTemplate } from './wmts.js';
 import { parseWmtsCapabilities } from './capabilities.js';
 
 /**
@@ -477,4 +477,20 @@ test('wmts pinned time (Black Marble, a yearly composite): the 2016 picture, zoo
   // The 2012 composite, from the setting.
   const earlier = await overlayOf(() => ({ status: 200, body: caps }), { doc, settings: { time: '2012-01-01' } });
   assert.match(earlier.overlay.url, /\/2012-01-01\//);
+});
+
+test('fadeShift: the operator moves the fade window, kept inside 0–255 and at least one level wide', async () => {
+  const plain = await overlayOf(byUrl(DOMAINS));
+  assert.deepEqual({ from: plain.overlay.fadeBelow?.from, to: plain.overlay.fadeBelow?.to }, { from: 135, to: 195 });
+  const thicker = await overlayOf(byUrl(DOMAINS), { settings: { fadeShift: 40 } });
+  assert.deepEqual(
+    { from: thicker.overlay.fadeBelow?.from, to: thicker.overlay.fadeBelow?.to },
+    { from: 175, to: 235 },
+  );
+  assert.equal(thicker.overlay.fadeBelow?.monochrome, plain.overlay.fadeBelow?.monochrome, 'the rest unchanged');
+  assert.deepEqual(shiftFade({ from: 135, to: 195 }, -500), { from: 35, to: 95 }, 'at most 100 either way');
+  assert.deepEqual(shiftFade({ from: 135, to: 195 }, 100), { from: 235, to: 255 }, 'cut at 255');
+  assert.deepEqual(shiftFade({ from: 250, to: 255 }, 100), { from: 254, to: 255 }, 'never shut');
+  assert.deepEqual(shiftFade({ from: 3, to: 12 }, -100), { from: 0, to: 9 });
+  assert.deepEqual(shiftFade({ from: 3, to: 12 }, undefined), { from: 3, to: 12 });
 });

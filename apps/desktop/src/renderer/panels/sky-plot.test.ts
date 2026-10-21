@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { SkyOverheadAnswer, SkySatellite } from '@worldview/ipc-contract';
-import { PLOT_RADIUS, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
+import { PLOT_RADIUS, auroraText, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
 
 const sat = (id: string, elevationDeg: number, over: Partial<SkySatellite> = {}): SkySatellite => ({
   id,
@@ -46,4 +46,23 @@ test('which could be seen: sunlit, ten degrees up, the Sun six below; the summar
     '1,068 above the horizon · the sky is not dark: none can be seen with the eye',
   );
   assert.equal(lookText(answer.satellites[0]!), '62° up · 047° NE · 1,120 km');
+});
+
+test('the aurora line: the band the place is in, the time it is for, and whether the sky is dark', () => {
+  const answer: SkyOverheadAnswer = {
+    at: '2026-09-23T19:30:00.000Z',
+    observer: { latitude: 64.84, longitude: -147.72 },
+    total: 0,
+    visible: 0,
+    stale: 0,
+    sunElevationDeg: -20,
+    satellites: [],
+  };
+  assert.equal(auroraText(answer), undefined, 'no aurora source, or outside every area');
+  const aurora = { chancePct: 30, belowPct: 50, forecastFor: '2026-09-23T20:08:00.000Z' };
+  assert.equal(auroraText({ ...answer, aurora }), 'Aurora: 30–50% chance overhead at 20:08 UTC');
+  assert.equal(
+    auroraText({ ...answer, aurora: { chancePct: 70 }, sunElevationDeg: 4 }),
+    'Aurora: 70% or more chance overhead · the sky is not dark here now',
+  );
 });

@@ -98,7 +98,7 @@ export function resolveFlyTarget(
   current: ViewState,
   viewportPx?: number,
 ): FlyDestination {
-  if (target.bounds) return { kind: 'bounds', bounds: target.bounds };
+  if (target.bounds) return { kind: 'bounds', bounds: padBounds(target.bounds) };
   const height =
     target.altitudeM ??
     (target.zoom !== undefined
@@ -110,4 +110,25 @@ export function resolveFlyTarget(
     latitude: target.position.latitude,
     height: Math.max(1, height),
   };
+}
+
+/**
+ * A box widened by FLY_BOUNDS_PAD of its size on every side. Cesium fits a rectangle to the
+ * canvas edge to edge, and the canvas has the files card, the layer bar and the timeline over
+ * its lower part: a dropped file's line ran off both sides of the view it was flown to (test
+ * laptop, 2026-10-17). The 2D map pads its fit by 48 px for the same reason.
+ */
+export const FLY_BOUNDS_PAD = 0.12;
+
+export function padBounds(b: GeoBounds): GeoBounds {
+  const width = b.east >= b.west ? b.east - b.west : b.east + 360 - b.west;
+  const height = Math.max(0, b.north - b.south);
+  const dx = width * FLY_BOUNDS_PAD;
+  const dy = height * FLY_BOUNDS_PAD;
+  const wrap = (lon: number) => (lon > 180 ? lon - 360 : lon < -180 ? lon + 360 : lon);
+  // Within ±89° and never upside down: a box against a pole keeps its height on the other side.
+  const south = Math.min(89, Math.max(-89, b.south - dy));
+  const north = Math.max(south, Math.min(89, Math.max(-89, b.north + dy)));
+  if (width + 2 * dx >= 360) return { west: -180, south, east: 180, north };
+  return { west: wrap(b.west - dx), south, east: wrap(b.east + dx), north };
 }

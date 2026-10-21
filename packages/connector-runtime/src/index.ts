@@ -8,6 +8,7 @@ export * from './registry.js';
 export * from './load.js';
 export * from './pagination.js';
 export * from './csv.js';
+export * from './contours.js';
 export * from './connectors/rest-json.js';
 export * from './connectors/websocket-json.js';
 export * from './connectors/geojson.js';

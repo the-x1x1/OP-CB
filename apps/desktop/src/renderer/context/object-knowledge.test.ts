@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import type { JsonValue, WorldObject } from '@worldview/world-model';
 import {
   compassPoint,
+  countdownText,
+  launchRows,
   lookNowText,
   feltText,
   formatDay,
@@ -239,4 +241,70 @@ test('a satellite now, from where its passes were worked out: elevation, bearing
   assert.equal(lookNowText({}, { latitude: 0, longitude: 0, altitudeM: 1 }), undefined, 'no observer');
   assert.equal(lookNowText(p, { latitude: 0, longitude: 0 }), undefined, 'no height');
   assert.equal(lookNowText(p, undefined), undefined);
+});
+
+test('a launch: mission, rocket, provider, pad, orbit, status, NET with its precision and countdown, the window', () => {
+  const now = Date.parse('2026-10-16T05:30:00Z');
+  const rows = launchRows(
+    {
+      mission: 'Bandwagon 5 (Dedicated Mid-Inclination Rideshare)',
+      missionType: 'Dedicated Rideshare',
+      vehicle: 'Falcon 9 Block 5',
+      launchProvider: 'SpaceX',
+      launchProviderType: 'Commercial',
+      pad: 'Space Launch Complex 40',
+      site: 'Cape Canaveral SFS, FL, USA',
+      orbit: 'Low Earth Orbit',
+      status: 'Go for Launch',
+      net: '2026-10-19T10:30:00.000Z',
+      netPrecision: 'Minute',
+      windowStart: '2026-10-19T10:30:00.000Z',
+      windowEnd: '2026-10-19T11:30:00.000Z',
+      webcastLive: false,
+      lastUpdated: '2026-10-13T17:28:28.000Z',
+    },
+    now,
+  );
+  assert.deepEqual(rows, [
+    { label: 'Mission', value: 'Bandwagon 5 (Dedicated Mid-Inclination Rideshare) (Dedicated Rideshare)' },
+    { label: 'Rocket', value: 'Falcon 9 Block 5' },
+    { label: 'Launch provider', value: 'SpaceX (Commercial)' },
+    { label: 'Pad', value: 'Space Launch Complex 40, Cape Canaveral SFS, FL, USA' },
+    { label: 'Orbit', value: 'Low Earth Orbit' },
+    { label: 'Status', value: 'Go for Launch' },
+    { label: 'No earlier than', value: '2026-10-19 10:30:00 UTC (to the minute) · in 3 d 5 h' },
+    { label: 'Window', value: '2026-10-19 10:30 to 11:30 UTC (1h 00m)' },
+    { label: 'Record updated', value: '2026-10-13 17:28:28 UTC' },
+  ]);
+});
+
+test('a launch: an instantaneous window, a coarse NET without a countdown, a flown launch counted since, weather odds', () => {
+  const now = Date.parse('2026-10-16T05:30:00Z');
+  const value = (rows: ReturnType<typeof launchRows>, label: string) => rows.find((r) => r.label === label)?.value;
+  const mmx = launchRows(
+    {
+      net: '2026-10-19T19:41:03Z',
+      netPrecision: 'Second',
+      windowStart: '2026-10-19T19:41:03Z',
+      windowEnd: '2026-10-19T19:41:03Z',
+    },
+    now,
+  );
+  assert.equal(value(mmx, 'Window'), 'Instantaneous');
+  const someday = launchRows({ net: '2026-12-01T00:00:00Z', netPrecision: 'Month', probabilityPercent: 70 }, now);
+  assert.equal(value(someday, 'No earlier than'), 'December 2026 (the month only)');
+  assert.equal(value(someday, 'Weather'), '70 % favourable');
+  const flown = launchRows({ net: '2026-10-16T00:01:05Z', status: 'Launch Successful', webcastLive: true }, now);
+  assert.equal(value(flown, 'No earlier than'), '2026-10-16 00:01:05 UTC · 5 h 28 m ago');
+  assert.equal(value(flown, 'Webcast'), 'Live now');
+  const late = launchRows({ windowStart: '2026-10-19T23:30:00Z', windowEnd: '2026-10-20T00:30:00Z' }, now);
+  assert.equal(value(late, 'Window'), '2026-10-19 23:30 to 2026-10-20 00:30 UTC (1h 00m)');
+  assert.deepEqual(launchRows({}, now), []);
+});
+
+test('countdown text', () => {
+  const t = Date.parse('2026-10-16T00:00:00Z');
+  assert.equal(countdownText(t + 40_000, t), 'in 40 s');
+  assert.equal(countdownText(t + 125 * 60_000, t), 'in 2 h 05 m');
+  assert.equal(countdownText(t - 3 * 86_400_000 - 4 * 3_600_000, t), '3 d 4 h ago');
 });

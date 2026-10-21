@@ -201,7 +201,7 @@ export function mapFeaturePage(
   state.total += mapped.total;
   state.filtered += mapped.filtered;
   state.rejected += mapped.rejected.length;
-  warnRejected(opts.context.logger, mapped.rejected);
+  warnRejected(opts.context, mapped.rejected);
   if (mapped.total > 0 && mapped.observations.length === 0 && mapped.filtered === 0) {
     opts.invalidate();
     assertAtomicAdmission(mapped.total, 0, `${opts.definition.id} feed`);

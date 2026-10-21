@@ -42,6 +42,8 @@ export interface RuntimeDeps {
   offlineBasemapUrl?: string;
   /** Read-only bundled data granted to filesystem providers (packaged `resources/data`). */
   resourcesDir?: string;
+  /** Reads a dropped file off the main thread (geodata-reader.ts). */
+  geodataReader?: WorldRuntimeDeps['geodataReader'];
   /** The map's Natural Earth label file; its places become searchable (runtime deps). */
   referenceLabelsPath?: string;
   referencePlacesPath?: string;
@@ -77,6 +79,7 @@ export function runtimeDepsFor(deps: RuntimeDeps): WorldRuntimeDeps {
     ...(deps.cachedTileSources ? { cachedTileSources: deps.cachedTileSources } : {}),
     ...(deps.offlineBasemapUrl ? { offlineBasemapUrl: deps.offlineBasemapUrl } : {}),
     ...(deps.resourcesDir ? { resourcesDir: deps.resourcesDir } : {}),
+    ...(deps.geodataReader ? { geodataReader: deps.geodataReader } : {}),
     ...(deps.referenceLabelsPath ? { referenceLabelsPath: deps.referenceLabelsPath } : {}),
     ...(deps.referencePlacesPath ? { referencePlacesPath: deps.referencePlacesPath } : {}),
     ...(deps.demo ? { demo: true } : {}),

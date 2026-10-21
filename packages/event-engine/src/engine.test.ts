@@ -4,7 +4,20 @@ import { SourceHealthRegistry } from '@worldview/source-health';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { EventEngine } from './engine.js';
 import { EventStore } from './store.js';
-import { DAY, FixedClock, HOUR, T0, eventFrom, fire, iso, observationOf, quake, stateOf } from './test-fixtures.js';
+import { WorldState } from '@worldview/state-engine';
+import {
+  DAY,
+  FixedClock,
+  HOUR,
+  T0,
+  eventFrom,
+  fire,
+  iso,
+  obj,
+  observationOf,
+  quake,
+  stateOf,
+} from './test-fixtures.js';
 
 test('EventStore: ordering, indexes, bound, unchanged detection, related', () => {
   const store = new EventStore({ maxEvents: 3 });
@@ -168,5 +181,61 @@ test('EventEngine: source health transitions become throttled INFO events', () =
   clock.advance(10 * 60_000);
   registry.update({ ...base, status: 'ERROR' });
   assert.equal(engine.store.size, 2);
+  engine.dispose();
+});
+
+test('EventEngine: an alert its source stops listing ends then; one taken away with its provider does not', () => {
+  const clock = new FixedClock(T0);
+  const state = new WorldState({ clock, flushDelayMs: 0 });
+  const engine = new EventEngine({ clock });
+  engine.attach(state);
+  const alert = (id: string, providerId: string) =>
+    observationOf(
+      obj({
+        id: `weather-alert:${providerId}:${id}`,
+        type: 'weather-alert',
+        providerId,
+        lat: 19.4,
+        lon: -155.3,
+        observedAt: iso(0),
+        properties: { event: 'Volcano alert', severity: 'Severe' },
+      }),
+    );
+  state.ingest([alert('kilauea', 'usgs-volcanoes'), alert('shishaldin', 'usgs-volcanoes')], {
+    snapshot: true,
+    withdraws: true,
+    providerId: 'usgs-volcanoes',
+  });
+  state.ingest([alert('surf', 'nws-alerts')], { snapshot: true, providerId: 'nws-alerts' });
+  state.flush();
+  const event = (id: string) => engine.store.ofType('weather-alert').find((e) => e.objectIds[0]?.endsWith(id))!;
+  assert.ok(Date.parse(event('kilauea').endAt!) > T0 + HOUR, 'open: it ends only when its reading goes stale');
+
+  clock.advance(30 * 60_000);
+  // A read of an area only (a boundsQuery source panned away) withdraws nothing.
+  state.ingest([alert('shishaldin', 'usgs-volcanoes')], { snapshot: true, providerId: 'usgs-volcanoes' });
+  state.flush();
+  assert.equal(event('kilauea').properties?.['withdrawnAt'], undefined, 'an area read says nothing of the rest');
+  state.ingest([alert('kilauea', 'usgs-volcanoes'), alert('shishaldin', 'usgs-volcanoes')], {
+    snapshot: true,
+    withdraws: true,
+    providerId: 'usgs-volcanoes',
+  });
+  state.flush();
+  state.ingest([alert('shishaldin', 'usgs-volcanoes')], {
+    snapshot: true,
+    withdraws: true,
+    providerId: 'usgs-volcanoes',
+  });
+  state.flush();
+  assert.equal(event('kilauea').endAt, iso(30 * 60_000), 'back to normal: left out of the next read');
+  assert.equal(event('kilauea').properties?.['withdrawnAt'], iso(30 * 60_000));
+  assert.equal(event('shishaldin').properties?.['withdrawnAt'], undefined, 'still listed');
+  assert.ok(Date.parse(event('shishaldin').endAt!) > clock.now());
+
+  state.removeProvider('nws-alerts');
+  state.flush();
+  assert.equal(event('surf').properties?.['withdrawnAt'], undefined, 'the source said nothing of it');
+  assert.ok(Date.parse(event('surf').endAt!) > clock.now());
   engine.dispose();
 });

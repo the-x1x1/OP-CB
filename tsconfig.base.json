@@ -71,6 +71,7 @@
       "@worldview/provider-infrastructure": ["./providers/infrastructure/src/index.ts"],
       "@worldview/providers": ["./providers/registry/src/index.ts"],
       "@worldview/core/node": ["./packages/core/src/node.ts"],
+      "@worldview/runtime/geodata": ["./packages/runtime/src/support/geodata-import.ts"],
       "@worldview/tool-provider-validator": ["./tools/provider-validator/src/index.ts"],
       "@worldview/tool-connector-validator": ["./tools/connector-validator/src/fixtures.ts"],
       "@worldview/tool-benchmark": ["./tools/benchmark/src/index.ts"],

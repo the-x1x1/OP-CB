@@ -71,10 +71,16 @@ test('mapping: origin, one observation per object and time, the rejected line an
   assert.equal(rejectedMessage(3), '3 record(s) rejected by the mapping on the last fetch');
   assert.equal(rejectedMessage(3, 2), '3 record(s) rejected by the mapping on the last fetch; 2 filtered out');
   const lines: Array<[string, unknown]> = [];
-  const logger = { warn: (m: string, d: unknown) => lines.push([m, d]) } as unknown as Parameters<
-    typeof warnRejected
-  >[0];
-  warnRejected(logger, []);
-  warnRejected(logger, [{ reason: 'r1' }, { reason: 'r2' }, { reason: 'r3' }, { reason: 'r4' }]);
+  const partial: string[] = [];
+  const context = {
+    logger: { warn: (m: string, d: unknown) => lines.push([m, d]) },
+    incomplete: (reason: string) => partial.push(reason),
+  } as unknown as Parameters<typeof warnRejected>[0];
+  warnRejected(context, []);
+  warnRejected(context, [{ reason: 'r1' }, { reason: 'r2' }, { reason: 'r3' }, { reason: 'r4' }]);
   assert.deepEqual(lines, [['rejected records', { count: 4, sample: ['r1', 'r2', 'r3'] }]]);
+  // A record left out makes the poll's answer partial; a repeat of one kept does not.
+  assert.deepEqual(partial, ['a record was refused: r1']);
+  warnRejected(context, [{ reason: 'duplicate id x' }, { reason: 'no position' }]);
+  assert.equal(partial.length, 1, 'a repeat, or a record with no place, leaves the answer whole');
 });

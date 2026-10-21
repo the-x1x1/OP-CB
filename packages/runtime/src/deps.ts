@@ -1,3 +1,4 @@
+import type { GeodataRead } from './support/geodata-import.js';
 import type { Clock, GeoPosition, SeverityClass } from '@worldview/world-model';
 import type { LocalHardwareScan } from './support/local-hardware.js';
 import type { Logger, LoggerHub, CredentialResolver } from '@worldview/core';
@@ -99,6 +100,12 @@ export interface WorldRuntimeDeps {
   /** MQTT socket factory (tests pass a fake broker; the runtime uses node:net / node:tls). */
   mqttConnect?: (opts: { host: string; port: number; tls: boolean }) => import('node:net').Socket;
 
+  /**
+   * Reads a dropped file off the main thread (main's worker, geodata-worker.ts): a large file
+   * read in the main process held the whole app while it was read. When the reader fails to
+   * run (not when the file is bad: that is an answer), the file is read in-process.
+   */
+  geodataReader?: (name: string, bytes: Uint8Array) => Promise<GeodataRead>;
   /**
    * Directory of bundled read-only data granted to filesystem-transport providers
    * (e.g. the seed airports GeoJSON). Without it those providers report an error

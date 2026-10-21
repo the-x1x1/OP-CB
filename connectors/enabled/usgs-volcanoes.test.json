@@ -1,0 +1,45 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/hazards/usgs-volcanoes-vhp-status.geojson",
+  "empty": "fixtures/connectors/hazards/usgs-volcanoes-vhp-status-empty.geojson",
+  "malformed": [
+    { "inline": "not json" },
+    { "inline": "<html><body>Service unavailable</body></html>" },
+    { "inline": "{\"type\":\"FeatureCollection\",\"features\":\"none\"}" }
+  ],
+  "expectObservations": 4,
+  "expectIds": ["284141", "311120", "332010", "311360"],
+  "expect": [
+    {
+      "externalId": "332010",
+      "position": { "latitude": 19.421, "longitude": -155.287 },
+      "payload": {
+        "name": "Kilauea",
+        "title": "Kilauea",
+        "event": "Volcano alert",
+        "severity": "Severe",
+        "colorCode": "ORANGE",
+        "alertLevel": "WATCH",
+        "areaDesc": "Hawaii",
+        "senderName": "Hawaiian Volcano Observatory",
+        "observatory": "hvo",
+        "sent": "2026-10-15T20:10:46.000Z",
+        "effectiveFrom": "2026-10-15T20:10:46.000Z",
+        "colourSince": "2026-10-15T20:10:46.000Z",
+        "noticeId": "DOI-USGS-HVO-2026-10-15T19:07:17+00:00",
+        "detailUrl": "https://volcanoes.usgs.gov/hans2/view/notice/DOI-USGS-HVO-2026-10-15T19:07:17+00:00",
+        "volcanoUrl": "https://www.usgs.gov/volcanoes/kilauea",
+        "threat": "Very High Threat",
+        "volcanoCode": "hi3",
+        "vnum": "332010"
+      },
+      "attribution": "Volcano alerts: USGS Volcano Hazards Program",
+      "flags": ["fetch-time"]
+    },
+    {
+      "externalId": "284141",
+      "payload": { "severity": "Moderate", "alertLevel": "ADVISORY", "senderName": "USGS, Northern Mariana Islands" }
+    },
+    { "externalId": "311120", "payload": { "severity": "Severe", "senderName": "Alaska Volcano Observatory" } }
+  ]
+}

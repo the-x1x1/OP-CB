@@ -41,11 +41,12 @@ limits) is not a connector; it is described in [telemetry.md](telemetry.md).
 
 The definitions in [`connectors/enabled/`](../../connectors/enabled/) ship with the app
 (reviewed, with a licence record each); what they are, their licences and how they draw is
-in [hazards.md](hazards.md). Definitions waiting for review to replace a bespoke provider
+in [hazards.md](hazards.md), except Launch Library 2, which is below the table. Definitions waiting for review to replace a bespoke provider
 are in `connectors/enabled/pending-review/` and do not ship.
 
 | Definition                                                                                        | Connector        | Source                                                                | On by default |
 | ------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------- | ------------- |
+| [eccc-aqhi.json](../../connectors/enabled/eccc-aqhi.json)                                         | `ogc-features`   | Air quality, Canada (ECCC Air Quality Health Index)                   | yes           |
 | [gdacs-droughts.json](../../connectors/enabled/gdacs-droughts.json)                               | `geojson`        | GDACS drought alerts (global)                                         | no            |
 | [gdacs-earthquakes.json](../../connectors/enabled/gdacs-earthquakes.json)                         | `geojson`        | GDACS earthquake alerts (global)                                      | no            |
 | [gdacs-floods.json](../../connectors/enabled/gdacs-floods.json)                                   | `geojson`        | GDACS flood alerts (global)                                           | no            |
@@ -59,6 +60,8 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [gibs-imerg-precipitation.json](../../connectors/enabled/gibs-imerg-precipitation.json)           | `wmts`           | Precipitation rate, worldwide (NASA GPM IMERG, 30-minute)             | yes           |
 | [gibs-viirs-noaa20-true-colour.json](../../connectors/enabled/gibs-viirs-noaa20-true-colour.json) | `wmts`           | True colour, worldwide (VIIRS on NOAA-20, NASA GIBS, daily)           | no            |
 | [gibs-viirs-snpp-true-colour.json](../../connectors/enabled/gibs-viirs-snpp-true-colour.json)     | `wmts`           | True colour, worldwide (VIIRS on Suomi NPP, NASA GIBS, daily)         | no            |
+| [launch-library-2.json](../../connectors/enabled/launch-library-2.json)                           | `rest-json`      | Rocket launches, worldwide (Launch Library 2, The Space Devs)         | yes           |
+| [ndbc-observations.json](../../connectors/enabled/ndbc-observations.json)                         | `rest-json`      | Ocean buoys and coastal stations, worldwide (NOAA NDBC)               | yes           |
 | [nhc-forecast-cones.json](../../connectors/enabled/nhc-forecast-cones.json)                       | `arcgis-feature` | NHC forecast cones (active tropical cyclones)                         | yes           |
 | [nhc-forecast-tracks.json](../../connectors/enabled/nhc-forecast-tracks.json)                     | `arcgis-feature` | NHC forecast tracks (active tropical cyclones)                        | yes           |
 | [nhc-forecast-points.json](../../connectors/enabled/nhc-forecast-points.json)                     | `arcgis-feature` | NHC forecast positions (active tropical cyclones)                     | yes           |
@@ -68,8 +71,37 @@ are in `connectors/enabled/pending-review/` and do not ship.
 | [nowcoast-goes-infrared.json](../../connectors/enabled/nowcoast-goes-infrared.json)               | `wms`            | Satellite infrared, North America (NOAA nowCOAST GOES)                | no            |
 | [nowcoast-radar.json](../../connectors/enabled/nowcoast-radar.json)                               | `wms`            | Weather radar, US (NOAA nowCOAST MRMS)                                | yes           |
 | [nowcoast-strike-density.json](../../connectors/enabled/nowcoast-strike-density.json)             | `wms`            | Lightning, Americas and Pacific (NOAA nowCOAST strike density)        | yes           |
+| [nwps-river-flooding.json](../../connectors/enabled/nwps-river-flooding.json)                     | `arcgis-feature` | River and coastal flooding, US (NOAA NWPS gauges in flood)            | yes           |
 | [nws-storm-reports.json](../../connectors/enabled/nws-storm-reports.json)                         | `arcgis-feature` | Storm reports, US (NWS local storm reports: tornado, hail, wind)      | yes           |
 | [spc-day1-outlook.json](../../connectors/enabled/spc-day1-outlook.json)                           | `arcgis-feature` | Severe weather outlook today, US (SPC day 1 categorical)              | yes           |
+| [swpc-aurora.json](../../connectors/enabled/swpc-aurora.json)                                     | `rest-json`      | Aurora forecast (NOAA SWPC OVATION, 30–90 minutes ahead)              | no            |
+| [usgs-volcanoes.json](../../connectors/enabled/usgs-volcanoes.json)                               | `geojson`        | Volcano alerts, US (USGS Volcano Hazards Program)                     | yes           |
+
+**Launch Library 2** (`launch-library-2`, Space layer): the next thirty launches (orbital and suborbital) from The
+Space Devs' `GET /2.3.0/launches/upcoming/?limit=30&mode=normal`, every thirty minutes — two of
+the fifteen calls an hour the API allows without a key. Each launch is a `launch` object at its
+pad with the rocket, provider, mission, orbit, status, NET and window; the event engine's launch
+rule makes each one a launch event whose span is the window. The observation time is the time it
+was read (LL2's `last_updated` is kept as `lastUpdated`). A launch that leaves the list leaves the
+map at the next read (each read replaces the last); while reads fail the last list stays, live for
+an hour and gone a day after the last good read. No image in the answer is read: some are agencies' or the press's under
+their own licences. Fixture: `fixtures/connectors/space/ll2-launches-upcoming.json`, three launches
+recorded on 2026-10-16 at about 05:40 UTC by the built-in browser on the operator's laptop, trimmed to the fields
+read (values untouched).
+
+**ECCC AQHI** (`eccc-aqhi`, Environment layer): the latest observed Air Quality Health Index at
+each of Environment and Climate Change Canada's ~120 stations, from the MSC GeoMet OGC API
+(`aqhi-observations-realtime`, `latest=true`), every half hour, as air-quality sensors with
+`aqhi` — a health-risk scale of 1 to 10 and over, never turned into a US AQI; the air-quality
+rule raises at 7 (EVENT-RULES.md). Credited as the licence prescribes. Fixture
+`fixtures/connectors/air/eccc-aqhi-latest.json`, recorded 2026-10-16.
+
+**SWPC aurora** (`swpc-aurora`, Weather layer, off by default): NOAA Space Weather Prediction
+Center's OVATION aurora forecast — the chance of aurora overhead 30 to 90 minutes ahead on a 1°
+global grid — read with `response.contour` ([REST-JSON.md](REST-JSON.md)) as the areas of at least
+10, 30, 50 and 70 percent, weather-alert areas in green to red, out of the feed (INFO). Off by
+default because the 10% oval lies across Alaska, Canada, Scandinavia and the Southern Ocean at
+any hour. Fixture `fixtures/connectors/space/swpc-ovation-aurora.json`, recorded 2026-10-16.
 
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the

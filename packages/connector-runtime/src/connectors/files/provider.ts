@@ -134,6 +134,8 @@ interface CachedRead {
   key: string;
   observations: Observation[];
   mtimeMs: number;
+  /** Why the read was partial (records refused), said again whenever it is served. */
+  incomplete?: string;
 }
 
 export abstract class FileBackedProvider extends PollingProvider {
@@ -186,8 +188,10 @@ export abstract class FileBackedProvider extends PollingProvider {
     cancelled();
     const now = this.context.clock.now();
     // Never look more often than the minimum interval, whoever asks.
-    if (this.cache && now - this.lastLookAt < MIN_FILE_INTERVAL_SECONDS * 1000)
+    if (this.cache && now - this.lastLookAt < MIN_FILE_INTERVAL_SECONDS * 1000) {
+      if (this.cache.incomplete) this.context.incomplete?.(this.cache.incomplete);
       return { observations: this.cache.observations, cacheAgeMs: now - this.lastLookAt };
+    }
     try {
       return await this.look(signal, now, cancelled);
     } catch (err) {
@@ -207,7 +211,10 @@ export abstract class FileBackedProvider extends PollingProvider {
     this.lastModified = before.mtimeMs;
     cancelled();
     const key = `${before.size}:${before.mtimeMs}`;
-    if (this.cache && this.cache.key === key) return { observations: this.cache.observations, cacheAgeMs: 0 };
+    if (this.cache && this.cache.key === key) {
+      if (this.cache.incomplete) this.context.incomplete?.(this.cache.incomplete);
+      return { observations: this.cache.observations, cacheAgeMs: 0 };
+    }
     if (before.size > this.maxBytes)
       throw new ProviderError('TOO_LARGE', `${this.path} is ${before.size} bytes; the limit is ${this.maxBytes}`, {
         retryable: false,
@@ -252,6 +259,12 @@ export abstract class FileBackedProvider extends PollingProvider {
         count: rejected.length,
         sample: rejected.slice(0, 3),
       });
+    // As warnRejected: not repeats of a record kept, nor records with no place.
+    const refused =
+      read.skipped.length +
+      mapped.rejected.filter((r) => !r.reason.startsWith('duplicate id') && r.reason !== 'no position').length;
+    const lost = refused ? 'records in the file were refused' : undefined;
+    if (lost) this.context.incomplete?.(lost);
     const total = mapped.total + read.skipped.length;
     if (total > 0 && mapped.observations.length === 0 && mapped.filtered === 0)
       throw new ProviderError(
@@ -261,7 +274,9 @@ export abstract class FileBackedProvider extends PollingProvider {
       );
     const observations = datedByFile(mapped.observations, Math.min(before.mtimeMs, now));
     // A file that changed while it was read is served, but not remembered: the next poll reads it again.
-    this.cache = settled ? { key, observations, mtimeMs: before.mtimeMs } : undefined;
+    this.cache = settled
+      ? { key, observations, mtimeMs: before.mtimeMs, ...(lost ? { incomplete: lost } : {}) }
+      : undefined;
     this.context.logger.debug('file read', {
       file: this.path,
       format: read.format,

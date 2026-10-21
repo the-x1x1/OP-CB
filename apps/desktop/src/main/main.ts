@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { geodataWorkerPath, geodataWorkerReader } from './geodata-reader.js';
 import { promises as fs } from 'node:fs';
 import {
   app,
@@ -235,6 +236,13 @@ async function bootstrap(): Promise<void> {
   });
   memory.start();
   app.on('will-quit', () => memory.stop());
+  // Said once at start, so a packaging slip (the worker left inside the archive) shows in the log
+  // before anyone drops a file: the reader still works then, in-process.
+  const geodataWorker = geodataWorkerPath(appDir);
+  void fs.access(geodataWorker).then(
+    () => appLog.info('geodata worker', { path: geodataWorker }),
+    () => appLog.warn('geodata worker missing; dropped files are read in-process', { path: geodataWorker }),
+  );
   const { runtime } = await createRuntime({
     dirs,
     settings,
@@ -256,6 +264,8 @@ async function bootstrap(): Promise<void> {
     // Development loads the page from Vite, which cannot serve it; only the packaged scheme can.
     ...(DEV ? {} : { offlineBasemapUrl: `${APP_ORIGIN}${PACK_BASEMAP_ROUTE}` }),
     resourcesDir: bundledResourcesDir(appDir),
+    // A dropped file is parsed on a worker thread; if that cannot run, in-process as before.
+    geodataReader: geodataWorkerReader(geodataWorker),
     // The label file the map draws place names from; the same file makes them searchable.
     referenceLabelsPath: DEV
       ? path.join(appDir, 'assets', 'reference', 'labels.json')

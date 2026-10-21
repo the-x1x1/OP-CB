@@ -77,7 +77,7 @@ INTEGRATION.md gives, then a refactor pass and `0.2.0-rc.1`:
 - [x] `telemetry` — series descriptors and a Readings panel (Open MCT harvest). Merged with R1 and R5; R2–R4 landed after.
 - [x] `source-health-ui` — the connector shown in Sources and Source Health; the
       operator's folder managed in-app; an Add-source dialog. Merged with its runtime requests 2–3.
-- [x] `offline-basemaps` — Planetiler/Protomaps extracts by tool, a Martin tile source (read side). Merged; B2 (a pack's basemap reaching the 2D map), B3 (pack credit line) and B5 landed; B1 (licence record, operator decision) and B4 (Martin in the app) open.
+- [x] `offline-basemaps` — Planetiler/Protomaps extracts by tool, a Martin tile source (read side). Merged; B2 (a pack's basemap reaching the 2D map), B3 (pack credit line), B4 (Martin in the app, 2026-10-04; its CSP part not done) and B5 landed; B1 (licence record, operator decision) open.
 
 Found during the connector work and deferred to the refactor pass or a later minor (all
 listed with detail in
@@ -280,8 +280,10 @@ same manifest/data-policy contract for devices that need code.
       client API (port 4403), on a new binary local stream (ADR-003 amendment 2026-10-05);
       positions, node info and telemetry, text never read; off by default (on feature/next;
       tested against messages encoded by Meshtastic's own code, not yet against a node).
-- [ ] Meshtastic over USB serial and Bluetooth: the same decoder; needs a serial or BLE
-      transport in the main process.
+- [x] Meshtastic over USB serial (Linux): the same decoder on a serial stream in the main process
+      (ADR-003 amendment 2026-10-08; in 0.3.0, tested against a pseudo-terminal, not yet a node).
+- [ ] Meshtastic over Bluetooth, and USB serial on Windows: each needs a transport in the main
+      process (a design call: docs/cyberdeck/ROADMAP.md).
 - [x] NMEA 2000 through the operator's own gateway (Yacht Devices RAW over TCP): the boat —
       position, course, heading, depth, wind, temperatures — and the ships its AIS hears; read
       only (on feature/next; checked against CANboat's analyzer, not yet against a boat).
@@ -312,6 +314,91 @@ legal; the commercial distribution review closed with no outstanding blockers.
 - [ ] Accessibility audit, by hand: a screen reader (NVDA or Narrator) through the main
       tasks, keyboard-only use of the map, and the HUD's ink over the imagery in each visual
       style (its background is the map, not a token).
+
+## From God's Eye View and OSIRIS, reviewed 2026-10-15
+
+God's Eye View (`bilawalsidhu/gods-eye-view`, UPSTREAM.md) has 778 commits since the import at
+`0dbde1e` (2026-09-20 → `e2274bb`, 2026-10-16); OSIRIS (osirisai.live, "V5.0") publishes a feature
+list but no changelog. What either has that WORLDVIEW does not, taken as a list to work through.
+Nothing is copied without its licence: GEV code is MIT (keep the notice); each data source still
+needs its own record.
+
+Engineering with no licence or key, in the order they are to be built:
+
+- [x] **GNSS interference from ADS-B integrity** (on feature/roadmap-2, `d23bfaf`: 10 minutes, not 30 — the rule is stateless over the aircraft the state holds) (GEV `eefcb33`; OSIRIS lists GPS jamming):
+      aircraft reporting degraded navigation integrity (NIC < 7, NACp < 8, or readsb's GPS-loss
+      flag) binned into 0.5° cells over a rolling 30 minutes, coloured in gpsjam.org's bands.
+      Built from the aircraft WORLDVIEW already receives (adsb.lol, the operator's own readsb):
+      the providers keep the integrity fields, a derived layer bins them. No new request.
+- [x] **Drop your own GeoJSON, KML, KMZ or GPX onto the map** (on feature/roadmap-2: read by the runtime, `geodata.read`; shapes and names only, so nothing needs sanitizing — nothing else is read) (GEV `57b8d8b`): drawn for the
+      session, one colour per file, show/hide, fly to, remove; KML/KMZ sanitized so a file cannot
+      make the app fetch anything (network links, remote icons, overlays, balloon HTML removed);
+      KMZ read with the platform's DecompressionStream, size, entity and file limits. Today a file
+      needs a granted folder and a definition.
+- [x] **Space weather** (OSIRIS keywords): NOAA SWPC's OVATION aurora forecast and planetary K
+      index (U.S. public domain).
+  - [x] The aurora oval (on feature/roadmap-2: `swpc-aurora`; the 1° grid read as areas of 10,
+        30, 50 and 70% by `response.contour`, ADR-013 amendment 2026-10-16 — ordinary weather-alert
+        areas, so no field overlay was needed; ADR-008 unchanged).
+  - [x] The chance at the place in the Sky tab (on feature/roadmap-2: `sky.overhead`'s `aurora`,
+        from the areas the world holds; ADR-004 amendment 2026-10-16).
+  - The Kp line moved to the decisions below: the planetary K index is one number for the
+    whole Earth, and every object the world model holds has a place.
+- [x] **Satellite infrared strength** (on feature/roadmap-2: a Thin cloud setting per source, `fadeShift`; applied at the next read, not previewed while dragged) (GEV `86b7dc8`): one setting that thins or thickens the
+      clouds-only infrared ramp, previewed while dragged.
+- [x] **Cyclone advisories released early** (on feature/roadmap-2, `dc38f83`: `nhc-storms` allowed an hour; now ninety minutes) (GEV `6d6ce36`): NHC can publish an advisory before
+      its nominal time; check `nhc-storms` does not reject one up to 90 minutes ahead of the clock.
+- [x] **Air quality, Canada** (on feature/roadmap-2: `eccc-aqhi`, the air-quality rule reads AQHI on its own scale) (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
+      its scale (`{provider, scale, value, band}`), since AQHI, the US AQI and Europe's EAQI do not
+      share a meaning. Open Government Licence – Canada (attribution): record first.
+- [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the
+      selection; after the 2D profile, since it costs frames.
+
+Each needs a decision of the operator's first:
+
+- **Wind on the globe** (GEV `0251c74`: GFS and ECMWF IFS as animated particles and a reading at
+  the centre): which source — NOAA GFS needs a GRIB2 decoder (a dependency) or a re-served grid;
+  Open-Meteo's record is conditional.
+- **Street-level imagery** (GEV: Mapillary, KartaView, Panoramax, Google Street View): Mapillary
+  needs a key; KartaView is CC BY-SA; Panoramax instances set their own licences; Google is
+  excluded.
+- **Links to a view** (GEV `fe69f22`): a `worldview://` link that opens the app at a place with
+  given layers — registering a protocol handler is an installer and OS change.
+- **An MCP server over the local API** (GEV's tool catalog and `/mcp`): AI clients reading what
+  the app holds; extends ADR-014 and what leaves the app.
+- **Recent imagery for a box** (GEV `#716`): the STAC example for Sentinel-2 on Earth Search, shipped
+  and offered from What's here; Copernicus terms to record.
+- **More camera, transit and bike-share regions** (GEV: Toronto, WSDOT, King County, NYC DOT,
+  Catalonia, Lithuania, Norway; TTC and Ontario transit; Kona & Hilo, Norway and Brazil bike
+  share): each source's licence.
+- **The planetary K index in the Sky tab** (OSIRIS; SWPC, public domain): Kp is one reading
+  for the whole Earth, and the world model's objects all have a position or a shape. Either a
+  kind of reading without a place (a world-model change, ADR) or a Sky-tab-only request that
+  fetches it in the runtime outside the provider path (an exception to ADR-003). Which, if
+  either.
+- **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
+  licence review; the recon tools stay under 1.10.0 below.
+
+God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
+
+- [x] **geo URIs in search** (GEV `11bc2ec`): `geo:lat,lon` with `;u=` and `;crs=wgs84`, the rest
+      declined with the reason (on feature/roadmap-2, `d8b7d35`).
+- [x] **Hold the last heading and speed when a report omits them** (GEV `557d3bb`): the state
+      engine replaced an object's motion whole (on feature/roadmap-2, `94121d4`).
+- [x] **Retry the real basemap behind its fallback** (GEV `d6c1ea0`, `759c796`, `f0d43a6`): the
+      globe cached Natural Earth under the failed stack's name for the session (on
+      feature/roadmap-2, `fa163aa`).
+- Already so here: perimeter queries across 180° (GEV `8d37661`; the ArcGIS connector splits the
+  envelope), unknown numbers kept unknown rather than zero (GEV `4399feb`, `9bee985`; NDBC's `MM`).
+- A decision first: **the interface in other languages** (GEV ships Spanish and Russian, some
+  60 commits) — a translation layer over every string, and who translates; **bike share in
+  Barcelona, Bogotá and Santiago** (GEV `194595e`, `7e9b8d9`) — each feed's licence.
+- Checked again 2026-10-16 evening: nothing new on GEV `main` after `1df2a27`. Of its open
+  branches, `feat/global-radar` is RainViewer (personal and educational use only; refused in
+  DATA-SOURCE-LICENSES) and `german/street-level-slim` is Mapillary street-level imagery (on the
+  decision list above: keys and licences); the voice branches (OpenAI realtime, or Gemma, Whisper
+  and Kokoro models downloaded to the device) need speech models and a
+  microphone permission, a decision of their own.
 
 ## 1.10.0 — Deferred options from the OSIRIS review (each needs a decision first)
 

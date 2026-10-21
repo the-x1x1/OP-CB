@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+import { noteRenderMark, noteShellCommit } from './map/delta-marks.js';
 import { ErrorState, LoadingState } from '@worldview/ui';
 import { useAppState } from './store/store.js';
 import { TopBar } from './components/top-bar.js';
@@ -22,8 +23,16 @@ import './shell.css';
  *   top bar · left lens rail · centre map (largest surface) · right context rail · bottom timeline.
  * Dialogs and the palette overlay the grid; the demo banner sits under the top bar.
  */
+/** Where React's render of the shell has got to (delta-marks.ts): renders nothing. */
+function Mark({ at }: { at: string }) {
+  noteRenderMark(at);
+  return null;
+}
+
 export function Shell() {
   const { session, ui } = useAppState();
+  // After every commit: how long the shell took to render a world change (perf log `shellMs`).
+  useLayoutEffect(() => noteShellCommit());
 
   // Text scale and reduced motion are applied at the root so every token-based size follows.
   useEffect(() => {
@@ -45,10 +54,12 @@ export function Shell() {
     <div
       className={`wv-shell${session.appInfo?.demoMode ? ' wv-shell--demo' : ''}${ui.cleanView ? ' wv-shell--clean' : ''}`}
     >
+      <Mark at="top" />
       <TopBar />
       <FieldStatus />
       <DemoBanner />
       <OfflineNotice />
+      <Mark at="lens" />
       <LensRail />
       <main className="wv-main" aria-label="World">
         {session.status === 'booting' ? (
@@ -56,10 +67,14 @@ export function Shell() {
             <LoadingState label="Connecting to the runtime" />
           </div>
         ) : null}
+        <Mark at="map" />
         <MapHost />
       </main>
+      <Mark at="ctx" />
       <ContextRail />
+      <Mark at="time" />
       <TimelineBar />
+      <Mark at="end" />
       <Notifications />
       <PaletteHost />
       <Splash />

@@ -39,6 +39,7 @@ import {
   GOOGLE_3D_ATTRIBUTION,
   type Google3DOptions,
 } from './google3d.js';
+import { detachImageryLayer } from './detach-layer.js';
 
 export interface StackDescriptor {
   id: string;
@@ -97,7 +98,13 @@ export interface MapStackControllerOptions {
   credits: MapCreditsLike;
   onChange?: (state: MapStackState) => void;
   onError?: (message: string, stack: StackDescriptor) => void;
+  /** Timer for the background retry of a stack that fell back (tests pass their own). */
+  schedule?: (run: () => void, ms: number) => { cancel(): void };
 }
+
+/** The background retry of a stack shown by its construction fallback: 30 s, doubling to 10 min. */
+export const FALLBACK_RETRY_MS = 30_000;
+export const FALLBACK_RETRY_MAX_MS = 600_000;
 
 /** Catch invalid source graphs before a cached fallback can wait on itself. */
 export function indexMapSources(sources: MapStackSource[]): Map<string, MapStackSource> {
@@ -125,6 +132,8 @@ interface ImageryResolution {
   provider: ImageryProviderLike;
   effectiveStackId: string;
   fallbackMessage: string | null;
+  /** The stack this resolution stands in for, when its construction failed. */
+  fallbackFor?: string;
 }
 
 /** The readable part of whatever a provider threw, short enough for a toast. */
@@ -149,6 +158,10 @@ export class MapStackController {
   private activeImageryProvider: ImageryProviderLike | null = null;
   private removeImageryErrorListener: (() => void) | null = null;
   private destroyed = false;
+  /** The stack shown by its fallback, retried in the background while that lasts. */
+  private standIn: { forId: string; shownId: string } | null = null;
+  private retry: { cancel(): void } | null = null;
+  private retryDelayMs = FALLBACK_RETRY_MS;
 
   constructor(
     private readonly viewer: StackViewerLike,
@@ -230,10 +243,12 @@ export class MapStackController {
         this.lastError = activation.fallbackMessage;
         this.options.onError?.(activation.fallbackMessage, stack);
       }
+      this.trackStandIn(activation);
       this.viewer.scene.requestRender();
       if (!silent) this.emitChange('ready');
     } catch (error) {
       if (gen !== this.switchGen) return this.getState();
+      this.trackStandIn(undefined);
       const message = error instanceof Error ? error.message : String(error);
       this.lastError = message;
       this.options.onError?.(message, stack);
@@ -336,6 +351,8 @@ export class MapStackController {
   private getImageryProvider(stack: StackDescriptor, visited: Set<string> = new Set()): Promise<ImageryResolution> {
     if (visited.has(stack.id)) return Promise.reject(new Error('Map source fallback cycle'));
     return this.cached(this.imageryProviders, stack.id, async () => {
+      // This attempt's own cache entry (set before this runs), so that only it is removed below.
+      const mine = this.imageryProviders.get(stack.id);
       const source = this.sources.get(stack.id)!;
       try {
         const provider = await source.imagery!({ signal: this.abort.signal });
@@ -346,13 +363,23 @@ export class MapStackController {
         if (this.destroyed || !fallback || !this.isStackAvailable(fallback.id)) throw error;
         const next = new Set(visited).add(stack.id);
         const resolution = await this.getImageryProvider(this.getStack(fallback.id)!, next);
+        // Not kept as this stack's answer: the next time it is chosen it is asked again, and
+        // while its stand-in is on screen it is retried in the background (retryStandIn).
+        // Cached, one failure at start-up — a network still coming up — showed Natural Earth
+        // for "Satellite HD" for the whole session (God's Eye View d6c1ea0 found the same).
+        // Only this attempt's entry: a background retry may have put a built provider there.
+        if (this.imageryProviders.get(stack.id) === mine) this.imageryProviders.delete(stack.id);
         // Carry the reason. This used to report only "X is unavailable; showing Natural
         // Earth II", which tells an operator that something failed and nothing about
         // what — and it cost a long session to work out that two different online
         // basemaps were both falling back, because the message was identical and
         // content-free either way. Whatever the provider threw (a 403, a CORS refusal, a
         // DNS failure, a malformed service document) is the only part worth reading.
-        return { ...resolution, fallbackMessage: `${fallback.message} — ${describeCause(error)}` };
+        return {
+          ...resolution,
+          fallbackMessage: `${fallback.message} — ${describeCause(error)}`,
+          fallbackFor: stack.id,
+        };
       }
     });
   }
@@ -388,7 +415,7 @@ export class MapStackController {
   private removeImageryLayer(): void {
     this.removeImageryErrorListener?.();
     this.removeImageryErrorListener = null;
-    if (this.imageryLayer) this.viewer.imageryLayers.remove(this.imageryLayer, true);
+    if (this.imageryLayer) detachImageryLayer(this.viewer.imageryLayers, this.imageryLayer);
     this.imageryLayer = null;
     this.activeImageryProvider = null;
   }
@@ -399,9 +426,90 @@ export class MapStackController {
     if (typeof value.destroy === 'function' && !value.isDestroyed?.()) value.destroy();
   }
 
+  /** After a switch: start, keep or stop the background retry of a stack shown by a stand-in. */
+  private trackStandIn(activation: ImageryResolution | undefined): void {
+    const forId = activation?.fallbackFor;
+    if (!forId || !activation) {
+      this.standIn = null;
+      this.retry?.cancel();
+      this.retry = null;
+      this.retryDelayMs = FALLBACK_RETRY_MS;
+      return;
+    }
+    if (this.standIn?.forId !== forId) this.retryDelayMs = FALLBACK_RETRY_MS;
+    this.standIn = { forId, shownId: activation.effectiveStackId };
+    this.scheduleRetry();
+  }
+
+  private scheduleRetry(): void {
+    if (this.retry || this.destroyed) return;
+    const schedule =
+      this.options.schedule ??
+      ((run: () => void, ms: number) => {
+        const t = setTimeout(run, ms);
+        // Never what keeps a process alive (a test run, a tool): only the map waits on it.
+        (t as unknown as { unref?: () => void }).unref?.();
+        return { cancel: () => clearTimeout(t) };
+      });
+    this.retry = schedule(() => {
+      this.retry = null;
+      void this.retryStandIn();
+    }, this.retryDelayMs);
+  }
+
+  /**
+   * Ask the real provider again behind its stand-in. Built, it becomes the stack's cached
+   * answer and, if the stand-in is still what is shown, the map switches to it; still failing,
+   * the stand-in stays and the next try waits twice as long, up to FALLBACK_RETRY_MAX_MS.
+   * No switch ever waits on a retry.
+   */
+  private async retryStandIn(): Promise<void> {
+    const standIn = this.standIn;
+    if (!standIn || this.destroyed) return;
+    // Already answered (a retry that finished while a choice of the stack was failing): use it.
+    if (this.imageryProviders.has(standIn.forId)) return this.recoverFrom(standIn);
+    const source = this.sources.get(standIn.forId);
+    let provider: ImageryProviderLike | undefined;
+    try {
+      provider = await source?.imagery?.({ signal: this.abort.signal });
+    } catch {
+      provider = undefined;
+    }
+    if (this.destroyed || (provider && (this.standIn !== standIn || this.imageryProviders.has(standIn.forId)))) {
+      // Destroyed, or the stack was chosen again and answered meanwhile: this one is not needed.
+      if (provider) this.dispose(provider);
+      if (!this.destroyed && this.standIn === standIn) await this.recoverFrom(standIn);
+      return;
+    }
+    if (!provider) {
+      this.retryDelayMs = Math.min(FALLBACK_RETRY_MAX_MS, this.retryDelayMs * 2);
+      if (this.standIn === standIn) this.scheduleRetry();
+      return;
+    }
+    this.imageryProviders.set(
+      standIn.forId,
+      Promise.resolve({ provider, effectiveStackId: standIn.forId, fallbackMessage: null }),
+    );
+    await this.recoverFrom(standIn);
+  }
+
+  /** Switch from the stand-in to the stack's built provider, if the stand-in is still what is shown. */
+  private async recoverFrom(standIn: { forId: string; shownId: string }): Promise<void> {
+    if (this.standIn !== standIn || this.activeId !== standIn.shownId) return;
+    // A switch in progress settles first; the stand-in, if it is still shown then, is retried again.
+    if (this.isSwitching) {
+      this.scheduleRetry();
+      return;
+    }
+    await this.setStack(standIn.forId);
+  }
+
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.retry?.cancel();
+    this.retry = null;
+    this.standIn = null;
     this.switchGen++;
     this.abort.abort();
     this.isSwitching = false;

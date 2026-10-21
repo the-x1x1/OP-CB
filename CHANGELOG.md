@@ -5,6 +5,156 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **What's here reads the weather overlays.** With a WMS overlay drawn — weather radar, infrared
+  satellite, lightning density — What's here asks its source what lies under the point (one
+  WMS GetFeatureInfo request for the frame on the map) and shows the answer in the source's own
+  names, with its credit and the frame time. Nothing is asked of a basemap, of a layer whose
+  service does not offer it in JSON or plain text, or while working offline.
+- **What's here names the radar's value.** Reflectivity in dBZ for the US radar, Strike density for
+  lightning, from the definitions (`valueNames`, `valueUnits` in a WMS definition's query): the
+  service itself calls each `Band1`. Checked against nowCOAST's real answers.
+- **Aurora forecast.** NOAA SWPC's OVATION forecast of the chance of aurora overhead in the next
+  30 to 90 minutes, drawn as faint nested areas of 10, 30, 50 and 70 percent, green to red, on the
+  Weather layer (`swpc-aurora`, public domain, off by default; every ten minutes), and in the Sky
+  tab a line with the chance overhead at the place it shows. A REST JSON definition can now read
+  a gridded field as areas (`response.contour`).
+- **Air quality, Canada.** The latest Air Quality Health Index at each of Environment and Climate
+  Change Canada's ~120 stations, as air-quality sensors on the Environment layer, with ECCC's
+  risk category; at 7 ("High risk") it is an air-quality event, read on its own scale and never
+  as a US AQI (`eccc-aqhi`, ECCC's data licence, credited; every half hour).
+- **Drop a file on the map.** GeoJSON, TopoJSON, KML, KMZ or GPX, dropped on the map or chosen
+  from the palette, drawn for the session in a colour per file, named where the file names its
+  points, lines and areas, with a card to hide, go to or remove each. Only shapes and names are read; nothing in the file is fetched and nothing is kept.
+- **GPS interference from the aircraft.** Squares of 0.5° where aircraft report degraded
+  satellite navigation (NIC below 7, NACp below 8, or a lost GPS fix) in the last ten minutes,
+  in gpsjam.org's bands, as events under the Overview and Aviation lenses and for watch zones.
+  adsb.lol and your own receiver now keep each aircraft's navigation integrity, including for an
+  aircraft placed by MLAT because it has lost GPS; nothing new is asked for.
+- **River and coastal flooding, US.** Every river, lake and tide gauge NOAA's National Water
+  Prediction Service has in minor, moderate or major flood, at the gauge in the Disasters layer,
+  with the stage, flow, the thresholds of each category and a link to its hydrograph; major
+  flooding is a severe alert (`nwps-river-flooding`, U.S. public domain, every fifteen minutes).
+- **Ocean buoys and coastal stations, worldwide.** The latest report of each of the ~860 stations
+  NOAA's National Data Buoy Center carries, as weather stations on the Weather layer: wind and
+  gusts, pressure and its trend, air and water temperature, waves (height, period and the
+  direction they come from), visibility and tide, whatever each measures. The station panel has
+  rows for water, waves, visibility and tide (`ndbc-observations`, U.S. public domain, every
+  fifteen minutes).
+- **Column-aligned text in a definition** (`response.csv.delimiter: "whitespace"`, and
+  `comment` to skip header lines), for tables like NDBC's.
+- **Volcano alerts, US.** Every US volcano the USGS observatories have raised above normal, at
+  its summit in the Disasters layer: its aviation colour code and alert level, the latest
+  notice's synopsis and a link to it. ORANGE is a severe alert, RED an extreme one, YELLOW
+  moderate; a volcano lowered to GREEN leaves at the next read (`usgs-volcanoes`, U.S. public
+  domain, every thirty minutes).
+- **A lookup table in a definition's mapping** (`map`): a code a source publishes, named as
+  WORLDVIEW names it — the volcano colour code as a severity. A closed table, not an expression.
+- **Rocket launches, worldwide.** The next thirty launches (orbital and suborbital) from The Space Devs' Launch
+  Library 2, each at its pad on the Space layer, with the rocket, who launches it, the mission and
+  its orbit, the status and the scheduled time and window; each is a launch event in the feed and
+  History. Read every thirty minutes, on by default (`launch-library-2`, free to use and share,
+  credited).
+
+- **Search takes a geo URI.** `geo:21.3069,-157.8583` (with `;u=` metres of uncertainty and
+  `;crs=wgs84`, or Android's `?z=` and `geo:0,0?q=lat,lon(Label)`), as a phone shares a
+  location, flies there; one with an altitude, a place named in words or another CRS is declined
+  with the reason. After God's Eye View (11bc2ec).
+
+### Changed
+
+- **A sharper globe on Auto.** The quality Auto picks is now a floor: while the globe draws at
+  60 frames a second, it steps up a quarter of a device pixel at a time (to the display's own
+  density, 2× at most) and fetches finer imagery tiles; a slow stretch steps it back, and when
+  the map has to give up detail the sharpness goes first, all of it. A resting globe is not
+  counted (it ticks at 60 whatever a frame costs). A quality chosen in Settings is kept.
+- **Thin cloud on the infrared layers.** Each geostationary infrared source has a Thin cloud
+  setting in Sources that moves where cloud starts to be drawn: up for only the coldest tops,
+  down for thinner, warmer cloud too.
+
+### Fixed
+
+- **A gauge's stage, and a volcano's colour code, in the panel.** A river gauge in flood shows
+  its stage, its action, flood, moderate and major stages and its flow; a volcano its aviation
+  colour code with when it was set, and its threat ranking. The volcano notice is no longer
+  shown twice.
+- **NHC forecast cones and tracks** are dated by their own advisory again, not by the first one
+  seen (the first-seen start is for sources that ask for it: river gauges, the aurora).
+- **A source that suddenly answers nothing** is believed only on its second empty answer in a
+  row: a layer that answered nothing while it reloaded ended every alert it had.
+- **What's here leaves the radar its requests.** Clicks asked the WMS source through the poll's
+  own budget, and four a minute made nowCOAST radar's next poll fail.
+- **GNSS interference squares** are sent again only when they change (or once a minute), not
+  with every aircraft batch.
+- **Dropped files:** a TopoJSON file's names are kept; an over-large KML inside a KMZ says so;
+  the reader's thread has its own memory limit and gives up at 45 s, inside the request's 60.
+- **Launches** are in the feed, and a launch known only to the month reads "December 2026" in
+  the panel, not a minute in it.
+- **What's here** stops "asking" after 12 s when a source never answers.
+- **An alert the source stops listing ends.** A volcano back to normal, a river gauge below flood
+  stage or an aurora level no longer reached stayed drawn on the map, its event never ended.
+  Such an event now ends when a complete read of the source leaves it out (not a read of an
+  area, an answer the source cut short or whose records were refused, the first read after its
+  settings changed, nor a source turned off), and the map draws an alert's or a storm's event
+  only while it is in force. An ended event raises no watch-zone notice. An alert with its own
+  end (an SPC outlook) ends then, not when its reading would go stale.
+- **Volcano and flood alerts keep their start.** A volcano alert starts when its colour code was
+  raised (USGS `colorDate`), not at each read; a gauge in flood keeps the start it was first
+  seen with instead of restarting at every reading. Neither states an "until" the source never
+  gave. Gauges with placeholder flood stages (Devils Lake and Stump Lake, North Dakota: 0.1, 0.2
+  and 0.3 ft) are no longer shown as in major flood.
+- **Launch times as precise as known.** A launch Launch Library 2 knows only to the day, week,
+  month or quarter is summarised as such ("NET October 2026 (the month only)"), not as a minute.
+- **Buoys.** A wave period of 0 (no period measured) is left out rather than read "every 0 s",
+  and gusts are labelled without a 10-minute period buoys do not use.
+- **An event's end in the panel** reads "Ended" only once it is past: "Ends" before then, and
+  "Kept until … (unless read again)" for an alert whose end is only how long its reading stays
+  fresh (a volcano, a flooding gauge), where it read "Ended" two days ahead.
+- **What's here** no longer shows the previous point's overlay values for a moment.
+- **Place names give way to labels on the globe.** A sea's or a country's name was drawn
+  through an aircraft's callsign over it (the two were decluttered separately).
+- **A large dropped file no longer holds the app.** It is read on a worker thread; a 17 MB
+  GeoJSON took 1.6 s, during which every window had stood still. If the thread cannot run, the
+  file is read as before.
+- **A dropped file either side of 180°** (Fiji, the Aleutians) is flown to as one box across
+  180°, not a view of the whole world between its two halves.
+- **A gridded field across 180°.** A REST JSON definition's `response.contour` now reads a
+  regional grid that crosses 180° (the Bering Sea, Fiji), cutting its areas there, where it
+  was refused as unevenly spaced.
+- **What's here on a WMS 1.1.1 layer that lists only CRS:84** asks in CRS:84, not in an
+  EPSG:4326 the layer does not list.
+- **A basemap that failed to start comes back by itself.** When Satellite HD (or another online
+  map) could not be set up, the globe showed Natural Earth instead, and that stand-in was kept
+  as the map's answer for the rest of the session. It is now retried in the background — after
+  30 s, doubling to 10 minutes — and replaces the stand-in once it loads; choosing it again asks
+  again. As God's Eye View found (d6c1ea0).
+
+- **An aircraft no longer turns to north when a report leaves out its heading.** adsb.lol sends
+  the odd row without `track`; the object's motion was replaced by the report's, so the heading
+  went while the speed stayed. A report now keeps the last heading or speed it leaves out; a value
+  it carries, zero included, replaces it (as God's Eye View found, 557d3bb).
+
+- **A hurricane advisory released early stays on the map.** NHC sometimes publishes an
+  advisory up to about an hour before its nominal time; the allowance is now ninety minutes
+  (it was one hour, the edge of what happens), as God's Eye View found too.
+- **A fly to an area on the globe leaves a margin.** The globe fitted a box edge to edge, under
+  the bars at the foot of the map, so a dropped file's line ran off both sides of the view it was
+  flown to (seen on the test laptop); it now leaves 12 % of the box on every side, as the 2D map
+  leaves 48 px.
+- **The globe no longer stops rendering when weather layers are switched off in 2D.** Overlays
+  taken off the globe were destroyed, and a globe tile still loading one of their frames threw
+  "This object was destroyed" when the 3D view came back, which stopped rendering until the app
+  was restarted (seen on the test laptop). Layers are now taken off without being destroyed;
+  Cesium's destroy freed nothing anyway.
+- **Infrared tiles on the globe give their memory back, and are faded in slices.** Each faded
+  tile left its decoded bitmap open and its work canvas full (the 2D map's path did not), and
+  tiles arriving together were faded back to back in one task. Both are fixed: bitmaps are
+  closed, canvases emptied, and fading runs 8 ms at a time with frames drawn in between. On the
+  test laptop with every weather layer on over Alaska, before: JavaScript heap 3–4.4 GB, window
+  6.7 GB, 3–4 fps, tasks up to 1 s; after: heap peaking at 1.7 GB while zooming and settling at
+  about 0.4 GB, window under 1 GB, 60 fps once tiles are in, the longest task 0.3 s.
+
 ## [0.4.0] — 2026-10-12
 
 The map at altitude and the world's emergencies: the selected aircraft's and satellite's lines

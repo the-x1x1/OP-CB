@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardPlacement, countryName, nearestPlaceText, nextPassRows, whatsHereRows } from './whats-here-text.js';
+import {
+  cardPlacement,
+  countryName,
+  nearestPlaceText,
+  nextPassRows,
+  overlayValueRows,
+  overlayValueText,
+  whatsHereRows,
+} from './whats-here-text.js';
 
 const MAUNA_KEA = { latitude: 19.8207, longitude: -155.468 };
 
@@ -107,4 +115,41 @@ test("a selected satellite's next pass over the point, from its source's answer"
     [{ label: 'ISS (ZARYA) here', value: 'No pass above 10° from here before 2026-10-07 00:00:00 UTC.' }],
   );
   assert.deepEqual(nextPassRows('ISS (ZARYA)', { satcatName: 'x' }, now), [], 'nothing about passes: nothing said');
+});
+
+test('overlay values: a row per overlay, named as the overlay is, the values with their names and units, credit and frame under them', () => {
+  const nowMs = Date.parse('2026-10-15T22:00:00Z');
+  const rows = overlayValueRows(
+    [
+      {
+        overlayId: 'nowcoast-radar:a',
+        providerId: 'nowcoast-radar',
+        label: 'Weather radar',
+        values: [{ name: 'Reflectivity', value: 35.5123, unit: 'dBZ' }],
+        attribution: 'Radar: NOAA nowCOAST, NWS/OAR MRMS',
+        frame: '2026-10-15T21:36:00Z',
+      },
+      {
+        overlayId: 'other:b',
+        providerId: 'other',
+        label: 'Weather radar',
+        values: [
+          { name: 'band', value: 'rain' },
+          { name: 'rate', value: 2 },
+        ],
+        frame: '2020-01-02T03:04:00Z',
+      },
+    ],
+    nowMs,
+  );
+  assert.deepEqual(rows, [
+    {
+      label: 'Weather radar',
+      value: 'Reflectivity 35.512 dBZ',
+      note: 'Radar: NOAA nowCOAST, NWS/OAR MRMS · frame 21:36 UTC',
+    },
+    { label: 'Weather radar (2)', value: 'band rain · rate 2', note: 'frame 2020-01-02 03:04 UTC' },
+  ]);
+  assert.deepEqual(overlayValueRows([], nowMs), []);
+  assert.equal(overlayValueText(-3), '-3');
 });

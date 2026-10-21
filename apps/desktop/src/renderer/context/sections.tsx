@@ -24,7 +24,7 @@ import { bool, num, safeHttpsUrl, str, strList } from './props.js';
 import type { ShellActions } from '../store/actions.js';
 import { readMjpeg } from './mjpeg.js';
 import { SatelliteKnowledge } from './satellite-details.js';
-import { feltText, intensityText, magnitudeText, pagerText, vesselRows } from './object-knowledge.js';
+import { feltText, intensityText, launchRows, magnitudeText, pagerText, vesselRows } from './object-knowledge.js';
 import { cpa, cpaText } from './cpa.js';
 import { AircraftDetails } from './flight.js';
 import { useAppState } from '../store/store.js';
@@ -98,6 +98,15 @@ const earthquake: ContextSection = {
         ) : null}
       </div>
     );
+  },
+};
+
+const launch: ContextSection = {
+  id: 'launch',
+  title: 'Launch',
+  render: ({ object, nowMs }) => {
+    const rows = launchRows(object.properties, nowMs);
+    return rows.length ? <FieldList rows={rows} /> : null;
   },
 };
 
@@ -325,10 +334,44 @@ export function hazardRows(
   const hail = str(object, 'maxHailSize');
   const category = str(object, 'spcCategory');
   const reported = str(object, 'reportedAt');
+  // A river or tide gauge in flood (nwps-river-flooding): its stage against its own thresholds.
+  const stage = num(object, 'stage');
+  const stageUnits = str(object, 'stageUnits') ?? 'ft';
+  const thresholds: string[] = [];
+  for (const [name, key] of [
+    ['action', 'actionStage'],
+    ['flood', 'floodStage'],
+    ['moderate', 'moderateStage'],
+    ['major', 'majorStage'],
+  ] as const) {
+    const v = num(object, key);
+    if (v !== undefined && v > -999) thresholds.push(`${name} ${v}`);
+  }
+  // NWPS writes -999 for no flow measured.
+  const flowValue = num(object, 'flow');
+  const flow = flowValue !== undefined && flowValue >= 0 ? flowValue : undefined;
+  const flowUnits = str(object, 'flowUnits');
+  // A volcano's aviation colour code (usgs-volcanoes), with when it was set, and its threat rank.
+  const colour = str(object, 'colorCode');
+  const colourSince = str(object, 'colourSince');
   return [
     {
       label: 'Alert level',
       value: level ? (episode && episode !== level ? `${level} (this episode ${episode})` : level) : undefined,
+    },
+    {
+      label: 'Aviation colour code',
+      value: colour ? `${colour}${colourSince ? ` since ${formatUtcDateTime(colourSince)}` : ''}` : undefined,
+    },
+    { label: 'Threat', value: str(object, 'threat') },
+    { label: 'Stage', value: stage !== undefined && stage > -999 ? `${stage} ${stageUnits}` : undefined },
+    { label: 'Stages', value: thresholds.length ? `${thresholds.join(' · ')} ${stageUnits}` : undefined },
+    {
+      label: 'Flow',
+      value:
+        flow !== undefined
+          ? `${flow} ${flowUnits === 'kcfs' ? 'kcfs (thousand cubic feet a second)' : (flowUnits ?? '')}`.trim()
+          : undefined,
     },
     { label: 'Impact', value: str(object, 'severityText') },
     // GDACS's figure is the most the storm has reached, not its wind now.
@@ -1045,6 +1088,46 @@ export function stationRain(
   return parts.length ? parts.join(' · ') : undefined;
 }
 
+/**
+ * "1.8 m (5.9 ft) · every 8 s (6.4 s average) · from NNW (342°)": significant wave height, the
+ * dominant and average period, and the direction the dominant waves come from, as a buoy
+ * reports them (NDBC WVHT, DPD, APD, MWD); whatever part it has.
+ */
+export function stationWaves(
+  heightM: number | undefined,
+  dominantS: number | undefined,
+  averageS: number | undefined,
+  fromDeg: number | undefined,
+): string | undefined {
+  const parts: string[] = [];
+  // A period of zero is no period measured (NDBC 22101 and 22102 send DPD 0), not waves every 0 s;
+  // a height of zero with it is no measurement either, not a flat sea.
+  if (dominantS !== undefined && !(dominantS > 0)) {
+    dominantS = undefined;
+    if (heightM === 0) heightM = undefined;
+  }
+  if (averageS !== undefined && !(averageS > 0)) averageS = undefined;
+  if (heightM !== undefined) parts.push(`${heightM.toFixed(1)} m (${(heightM / 0.3048).toFixed(1)} ft)`);
+  if (dominantS !== undefined)
+    parts.push(
+      `every ${Math.round(dominantS)} s${averageS !== undefined ? ` (${averageS.toFixed(1)} s average)` : ''}`,
+    );
+  else if (averageS !== undefined) parts.push(`${averageS.toFixed(1)} s average period`);
+  if (fromDeg !== undefined)
+    parts.push(`from ${COMPASS_16[Math.round((((fromDeg % 360) + 360) % 360) / 22.5) % 16]} (${Math.round(fromDeg)}°)`);
+  return parts.length ? parts.join(' · ') : undefined;
+}
+
+/**
+ * "1.8 · low risk (1–10+ scale)": Canada's Air Quality Health Index with ECCC's risk category.
+ * A health-risk scale, not a concentration: never shown as, or beside, a US AQI number.
+ */
+export function aqhiText(aqhi: number): string {
+  const v = Math.round(aqhi);
+  const risk = v <= 3 ? 'low risk' : v <= 6 ? 'moderate risk' : v <= 10 ? 'high risk' : 'very high risk';
+  return `${Number.isInteger(aqhi) ? aqhi : aqhi.toFixed(1)} · ${risk} (1–10+ scale)`;
+}
+
 /** Heat index when it is warmer than the air, wind chill when colder; nothing when they agree. */
 export function feelsLike(object: WorldObject): string | undefined {
   const t = num(object, 'temperatureC');
@@ -1078,7 +1161,9 @@ const weatherStation: ContextSection = {
           { label: 'Dew point', value: formatTemperature(num(object, 'dewPointC')) },
           { label: 'Wind', value: stationWind(num(object, 'windSpeedMps'), num(object, 'windDirDeg')) },
           {
-            label: 'Gusts (10 min)',
+            // Over the source's own period (10 min at a home station, 8 min at an NDBC buoy, 2 min
+            // at a C-MAN station): the label names none of them.
+            label: 'Gusts',
             value:
               num(object, 'windGustMps') !== undefined ? stationWind(num(object, 'windGustMps'), undefined) : undefined,
           },
@@ -1089,6 +1174,27 @@ const weatherStation: ContextSection = {
           {
             label: 'Rain',
             value: stationRain(num(object, 'rainRateMmH'), num(object, 'rainTodayMm'), num(object, 'rain24hMm')),
+          },
+          { label: 'Water', value: formatTemperature(num(object, 'waterTempC')) },
+          {
+            label: 'Waves',
+            value: stationWaves(
+              num(object, 'waveHeightM'),
+              num(object, 'wavePeriodDominantS'),
+              num(object, 'wavePeriodAverageS'),
+              num(object, 'waveDirDeg'),
+            ),
+          },
+          {
+            label: 'Visibility',
+            value:
+              num(object, 'visibilityNmi') !== undefined
+                ? `${num(object, 'visibilityNmi')!.toFixed(1)} nmi`
+                : undefined,
+          },
+          {
+            label: 'Tide',
+            value: num(object, 'tideFt') !== undefined ? `${num(object, 'tideFt')!.toFixed(2)} ft` : undefined,
           },
           {
             label: 'Sun',
@@ -1135,6 +1241,11 @@ const airQuality: ContextSection = {
       <FieldList
         rows={[
           { label: 'AQI (US EPA, PM2.5)', value: aqi !== undefined ? `${aqi} · ${aqiCategory(aqi)}` : undefined },
+          {
+            label: 'AQHI (Canada)',
+            value: num(object, 'aqhi') !== undefined ? aqhiText(num(object, 'aqhi')!) : undefined,
+          },
+          { label: 'Note', value: str(object, 'specialNotes') },
           {
             label: 'PM2.5',
             value: ugm3(num(object, 'pm25Ugm3'))
@@ -1273,6 +1384,7 @@ export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSecti
   { type: 'aircraft', sections: [aircraft] },
   { type: 'earthquake', sections: [earthquake] },
   { type: 'satellite', sections: [satellite] },
+  { type: 'launch', sections: [launch] },
   { type: 'fire-detection', sections: [fireDetection] },
   { type: 'weather-alert', sections: [weatherAlert] },
   { type: 'storm', sections: [storm] },
