@@ -54,6 +54,7 @@ import {
   type ViewLink,
 } from '@worldview/ipc-contract';
 import { linkForView, linkHiddenLayers } from './view-link.js';
+import { HOME_ASSISTANT_TOKEN_KEY } from '../panels/connections-model.js';
 import {
   MAX_IMPORTED_FILES,
   importedTarget,
@@ -840,6 +841,40 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         fail('Credential not stored', err);
         return false;
       }
+    },
+    /**
+     * Home Assistant in one step (the Connections tab): the address and the token for every
+     * Home Assistant source at once, and the ones asked for switched on. The token goes to the
+     * OS secure store, as from any credential field; only the sources named are turned on.
+     */
+    async connectHomeAssistant(opts: {
+      address: { host: string; port: number; tls: boolean };
+      token?: string;
+      enable: readonly string[];
+      providerIds: readonly string[];
+    }): Promise<boolean> {
+      if (opts.token?.trim() && !(await actions.setCredential(HOME_ASSISTANT_TOKEN_KEY, opts.token.trim())))
+        return false;
+      try {
+        for (const providerId of opts.providerIds) {
+          const current =
+            getState().sources.providerSettings[providerId] ??
+            (await client.request('sources.settings.get', { providerId }));
+          const next = { ...current, host: opts.address.host, port: opts.address.port, tls: opts.address.tls };
+          await client.request('sources.settings.set', { providerId, settings: next });
+          dispatch({ type: 'sources/settings', providerId, settings: next });
+          if (opts.enable.includes(providerId))
+            await client.request('sources.setEnabled', { providerId, enabled: true });
+        }
+      } catch (err) {
+        fail('Home Assistant not connected', err);
+        return false;
+      }
+      notify(
+        'Home Assistant connected',
+        `${opts.address.tls ? 'https' : 'http'}://${opts.address.host}:${opts.address.port} — ${opts.enable.length} source${opts.enable.length === 1 ? '' : 's'} on.`,
+      );
+      return true;
     },
     async deleteCredential(key: string): Promise<void> {
       try {

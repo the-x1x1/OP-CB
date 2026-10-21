@@ -2604,3 +2604,70 @@
   padding-left: var(--wv-space-2);
   border-left: 2px solid var(--wv-border);
 }
+
+/* ---- Connections tab (panels/connections-panel.tsx) ---- */
+.wv-connections__intro {
+  margin: 0 0 var(--wv-space-3);
+}
+.wv-connections__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wv-space-2);
+  margin-bottom: var(--wv-space-4);
+}
+.wv-connections__group > p {
+  margin: 0;
+  font-size: var(--wv-text-sm);
+}
+.wv-connections__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wv-space-2);
+  padding: var(--wv-space-2) var(--wv-space-3);
+  border: 1px solid var(--wv-border);
+  border-radius: var(--wv-radius-md);
+  background: var(--wv-surface-1);
+}
+.wv-connections__head,
+.wv-connections__pickrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--wv-space-2);
+}
+.wv-connections__head > :first-child,
+.wv-connections__pickrow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.wv-connections__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wv-space-2);
+  color: var(--wv-text-secondary);
+  font-size: var(--wv-text-sm);
+  white-space: nowrap;
+}
+.wv-connections__message {
+  margin: 0;
+  color: var(--wv-text-secondary);
+  font-size: var(--wv-text-sm);
+  overflow-wrap: anywhere;
+}
+.wv-connections__settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wv-space-2);
+}
+.wv-connections__pick {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wv-space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.wv-connections__pick p {
+  margin: 0;
+  font-size: var(--wv-text-sm);
+}

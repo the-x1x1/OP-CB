@@ -310,7 +310,7 @@ function SourceDetail({ entry, nowMs }: { entry: SourceHealthEntry; nowMs: numbe
  * Credential entry: value goes straight to credentials.set and is never displayed or kept in
  * state — except a token generated here, shown once so it can be copied into the sender.
  */
-function CredentialField({
+export function CredentialField({
   credentialKey,
   providerId,
   present,
@@ -414,7 +414,7 @@ function CredentialField({
  * Clearing a field removes the key rather than storing an empty value, so the provider
  * returns to its own default instead of being told "" or 0 was chosen deliberately.
  */
-function ProviderSettingField({
+export function ProviderSettingField({
   providerId,
   def,
   value,

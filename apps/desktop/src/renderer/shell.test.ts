@@ -209,11 +209,19 @@ test('context rail tab visibility and polygon parsing helpers', () => {
   assert.deepEqual(visibleTabs(['selection', 'sources', 'feed'], []), [
     'selection',
     'sources',
+    'connections',
     'timeline',
     'related',
     'feed',
   ]);
-  assert.deepEqual(visibleTabs([], ['watchzones']), ['selection', 'sources', 'timeline', 'related', 'watchzones']);
+  assert.deepEqual(visibleTabs([], ['watchzones']), [
+    'selection',
+    'sources',
+    'connections',
+    'timeline',
+    'related',
+    'watchzones',
+  ]);
   const ok = parsePolygonText('21.7, -158.3\n21.3 -156.0\n20.8, -156.1');
   assert.equal(ok.error, undefined);
   assert.equal(ok.ring.length, 4, 'ring is closed');

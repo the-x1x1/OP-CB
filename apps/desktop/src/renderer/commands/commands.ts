@@ -133,6 +133,14 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
       run: () => actions.goHome(),
     },
     {
+      id: 'panel.connections',
+      title: 'Connections: your receivers, Meshtastic and Home Assistant',
+      group: 'Navigate',
+      icon: 'link',
+      keywords: ['connect', 'meshtastic', 'sdr', 'rtl-sdr', 'readsb', 'ais', 'home assistant', 'nmea', 'radio'],
+      run: () => actions.setContextTab('connections'),
+    },
+    {
       id: 'view.link.copy',
       title: 'Copy a link to this view',
       group: 'Navigate',

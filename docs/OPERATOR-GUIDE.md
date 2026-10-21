@@ -127,6 +127,26 @@ Import verifies structure, paths, checksums and source policies before writing
 anything; a tampered or hostile pack is refused and leaves nothing behind. Packs
 contain data only — never code.
 
+## Connections
+
+The **Connections** tab (right rail; or "Connections" in the command palette) has your own
+receivers and servers in one place, each with its switch, whether it is answering and how many
+things it has on the map:
+
+- **Home Assistant**: the address (`http://homeassistant.local:8123`, `192.168.1.20`,
+  `https://ha.example.lan`) and a long-lived access token once, for all four Home Assistant
+  sources, and which to show — zones, weather, sensors, and the people of your household and
+  their phones (off unless you choose it; not kept in history). **Connect** saves the token to
+  the operating system's secure store and switches the chosen ones on.
+- **Radios**: an RTL-SDR decoding aircraft (readsb or dump1090) or ships (an AIS decoder
+  sending NMEA over TCP), and a Meshtastic node on your network — or, on Linux, plugged in by
+  USB. **Address** opens each one's own settings.
+- **Boat**: NMEA 2000 through your gateway.
+- **Weather station and air**: a Davis WeatherLink Live and a PurpleAir sensor.
+
+Only the address you give is contacted; nothing on your network is searched for, and every
+radio is receive-only. Each is also a source in the Sources tab, with its full detail.
+
 ## Local ADS-B (readsb / dump1090)
 
 Run readsb or dump1090-fa yourself, with its JSON output enabled. In Settings → Sources

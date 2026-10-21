@@ -21,6 +21,10 @@ Versioning: [semantic versioning](https://semver.org/).
   drops `person` and `device_tracker` entities, and where people were is not written to history,
   put in a pack or shared.
 
+- **A Connections tab.** Your own receivers and servers in one place: Home Assistant's address and
+  token once for all of its sources, the RTL-SDR's aircraft (readsb) and ships (AIS), a
+  Meshtastic node, NMEA 2000, the weather station and air sensor — each with its switch, whether
+  it is answering and how many things it has on the map (docs/OPERATOR-GUIDE.md, "Connections").
 - **WorldView updates itself.** Shortly after it starts and every four hours, it asks the GitHub
   releases for a newer version; on Windows the new version downloads in the background and a
   card over the map offers **Restart to update** (or it installs when you next quit). Update

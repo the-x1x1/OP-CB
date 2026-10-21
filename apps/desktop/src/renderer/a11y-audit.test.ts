@@ -80,7 +80,17 @@ test('every screen of the shell names its controls', async () => {
       },
     ],
   });
-  for (const tab of ['sources', 'feed', 'timeline', 'related', 'changes', 'collections', 'watchzones', 'sky'] as const)
+  for (const tab of [
+    'sources',
+    'connections',
+    'feed',
+    'timeline',
+    'related',
+    'changes',
+    'collections',
+    'watchzones',
+    'sky',
+  ] as const)
     screens.push([`tab ${tab}`, rootReducer(base, { type: 'ui/contextTab', tab })]);
   for (const dialog of ['settings', 'attribution', 'welcome', 'diagnostics'] as const)
     screens.push([`dialog ${dialog}`, rootReducer(base, { type: 'ui/dialog', dialog })]);
