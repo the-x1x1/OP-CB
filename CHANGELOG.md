@@ -5,6 +5,21 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-10-20
+
+The world's hazards as sources and What's here on the weather: aurora, Canadian air quality,
+US river and coastal flooding, ocean buoys worldwide, US volcano alerts, rocket launches
+worldwide and GPS interference from the aircraft, each a JSON definition; What's here reads
+the value under a point from the weather radar, infrared and lightning overlays; files dropped
+on the map (KML, KMZ, GPX, GeoJSON, TopoJSON) read off the main thread; alerts a source stops
+listing end; and a sharper globe on Auto that steps back when the frame rate falls. Released
+to `main` on the operator's decision; the Windows installer checklist and the P16s hardware
+checks from 0.3.0 are still open (docs/cyberdeck/READINESS.md), and the Linux `.deb` is
+attached untested as before. Checked on the Windows test laptop (Radeon 740M): the laptop gate
+16/16 at `0d69583`, and on screen the volcano start, the aurora line in the Sky tab, a KML read
+through the worker, the sharper globe at about 59 fps, a GNSS interference square and a
+launch's end in the panel.
+
 ### Added
 
 - **What's here reads the weather overlays.** With a WMS overlay drawn — weather radar, infrared
