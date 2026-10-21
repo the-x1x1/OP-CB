@@ -16,6 +16,7 @@ import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '
 import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
 import type { StateChange, TrackPoint } from '@worldview/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
+import type { ViewLink } from './view-link.js';
 
 /**
  * @worldview/ipc-contract — the typed bridge between the WORLDVIEW runtime (Electron
@@ -1177,6 +1178,13 @@ export interface WorldRequests {
    * desktop without notification support).
    */
   'notifications.test': { request: void; response: { inApp: true; desktop: boolean } };
+  /**
+   * (additive, 2026-10-20) The link the app was started with, once: a link that arrives
+   * before the window is up waits here (view-link.ts). Null when there is none.
+   */
+  'link.take': { request: void; response: ViewLink | null };
+  /** (additive, 2026-10-20) The link for a view, put on the clipboard by the host. */
+  'link.copy': { request: { link: ViewLink }; response: { url: string; copied: boolean } };
   /** The page telling the runtime what it draws with, for Diagnostics and the exported bundle. */
   'diagnostics.renderer': {
     request: { active: '2D' | '3D'; webgl2: boolean; gpu?: string; fps?: number };
@@ -1242,6 +1250,8 @@ export interface WorldEvents {
   'field.changed': FieldHostStatus;
   'settings.changed': AppSettings;
   'lenses.changed': LensDefinition[];
+  /** (additive, 2026-10-20) A worldview:// link was opened from outside the app (view-link.ts). */
+  'link.opened': ViewLink;
 }
 
 export type EventChannel = keyof WorldEvents;
@@ -1333,6 +1343,8 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'diagnostics.export',
   'diagnostics.renderer',
   'notifications.test',
+  'link.take',
+  'link.copy',
   'updater.state',
   'updater.check',
   'updater.install',
@@ -1355,6 +1367,7 @@ export const EVENT_CHANNELS: readonly EventChannel[] = Object.freeze([
   'field.changed',
   'settings.changed',
   'lenses.changed',
+  'link.opened',
 ]);
 
 /** Channel names as they appear on the wire (namespaced to avoid collisions with Electron internals). */
@@ -1396,3 +1409,4 @@ export function isIpcError(v: unknown): v is IpcError {
 }
 
 export * from './local-api.js';
+export * from './view-link.js';

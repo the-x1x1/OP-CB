@@ -465,3 +465,12 @@ test('the dropped-file worker is built beside main and shipped outside the asar 
   assert.match(buildMain, /geodata-worker\.cjs/);
   assert.match(builderYml, /^\s*-\s*'dist\/main\/geodata-worker\.cjs'\s*$/m);
 });
+
+test('worldview:// links are registered by the installer and the .deb', () => {
+  // electron-builder writes the NSIS registry keys and the .desktop MimeType from `protocols`;
+  // main.ts reads the link from the command line (view-link.ts linkInArgs).
+  assert.match(builderYml, /^protocols:\s*\n\s*-\s*name:\s*WorldView link\s*\n\s*schemes:\s*\[worldview\]\s*$/m);
+  const main = read('src/main/main.ts');
+  assert.match(main, /setAsDefaultProtocolClient\(VIEW_LINK_SCHEME\)/);
+  assert.match(main, /linkInArgs\(argv\)/);
+});

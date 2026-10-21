@@ -235,6 +235,13 @@ export function bindClient({
       guard((lenses) => dispatch({ type: 'lenses/list', lenses })),
     ),
   );
+  // A worldview:// link opened while the app runs; one that started the app is taken below.
+  offs.push(
+    client.on(
+      'link.opened',
+      guard((link) => dispatch({ type: 'ui/link', link })),
+    ),
+  );
 
   void (async () => {
     try {
@@ -261,6 +268,9 @@ export function bindClient({
         .request('timeline.get', undefined)
         .then((state) => dispatch({ type: 'timeline/runtime', state, nowMs: now() })),
       client.request('lenses.list', undefined).then((lenses) => dispatch({ type: 'lenses/list', lenses })),
+      client.request('link.take', undefined).then((link) => {
+        if (link) dispatch({ type: 'ui/link', link });
+      }),
       client
         .request('collections.list', undefined)
         .then((collections) => dispatch({ type: 'collections/list', collections })),

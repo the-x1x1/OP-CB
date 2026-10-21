@@ -202,6 +202,8 @@ jobs:
           dpkg-deb -x "$DEB" /tmp/wv-deb
           desktop-file-validate /tmp/wv-deb/usr/share/applications/worldview.desktop
           cat /tmp/wv-deb/usr/share/applications/worldview.desktop
+          # worldview:// links open the app (electron-builder.yml protocols).
+          grep -q 'x-scheme-handler/worldview' /tmp/wv-deb/usr/share/applications/worldview.desktop
           # The native history engine must ship unpacked, for this platform.
           find /tmp/wv-deb/opt/WorldView/resources/app.asar.unpacked -name duckdb.node | tee /tmp/duckdb-bindings.txt
           grep -q 'node-bindings-linux-x64/duckdb.node' /tmp/duckdb-bindings.txt

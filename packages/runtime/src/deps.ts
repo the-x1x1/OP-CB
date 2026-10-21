@@ -49,6 +49,8 @@ export interface HostBridge {
   appPaths(): { downloads?: string };
   /** (2026-10-08) The OS folder dialog, for a data vault. Hosts without one cannot add vaults. */
   pickFolder?(opts: { title: string }): Promise<FileChoice>;
+  /** (2026-10-20) Text onto the system clipboard (a view's link). False: this host has none. */
+  copyText?(text: string): boolean;
 }
 
 /** The browser / in-process HostBridge: no dialogs, no shell, nothing silently written anywhere. */

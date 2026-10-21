@@ -90,6 +90,7 @@ import type {
   FeedItem,
   FieldHostStatus,
   OfflineStatus,
+  ViewLink,
   WatchZone,
   WorldFlightInfo,
 } from '@worldview/ipc-contract';
@@ -239,6 +240,23 @@ export class RuntimeCore {
   readonly subscriptions = new SubscriptionRegistry();
   /** The unfetched rest of paged world.subscribe snapshots (support/snapshot-pages.ts). */
   readonly snapshotPages = new SnapshotPages(() => this.clock.now());
+  /** A worldview:// link waiting for the window (ADR-004 amendment 2026-10-20). */
+  private pendingLink: ViewLink | null = null;
+
+  /**
+   * A link opened from outside: told to every window now, and kept for one `link.take` in
+   * case no window is listening yet (the app was started by the link).
+   */
+  openLink(link: ViewLink): void {
+    this.pendingLink = link;
+    this.emitter.emit('link.opened', link);
+  }
+
+  takeLink(): ViewLink | null {
+    const link = this.pendingLink;
+    this.pendingLink = null;
+    return link;
+  }
 
   settings!: SettingsStore;
   providerHost!: ProviderHost;

@@ -73,6 +73,7 @@ export function initialState(nowMs: number): RootState {
       lastQuery: null,
       cleanView: false,
       firstFrame: false,
+      pendingLink: null,
       orbit: false,
       imageryCompare: null,
       measure: null,
@@ -405,6 +406,8 @@ function ui(state: UiSlice, action: RootAction): UiSlice {
       return state.imageryCompare === action.split ? state : { ...state, imageryCompare: action.split };
     case 'ui/firstFrame':
       return state.firstFrame ? state : { ...state, firstFrame: true };
+    case 'ui/link':
+      return state.pendingLink === action.link ? state : { ...state, pendingLink: action.link };
     case 'ui/cameraMode': {
       // Orbit and follow both drive the camera: one at a time, follow winning a tie.
       const followId = action.followId;

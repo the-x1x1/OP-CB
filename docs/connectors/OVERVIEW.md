@@ -153,7 +153,7 @@ endpoint's own origin. A source on your own network is a local connector (phase 
 - Bundled: `resources/connectors/enabled/*.json` in the packaged app (from
   `connectors/enabled/` in the repository once a definition is reviewed). Examples that are
   tested but not shipped enabled are `connectors/examples/`.
-- Yours: `<userData>/connectors/*.json` (Windows: `%APPDATA%\WorldView\connectors\`). Files
+- Yours: `<userData>/connectors/*.json` (Windows: `%APPDATA%\@worldview\desktop\connectors\`). Files
   are read at startup with `review` forced to `user-configured`; one that does not validate
   is logged (`connector definition rejected`, with the file and the reasons) and skipped, and
   the rest still load. A `*.test.json` beside a definition is its test sidecar, not a

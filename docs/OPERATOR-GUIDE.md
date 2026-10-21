@@ -19,7 +19,7 @@ Current builds are unsigned, so SmartScreen warns on first run
 
 ### Where data lives
 
-| Path (`%APPDATA%\WorldView\`)                        | Contents                                                                                                                        |
+| Path (`%APPDATA%\@worldview\desktop\`)               | Contents                                                                                                                        |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `settings.json`                                      | application settings (atomic writes, migrated on upgrade)                                                                       |
 | `credentials.json`                                   | API keys, encrypted with Windows DPAPI                                                                                          |
@@ -31,7 +31,8 @@ Current builds are unsigned, so SmartScreen warns on first run
 | `tiles/`                                             | map tiles kept for Esri World Imagery, under the cap set in Settings                                                            |
 | `logs/`                                              | rotating structured logs, redacted; a warning repeated every poll is written once, then as a `repeated: N` summary every 10 min |
 
-The portable build uses the same paths, so an installed and a portable copy share data.
+The portable build uses the same paths, so an installed and a portable copy share data. On
+Linux the same files are under `~/.config/@worldview/desktop/` (the XDG config folder).
 
 ## Providers and credentials
 
@@ -70,7 +71,7 @@ in a commercial setting.
 
 A feed that publishes JSON, GeoJSON or CSV over HTTPS, or JSON over a WebSocket, can be
 added without a release: write a definition file and put it in
-`%APPDATA%\WorldView\connectors\` (one `.json` per source). It is read at the next start
+`%APPDATA%\@worldview\desktop\connectors\` (one `.json` per source). It is read at the next start
 and appears in Settings → Sources under its own name, off until you switch it on, with the
 attribution and terms you wrote into it and any credential it names in the Credentials
 section. A file that does not validate is skipped and the reason is in the log
@@ -224,6 +225,22 @@ request to OpenStreetMap's Nominatim (or Photon, Settings → Search), at most o
 and the answer is kept for a day. "fly to", "go to" and "take me to" are not sent: "fly to
 Hilo" asks for Hilo, and "fly to" alone asks where to. Settings → Search switches online
 search off. Ctrl+K opens the command palette; `/` puts the cursor in the search box.
+
+### Links to a view
+
+A `worldview://` link opens WorldView at the place it names, from an email, a chat or a web
+page; the installer registers the scheme (the portable copy registers itself the first time it
+starts). **Copy a link to this view** in the command palette (Ctrl+K) puts the view on the
+clipboard: the place, the zoom (2D) or camera height (3D), the lens and the selection. A link
+pasted into the search box opens the same way.
+
+    worldview://view?lat=19.4069&lon=-155.2834&z=11&mode=3d&show=disasters&select=…
+
+`lat` and `lon` are needed; `z` (zoom 0–22) or `alt` (camera height in metres), `mode` (`2d` or
+`3d`), `lens`, `show` and `hide` (layer ids, comma-separated) and `select` (an object or event id)
+are optional. A link only moves the view and turns those switches: nothing in it is fetched or
+run. One that cannot be read is refused, with the reason, and parameters this version does not
+read are named in a notice rather than half read.
 
 ## Map tools
 
@@ -402,7 +419,7 @@ replaces a stable installation unless you opt in (ADR-012).
 
 ## Backups
 
-Everything worth keeping is JSON or Parquet under `%APPDATA%\WorldView\`. Copy that
+Everything worth keeping is JSON or Parquet under `%APPDATA%\@worldview\desktop\`. Copy that
 directory while the app is closed. To move to another machine, copy it across —
 `credentials.json` will not decrypt there (it is bound to the Windows account), so
 re-enter keys. Collections and lenses can also be exported individually from the

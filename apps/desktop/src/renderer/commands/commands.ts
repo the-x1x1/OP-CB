@@ -133,6 +133,14 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
       run: () => actions.goHome(),
     },
     {
+      id: 'view.link.copy',
+      title: 'Copy a link to this view',
+      group: 'Navigate',
+      icon: 'globe',
+      keywords: ['link', 'share', 'url', 'worldview://', 'copy', 'send'],
+      run: () => actions.copyViewLink(),
+    },
+    {
       id: 'view.home.set',
       title: 'Make this view the home view',
       group: 'Navigate',

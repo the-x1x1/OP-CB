@@ -141,6 +141,8 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'diagnostics.get': undefined,
   'diagnostics.export': undefined,
   'notifications.test': undefined,
+  'link.take': undefined,
+  'link.copy': { link: { latitude: 21.3, longitude: -157.86, zoom: 10 } },
   'updater.state': undefined,
   'updater.check': undefined,
   'updater.install': undefined,

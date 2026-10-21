@@ -18,6 +18,7 @@ import type {
   ResponseOf,
   TimelineState,
   UpdaterState,
+  ViewLink,
   WatchZone,
   WorldChangedEvent,
   WorldFlightInfo,
@@ -263,6 +264,8 @@ export interface UiSlice {
    * a home view the operator asked for at start is flown to.
    */
   firstFrame: boolean;
+  /** A worldview:// link waiting for the first frame (store/view-link.ts), or null. */
+  pendingLink: ViewLink | null;
 }
 
 export interface RootState {
@@ -359,6 +362,7 @@ export type UiAction =
   | { type: 'ui/importedFiles'; files: ImportedFile[] }
   | { type: 'ui/importRequest' }
   | { type: 'ui/firstFrame' }
+  | { type: 'ui/link'; link: ViewLink | null }
   /** What the camera is doing: asked for by the operator, or reported by the renderer when it stopped by itself. */
   | { type: 'ui/cameraMode'; orbit: boolean; followId: string | null };
 

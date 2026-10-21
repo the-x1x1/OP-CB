@@ -133,10 +133,12 @@ The boxes above are ticked from the QA walk on the installed build, not from the
 
 Decisions only the operator can make:
 
-- [ ] `offline-basemaps` B1: the licence record for a pack's basemap.
+- [ ] `offline-basemaps` B1: the licence record for a pack's basemap. Decided 2026-10-20: a
+      licence-free one (below, "The operator's decisions, 2026-10-20").
 - [ ] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
-- [ ] The user-data folder: `%APPDATA%\@worldview\desktop\` as built, or
-      `%APPDATA%\WorldView\` as the docs say.
+      Decided 2026-10-20: they may show, with an easy way to add them (below).
+- [x] The user-data folder: `%APPDATA%\@worldview\desktop\` as built (decided 2026-10-20;
+      the docs now say so).
 - [ ] Legal sign-off on the conditional and manual-review providers (LR-01…LR-19) and
       AISStream's commercial terms; until then they stay off by default.
 
@@ -149,7 +151,7 @@ Engineering:
       server over plain http stays undrawn unless the operator decides to widen the CSP.
 - [x] `home-assistant` request 2 (`connector:test --live --setting key=value`).
 - [ ] `home-assistant` request 1 (`ws://` to loopback or the trusted host for local
-      sources): a decision for the operator — it relaxes the wss-only rule for sockets.
+      sources). Decided 2026-10-20: Home Assistant may connect with `ws://` (below).
 - [x] The refactor pass (docs/roadmap/INTEGRATION.md): items 1–4 on `feature/refactor`; the
       Windows gate on every build; `connector:test --live` for all 25 bundled definitions
       on 2026-10-04, all LIVE.
@@ -403,6 +405,39 @@ God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
   decision list above: keys and licences); the voice branches (OpenAI realtime, or Gemma, Whisper
   and Kokoro models downloaded to the device) need speech models and a
   microphone permission, a decision of their own.
+
+## The operator's decisions, 2026-10-20
+
+The goal stays a WorldView that ships with no key and no licence to sign: a fresh download
+shows as much as it can without registering anything. Answers to the decisions listed above,
+each to be built on `feature/roadmap-3`:
+
+- [x] **Links to a view:** `worldview://view?lat=…&lon=…` registered by the installer, read
+      strictly in the main process, Copy a link to this view in the palette, a link pasted into
+      search opens too (ADR-004 amendment 2026-10-20; docs/OPERATOR-GUIDE.md "Links to a view").
+- [ ] **Wind on the globe:** a source that needs no key and no licence condition. NOAA's ERDDAP
+      serves NCEP's GFS 10 m wind (`NCEP_Global_Best`, 0.5°, U.S. public domain) as JSON, so no
+      GRIB2 decoder (God's Eye View's way) is needed; Open-Meteo's free tier is non-commercial,
+      so not that.
+- [ ] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
+      (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown) and
+      KartaView (open API, CC BY-SA 4.0); live only, never cached into packs (ShareAlike).
+      Mapillary needs a token and Google a key: not those.
+- [ ] **An MCP server** for AI clients on this machine (Formicaria's tools among them): local,
+      off by default, read-only over what the local API already serves (ADR-014).
+- [ ] **The planetary K index** in the Sky tab, as an exception to the provider path (ADR-003):
+      one SWPC request for the whole Earth, asked only while the Sky tab is open, offline-aware.
+- [ ] **Home Assistant:** `ws://` to the operator's own server allowed, and `person` and
+      `device_tracker` entities shown, with an easy way to add the server and its token.
+- [ ] **A connections tab** for the operator's own radios: Meshtastic (TCP, serial), the RTL-SDR
+      receivers (readsb, AIS) — what is plugged in, connect, disconnect, status, in one place.
+- [ ] **A licence-free basemap for offline packs:** Protomaps' OpenStreetMap builds (ODbL:
+      attribution only for a Produced Work) cut to the pack's region; Natural Earth (public
+      domain) at low zoom as now.
+- Not needed now: the interface in other languages.
+- Still the operator's or legal's: the conditional providers (LR-01…LR-19) and AISStream's
+  commercial terms; more camera, transit and bike-share regions (each feed's licence); OSIRIS's
+  reference data.
 
 ## 1.10.0 — Deferred options from the OSIRIS review (each needs a decision first)
 

@@ -396,6 +396,6 @@ live, non-retained message.)
 
 For the operator, once M1 and M2 have landed: run Mosquitto on this machine and
 `rtl_433 -F mqtt://127.0.0.1:1883 -M time:unix`. Copy `rtl_433-weather-stations.json` into
-`%APPDATA%\WorldView\connectors\`, enable it, and name a `position.fixed`. Source Health
+`%APPDATA%\@worldview\desktop\connectors\`, enable it, and name a `position.fixed`. Source Health
 should say LIVE and the stations should appear. `connector:test --live` fetches over HTTP and
 does not speak MQTT, so it is not the way to check this source.

@@ -5,6 +5,21 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Links to a view.** A `worldview://view?lat=…&lon=…` link opens WorldView at that place from an
+  email, a chat or a web page: the zoom or camera height, 2D or 3D, the lens, layers shown or
+  hidden and one thing to select, all optional. The installer registers the scheme (a portable
+  copy registers itself); **Copy a link to this view** in the command palette puts the view on
+  the clipboard, and a link pasted into search opens the same way. A link only moves the view
+  and turns switches — nothing in it is fetched or run — and one that cannot be read is refused
+  with the reason (docs/OPERATOR-GUIDE.md, "Links to a view").
+
+### Changed
+
+- **The docs name the data folder the app uses**, `%APPDATA%\@worldview\desktop\`
+  (`~/.config/@worldview/desktop/` on Linux), not `%APPDATA%\WorldView\`.
+
 ## [0.5.0] — 2026-10-20
 
 The world's hazards as sources and What's here on the weather: aurora, Canadian air quality,

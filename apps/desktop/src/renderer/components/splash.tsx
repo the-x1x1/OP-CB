@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useActions, useAppState } from '../store/store.js';
+import { useActions, useAppState, useDispatch } from '../store/store.js';
 import { shouldFlyHomeAtStart } from '../store/home.js';
 
 /** The splash never outstays this, whatever the renderer does: a map that cannot start must not hide the app. */
@@ -33,6 +33,7 @@ export function nextSplashPhase(
 export function Splash() {
   const { ui, session } = useAppState();
   const actions = useActions();
+  const dispatch = useDispatch();
   const reducedMotion = session.settings?.reducedMotion ?? false;
   const [phase, setPhase] = useState<SplashPhase>('shown');
   const flown = useRef(false);
@@ -52,13 +53,21 @@ export function Splash() {
     return () => clearTimeout(t);
   }, [phase, reducedMotion]);
 
-  // The start-up flight home: once, after the first frame, when asked for.
+  // The start-up flight home: once, after the first frame, when asked for — unless a link
+  // started the app, which says where to go instead.
   const home = session.settings?.home;
   useEffect(() => {
     if (!shouldFlyHomeAtStart(home, ui.firstFrame, flown.current)) return;
     flown.current = true;
-    actions.goHome();
-  }, [home, ui.firstFrame, actions]);
+    if (!ui.pendingLink) actions.goHome();
+  }, [home, ui.firstFrame, ui.pendingLink, actions]);
+  // A worldview:// link (store/view-link.ts): opened once the map can fly, then let go.
+  useEffect(() => {
+    if (!ui.firstFrame || !ui.pendingLink || session.status !== 'ready') return;
+    const link = ui.pendingLink;
+    dispatch({ type: 'ui/link', link: null });
+    void actions.openViewLink(link);
+  }, [ui.firstFrame, ui.pendingLink, session.status, actions, dispatch]);
 
   if (phase === 'gone') return null;
   return (

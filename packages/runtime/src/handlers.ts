@@ -31,6 +31,7 @@ import {
   GEODATA_MAX_FILE_BYTES,
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
+  formatViewLink,
   type AppSettings,
   type Collection,
   type CollectionItem,
@@ -1025,6 +1026,20 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     // A test notification (ADR-004 amendment 2026-10-12): the in-app toast through the same
     // event a watch zone's or a pass alert's takes, and the host's desktop notification, so the
     // operator sees both arrive before a real one is due.
+    // Links to a view (ADR-004 amendment 2026-10-20): the one a window had not yet heard of,
+    // and a view's own link put on the clipboard (the window itself may not write to it).
+    'link.take': async () => core.takeLink(),
+    'link.copy': async ({ link }) => {
+      const url = formatViewLink(link);
+      let copied = false;
+      try {
+        copied = core.hostBridge.copyText?.(url) ?? false;
+      } catch {
+        copied = false;
+      }
+      return { url, copied };
+    },
+
     'notifications.test': async () => {
       const at = new Date(core.clock.now());
       const body = `Sent from Diagnostics at ${at.toISOString().slice(11, 19)} UTC. A watch zone's or a pass alert's notice arrives this way.`;

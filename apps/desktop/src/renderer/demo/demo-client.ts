@@ -38,7 +38,7 @@ import type {
   DiagnosticsSnapshot,
   OfflineStatus,
 } from '@worldview/ipc-contract';
-import { EVENT_TYPE_LABELS, IPC_CONTRACT_VERSION } from '@worldview/ipc-contract';
+import { EVENT_TYPE_LABELS, IPC_CONTRACT_VERSION, formatViewLink } from '@worldview/ipc-contract';
 import type { LensDefinition } from '@worldview/render-core';
 import { BUILT_IN_LENSES, resolveMapProviders } from '@worldview/render-core';
 import type { SourceHealthEntry } from '@worldview/source-health';
@@ -737,6 +737,11 @@ export class DemoClient implements WorldClient {
 
       case 'diagnostics.get':
         return this.diagnostics(nowMs);
+      case 'link.take':
+        return null;
+      case 'link.copy':
+        // The browser demo has no clipboard of its own to write to: the link is shown instead.
+        return { url: formatViewLink((request as RequestOf<'link.copy'>).link), copied: false };
       case 'notifications.test':
         this.emit('notification', {
           id: `notification:test:${nowMs}`,

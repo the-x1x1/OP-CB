@@ -105,6 +105,7 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'sources.definitions.draft': { url: 'https://example.org/stations.json' },
     'sources.definitions.save': { id: 'my-stations', definition: { connector: 'rest-json' } },
     'view.capture': { rect: { x: 0, y: 48, width: 1200, height: 700 } },
+    'link.copy': { link: { latitude: 21.3, longitude: -157.86, zoom: 10 } },
     'tiles.prefetch': {
       sourceId: 'esri-world-imagery',
       bounds: { west: -10, south: -10, east: 10, north: 10 },

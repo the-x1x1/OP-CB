@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import {
   app,
   BrowserWindow,
+  clipboard,
   dialog,
   ipcMain,
   Menu,
@@ -27,7 +28,14 @@ import {
   policyInputFromSettings,
   type AutoUpdaterLike,
 } from '@worldview/updater';
-import { wireChannel, type DefinitionsListing, type DiagnosticsSnapshot } from '@worldview/ipc-contract';
+import {
+  VIEW_LINK_SCHEME,
+  linkInArgs,
+  readViewLink,
+  wireChannel,
+  type DefinitionsListing,
+  type DiagnosticsSnapshot,
+} from '@worldview/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
@@ -481,10 +489,34 @@ async function bootstrap(): Promise<void> {
   };
   let main = open();
 
-  app.on('second-instance', () => {
+  // Links to a view (ADR-004 amendment 2026-10-20, packages/ipc-contract view-link.ts): the
+  // scheme is registered by the installer (electron-builder.yml `protocols`); a portable copy
+  // registers itself for the signed-in user. A link opens the view and nothing else.
+  const openLink = (text: string | undefined, how: string) => {
+    if (!text) return;
+    const read = readViewLink(text);
+    if (!read.ok) {
+      log.warn('view link refused', { how, reason: read.reason });
+      return;
+    }
+    log.info('view link', { how, ignored: read.ignored.join(',') });
+    runtime.core.openLink(read.link);
+  };
+  if (app.isPackaged && !app.isDefaultProtocolClient(VIEW_LINK_SCHEME)) {
+    const registered = app.setAsDefaultProtocolClient(VIEW_LINK_SCHEME);
+    log.info('view link scheme', { registered });
+  }
+  openLink(linkInArgs(process.argv), 'start');
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    openLink(url, 'open-url');
+  });
+
+  app.on('second-instance', (_event, argv) => {
     if (main.isDestroyed()) main = open();
     if (main.isMinimized()) main.restore();
     main.focus();
+    openLink(linkInArgs(argv), 'second-instance');
   });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) main = open();
@@ -557,6 +589,10 @@ function electronHostBridge(): HostBridge {
       return true;
     },
     appPaths: () => ({ downloads: app.getPath('downloads') }),
+    copyText: (text) => {
+      clipboard.writeText(text.slice(0, 4096));
+      return true;
+    },
   };
 }
 
