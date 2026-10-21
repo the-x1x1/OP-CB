@@ -5,26 +5,29 @@ zones, its weather entities and the environmental and energy sensors you choose,
 reads them through Home Assistant's own documented APIs with a long-lived access token and
 **never controls anything**: no service is called, nothing is written, over either API.
 
-Three example definitions live in `connectors/examples/home-assistant/`:
+Four definitions ship with the app (`connectors/enabled/`), all off until you give the
+address and the token (Connections tab, or each source's own settings in Sources):
 
 | Definition               | Object type       | What it shows                                                                                                                                     |
 | ------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `home-assistant-zones`   | `place`           | every `zone.*`: home and the places you named, with their radius (who is in a zone, and when that changed, is not read)                           |
 | `home-assistant-weather` | `weather-station` | every `weather.*`: condition, temperature, dew point, humidity, pressure, wind, visibility — in SI units                                          |
 | `home-assistant-sensors` | `sensor`          | `sensor.*` measurements of an environmental or energy kind (temperature, humidity, pressure, particulates, CO2, light, wind, rain, power, energy) |
+| `home-assistant-people`  | `sensor`          | `person.*` and `device_tracker.*`: where Home Assistant last placed the people of your household and their phones, with accuracy and battery      |
 
-Copy one into your connectors folder, store the token, set the host, and switch it on. All
-three are `review: "user-configured"` and `enabled: false`, and open no data policy.
+They are `review: "commercially-reviewed"` with a data policy of your own data: cached, exported
+if you ask, never redistributed or put in an offline pack. The people definition's positions are
+not written to history either.
 
-## Never read: people and their devices
+## People and their phones
 
-`person.*` and `device_tracker.*` entities are dropped the moment they arrive, from
-`/api/states` and from the socket alike. They are never kept, mapped or emitted, whatever a
-definition's filter or the Entities setting selects. They are phones, personal trackers and
-named people, and following them is outside what WORLDVIEW does
-([PRODUCT-BOUNDARIES.md](../PRODUCT-BOUNDARIES.md): no private-device tracking, no
-following a named person). A definition whose filter names them validates with a warning
-and shows nothing.
+`person.*` and `device_tracker.*` entities are read only by `home-assistant-people`, by the
+operator's decision of 2026-10-20 ([PRODUCT-BOUNDARIES.md](../PRODUCT-BOUNDARIES.md), "The
+operator's own household"). Every other definition drops them the moment they arrive, from
+`/api/states` and from the socket alike, whatever its filter or the Entities setting selects,
+and never names them in a message. A definition whose filter names those domains is the one
+that reads them; it validates with a warning saying so. Keep it off unless the people it shows
+agree.
 
 Zones are read for where they are, not for who is in them. A zone's state (how many people
 are inside), its `persons` attribute (which people) and its update times (which move when
@@ -84,14 +87,13 @@ address is refused and Source Health says so.
 Health says which path is carrying the source ("live over the WebSocket API", or "reading
 /api/states once a minute" and why the socket is not live).
 
-### The socket on this build
+### The socket
 
-This build's host opens WebSockets only as `wss://`. So with `tls` **on**, the socket works to
-your host. With `tls` **off** (plain `http://` on your network), the host refuses `ws://`. The
-source then runs on `/api/states` once a minute, says so in Source Health, and asks for the
-socket again every 15 minutes. The phase brief records `ws://` to loopback or the trusted host
-as an amendment request. When it lands, the same definition goes live over the socket with
-nothing changed.
+With `tls` **on** the socket is `wss://` to your host. With `tls` **off** (plain `http://` on your
+network, Home Assistant's usual setup) it is `ws://`, which the host opens only to this computer
+or to the one host you named in Host — never to anything else (ADR-003 amendment 2026-10-20, the
+same rule as plain `http://`). If the socket cannot be opened the source runs on `/api/states`
+once a minute, says so in Source Health, and asks for the socket again every 15 minutes.
 
 ### Failures
 

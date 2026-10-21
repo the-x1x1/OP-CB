@@ -15,7 +15,9 @@ EUMETSAT EUMETView Meteosat infrared (0° and Indian Ocean services) for 37.5° 
 the GIBS daily VIIRS true-colour overlays from Suomi NPP and NOAA-20 (off by default; for the
 Compare imagery command),
 NWS storm reports, the SPC day 1 outlook, NHC forecast cones and tracks, NIFC wildfire
-perimeters and six GDACS alert lists
+perimeters and six GDACS alert lists, and — off until the operator gives the address and token —
+four definitions for the operator's own Home Assistant (zones, weather, sensors, and the people of
+the household by the operator's decision of 2026-10-20; docs/connectors/home-assistant.md)
 ([docs/connectors/hazards.md](../../docs/connectors/hazards.md)). `shipped.test.ts` checks what
 their sidecars cannot: how the runtime loads them, their licence defaults, their Overview layer,
 the radar's frame time and the shapes they draw. `pending-review/` holds definitions written to replace a

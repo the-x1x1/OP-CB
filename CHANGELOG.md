@@ -14,8 +14,18 @@ Versioning: [semantic versioning](https://semver.org/).
   the clipboard, and a link pasted into search opens the same way. A link only moves the view
   and turns switches — nothing in it is fetched or run — and one that cannot be read is refused
   with the reason (docs/OPERATOR-GUIDE.md, "Links to a view").
+- **Home Assistant ships with the app.** Its zones, weather, sensors and — new — the people of
+  your household and their phones (`home-assistant-people`) are in Sources, off until you give
+  your server's address and token. The people definition is the operator's decision of
+  2026-10-20 for their own household (docs/PRODUCT-BOUNDARIES.md): every other definition still
+  drops `person` and `device_tracker` entities, and where people were is not written to history,
+  put in a pack or shared.
 
 ### Changed
+
+- **Home Assistant over plain `ws://`.** A source's socket may now be `ws://` to this computer
+  or to the one host you named for it — Home Assistant on your network without TLS goes live
+  over its WebSocket API instead of reading `/api/states` once a minute (ADR-003 amendment).
 
 - **The docs name the data folder the app uses**, `%APPDATA%\@worldview\desktop\`
   (`~/.config/@worldview/desktop/` on Linux), not `%APPDATA%\WorldView\`.

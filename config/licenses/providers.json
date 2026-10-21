@@ -2708,6 +2708,98 @@
       },
       "commercialReview": "approved",
       "notes": "Added 2026-09-28 (storms). Definition connectors/enabled/nowcoast-strike-density.json (named so it loads after nowcoast-radar and draws above it; wms connector, raster overlay, time latest, 90 % opacity, on by default: a density raster that is transparent where there is no lightning). Terms: NOAA OPC's product description (https://ocean.weather.gov/lightning/lightning_pdd.php) and the NWS 2013 public information statement on the product (https://www.weather.gov/media/notification/pdfs/pns13lightning_strike_density.pdf) say the gridded density 'is considered a derived product and is therefore acceptable for distribution to the public'; the raw Vaisala detections are licensed and are not what this reads. Credit names the derivation, as GEV DATA_SOURCES.md line 21 does. Coverage 25 S-80 N, 110 E across the dateline to 0 (not global), 8 km grid, 15-minute density. Service URL, layer ldn_lightning_strike_density and style lightning_density come from God's Eye View (server/providers/weather.js, MIT) — nowcoast.noaa.gov refuses automated reading (robots.txt), so no capabilities were read from here; the fixture is invented in GeoServer's shape. Needs a live check on Windows."
+    },
+    {
+      "providerId": "home-assistant-sensors",
+      "name": "Home Assistant sensors (your own instance)",
+      "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
+      "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "category": "environment",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Home Assistant (your own instance)",
+        "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
+      },
+      "commercialReview": "approved",
+      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
+    },
+    {
+      "providerId": "home-assistant-weather",
+      "name": "Home Assistant weather (your own instance)",
+      "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
+      "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "category": "weather",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Home Assistant (your own instance)",
+        "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
+      },
+      "commercialReview": "approved",
+      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
+    },
+    {
+      "providerId": "home-assistant-zones",
+      "name": "Home Assistant zones (your own instance)",
+      "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
+      "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "category": "infrastructure",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Home Assistant (your own instance)",
+        "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
+      },
+      "commercialReview": "approved",
+      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
+    },
+    {
+      "providerId": "home-assistant-people",
+      "name": "Home Assistant people and their phones (your own instance)",
+      "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
+      "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "category": "infrastructure",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": false,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Home Assistant (your own instance)",
+        "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
+      },
+      "commercialReview": "approved",
+      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Where the people of the household and their phones are (person, device_tracker), shown by the operator's decision of 2026-10-20 for their own household; not written to history, never put in a pack or shared. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
     }
   ]
 }
