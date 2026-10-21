@@ -5,6 +5,7 @@ import { historyCapMigration } from './004-history-cap.js';
 import { referenceLayerMigration } from './005-reference-layer.js';
 import { displayMigration } from './006-display.js';
 import { optInLayersMigration } from './007-opt-in-layers.js';
+import { automaticUpdatesMigration } from './008-automatic-updates.js';
 import { latestVersion, type Migration } from './runner.js';
 
 export * from './runner.js';
@@ -18,6 +19,7 @@ export const MIGRATIONS: readonly Migration[] = Object.freeze([
   referenceLayerMigration,
   displayMigration,
   optInLayersMigration,
+  automaticUpdatesMigration,
 ]);
 
 /** The schemaVersion a freshly written settings.json carries. */

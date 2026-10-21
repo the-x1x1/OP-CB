@@ -9,6 +9,7 @@ import { MapHost } from './map/map-host.js';
 import { ContextRail } from './components/context-rail.js';
 import { TimelineBar } from './components/timeline-bar.js';
 import { DemoBanner, Notifications, OfflineNotice } from './components/notices.js';
+import { UpdateNotice } from './components/update-notice.js';
 import { PaletteHost } from './components/palette-host.js';
 import { Splash } from './components/splash.js';
 import { SettingsDialog } from './dialogs/settings-dialog.js';
@@ -76,6 +77,7 @@ export function Shell() {
       <TimelineBar />
       <Mark at="end" />
       <Notifications />
+      <UpdateNotice />
       <PaletteHost />
       <Splash />
       <SettingsDialog />

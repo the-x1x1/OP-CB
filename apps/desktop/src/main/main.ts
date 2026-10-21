@@ -64,6 +64,9 @@ import { blockInternetRequests, gatedFetch } from './network-gate.js';
  */
 const DEV = !app.isPackaged && process.env.WORLDVIEW_DEV === '1';
 const NETWORK_POLL_MS = 15_000;
+/** The first update check after start, and the gap between the next ones. */
+const UPDATE_FIRST_CHECK_MS = 20_000;
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60_000;
 
 // Before whenReady on purpose: Chromium reads the scheme registry as the network service
 // starts, and a scheme registered afterwards gets no origin — which is the one thing it is
@@ -301,7 +304,13 @@ async function bootstrap(): Promise<void> {
   const updater = new UpdaterController({
     updater: autoUpdater,
     currentVersion: app.getVersion(),
-    policy: () => policyInputFromSettings(settings.get().updater, { signed: build.signed, packaged: app.isPackaged }),
+    // The installed Windows build updates itself (NSIS); the .deb is the package manager's.
+    policy: () =>
+      policyInputFromSettings(settings.get().updater, {
+        signed: build.signed,
+        packaged: app.isPackaged,
+        canInstall: process.platform === 'win32',
+      }),
     logger: hub.logger('updater'),
   });
   settings.onChange(() => updater.applyPolicy());
@@ -448,6 +457,18 @@ async function bootstrap(): Promise<void> {
   });
   const networkTimer = setInterval(pollNetwork, NETWORK_POLL_MS);
 
+  // Automatic updates (ADR-012 amendment 2026-10-20): asked shortly after start, so an old
+  // build says so in its first minute, then every few hours while it runs; never while working
+  // offline. With automatic updates on the new version downloads in the background and the
+  // window offers to restart into it (components/update-notice.tsx).
+  const checkForUpdate = (why: string) => {
+    if (!online()) return;
+    log.info('update check', { why });
+    void updater.check();
+  };
+  const updateFirst = setTimeout(() => checkForUpdate('start'), UPDATE_FIRST_CHECK_MS);
+  const updateTimer = setInterval(() => checkForUpdate('interval'), UPDATE_CHECK_INTERVAL_MS);
+
   // Power and sleep (docs/cyberdeck M5): the OS's own events, nothing polled. On waking the
   // network is asked at once (not in up to 15 s) and the vaults re-checked; a USB device that
   // went away while asleep is reported by its source and reconnects on its own.
@@ -526,6 +547,8 @@ async function bootstrap(): Promise<void> {
   });
   app.on('before-quit', () => {
     clearInterval(networkTimer);
+    clearTimeout(updateFirst);
+    clearInterval(updateTimer);
     // The local API's socket goes now: the asynchronous stop below may not finish before exit.
     runtime.localApi?.closeNow();
     router.dispose();

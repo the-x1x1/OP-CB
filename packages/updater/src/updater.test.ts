@@ -56,7 +56,9 @@ class FakeAutoUpdater implements AutoUpdaterLike {
     this.calls.push('download');
     return ['/tmp/WorldView-Setup.exe'];
   }
-  quitAndInstall() {
+  silent: boolean | undefined;
+  quitAndInstall(isSilent?: boolean) {
+    this.silent = isSilent;
     this.calls.push('quitAndInstall');
   }
   removeAllListeners() {
@@ -103,6 +105,19 @@ test('update policy matrix: signed/unsigned × channel × automatic', () => {
       { signed: true, channel: 'stable', automatic: true, packaged: false },
       { enabled: false, autoDownload: false, autoInstallOnAppQuit: false },
     ],
+    // Unsigned where the updater can install (Windows), operator decision 2026-10-20.
+    [
+      { signed: false, channel: 'stable', automatic: true, packaged: true, canInstall: true },
+      { enabled: true, autoDownload: true, autoInstallOnAppQuit: true, allowPrerelease: false },
+    ],
+    [
+      { signed: false, channel: 'stable', automatic: false, packaged: true, canInstall: true },
+      { enabled: true, autoDownload: false, autoInstallOnAppQuit: false },
+    ],
+    [
+      { signed: false, channel: 'stable', automatic: true, packaged: false, canInstall: true },
+      { enabled: false, autoDownload: false },
+    ],
   ];
   for (const [input, expected] of cases) {
     const d = resolveUpdatePolicy(input);
@@ -116,6 +131,7 @@ test('update policy matrix: signed/unsigned × channel × automatic', () => {
     automatic: true,
     signed: false,
     packaged: true,
+    canInstall: false,
   });
   assert.equal(
     policyInputFromSettings({ automatic: false, prerelease: false }, { signed: true, packaged: true }).channel,
@@ -168,6 +184,25 @@ test('controller: unsigned build checks and notifies only; install is explicit a
   assert.deepEqual(fake.calls, ['check', 'download', 'quitAndInstall']);
   assert.equal(installed.status, 'downloaded');
   assert.deepEqual(states, ['checking', 'checking', 'available', 'downloading', 'downloaded']);
+});
+
+test('controller: an unsigned Windows build downloads in the background and restarts into the update silently, on request', async () => {
+  const fake = new FakeAutoUpdater();
+  fake.offered = { version: '0.6.0' };
+  const ctl = new UpdaterController({
+    updater: fake,
+    currentVersion: '0.5.0',
+    policy: () => ({ signed: false, channel: 'stable', automatic: true, packaged: true, canInstall: true }),
+  });
+  assert.equal(fake.autoDownload, true);
+  assert.equal(fake.autoInstallOnAppQuit, true);
+  const after = await ctl.check();
+  assert.equal(after.status, 'downloaded');
+  assert.equal(after.availableVersion, '0.6.0');
+  assert.deepEqual(fake.calls, ['check'], 'downloaded by the updater itself, not installed');
+  await ctl.install();
+  assert.deepEqual(fake.calls, ['check', 'quitAndInstall']);
+  assert.equal(fake.silent, true, 'the installer runs without its wizard and the app comes back');
 });
 
 test('controller: signed automatic build downloads in the background; install with nothing available is a no-op', async () => {

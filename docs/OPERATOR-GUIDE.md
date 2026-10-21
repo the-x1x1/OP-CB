@@ -412,10 +412,19 @@ reason rather than a false pass.
 
 ## Updates
 
-Settings → Updates: channel (`stable` or `prerelease`) and automatic updates. While
-builds are unsigned, WORLDVIEW checks for updates and tells you one exists but never
-installs on its own; download and run the installer yourself. A prerelease never
-replaces a stable installation unless you opt in (ADR-012).
+WorldView keeps itself current. Shortly after it starts, and every four hours while it runs, it
+asks the project's GitHub releases whether there is a newer version. On Windows a newer version
+downloads in the background, and a card over the map says **WorldView X is ready — Restart to
+update**: press it and the app closes, installs the update without the installer's wizard and
+opens again; press **Later** and it installs the next time you quit. Nothing is asked while
+working offline.
+
+Settings → Updates: **Update automatically** (on by default; off, the card offers **Download and
+restart** instead), **Include pre-release builds**, and **Check now**. Builds are not code-signed
+yet: a download is checked against the hash the release itself publishes, the same check as
+downloading the installer by hand. A prerelease never replaces a stable installation unless you
+opt in, and an older version never replaces a newer one (ADR-012). On Linux the `.deb` is
+installed by the package manager, so the card only says a new version exists.
 
 ## Backups
 

@@ -21,6 +21,13 @@ Versioning: [semantic versioning](https://semver.org/).
   drops `person` and `device_tracker` entities, and where people were is not written to history,
   put in a pack or shared.
 
+- **WorldView updates itself.** Shortly after it starts and every four hours, it asks the GitHub
+  releases for a newer version; on Windows the new version downloads in the background and a
+  card over the map offers **Restart to update** (or it installs when you next quit). Update
+  automatically is now on by default, also in existing settings (once; switching it off stays
+  off). Until builds are signed the download is checked against the release's own SHA-512
+  (ADR-012 amendment 2026-10-20). The Linux `.deb` is told about a new version, not updated.
+
 ### Changed
 
 - **Home Assistant over plain `ws://`.** A source's socket may now be `ws://` to this computer

@@ -276,7 +276,7 @@ test('migrations: a document from before hiddenLayers/tileCache keeps every choi
   assert.equal(report.ok, true);
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [3, 4, 5, 6, 7],
+    [3, 4, 5, 6, 7, 8],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -305,7 +305,7 @@ test('migrations: an rc.3 document (schema 3) gains the history size cap and kee
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [4, 5, 6, 7],
+    [4, 5, 6, 7, 8],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -352,7 +352,7 @@ test('migrations: 007 turns the opt-in layer switches off once, and leaves them 
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [7],
+    [7, 8],
   );
   const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
   assert.deepEqual(store.get().hiddenLayers, ['space', 'camera.previews', 'aircraft.military-only'], 'no duplicate');
@@ -402,7 +402,7 @@ test('migrations: a schema-4 document gains the borders-and-names switches, both
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [5, 6, 7],
+    [5, 6, 7, 8],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -524,4 +524,28 @@ test('settings: the local API is optional and off by default; own position is it
   );
   const next = applySettingsPatch(DEFAULT_SETTINGS, { localApi: { enabled: true } });
   assert.deepEqual(next.localApi, { enabled: true });
+});
+
+test('migrations: 008 turns automatic updates on once, and leaves the switch to the operator after', async () => {
+  const dir = await tmpDir();
+  const dirs = dataDirs(dir);
+  await fs.writeFile(
+    dirs.settingsFile,
+    JSON.stringify({
+      schemaVersion: 7,
+      settings: { ...DEFAULT_SETTINGS, updater: { automatic: false, prerelease: true } },
+    }),
+  );
+  const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
+  assert.deepEqual(
+    report.applied.map((m) => m.version),
+    [8],
+  );
+  const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
+  assert.deepEqual(store.get().updater, { automatic: true, prerelease: true }, 'the channel is kept');
+  await store.patch({ updater: { automatic: false, prerelease: true } });
+  assert.deepEqual((await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run()).applied, [], 'never again');
+  const again = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
+  assert.equal(again.store.get().updater.automatic, false, 'turned off stays off');
+  assert.equal(DEFAULT_SETTINGS.updater.automatic, true, 'a new installation starts with it on');
 });

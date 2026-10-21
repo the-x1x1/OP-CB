@@ -347,7 +347,8 @@ export function SettingsDialog() {
         </Section>
         <Section title="Updates">
           <Toggle
-            label="Check for updates automatically"
+            label="Update automatically"
+            description="Download a new version in the background and offer to restart into it"
             checked={s.updater.automatic}
             onChange={(v) => void actions.updateSettings({ updater: { ...s.updater, automatic: v } })}
           />
@@ -364,7 +365,9 @@ export function SettingsDialog() {
                 { label: 'Available', value: updater.state.availableVersion, mono: true },
                 {
                   label: 'Signature',
-                  value: updater.state.signed ? 'verified' : 'unsigned build — install is check-only',
+                  value: updater.state.signed
+                    ? 'verified'
+                    : 'unsigned build — checked against the release’s own hash, no code signature yet',
                 },
                 {
                   label: 'Last checked',
@@ -380,9 +383,9 @@ export function SettingsDialog() {
                 Check now
               </Button>
             ) : null}
-            {updater.state?.status === 'downloaded' && updater.state.signed ? (
+            {updater.state?.status === 'downloaded' || updater.state?.status === 'available' ? (
               <Button size="sm" variant="primary" onClick={() => void actions.installUpdate()}>
-                Install and restart
+                {updater.state.status === 'downloaded' ? 'Restart to update' : 'Download and restart'}
               </Button>
             ) : null}
           </div>

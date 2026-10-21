@@ -70,11 +70,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   scrub took 2.2–2.9 s (satellites 1.2–1.9 s) against 7.2 s on the build before.
 - GDACS gives a tropical cyclone's strongest wind so far, not its wind now; the map labels it
   "peak" and the panel "Peak wind (its life so far)". NHC's storms carry their current wind.
-- Only pre-releases are published, so an update check on the stable channel reports that
-  no stable release exists; turn on "Include pre-release builds" to be told about new ones.
-- SIGNING_REQUIRED — builds are unsigned: Windows SmartScreen warns on first run, and the
-  updater only checks and notifies; installation is manual until a code-signing
-  certificate is configured (ADR-012).
+- SIGNING_REQUIRED — builds are unsigned: Windows SmartScreen warns on first run. The updater
+  installs updates anyway on Windows (ADR-012 amendment 2026-10-20), checking each download
+  against the SHA-512 its GitHub release publishes; there is no code signature to check until a
+  certificate is configured.
+- An installation older than the first version with automatic updates (0.5.0 and earlier) has
+  to be updated once by hand, or from Settings → Updates; from then on it updates itself.
 - AUTH_REQUIRED — NASA FIRMS needs a free MAP_KEY; without it the fire provider reports
   AUTH_REQUIRED and stays idle.
 - AUTH_REQUIRED — AISStream needs an API key; the maritime provider is off by default and
@@ -353,6 +354,13 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## After 0.5.0 (unreleased)
+
+- Automatic updates on Windows have been tested against a fake updater only: the first real
+  restart into a new version is the release after the one that brings them.
+- The people of a Home Assistant household are shown only while `home-assistant-people` is on;
+  where they were is not kept in history, so the timeline cannot replay them.
 
 ## 0.5.0
 
