@@ -32,7 +32,11 @@ before the installer checklist and the hardware checks (docs/cyberdeck/READINESS
 (2026-10-12) draws the selected aircraft's and satellite's lines at altitude, asks adsb.lol for
 the emergency squawk lists once a minute, adds NASA's Black Marble as Night lights, fixes the
 always-stale high-apogee satellites, and adds a test notification (CHANGELOG); the 0.3.0
-checklist and hardware checks are still open.
+checklist and hardware checks are still open. 0.5.0 (2026-10-20) adds aurora, Canadian air
+quality, US flooding, ocean buoys, US volcano alerts, rocket launches and GPS interference as
+sources, What's here on the weather overlays, files dropped on the map, alerts that end when a
+source stops listing them, and a sharper globe on Auto (CHANGELOG); the 0.3.0 checklist and
+hardware checks are still open.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:

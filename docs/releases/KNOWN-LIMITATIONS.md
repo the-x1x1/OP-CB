@@ -1,4 +1,4 @@
-# Known limitations — 0.4.0
+# Known limitations — 0.5.0
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -354,7 +354,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
-## After 0.4.0 (unreleased)
+## 0.5.0
 
 - When a source that listed alerts answers nothing, its alerts are ended only by a second empty
   answer in a row (up to one poll interval late: 30 minutes for volcanoes).
