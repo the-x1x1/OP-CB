@@ -322,6 +322,24 @@ export interface SkyOverheadAnswer {
    * weather-alert areas, which carry `auroraChancePct`. Absent when no such area is held.
    */
   aurora?: SkyAurora;
+  /**
+   * (additive, 2026-10-20) The planetary K index now: one reading for the whole Earth from NOAA
+   * SWPC, asked by the runtime itself while the Sky tab asks (runtime support/kp-index.ts).
+   * Absent offline, before the first answer, or when the newest reading is over nine hours old.
+   */
+  kp?: SkyKp;
+}
+
+export interface SkyKp {
+  /** 0–9. */
+  kp: number;
+  /** The start of the three hours it is for. */
+  at: string;
+  /** How old that is now. */
+  ageMs: number;
+  /** NOAA's geomagnetic storm level for it, from Kp 5 (G1) to 9 (G5). */
+  storm?: 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+  attribution: string;
 }
 
 export interface SkyAurora {

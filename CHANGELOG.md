@@ -21,6 +21,9 @@ Versioning: [semantic versioning](https://semver.org/).
   drops `person` and `device_tracker` entities, and where people were is not written to history,
   put in a pack or shared.
 
+- **The planetary K index in the Sky tab.** How disturbed the Earth's magnetic field is, 0 to 9,
+  for the latest three hours, and the geomagnetic storm level from Kp 5 (NOAA SWPC, public
+  domain): asked only while the Sky tab is open, at most every 15 minutes, never offline.
 - **A Connections tab.** Your own receivers and servers in one place: Home Assistant's address and
   token once for all of its sources, the RTL-SDR's aircraft (readsb) and ships (AIS), a
   Meshtastic node, NMEA 2000, the weather station and air sensor — each with its switch, whether

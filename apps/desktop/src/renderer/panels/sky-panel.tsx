@@ -6,7 +6,7 @@ import { moonPosition, sunPosition, type GeoPosition } from '@worldview/world-mo
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { pastShownAtMs } from '../store/shown-time.js';
-import { PLOT_RADIUS, auroraText, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
+import { PLOT_RADIUS, auroraText, kpText, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
 
 /** How often the sky is asked for again while the tab is open. */
 const REFRESH_MS = 5_000;
@@ -154,6 +154,7 @@ export function SkyPanel() {
   const listed = showAll ? shown : shown.slice(0, LISTED);
   const replaying = pastShownAtMs(timeline.control) !== undefined;
   const aurora = auroraText(answer);
+  const kp = kpText(answer);
 
   return frame(
     `Above ${place(seenFrom)} at ${hhmm(answer.at)} UTC · ${skySummary(answer)}`,
@@ -174,6 +175,11 @@ export function SkyPanel() {
       {aurora ? (
         <p className="wv-sky__aurora" title={answer.aurora?.attribution}>
           {aurora}
+        </p>
+      ) : null}
+      {kp ? (
+        <p className="wv-sky__kp" title={answer.kp?.attribution}>
+          {kp}
         </p>
       ) : null}
       <svg

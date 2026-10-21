@@ -568,7 +568,9 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       });
       // And the aurora forecast there, from the areas an aurora source holds (support/aurora-here.ts).
       const aurora = auroraHere(core.state.ofType('weather-alert'), { latitude, longitude });
-      return aurora ? { ...sky, aurora } : sky;
+      // And the planetary K index, for the whole Earth (support/kp-index.ts).
+      const kp = core.kpIndex.current();
+      return { ...sky, ...(aurora ? { aurora } : {}), ...(kp ? { kp } : {}) };
     },
     // Offline reverse lookup ("What's here"): the gazetteers in memory, nothing sent anywhere.
     'search.nearest': async ({ position, kinds, limit, maxDistanceM }) => {

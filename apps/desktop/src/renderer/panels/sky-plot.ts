@@ -53,6 +53,19 @@ export function auroraText(answer: SkyOverheadAnswer): string | undefined {
   return `Aurora: ${chance} chance overhead${at}${sky}`;
 }
 
+/** Kp in NOAA's words: 0–3 quiet, 4 active, 5+ a geomagnetic storm (G1–G5). */
+const KP_WORDS = ['quiet', 'quiet', 'quiet', 'unsettled', 'active'];
+
+/** "Kp 3.3 (unsettled) for 21:00 UTC" — the planetary K index, for the whole Earth. */
+export function kpText(answer: SkyOverheadAnswer): string | undefined {
+  const k = answer.kp;
+  if (!k) return undefined;
+  const value = Number.isInteger(k.kp) ? String(k.kp) : k.kp.toFixed(1);
+  const word = k.storm ? `geomagnetic storm ${k.storm}` : (KP_WORDS[Math.floor(k.kp)] ?? 'active');
+  const at = new Date(Date.parse(k.at)).toISOString().slice(11, 16);
+  return `Kp ${value} (${word}) · the three hours from ${at} UTC, whole Earth`;
+}
+
 /** "62° up · 047° NE · 1,120 km". */
 export function lookText(s: SkySatellite): string {
   const bearing = `${String(Math.round(s.azimuthDeg) % 360).padStart(3, '0')}° ${compassPoint(s.azimuthDeg)}`;

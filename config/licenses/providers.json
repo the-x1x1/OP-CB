@@ -2800,6 +2800,29 @@
       },
       "commercialReview": "approved",
       "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Where the people of the household and their phones are (person, device_tracker), shown by the operator's decision of 2026-10-20 for their own household; not written to history, never put in a pack or shared. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
+    },
+    {
+      "providerId": "swpc-kp-index",
+      "name": "NOAA SWPC — planetary K index (noaa-planetary-k-index.json)",
+      "sourceUrl": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+      "termsUrl": "https://www.swpc.noaa.gov/disclaimer",
+      "license": "U.S. Government work (NOAA), public domain in the United States",
+      "category": "space",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "Planetary K index: NOAA Space Weather Prediction Center",
+        "termsUrl": "https://www.swpc.noaa.gov/disclaimer"
+      },
+      "commercialReview": "approved",
+      "notes": "Not a provider (2026-10-20, ADR-003 amendment): the runtime asks for it itself, only while the Sky tab asks and at most every 15 minutes, never offline (packages/runtime/src/support/kp-index.ts). One number for the whole Earth; credited in the Sky tab."
     }
   ]
 }

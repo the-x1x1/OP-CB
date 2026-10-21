@@ -361,6 +361,11 @@ overhead at 20:08 UTC", the band of SWPC's forecast the place lies in and the ti
 and says when the sky there is not dark enough to see it. The same areas are drawn faintly on
 the map. Outside every area, or with the source off, there is no line.
 
+The line under it is the **planetary K index**: how disturbed the Earth's magnetic field is,
+0 to 9 for the whole planet, for the latest three hours — "Kp 3.3 (unsettled)", and from Kp 5 a
+geomagnetic storm on NOAA's scale (G1–G5), when aurora reaches lower latitudes. It is asked of
+NOAA SWPC only while the Sky tab is open, at most every 15 minutes, and not while offline.
+
 ## Watch zones and notifications
 
 The Watch zones tab of the right-hand rail: a circle round the middle of the view with a
