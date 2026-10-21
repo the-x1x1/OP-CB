@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import type { SearchResult } from '@worldview/ipc-contract';
 import { IconButton, Popover, Search, StatusBadge, formatUtcTime } from '@worldview/ui';
-import { useActions, useAppState } from '../store/store.js';
+import { useActions, useAppSlice } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { ONLINE_ROW_ID, onlinePlaceText, searchList, type OnlineSearchState } from './search-items.js';
 
 /** Top bar (directive §53): global search, connection/state badge, UTC clock, app menu. */
 export function TopBar() {
-  const { sources, world, session, ui } = useAppState();
+  // Slices, not the whole state: the bar is redrawn when what it shows changes, not for every
+  // world delta (store.tsx useAppSlice; the perf log's shellParts).
+  const connection = useAppSlice((s) => s.sources.connection);
+  const objectCount = useAppSlice((s) => s.world.objects.size);
+  const settings = useAppSlice((s) => s.session.settings);
+  const demoMode = useAppSlice((s) => s.session.appInfo?.demoMode === true);
+  const paletteOpen = useAppSlice((s) => s.ui.paletteOpen);
   const actions = useActions();
   const now = useNow(1000);
   const [query, setQuery] = useState('');
@@ -48,17 +54,15 @@ export function TopBar() {
     return () => clearTimeout(t);
   }, [query, actions]);
 
-  const connection = sources.connection;
   // Work offline (Settings → Network) is offline whatever the cable says.
-  const workingOffline = session.settings?.network?.workOffline === true;
+  const workingOffline = settings?.network?.workOffline === true;
   const offline = workingOffline || connection?.state === 'OFFLINE';
-  const objectCount = world.objects.size;
   const list = searchList({
     text: query,
     local: results,
     online,
     offline,
-    enabled: session.settings?.search?.online !== false,
+    enabled: settings?.search?.online !== false,
   });
   const items = list.items;
   const settled = resultsFor === query.trim();
@@ -102,7 +106,7 @@ export function TopBar() {
     <header className="wv-topbar" role="banner">
       <div className="wv-topbar__brand" aria-label="WORLDVIEW">
         <span className="wv-topbar__wordmark">WORLDVIEW</span>
-        {session.appInfo?.demoMode ? <span className="wv-topbar__demo">demo</span> : null}
+        {demoMode ? <span className="wv-topbar__demo">demo</span> : null}
       </div>
       <div className="wv-topbar__search" id="wv-global-search">
         <Search
@@ -146,7 +150,7 @@ export function TopBar() {
           icon="command"
           label="Command palette (Ctrl+K)"
           onClick={() => actions.openPalette()}
-          pressed={ui.paletteOpen}
+          pressed={paletteOpen}
         />
         <Popover
           label="Application menu"

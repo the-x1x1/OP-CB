@@ -48,6 +48,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **The shell's bars render only when what they show changes.** The top bar, the lens rail, the
+  field strip, the notices and the timeline bar used to render on every world change — the
+  whole tree reconciled for a delta that changed nothing they show, which the perf log's
+  `shellParts` put at 55–156 ms of "wait" before the shell's first part in the slow windows on
+  the test laptop (2026-10-20). Each now reads only the slice of the state it shows
+  (`useAppSlice`) and is left alone otherwise. The log also showed `shellParts` cut to 40
+  characters in builds before `0d69583`; it is whole now.
 - **Home Assistant over plain `ws://`.** A source's socket may now be `ws://` to this computer
   or to the one host you named for it — Home Assistant on your network without TLS goes live
   over its WebSocket API instead of reading `/api/states` once a minute (ADR-003 amendment).
