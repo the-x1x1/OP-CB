@@ -236,7 +236,11 @@ test('home-assistant: the shipped definitions are off, keep the household out of
     assert.equal(policy['offlinePackAllowed'], false, f);
     assert.equal(policy['rawPayloadRetentionAllowed'], false, f);
     // Where the people were is not written to history.
-    if (f === 'home-assistant-people.json') assert.equal(policy['normalizedRetentionAllowed'], false, f);
+    // Where the people were is not written to history, exported, or given to other programs.
+    if (f === 'home-assistant-people.json') {
+      assert.equal(policy['normalizedRetentionAllowed'], false, f);
+      assert.equal(policy['exportAllowed'], false, f);
+    }
     assert.equal(doc['endpoint'], undefined, f);
     assert.equal(doc['websocket'], undefined, f);
     const text = JSON.stringify(doc);

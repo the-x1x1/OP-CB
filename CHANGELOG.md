@@ -21,6 +21,13 @@ Versioning: [semantic versioning](https://semver.org/).
   drops `person` and `device_tracker` entities, and where people were is not written to history,
   put in a pack or shared.
 
+- **An MCP server, and the local API on Windows.** Formicaria's tools or any Model Context
+  Protocol client on this computer can read what WorldView holds — status, sources,
+  objects near a place, a track, offline readiness, this computer's position by its own
+  permission — as read-only tools (docs/cyberdeck/LOCAL-API.md has the client configuration).
+  Each tool is one read of the local API, which now also runs on Windows, on a named pipe only
+  your user can write to; it stays off until Settings → Local API is turned on (ADR-014
+  amendment 2026-10-20).
 - **The planetary K index in the Sky tab.** How disturbed the Earth's magnetic field is, 0 to 9,
   for the latest three hours, and the geomagnetic storm level from Kp 5 (NOAA SWPC, public
   domain): asked only while the Sky tab is open, at most every 15 minutes, never offline.

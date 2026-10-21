@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import type { ProviderDataPolicy } from '@worldview/provider-sdk';
 import type { SourceHealthEntry } from '@worldview/source-health';
 import type { WorldObject } from '@worldview/world-model';
-import { LOCAL_API_LIMITS, handleLocalApi, type LocalApiDeps } from './local-api.js';
+import {
+  LOCAL_API_LIMITS,
+  defaultSocketPath,
+  handleLocalApi,
+  isNamedPipe,
+  windowsPipePath,
+  type LocalApiDeps,
+} from './local-api.js';
 
 // Every object, place and node here is invented.
 const NOW = Date.parse('2026-10-08T20:00:00Z');
@@ -346,4 +353,17 @@ test('local API: the contract fixtures are what the router answers', async () =>
       file,
     );
   }
+});
+
+test('local API on Windows: a named pipe per user, the name made safe', () => {
+  assert.equal(windowsPipePath({ USERNAME: 'Temp' }), '\\\\.\\pipe\\worldview-api-temp');
+  assert.equal(windowsPipePath({ USERNAME: 'J Conn/../x' }), '\\\\.\\pipe\\worldview-api-j_conn_.._x');
+  assert.equal(windowsPipePath({}), undefined);
+  assert.equal(
+    defaultSocketPath({ USERNAME: 'temp', XDG_RUNTIME_DIR: '/run/user/1000' }, 'win32'),
+    '\\\\.\\pipe\\worldview-api-temp',
+  );
+  assert.equal(defaultSocketPath({ XDG_RUNTIME_DIR: '/run/user/1000' }, 'linux'), '/run/user/1000/worldview/api.sock');
+  assert.equal(isNamedPipe('\\\\.\\pipe\\worldview-api-temp'), true);
+  assert.equal(isNamedPipe('/run/user/1000/worldview/api.sock'), false);
 });

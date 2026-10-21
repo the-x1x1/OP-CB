@@ -50,6 +50,8 @@ asarUnpack:
   - '**/*.node'
   # The dropped-file reader's worker thread loads its script from a real path.
   - 'dist/main/geodata-worker.cjs'
+  # The MCP server for AI clients is run by them as a script of the executable (src/mcp).
+  - 'dist/mcp/worldview-mcp.cjs'
 
 # worldview://view?lat=…&lon=… links open the app at a place (ADR-004 amendment 2026-10-20;
 # packages/ipc-contract/src/view-link.ts). The NSIS installer registers the scheme for the user

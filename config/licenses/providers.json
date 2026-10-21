@@ -2792,14 +2792,14 @@
         "normalizedRetentionAllowed": false,
         "redistributionAllowed": false,
         "offlinePackAllowed": false,
-        "exportAllowed": true,
+        "exportAllowed": false,
         "commercialUseAllowed": true,
         "attributionRequired": false,
         "attributionText": "Home Assistant (your own instance)",
         "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
       },
       "commercialReview": "approved",
-      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Where the people of the household and their phones are (person, device_tracker), shown by the operator's decision of 2026-10-20 for their own household; not written to history, never put in a pack or shared. Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
+      "notes": "Shipped off (2026-10-20): inert until the operator gives the host and token. Where the people of the household and their phones are (person, device_tracker), shown by the operator's decision of 2026-10-20 for their own household; not written to history, never put in a pack, exported or given to other programs (the local API and MCP leave them out). Read-only: no Home Assistant service is ever called. Household data stays out of offline packs and is not redistributed."
     },
     {
       "providerId": "swpc-kp-index",

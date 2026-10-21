@@ -20,6 +20,7 @@
  */
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { appDir, workspaceRoot, stageRendererAssets } from './renderer-assets.mjs';
 
@@ -55,6 +56,8 @@ const build = {
   // Only the packaging job sets this, and only when a certificate was actually used (ADR-012).
   signed: process.env.WORLDVIEW_SIGNED === '1',
   buildTime: new Date().toISOString(),
+  // For the MCP server (src/mcp), which runs without Electron's app.getVersion().
+  version: JSON.parse(readFileSync(path.join(appDir, 'package.json'), 'utf8')).version,
 };
 
 /** @type {import('esbuild').BuildOptions} */
@@ -84,6 +87,13 @@ const targets = [
     ...common,
     entryPoints: [path.join(appDir, 'src', 'main', 'geodata-worker.ts')],
     outfile: path.join(appDir, 'dist', 'main', 'geodata-worker.cjs'),
+  },
+  {
+    // The MCP server for AI clients (src/mcp/worldview-mcp.ts), run by the client as
+    // `ELECTRON_RUN_AS_NODE=1 <WorldView executable> <this file>`; unpacked like the worker.
+    ...common,
+    entryPoints: [path.join(appDir, 'src', 'mcp', 'worldview-mcp.ts')],
+    outfile: path.join(appDir, 'dist', 'mcp', 'worldview-mcp.cjs'),
   },
   {
     ...common,

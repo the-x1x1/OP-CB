@@ -189,10 +189,10 @@ test(
   },
 );
 
-test('local API: not offered off Linux', async () => {
+test('local API: not offered off Linux and Windows', async () => {
   const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
   const socket = path.join(runtimeDir, 'worldview', 'api.sock');
-  const h = await startRuntime({ platform: 'win32', localApiSocket: socket });
+  const h = await startRuntime({ platform: 'darwin', localApiSocket: socket });
   try {
     await h.client.request('settings.set', { localApi: { enabled: true } });
     await wait(200);
@@ -200,7 +200,7 @@ test('local API: not offered off Linux', async () => {
     assert.equal(await exists(socket), false);
     const line = (await h.client.request('diagnostics.get', undefined)).sidecars.find((x) => x.id === 'local-api');
     assert.equal(line?.status, 'not-configured');
-    assert.match(line?.message ?? '', /^Linux only/);
+    assert.match(line?.message ?? '', /^Linux and Windows only/);
   } finally {
     await h.dispose();
     await fs.rm(runtimeDir, { recursive: true, force: true });

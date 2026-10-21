@@ -299,11 +299,11 @@ export function SettingsDialog() {
             onChange={(v) => void actions.updateSettings({ network: { workOffline: v } })}
           />
         </Section>
-        {session.appInfo?.platform === 'linux' ? (
+        {session.appInfo?.platform === 'linux' || session.appInfo?.platform === 'win32' ? (
           <Section title="Local API">
             <Toggle
               label="Let other programs on this computer read WORLDVIEW"
-              description="A read-only connection for your own programs (Formicaria): source status, objects near a place, tracks and offline status, through a socket only your user can open — never the network. Data whose source does not allow it out of the app (a Meshtastic mesh, among others) is never given. Off unless you turn it on."
+              description="A read-only connection for your own programs and AI clients (Formicaria, or an AI assistant through the MCP server): source status, objects near a place, tracks and offline status, through a socket or named pipe only your user can write to — never the network. Data whose source does not allow it out of the app (a Meshtastic mesh, your household, among others) is never given. Off unless you turn it on."
               checked={s.localApi?.enabled === true}
               onChange={(v) => void actions.updateSettings({ localApi: { ...s.localApi, enabled: v } })}
             />

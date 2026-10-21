@@ -70,7 +70,7 @@
     "normalizedRetentionAllowed": false,
     "redistributionAllowed": false,
     "offlinePackAllowed": false,
-    "exportAllowed": true,
+    "exportAllowed": false,
     "commercialUseAllowed": true,
     "attributionRequired": false,
     "attributionText": "Home Assistant (your own instance)",

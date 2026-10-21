@@ -474,3 +474,10 @@ test('worldview:// links are registered by the installer and the .deb', () => {
   assert.match(main, /setAsDefaultProtocolClient\(VIEW_LINK_SCHEME\)/);
   assert.match(main, /linkInArgs\(argv\)/);
 });
+
+test('the MCP server is built beside main and shipped outside the asar archive', () => {
+  const buildMain = read('scripts/build-main.mjs');
+  assert.match(buildMain, /worldview-mcp\.ts/);
+  assert.match(buildMain, /dist', 'mcp', 'worldview-mcp\.cjs'/);
+  assert.match(builderYml, /^\s*-\s*'dist\/mcp\/worldview-mcp\.cjs'\s*$/m);
+});

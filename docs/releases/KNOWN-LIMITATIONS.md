@@ -359,6 +359,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 - Automatic updates on Windows have been tested against a fake updater only: the first real
   restart into a new version is the release after the one that brings them.
+- The MCP server and the local API's Windows named pipe have been tested with fakes and over
+  stdio in the container, not yet from a real MCP client against a running app.
 - The people of a Home Assistant household are shown only while `home-assistant-people` is on;
   where they were is not kept in history, so the timeline cannot replay them.
 
