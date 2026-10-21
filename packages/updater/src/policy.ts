@@ -38,6 +38,11 @@ export interface UpdatePolicyDecision {
   autoInstallOnAppQuit: boolean;
   /** Always true: the UI must present install as a button, never a timer. */
   installRequiresUserAction: true;
+  /**
+   * Whether `install` may download and run an update here at all. False for the .deb, which
+   * is the package manager's to install: the app only says a version exists.
+   */
+  canInstall: boolean;
   /** Human-readable summary shown in Settings → Updates and in diagnostics. */
   reason: string;
 }
@@ -51,6 +56,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: false,
       autoInstallOnAppQuit: false,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: 'update checks are disabled for unpackaged (development) runs',
     };
   }
@@ -61,6 +67,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: true,
       autoInstallOnAppQuit: true,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: `automatic updates on (${input.channel} channel): a new version downloads in the background from the GitHub release, is checked against the release's own hash, and installs when you restart (unsigned build: no code signature to check yet)`,
     };
   }
@@ -71,6 +78,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: false,
       autoInstallOnAppQuit: false,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: input.canInstall
         ? 'automatic updates off: updates are checked and shown, and download when you ask'
         : 'updates are checked and shown; this installation is updated by its package manager (download the new package from the release)',
@@ -83,6 +91,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: true,
       autoInstallOnAppQuit: true,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: `signed build, automatic updates on (${input.channel} channel): downloaded in the background, installed when you quit or on request`,
     };
   }
@@ -92,6 +101,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
     autoDownload: false,
     autoInstallOnAppQuit: false,
     installRequiresUserAction: true,
+    canInstall: input.canInstall === true,
     reason: `signed build, automatic updates off (${input.channel} channel): you will be told when an update exists`,
   };
 }

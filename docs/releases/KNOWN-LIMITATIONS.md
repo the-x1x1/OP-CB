@@ -357,6 +357,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.5.0 (unreleased)
 
+- The first start of 0.6.0 turns Update automatically on, once, in every settings file — an
+  operator who had switched it off before cannot be told from one who never touched it, since
+  the file holds every setting either way. Switch it off again; from then on it stays off.
 - Automatic updates on Windows have been tested against a fake updater only: the first real
   restart into a new version is the release after the one that brings them.
 - The MCP server and the local API's Windows named pipe have been tested with fakes and over

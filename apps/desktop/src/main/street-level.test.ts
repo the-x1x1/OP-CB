@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MIN_GAP_MS, PANORAMAX_HOST, StreetLevel, panoramaxUrl, readPanoramax } from './street-level.js';
+import {
+  INSTANCES_URL,
+  MIN_GAP_MS,
+  PANORAMAX_HOST,
+  StreetLevel,
+  panoramaxUrl,
+  readInstanceHosts,
+  readPanoramax,
+} from './street-level.js';
 
 /** The shape api.panoramax.xyz/api/search answered on 2026-10-20 near Notre-Dame (one feature, cut down). */
 const ANSWER = {
@@ -26,7 +34,13 @@ const ANSWER = {
         },
       },
     },
-    // Not pictures: no licence; a thumbnail over http; a bad id; off the Earth.
+    // Not pictures: no licence; a thumbnail over http; a bad id; off the Earth; a thumbnail on a host that is no Panoramax instance.
+    {
+      id: 'jkl',
+      geometry: { coordinates: [2.35, 48.85] },
+      properties: { license: 'CC-BY-SA-4.0' },
+      assets: { thumb: { href: 'https://evil.example/t.jpg' } },
+    },
     {
       id: 'abc',
       geometry: { coordinates: [2.35, 48.85] },
@@ -55,6 +69,15 @@ const ANSWER = {
   links: [],
 };
 const AT = { latitude: 48.8566, longitude: 2.3522 };
+/** Two of the 25 instances api.panoramax.xyz/api/instances listed on 2026-10-20. */
+const INSTANCES = {
+  instances: [
+    { url: 'https://panoramax.mapcomplete.org', name: 'MapComplete' },
+    { url: 'https://panoramax.ign.fr', name: 'IGN' },
+    { url: 'ftp://nope', name: 'not https' },
+  ],
+};
+const HOSTS = new Set(readInstanceHosts(INSTANCES));
 
 test('street level: the URL asks Panoramax for the point, lon,lat, within the radius, and nothing else', () => {
   assert.equal(
@@ -64,7 +87,8 @@ test('street level: the URL asks Panoramax for the point, lon,lat, within the ra
 });
 
 test('street level: a picture with its place, heading, time, licence, author and https thumbnail; the rest left out', () => {
-  const pics = readPanoramax(ANSWER, AT, 6);
+  assert.deepEqual([...HOSTS], ['panoramax.mapcomplete.org', 'panoramax.ign.fr']);
+  const pics = readPanoramax(ANSWER, AT, 6, HOSTS);
   assert.equal(pics.length, 1);
   const [p] = pics;
   assert.equal(p!.id, '9cc38bf6-6a40-4adf-b2be-4447eb361202');
@@ -78,6 +102,7 @@ test('street level: a picture with its place, heading, time, licence, author and
   assert.equal(p!.pageUrl, `https://${PANORAMAX_HOST}/#focus=pic&pic=9cc38bf6-6a40-4adf-b2be-4447eb361202`);
   assert.deepEqual(readPanoramax({ features: [], links: [] }, AT, 6), []);
   assert.deepEqual(readPanoramax('nonsense', AT, 6), []);
+  assert.deepEqual(readPanoramax(ANSWER, AT, 6), [], 'no instance list read yet: no picture host is trusted');
 });
 
 test('street level: one request a second, cached an hour, nothing sent offline or when switched off', async () => {
@@ -88,6 +113,7 @@ test('street level: one request a second, cached an hour, nothing sent offline o
   const sleeps: number[] = [];
   const sl = new StreetLevel({
     fetchImpl: (async (url: string) => {
+      if (url === INSTANCES_URL) return new Response(JSON.stringify(INSTANCES), { status: 200 });
       sent.push(url);
       return new Response(JSON.stringify(ANSWER), { status: 200 });
     }) as unknown as typeof fetch,
@@ -110,6 +136,7 @@ test('street level: one request a second, cached an hour, nothing sent offline o
   await sl.near({ position: { latitude: 48.9, longitude: 2.4 } });
   assert.equal(sent.length, 2);
   assert.deepEqual(sleeps, [MIN_GAP_MS], 'the second request waited its turn');
+  assert.equal(sl.stats.instances, 1, 'the federation list was read once for both');
   online = false;
   assert.equal((await sl.near({ position: { latitude: 49, longitude: 2 } })).status, 'offline');
   online = true;
@@ -122,10 +149,15 @@ test('street level: a service that fails is said, and asked again after two minu
   let now = 0;
   let status = 503;
   const sl = new StreetLevel({
-    fetchImpl: (async () =>
-      new Response(status === 200 ? JSON.stringify({ features: [], links: [] }) : 'busy', {
-        status,
-      })) as unknown as typeof fetch,
+    fetchImpl: (async (url: string) =>
+      new Response(
+        url === INSTANCES_URL
+          ? JSON.stringify(INSTANCES)
+          : status === 200
+            ? JSON.stringify({ features: [], links: [] })
+            : 'busy',
+        { status: url === INSTANCES_URL ? 200 : status },
+      )) as unknown as typeof fetch,
     userAgent: 'WorldView test',
     isOnline: () => true,
     enabled: () => true,

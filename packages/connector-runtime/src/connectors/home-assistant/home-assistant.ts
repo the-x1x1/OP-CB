@@ -228,8 +228,24 @@ export function haTokenKey(d: ConnectorProviderDefinition): string | undefined {
 export function homeAssistantManifest(d: ConnectorProviderDefinition): ProviderManifest {
   const base = definitionToManifest(d, CONNECTOR_NAME);
   const intervalSeconds = DEFAULT_INTERVAL_SECONDS;
+  // A definition that reads the household's people (PEOPLE_DOMAINS) gets a closed policy
+  // whatever its JSON says: where they were is never written to history, exported, put in a
+  // pack, or given to other programs (PRODUCT-BOUNDARIES, "The operator's own household").
+  // Enforced here, in code, so a definition the operator edits cannot open it.
+  const readsPeople = filteredDomains(d).some((x) => PEOPLE_DOMAINS.has(x));
+  const dataPolicy = readsPeople
+    ? {
+        ...base.dataPolicy,
+        rawPayloadRetentionAllowed: false,
+        normalizedRetentionAllowed: false,
+        redistributionAllowed: false,
+        offlinePackAllowed: false,
+        exportAllowed: false,
+      }
+    : base.dataPolicy;
   return {
     ...base,
+    dataPolicy,
     transport: 'local-process',
     capabilities: { live: true, historical: false, offline: true, boundsQuery: false },
     credentials: base.credentials.map((c) => ({ ...c, required: true })),

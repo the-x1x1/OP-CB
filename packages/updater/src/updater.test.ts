@@ -160,7 +160,7 @@ test('controller: unsigned build checks and notifies only; install is explicit a
   const ctl = new UpdaterController({
     updater: fake,
     currentVersion: '0.1.0',
-    policy: () => ({ signed: false, channel: 'stable', automatic: true, packaged: true }),
+    policy: () => ({ signed: false, channel: 'stable', automatic: false, packaged: true, canInstall: true }),
   });
   ctl.onChange((s) => states.push(s.status));
   assert.equal(fake.autoDownload, false, 'policy applied to the updater: no background download for unsigned');
@@ -205,13 +205,30 @@ test('controller: an unsigned Windows build downloads in the background and rest
   assert.equal(fake.silent, true, 'the installer runs without its wizard and the app comes back');
 });
 
+test('controller: where the app cannot install (the .deb), install() downloads and runs nothing', async () => {
+  const fake = new FakeAutoUpdater();
+  fake.offered = { version: '0.6.0' };
+  const ctl = new UpdaterController({
+    updater: fake,
+    currentVersion: '0.5.0',
+    policy: () => ({ signed: false, channel: 'stable', automatic: true, packaged: true, canInstall: false }),
+  });
+  assert.equal(fake.autoDownload, false);
+  assert.equal(ctl.state().canInstall, false);
+  const after = await ctl.check();
+  assert.equal(after.status, 'available');
+  const r = await ctl.install();
+  assert.deepEqual(fake.calls, ['check'], 'neither download nor quitAndInstall');
+  assert.match(r.message ?? '', /package manager/);
+});
+
 test('controller: signed automatic build downloads in the background; install with nothing available is a no-op', async () => {
   const fake = new FakeAutoUpdater();
   fake.offered = { version: '0.2.0' };
   const ctl = new UpdaterController({
     updater: fake,
     currentVersion: '0.1.0',
-    policy: () => ({ signed: true, channel: 'stable', automatic: true, packaged: true }),
+    policy: () => ({ signed: true, channel: 'stable', automatic: true, packaged: true, canInstall: true }),
   });
   assert.equal(fake.autoDownload, true);
   const s = await ctl.check();
@@ -223,7 +240,7 @@ test('controller: signed automatic build downloads in the background; install wi
   const idle = new UpdaterController({
     updater: new FakeAutoUpdater(),
     currentVersion: '0.1.0',
-    policy: () => ({ signed: true, channel: 'stable', automatic: false, packaged: true }),
+    policy: () => ({ signed: true, channel: 'stable', automatic: false, packaged: true, canInstall: true }),
   });
   const r = await idle.install();
   assert.equal(r.status, 'idle');

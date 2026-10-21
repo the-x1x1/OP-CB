@@ -418,7 +418,12 @@ each to be built on `feature/roadmap-3`:
 - [ ] **Wind on the globe:** a source that needs no key and no licence condition. NOAA's ERDDAP
       serves NCEP's GFS 10 m wind (`NCEP_Global_Best`, 0.5°, U.S. public domain) as JSON, so no
       GRIB2 decoder (God's Eye View's way) is needed; Open-Meteo's free tier is non-commercial,
-      so not that.
+      so not that. **Waiting on one thing:** a saved answer from
+      `coastwatch.pfeg.noaa.gov/erddap/griddap/NCEP_Global_Best.json?ugrd10m[(last)][(-90):10:(90)][(0):10:(359.5)],vgrd10m[…]`
+      (the container cannot reach either ERDDAP host, 2026-10-20) to read the row shape from — the
+      source is not built against a guessed shape. Then: a `wind` field read by the connector
+      runtime (u, v on a grid, like `response.contour`'s points), drawn as particles on the globe
+      and arrows on the 2D map, and the reading at the centre in the HUD.
 - [x] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
       (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown; on
       feature/roadmap-3, Street view in What's here); live only, never cached into packs
@@ -434,8 +439,14 @@ each to be built on `feature/roadmap-3`:
 - [x] **A connections tab** for the operator's own radios: Meshtastic (TCP, serial), the RTL-SDR
       receivers (readsb, AIS) — what is plugged in, connect, disconnect, status, in one place.
 - [ ] **A licence-free basemap for offline packs:** Protomaps' OpenStreetMap builds (ODbL:
-      attribution only for a Produced Work) cut to the pack's region; Natural Earth (public
-      domain) at low zoom as now.
+      attribution only for a Produced Work; already approved in the licence register as
+      `protomaps-builds`) cut to the pack's region with `pmtiles extract`, which the worldpack
+      tooling already does (`worldpack build --include map --pmtiles`); Natural Earth (public
+      domain) at low zoom as now. Nothing public-domain is detailed enough past zoom 6–8, and the
+      2D styles draw the Protomaps schema, so this is a record and a documented recipe (B1), not
+      new code: write the licence record for a pack's basemap into the pack's manifest at build
+      time and show it in Settings → Offline packs. Waits on a Protomaps build (about 120 GB, kept
+      seven days) being cut on a machine with the room.
 - Not needed now: the interface in other languages.
 - Still the operator's or legal's: the conditional providers (LR-01…LR-19) and AISStream's
   commercial terms; more camera, transit and bike-share regions (each feed's licence); OSIRIS's

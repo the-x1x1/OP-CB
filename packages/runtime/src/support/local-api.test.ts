@@ -32,6 +32,8 @@ const POLICIES: Record<string, ProviderDataPolicy> = {
   'readsb-local': policy(true),
   'usgs-earthquakes': policy(true),
   'meshtastic-local': policy(false, false),
+  // The household's people (home-assistant.ts closes this policy in code, whatever the JSON says).
+  'home-assistant-people': policy(false, false),
   'no-history': policy(true, false),
   'ais-closed': policy(false, true),
 };
@@ -61,6 +63,10 @@ const OBJECTS: WorldObject[] = [
   // Mesh nodes: other people's precise positions. Never out.
   obj('sensor:meshtastic:!11111111', 'meshtastic-local', 21.31, -157.86, { properties: { thisNode: true } }),
   obj('sensor:meshtastic:!22222222', 'meshtastic-local', 21.32, -157.87),
+  // The household: where Home Assistant placed a person and a phone. Never out either.
+  obj('sensor:home-assistant-people:person.alex', 'home-assistant-people', 21.30695, -157.85828, {
+    labels: { name: 'Alex' },
+  }),
   // Merged from an exportable and a non-exportable source: the stricter wins.
   obj('aircraft:icao24:a00004', 'readsb-local', 21.3, -157.9, {
     sourceRefs: [
@@ -216,6 +222,10 @@ test('local API: objects near a point — bounded, paged, and only what the data
   // Both mesh nodes, the aircraft merged with a mesh source, the source with no known policy, and
   // the vessel a closed source once fed: left out without a trace — not even a count.
   assert.ok(!JSON.stringify(near).includes('meshtastic'), 'no word of the mesh in the answer');
+  assert.ok(
+    !JSON.stringify(near).includes('Alex') && !JSON.stringify(near).includes('person.'),
+    'nor of the household',
+  );
   assert.ok(!JSON.stringify(near).includes('closed source'));
   assert.equal((near as unknown as Record<string, unknown>)['withheld'], undefined);
 
@@ -264,6 +274,7 @@ test('local API: a track only where the sources allow keeping and letting it out
     { at: iso(0), latitude: 21.31, longitude: -157.91, altitudeM: 900 },
   ]);
   assert.equal((await get('/v1/track?id=sensor:meshtastic:!22222222')).status, 403, 'a mesh node');
+  assert.equal((await get('/v1/track?id=sensor:home-assistant-people:person.alex')).status, 403, 'a person');
   assert.equal((await get('/v1/track?id=aircraft:icao24:a00004')).status, 403, 'merged with a mesh source');
   assert.equal((await get('/v1/track?id=earthquake:nohist:1')).status, 403, 'a source that keeps no history');
   assert.equal(

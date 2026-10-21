@@ -58,9 +58,15 @@ test('connections: Home Assistant in one step sets every source, stores the toke
     tls: false,
   });
   assert.deepEqual(
-    sent.filter((x) => x.channel === 'sources.setEnabled').map((x) => (x.request as { providerId: string }).providerId),
-    ['home-assistant-zones', 'home-assistant-weather'],
-    'the people are not turned on unless asked',
+    sent
+      .filter((x) => x.channel === 'sources.setEnabled')
+      .map((x) => x.request as { providerId: string; enabled: boolean }),
+    [
+      { providerId: 'home-assistant-zones', enabled: true },
+      { providerId: 'home-assistant-weather', enabled: true },
+      { providerId: 'home-assistant-people', enabled: false },
+    ],
+    'every source is switched as picked: the people, unticked, go off',
   );
   assert.ok(state.ui.notifications.some((n) => n.title === 'Home Assistant connected'));
 });

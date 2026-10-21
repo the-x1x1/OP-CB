@@ -67,6 +67,7 @@ const DEV = !app.isPackaged && process.env.WORLDVIEW_DEV === '1';
 const NETWORK_POLL_MS = 15_000;
 /** The first update check after start, and the gap between the next ones. */
 const UPDATE_FIRST_CHECK_MS = 20_000;
+const UPDATE_FIRST_RETRY_MS = 60_000;
 const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60_000;
 
 // Before whenReady on purpose: Chromium reads the scheme registry as the network service
@@ -472,12 +473,20 @@ async function bootstrap(): Promise<void> {
   // build says so in its first minute, then every few hours while it runs; never while working
   // offline. With automatic updates on the new version downloads in the background and the
   // window offers to restart into it (components/update-notice.tsx).
+  let updateChecked = false;
   const checkForUpdate = (why: string) => {
     if (!online()) return;
+    updateChecked = true;
     log.info('update check', { why });
     void updater.check();
   };
+  // The first check: 20 s after start, and again every minute until one has run (the OS may
+  // still say offline while the network comes up); then every four hours.
   const updateFirst = setTimeout(() => checkForUpdate('start'), UPDATE_FIRST_CHECK_MS);
+  const updateRetry = setInterval(() => {
+    if (updateChecked) clearInterval(updateRetry);
+    else checkForUpdate('retry');
+  }, UPDATE_FIRST_RETRY_MS);
   const updateTimer = setInterval(() => checkForUpdate('interval'), UPDATE_CHECK_INTERVAL_MS);
 
   // Power and sleep (docs/cyberdeck M5): the OS's own events, nothing polled. On waking the
@@ -559,6 +568,7 @@ async function bootstrap(): Promise<void> {
   app.on('before-quit', () => {
     clearInterval(networkTimer);
     clearTimeout(updateFirst);
+    clearInterval(updateRetry);
     clearInterval(updateTimer);
     // The local API's socket goes now: the asynchronous stop below may not finish before exit.
     runtime.localApi?.closeNow();

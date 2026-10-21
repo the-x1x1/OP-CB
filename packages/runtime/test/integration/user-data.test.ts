@@ -644,11 +644,15 @@ test('integration: a worldview:// link is told to the window and kept once for o
   try {
     const heard: Array<WorldEvents['link.opened']> = [];
     h.runtime.on('link.opened', (l) => heard.push(l));
-    assert.equal(await h.client.request('link.take', undefined), null, 'nothing waiting at start');
+    // Before any window has booted: a link waits for the first take, and is not an event.
+    h.runtime.core.openLink({ latitude: 1, longitude: 2 });
+    assert.deepEqual(heard, []);
+    assert.deepEqual(await h.client.request('link.take', undefined), { latitude: 1, longitude: 2 });
+    assert.equal(await h.client.request('link.take', undefined), null, 'taken once');
+    // After: a link is an event only; a later take (a window reloaded) gets nothing old.
     h.runtime.core.openLink({ latitude: 21.3, longitude: -157.86, zoom: 11 });
     assert.deepEqual(heard, [{ latitude: 21.3, longitude: -157.86, zoom: 11 }]);
-    assert.deepEqual(await h.client.request('link.take', undefined), { latitude: 21.3, longitude: -157.86, zoom: 11 });
-    assert.equal(await h.client.request('link.take', undefined), null, 'taken once');
+    assert.equal(await h.client.request('link.take', undefined), null, 'never kept once a window is up');
 
     // A view's link onto the host's clipboard; a host without one says so.
     const copiedText: string[] = [];

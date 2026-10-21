@@ -9,16 +9,28 @@ import { useActions, useAppState } from '../store/store.js';
  * knowing. With automatic updates the new version downloads in the background and the card
  * says so, then offers the restart; Later hides it for this version until the next start.
  */
+/** Where the releases are published (electron-builder.yml `publish`). */
+export const RELEASES_URL = 'https://github.com/the-x1x1/oneview/releases';
+
 export interface UpdateNoticeModel {
   title: string;
   body: string;
   /** The button, when there is something to press. */
-  action?: { label: string; kind: 'restart' | 'download' };
+  action?: { label: string; kind: 'restart' | 'download' | 'release' };
 }
 
 export function updateNoticeModel(state: UpdaterState | null | undefined): UpdateNoticeModel | null {
   if (!state?.availableVersion) return null;
   const v = state.availableVersion;
+  // The .deb is the package manager's to install: nothing is downloaded or run from here.
+  if (state.canInstall === false) {
+    if (state.status !== 'available' && state.status !== 'downloaded') return null;
+    return {
+      title: `WorldView ${v} is available`,
+      body: `You are on ${state.currentVersion}. Download the new package from the release page and install it with your package manager.`,
+      action: { label: 'Open the release page', kind: 'release' },
+    };
+  }
   switch (state.status) {
     case 'downloading':
       return {
@@ -59,7 +71,16 @@ export function UpdateNotice() {
       </div>
       <div className="wv-update-notice__actions">
         {model.action ? (
-          <Button size="sm" icon="refresh" variant="primary" onClick={() => void actions.installUpdate()}>
+          <Button
+            size="sm"
+            icon={model.action.kind === 'release' ? 'external' : 'refresh'}
+            variant="primary"
+            onClick={() =>
+              model.action!.kind === 'release'
+                ? void actions.openExternal(`${RELEASES_URL}/tag/v${updater.state!.availableVersion}`)
+                : void actions.installUpdate()
+            }
+          >
             {model.action.label}
           </Button>
         ) : null}

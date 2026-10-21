@@ -374,6 +374,16 @@ test('home-assistant: person and device_tracker entities only reach a definition
     lon: -157.85828,
   });
   assert.equal(h.provider.stats.refused, 0);
+  // The closed policy is the code's, not the JSON's: a definition opened by hand stays closed.
+  const opened = homeAssistantManifest(
+    definition('people', {
+      dataPolicy: { exportAllowed: true, normalizedRetentionAllowed: true, offlinePackAllowed: true },
+    }),
+  );
+  assert.equal(opened.dataPolicy.exportAllowed, false);
+  assert.equal(opened.dataPolicy.normalizedRetentionAllowed, false);
+  assert.equal(opened.dataPolicy.offlinePackAllowed, false);
+  assert.equal(opened.dataPolicy.redistributionAllowed, false);
 });
 
 test('home-assistant: the entities setting narrows what the definition selects; bad patterns are reported', async () => {

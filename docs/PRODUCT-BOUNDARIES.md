@@ -21,9 +21,11 @@ operator's **own Home Assistant** already locates (`person` and `device_tracker`
 be shown, through the shipped `home-assistant-people` definition only. It is off until the
 operator turns it on and gives their own server's address and token; it reads nothing Home
 Assistant does not already hold; where those people were is not written to history, put in an
-offline pack or shared; and no watch zone, search or alert is built around a person. Every other
-Home Assistant definition still drops these entities as they arrive. Keep it off unless the
-people it shows agree.
+offline pack, exported or given to other programs — a closed data policy the connector sets in
+code for any definition that reads these domains, whatever its JSON says. They are ordinary
+objects of the map otherwise: searchable by name and inside watch zones like anything else, which
+is why it stays off unless the people it shows agree. Every other Home Assistant definition
+still drops these entities as they arrive.
 
 ## What the camera system does
 

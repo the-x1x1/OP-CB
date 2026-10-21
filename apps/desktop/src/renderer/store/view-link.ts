@@ -9,6 +9,10 @@ import { withWeatherImagery } from '../weather-imagery.js';
  * text): which layer switches it turns, and the link for what is on the map now.
  */
 
+/** The same patterns `readViewLink` accepts (packages/ipc-contract view-link.ts). */
+const LINK_SELECT_ID = /^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,127}$/;
+const LINK_LENS_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+
 /** Every switch a link may turn: the categories, their types and children, the weather pictures. */
 export function linkableLayerIds(): Set<string> {
   const ids = new Set<string>();
@@ -54,8 +58,11 @@ export function linkForView(
   const link: ViewLink = { latitude: view.center.latitude, longitude: view.center.longitude, mode };
   if (mode === '3D') link.altitudeM = Math.max(1, Math.min(50_000_000, view.altitudeM));
   else link.zoom = Math.max(0, Math.min(22, view.zoom));
-  if (opts.lensId) link.lensId = opts.lensId;
-  if (opts.selectedId) link.select = opts.selectedId;
+  if (opts.lensId && LINK_LENS_ID.test(opts.lensId)) link.lensId = opts.lensId;
+  // Only an id the link can carry (view-link.ts reads `select` by this pattern): one it
+  // cannot — a '+' in it, over 128 characters — is left out rather than written into a link
+  // that the app would then refuse.
+  if (opts.selectedId && LINK_SELECT_ID.test(opts.selectedId)) link.select = opts.selectedId;
   // A centre a hair outside ±180 after a pan is the same place: wrap it into range.
   link.longitude = ((((link.longitude + 180) % 360) + 360) % 360) - 180;
   return link;

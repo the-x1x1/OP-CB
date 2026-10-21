@@ -614,6 +614,8 @@ export interface UpdaterState {
   signed: boolean;
   message?: string;
   lastCheckedAt?: string;
+  /** (additive, 2026-10-20) Whether this installation installs updates itself; false for the .deb. */
+  canInstall?: boolean;
 }
 
 export interface AppSettings {

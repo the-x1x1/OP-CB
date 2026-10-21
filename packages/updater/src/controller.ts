@@ -80,6 +80,7 @@ export class UpdaterController {
       status: this.decision.enabled ? 'idle' : 'disabled',
       currentVersion: opts.currentVersion,
       signed: input.signed,
+      canInstall: this.decision.canInstall,
       message: this.decision.reason,
     };
     this.applyPolicy();
@@ -109,6 +110,7 @@ export class UpdaterController {
       channel: input.channel,
       automatic: this.decision.autoDownload,
       signed: input.signed,
+      canInstall: this.decision.canInstall,
     };
     if (!this.decision.enabled) {
       patch.status = 'disabled';
@@ -144,6 +146,13 @@ export class UpdaterController {
   /** Explicit user action. Downloads (if needed) and installs. Unsigned builds are allowed here because the user asked. */
   async install(): Promise<UpdaterState> {
     if (!this.decision.enabled) return this.state();
+    // The .deb: nothing is downloaded or run here, whatever the state says is available.
+    if (!this.decision.canInstall) {
+      this.update({
+        message: 'this installation is updated by its package manager: download the new package from the release',
+      });
+      return this.state();
+    }
     if (this.current.status === 'downloaded') {
       this.logger.info('installing downloaded update', {
         version: this.current.availableVersion ?? 'unknown',

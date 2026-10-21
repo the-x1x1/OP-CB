@@ -75,6 +75,9 @@ test('view link for the view: 2D by zoom, the globe by height, lens and selectio
     select: 'vessel:ais:1',
   });
   assert.deepEqual(linkForView(view, '3D'), { latitude: 10, longitude: -179, mode: '3D', altitudeM: 3_000 });
+  // An id the link cannot carry is left out, not written into a link the app would refuse.
+  assert.equal(linkForView(view, '2D', { selectedId: 'vessel:ais:1+2' }).select, undefined);
+  assert.equal(linkForView(view, '2D', { selectedId: `x:${'a'.repeat(200)}` }).select, undefined);
 });
 
 test('view link: opening one flies there and turns its layers; unknown parts are said once', async () => {

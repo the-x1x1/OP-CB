@@ -864,8 +864,9 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           const next = { ...current, host: opts.address.host, port: opts.address.port, tls: opts.address.tls };
           await client.request('sources.settings.set', { providerId, settings: next });
           dispatch({ type: 'sources/settings', providerId, settings: next });
-          if (opts.enable.includes(providerId))
-            await client.request('sources.setEnabled', { providerId, enabled: true });
+          // Each Home Assistant source is switched as picked: an unticked one goes off, so
+          // unticking the household and pressing Connect stops reading them.
+          await client.request('sources.setEnabled', { providerId, enabled: opts.enable.includes(providerId) });
         }
       } catch (err) {
         fail('Home Assistant not connected', err);

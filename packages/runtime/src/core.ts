@@ -252,16 +252,22 @@ export class RuntimeCore {
   /** A worldview:// link waiting for the window (ADR-004 amendment 2026-10-20). */
   private pendingLink: ViewLink | null = null;
 
+  /** Whether a window has booted and asked `link.take`: from then on links are events only. */
+  private windowTookLinks = false;
+
   /**
-   * A link opened from outside: told to every window now, and kept for one `link.take` in
-   * case no window is listening yet (the app was started by the link).
+   * A link opened from outside: once a window is up (it has asked `link.take` at boot) it is
+   * an event, `link.opened`, and nothing is kept; before that (the app was started by the
+   * link) it waits for that first `link.take`. Never both, so a window reloaded or re-created
+   * later does not open an old link again, and a link is never opened twice.
    */
   openLink(link: ViewLink): void {
-    this.pendingLink = link;
-    this.emitter.emit('link.opened', link);
+    if (this.windowTookLinks) this.emitter.emit('link.opened', link);
+    else this.pendingLink = link;
   }
 
   takeLink(): ViewLink | null {
+    this.windowTookLinks = true;
     const link = this.pendingLink;
     this.pendingLink = null;
     return link;

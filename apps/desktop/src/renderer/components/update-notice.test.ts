@@ -39,3 +39,11 @@ test('update notice: with automatic updates off, the card offers the download', 
   const offered = updateNoticeModel({ ...base, automatic: false, status: 'available', availableVersion: '0.6.0' });
   assert.deepEqual(offered?.action, { label: 'Download and restart', kind: 'download' });
 });
+
+test('update notice: where the app cannot install (the .deb), the card points at the release page and offers no download', () => {
+  const deb = { ...base, canInstall: false, status: 'available' as const, availableVersion: '0.6.0' };
+  const m = updateNoticeModel(deb);
+  assert.deepEqual(m?.action, { label: 'Open the release page', kind: 'release' });
+  assert.match(m?.body ?? '', /package manager/);
+  assert.equal(updateNoticeModel({ ...deb, status: 'downloading' }), null);
+});

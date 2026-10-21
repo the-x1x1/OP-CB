@@ -19,7 +19,8 @@ import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@worldvie
  *  - Answers are cached (an hour; a failure for two minutes); the same point in flight shares
  *    the one request.
  *  - Only this host, over https; the URL is built here. Thumbnails come from the instance that
- *    holds the picture, so their hosts vary: each is checked to be https before it is offered.
+ *    holds the picture: only the federated instances listed in PANORAMAX_PICTURE_HOSTS, over
+ *    https, are offered to the window, so an answer cannot send it anywhere else.
  *
  * Offline (the OS says so), or with online lookups switched off in Settings → Search, nothing
  * is sent.
@@ -62,11 +63,44 @@ export function panoramaxUrl(position: GeoPosition, radiusM: number, limit: numb
   return u.href;
 }
 
-function httpsUrl(v: unknown): string | undefined {
+/**
+ * The hosts a picture may be shown from: the Panoramax instances the meta-catalogue federates,
+ * read from `api.panoramax.xyz/api/instances` (25 on 2026-10-20) once a day and kept in memory
+ * — not a fixed list, which goes stale as instances join, and not whatever an answer names,
+ * which a hostile or mistaken answer could point anywhere. Until the list has been read, or
+ * when it could not be, only the catalogue host itself is allowed. A picture on an instance not
+ * listed is left out.
+ */
+export const INSTANCES_URL = `https://${PANORAMAX_HOST}/api/instances`;
+const INSTANCES_TTL_MS = 24 * 3_600_000;
+const INSTANCES_RETRY_MS = 10 * 60_000;
+const MAX_INSTANCES = 200;
+
+/** The hostnames in the federation answer (each instance's `url`), lower-case; none on an error. */
+export function readInstanceHosts(body: unknown): string[] {
+  const list = (body as { instances?: unknown } | null)?.instances ?? body;
+  if (!Array.isArray(list)) return [];
+  const hosts = new Set<string>();
+  for (const i of list.slice(0, MAX_INSTANCES)) {
+    const url = (i as { url?: unknown } | null)?.url;
+    if (typeof url !== 'string') continue;
+    try {
+      const u = new URL(url);
+      if (u.protocol === 'https:') hosts.add(u.hostname.toLowerCase());
+    } catch {
+      /* not a URL: not an instance */
+    }
+  }
+  return [...hosts];
+}
+
+function pictureUrl(v: unknown, allowed: ReadonlySet<string>): string | undefined {
   if (typeof v !== 'string' || v.length > 1024) return undefined;
   try {
     const u = new URL(v);
-    return u.protocol === 'https:' ? u.href : undefined;
+    if (u.protocol !== 'https:' || u.username || u.password) return undefined;
+    const host = u.hostname.toLowerCase();
+    return host === PANORAMAX_HOST || allowed.has(host) ? u.href : undefined;
   } catch {
     return undefined;
   }
@@ -86,7 +120,12 @@ function haversineM(a: GeoPosition, b: GeoPosition): number {
  * The pictures in Panoramax's STAC answer, nearest first; anything not a picture with a place,
  * a licence and an https thumbnail is left out. Exported for the tests.
  */
-export function readPanoramax(body: unknown, at: GeoPosition, limit: number): StreetLevelPicture[] {
+export function readPanoramax(
+  body: unknown,
+  at: GeoPosition,
+  limit: number,
+  allowedHosts: ReadonlySet<string> = new Set(),
+): StreetLevelPicture[] {
   const features = (body as { features?: unknown } | null)?.features;
   if (!Array.isArray(features)) return [];
   const out: StreetLevelPicture[] = [];
@@ -102,7 +141,7 @@ export function readPanoramax(body: unknown, at: GeoPosition, limit: number): St
     const c = feature.geometry?.coordinates;
     if (!Array.isArray(c) || typeof c[0] !== 'number' || typeof c[1] !== 'number') continue;
     if (Math.abs(c[1]) > 90 || Math.abs(c[0]) > 180) continue;
-    const thumbUrl = httpsUrl(feature.assets?.thumb?.href);
+    const thumbUrl = pictureUrl(feature.assets?.thumb?.href, allowedHosts);
     if (!thumbUrl) continue;
     const p = feature.properties ?? {};
     const license = typeof p['license'] === 'string' ? p['license'].slice(0, 40) : '';
@@ -161,7 +200,8 @@ export class StreetLevel {
   private readonly inflight = new Map<string, Promise<StreetLevelAnswer>>();
   private readonly turn: Turnstile;
   private readonly now: () => number;
-  readonly stats = { asked: 0, fromCache: 0, sent: 0, refused: 0, failed: 0 };
+  private instances: { hosts: Set<string>; readAt: number; ok: boolean } = { hosts: new Set(), readAt: 0, ok: false };
+  readonly stats = { asked: 0, fromCache: 0, sent: 0, refused: 0, failed: 0, instances: 0 };
 
   constructor(private readonly opts: StreetLevelOptions) {
     this.now = opts.now ?? Date.now;
@@ -201,6 +241,32 @@ export class StreetLevel {
     return answer;
   }
 
+  /** The federation's hosts, read once a day (ten minutes after a failure); never waits on a second reader. */
+  private async refreshInstances(): Promise<void> {
+    const age = this.now() - this.instances.readAt;
+    if (this.instances.readAt && age < (this.instances.ok ? INSTANCES_TTL_MS : INSTANCES_RETRY_MS)) return;
+    this.instances.readAt = this.now();
+    this.stats.instances++;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await this.opts.fetchImpl(INSTANCES_URL, {
+        headers: { accept: 'application/json', 'user-agent': this.opts.userAgent },
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (text.length > MAX_BODY_BYTES) throw new Error('too large');
+      const hosts = readInstanceHosts(JSON.parse(text) as unknown);
+      if (hosts.length) this.instances = { hosts: new Set(hosts), readAt: this.now(), ok: true };
+      else this.instances.ok = false;
+    } catch {
+      this.instances.ok = false;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   private async ask(
     position: GeoPosition,
     radiusM: number,
@@ -212,9 +278,12 @@ export class StreetLevel {
       return { status: 'busy', pictures: [], attribution: '', message: 'Asked too often; try again in a moment.' };
     }
     this.stats.sent++;
+    await this.refreshInstances();
+    // The request is shared by every caller asking the same point (`inflight`), so one
+    // caller's signal must not end it for the others: only the timeout aborts it.
+    void signal;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-    signal?.addEventListener('abort', () => controller.abort(), { once: true });
     try {
       const res = await this.opts.fetchImpl(panoramaxUrl(position, radiusM, limit), {
         headers: { accept: 'application/geo+json, application/json', 'user-agent': this.opts.userAgent },
@@ -223,7 +292,7 @@ export class StreetLevel {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       if (text.length > MAX_BODY_BYTES) throw new Error('answer larger than expected');
-      const pictures = readPanoramax(JSON.parse(text) as unknown, position, limit);
+      const pictures = readPanoramax(JSON.parse(text) as unknown, position, limit, this.instances.hosts);
       return { status: 'ok', pictures, attribution: PANORAMAX_ATTRIBUTION };
     } catch (err) {
       this.stats.failed++;
