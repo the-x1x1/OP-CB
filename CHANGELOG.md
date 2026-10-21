@@ -21,6 +21,10 @@ Versioning: [semantic versioning](https://semver.org/).
   drops `person` and `device_tracker` entities, and where people were is not written to history,
   put in a pack or shared.
 
+- **Street view in What's here.** Pictures taken at street level near the point, from Panoramax
+  (the open, federated imagery project; no key), on the operator's press only: the nearest
+  first, with when it was taken, how far and which way it looks, its author and its own licence,
+  and a click opens it on Panoramax. Shown live, never kept, packed or exported.
 - **An MCP server, and the local API on Windows.** Formicaria's tools or any Model Context
   Protocol client on this computer can read what WorldView holds — status, sources,
   objects near a place, a track, offline readiness, this computer's position by its own

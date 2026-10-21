@@ -2823,6 +2823,29 @@
       },
       "commercialReview": "approved",
       "notes": "Not a provider (2026-10-20, ADR-003 amendment): the runtime asks for it itself, only while the Sky tab asks and at most every 15 minutes, never offline (packages/runtime/src/support/kp-index.ts). One number for the whole Earth; credited in the Sky tab."
+    },
+    {
+      "providerId": "panoramax",
+      "name": "Panoramax — federated open street-level imagery (api.panoramax.xyz STAC search)",
+      "sourceUrl": "https://api.panoramax.xyz/api/search?place_position=<lon>,<lat>&place_distance=0-<m>",
+      "termsUrl": "https://panoramax.fr/",
+      "license": "Per picture, stated in each feature's properties.license: mostly CC BY-SA 4.0; IGN's pictures Etalab Licence Ouverte 2.0 (read from the API 2026-10-20). The catalogue itself is open; no key, no registration.",
+      "category": "imagery",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": false,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": false,
+        "commercialUseAllowed": true,
+        "attributionRequired": true,
+        "attributionText": "Street-level pictures: Panoramax contributors, each under its own licence",
+        "termsUrl": "https://panoramax.fr/"
+      },
+      "commercialReview": "approved",
+      "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) and KartaView (field shape not yet confirmed from a live answer) are not asked."
     }
   ]
 }

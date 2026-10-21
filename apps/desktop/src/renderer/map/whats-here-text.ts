@@ -1,4 +1,4 @@
-import type { NearbyPlaceResult, OverlayValueResult } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@worldview/ipc-contract';
 import {
   geodesicInverse,
   moonIllumination,
@@ -201,4 +201,19 @@ export function cardPlacement(
   const x = right + card.width + MARGIN <= map.width ? right : point.x - OFFSET - card.width;
   const y = below + card.height + MARGIN <= map.height ? below : point.y - OFFSET - card.height;
   return { x: clampX(x), y: clampY(y) };
+}
+
+/**
+ * The street-level answer in a line: "Taken 2023-05-20, 35 m away, looking ENE" for the first
+ * picture, or why there is none (offline, switched off, nothing within reach, the service down).
+ */
+export function streetLevelText(answer: StreetLevelAnswer, index = 0): string {
+  const pic = answer.pictures[index];
+  if (!pic) {
+    if (answer.status === 'ok') return 'No street-level pictures within 150 m on Panoramax.';
+    return answer.message ?? 'No street-level pictures.';
+  }
+  const when = pic.takenAt ? `Taken ${pic.takenAt.slice(0, 10)}, ` : '';
+  const look = pic.headingDeg !== undefined ? `, looking ${compassPoint(pic.headingDeg)}` : '';
+  return `${when}${formatDistance(pic.distanceM)} away${look}`;
 }

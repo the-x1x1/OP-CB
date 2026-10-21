@@ -273,6 +273,7 @@ test('search, collections, watch zones, camera snapshot, exports and every chann
     'camera.stream': { cameraId: 'c' },
     'camera.unregister': { cameraId: 'c' },
     'link.copy': { link: { latitude: 1, longitude: 2 } },
+    'imagery.streetLevel': { position: { latitude: 1, longitude: 2 } },
   };
   for (const channel of REQUEST_CHANNELS) {
     // A page of a snapshot nobody paged: implemented, and it says the snapshot is gone.

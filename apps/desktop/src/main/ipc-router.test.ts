@@ -131,6 +131,7 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'timeline.set': { mode: 'PAUSED', speed: 5 },
     'search.query': { text: 'tokyo', limit: 5 },
     'search.places': { text: '221b baker street', limit: 6 },
+    'imagery.streetLevel': { position: { latitude: 48.8566, longitude: 2.3522 }, radiusM: 300, limit: 3 },
     'search.nearest': { position: { latitude: 19.9, longitude: -155.6 }, kinds: ['city'], limit: 3 },
     'sky.overhead': { observer: { latitude: 21.3, longitude: -157.85 }, minElevationDeg: 10, limit: 50 },
     'lenses.save': {

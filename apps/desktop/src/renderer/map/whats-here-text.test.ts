@@ -7,6 +7,7 @@ import {
   nextPassRows,
   overlayValueRows,
   overlayValueText,
+  streetLevelText,
   whatsHereRows,
 } from './whats-here-text.js';
 
@@ -152,4 +153,36 @@ test('overlay values: a row per overlay, named as the overlay is, the values wit
   ]);
   assert.deepEqual(overlayValueRows([], nowMs), []);
   assert.equal(overlayValueText(-3), '-3');
+});
+
+test("what's here: the street-level line says when, how far and which way, or why there is nothing", () => {
+  const pic = {
+    id: 'p1',
+    position: { latitude: 48.8565, longitude: 2.3518 },
+    distanceM: 35,
+    headingDeg: 81,
+    takenAt: '2023-05-20T17:55:28.000Z',
+    thumbUrl: 'https://x/t.jpg',
+    pageUrl: 'https://api.panoramax.xyz/#focus=pic&pic=p1',
+    license: 'CC-BY-SA-4.0',
+    author: 'mapcomplete',
+    service: 'panoramax' as const,
+  };
+  assert.equal(
+    streetLevelText({ status: 'ok', pictures: [pic], attribution: 'x' }),
+    'Taken 2023-05-20, 35 m away, looking E',
+  );
+  assert.equal(
+    streetLevelText({ status: 'ok', pictures: [], attribution: 'x' }),
+    'No street-level pictures within 150 m on Panoramax.',
+  );
+  assert.equal(
+    streetLevelText({
+      status: 'offline',
+      pictures: [],
+      attribution: '',
+      message: 'Offline — no street-level pictures.',
+    }),
+    'Offline — no street-level pictures.',
+  );
 });

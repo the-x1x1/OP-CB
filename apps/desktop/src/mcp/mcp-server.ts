@@ -1,6 +1,6 @@
 /**
  * WorldView as an MCP server for AI clients on this computer (operator decision 2026-10-20,
- * ADR-014 amendment): a client — Claude, Formicaria's tools, any Model Context Protocol client —
+ * ADR-014 amendment): a client — Formicaria's tools, any Model Context Protocol client —
  * starts WorldView's own executable as a stdio server (`worldview-mcp.ts`), and each tool it
  * offers is one read of the local API (`/v1/…`), which the running app serves only while
  * Settings → Local API is on. Read-only: no tool changes anything, and what the local API will

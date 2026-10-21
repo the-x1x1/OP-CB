@@ -51,6 +51,7 @@ import {
   MAX_OVERLAY_VALUE_OVERLAYS,
   isViewLink,
   readViewLink,
+  type StreetLevelAnswer,
   type ViewLink,
 } from '@worldview/ipc-contract';
 import { linkForView, linkHiddenLayers } from './view-link.js';
@@ -1404,6 +1405,16 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         return p ?? null;
       } catch {
         return null;
+      }
+    },
+    /** Street-level pictures near a point (main/street-level.ts), on the operator's ask. */
+    async streetLevelNear(position: GeoPosition): Promise<StreetLevelAnswer> {
+      try {
+        return await client.request('imagery.streetLevel', {
+          position: { latitude: position.latitude, longitude: position.longitude },
+        });
+      } catch (err) {
+        return { status: 'unavailable', pictures: [], attribution: '', message: describeError(err) };
       }
     },
     /** Start measuring from a point: the measure tool on, with it as the first point. */

@@ -353,6 +353,34 @@ export interface SkyAurora {
   attribution?: string;
 }
 
+/** One street-level picture near a point (`imagery.streetLevel`). */
+export interface StreetLevelPicture {
+  id: string;
+  /** Where it was taken. */
+  position: GeoPosition;
+  /** Metres from the asked point. */
+  distanceM: number;
+  /** Which way the camera looked, degrees clockwise from north, when known. */
+  headingDeg?: number;
+  takenAt?: string;
+  /** A small picture to show (https). */
+  thumbUrl: string;
+  /** The picture's page on its service, to open in the browser. */
+  pageUrl: string;
+  /** Its own licence (per picture: CC-BY-SA-4.0, etalab-2.0 …) and who took it. */
+  license: string;
+  author?: string;
+  service: 'panoramax';
+}
+
+export interface StreetLevelAnswer {
+  status: 'ok' | 'offline' | 'disabled' | 'busy' | 'unavailable';
+  pictures: StreetLevelPicture[];
+  /** The services' credit line. */
+  attribution: string;
+  message?: string;
+}
+
 export interface CollectionItem {
   id: string;
   kind: 'location' | 'object' | 'event' | 'watchzone' | 'note' | 'lens';
@@ -1044,6 +1072,15 @@ export interface WorldRequests {
   'search.query': { request: { text: string; bias?: GeoPosition; limit?: number }; response: SearchResult[] };
   /** Places from an online geocoder (additive, 2026-09-28): see PlaceSearchAnswer. */
   'search.places': { request: { text: string; bias?: GeoPosition; limit?: number }; response: PlaceSearchAnswer };
+  /**
+   * (additive, 2026-10-20) Street-level pictures near a point, from open imagery services that
+   * need no key (Panoramax), asked by the main process on the operator's request from What's
+   * here — never while the map moves. Each picture carries its own licence and author.
+   */
+  'imagery.streetLevel': {
+    request: { position: GeoPosition; radiusM?: number; limit?: number };
+    response: StreetLevelAnswer;
+  };
   /** The places nearest a point, nearest first (additive, 2026-10-05): see NearbyPlaceResult. */
   'search.nearest': {
     request: {
@@ -1320,6 +1357,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'timeline.set',
   'search.query',
   'search.places',
+  'imagery.streetLevel',
   'search.nearest',
   'sky.overhead',
   'lenses.list',

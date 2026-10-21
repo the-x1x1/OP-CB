@@ -439,6 +439,13 @@ export class DemoClient implements WorldClient {
           attribution: '',
           message: 'The demo build searches its recorded data and the built-in gazetteer only.',
         } satisfies PlaceSearchAnswer;
+      case 'imagery.streetLevel':
+        return {
+          status: 'unavailable',
+          pictures: [],
+          attribution: '',
+          message: 'The demo build sends nothing anywhere: no street-level pictures.',
+        };
       case 'search.nearest': {
         // The recorded place index stands in for the gazetteer: cities, nearest first.
         const { position, limit = 1, maxDistanceM = Infinity } = request as RequestOf<'search.nearest'>;

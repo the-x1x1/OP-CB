@@ -66,6 +66,7 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'timeline.set': { speed: 1 },
   'search.query': { text: 'Honolulu' },
   'search.places': { text: 'Honolulu' },
+  'imagery.streetLevel': { position: { latitude: 21.3, longitude: -157.86 } },
   'search.nearest': { position: { latitude: 19.9, longitude: -155.6 } },
   'sky.overhead': { observer: { latitude: 21.3, longitude: -157.85 } },
   'lenses.list': undefined,

@@ -419,17 +419,19 @@ each to be built on `feature/roadmap-3`:
       serves NCEP's GFS 10 m wind (`NCEP_Global_Best`, 0.5°, U.S. public domain) as JSON, so no
       GRIB2 decoder (God's Eye View's way) is needed; Open-Meteo's free tier is non-commercial,
       so not that.
-- [ ] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
-      (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown) and
-      KartaView (open API, CC BY-SA 4.0); live only, never cached into packs (ShareAlike).
-      Mapillary needs a token and Google a key: not those.
-- [ ] **An MCP server** for AI clients on this machine (Formicaria's tools among them): local,
+- [x] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
+      (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown; on
+      feature/roadmap-3, Street view in What's here); live only, never cached into packs
+      (ShareAlike). KartaView answers without a key too but no live answer with a record was
+      seen from the container, so its field names are unconfirmed and it waits. Mapillary needs
+      a token and Google a key: not those.
+- [x] **An MCP server** for AI clients on this machine (Formicaria's tools among them): local,
       off by default, read-only over what the local API already serves (ADR-014).
-- [ ] **The planetary K index** in the Sky tab, as an exception to the provider path (ADR-003):
+- [x] **The planetary K index** in the Sky tab, as an exception to the provider path (ADR-003):
       one SWPC request for the whole Earth, asked only while the Sky tab is open, offline-aware.
-- [ ] **Home Assistant:** `ws://` to the operator's own server allowed, and `person` and
+- [x] **Home Assistant:** `ws://` to the operator's own server allowed, and `person` and
       `device_tracker` entities shown, with an easy way to add the server and its token.
-- [ ] **A connections tab** for the operator's own radios: Meshtastic (TCP, serial), the RTL-SDR
+- [x] **A connections tab** for the operator's own radios: Meshtastic (TCP, serial), the RTL-SDR
       receivers (readsb, AIS) — what is plugged in, connect, disconnect, status, in one place.
 - [ ] **A licence-free basemap for offline packs:** Protomaps' OpenStreetMap builds (ODbL:
       attribution only for a Produced Work) cut to the pack's region; Natural Earth (public

@@ -335,6 +335,12 @@ read are named in a notice rather than half read.
   ground at sea level; it agrees with Astronomy Engine within seconds for the Sun and a couple
   of minutes for the Moon, more loosely beyond the polar circles.
 
+**Street view** on the card asks Panoramax — the open, federated street-level imagery project,
+no key — for pictures within 150 m, on that press only, and shows the nearest with when it was
+taken, how far and which way it looks, its author and its own licence (mostly CC BY-SA 4.0); a
+click opens it on Panoramax, Previous and Next step through the rest. Pictures are shown live
+and never kept. Off with online lookups (Settings → Search) and offline.
+
 ## The sky overhead
 
 The **Sky** tab (on in the Space lens; anywhere from the command palette, "Open the sky")

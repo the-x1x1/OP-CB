@@ -548,6 +548,14 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       attribution: '',
       message: 'Online place search is part of the desktop app; the built-in gazetteer is searched instead.',
     }),
+    // Street-level pictures: the desktop app's main process asks Panoramax
+    // (apps/desktop/src/main/street-level.ts); anywhere else there is no such client.
+    'imagery.streetLevel': async () => ({
+      status: 'unavailable',
+      pictures: [],
+      attribution: '',
+      message: 'Street-level pictures are part of the desktop app.',
+    }),
     // The satellites above a place's horizon now (support/sky-overhead.ts): from the live
     // world's propagated positions, nothing looked up.
     'sky.overhead': async ({ observer, minElevationDeg, limit, excludeCategories, visibleOnly }) => {

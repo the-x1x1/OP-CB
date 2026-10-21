@@ -8,6 +8,8 @@ import type { ProviderManifest } from '@worldview/provider-sdk';
  */
 export const STATIC_EXTERNAL_HOSTS: readonly string[] = Object.freeze([
   'github.com',
+  // A street-level picture's page (street-level.ts).
+  'api.panoramax.xyz',
   'earthquake.usgs.gov',
   'www.usgs.gov',
   'celestrak.org',

@@ -52,6 +52,7 @@ import { createMainWindow, hardenWebContents } from './window.js';
 import { TileCache } from './tile-cache.js';
 import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
+import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch } from './network-gate.js';
 
 /**
@@ -338,6 +339,15 @@ async function bootstrap(): Promise<void> {
     first: () => settings.get().search?.service ?? 'nominatim',
   });
 
+  // Street-level pictures (street-level.ts): Panoramax, one request a second, on the operator's
+  // ask from What's here only, under the same online-lookup switch as place search.
+  const streetLevel = new StreetLevel({
+    fetchImpl: netFetch,
+    userAgent: appUserAgent(app.getVersion()),
+    isOnline: online,
+    enabled: () => settings.get().search?.online !== false,
+  });
+
   const allowlist = lazyExternalAllowlist(runtime, log);
   const overrides: Partial<RequestHandlers> = {
     'app.info': async () => ({
@@ -374,6 +384,7 @@ async function bootstrap(): Promise<void> {
       await withCredentialErrors(() => credentials.delete(key));
     },
     'search.places': async (req, ctx) => places.search(req, ctx.signal),
+    'imagery.streetLevel': async (req, ctx) => streetLevel.near(req, ctx.signal),
     'tiles.status': async () => tiles.status(),
     'tiles.clear': async () => tiles.clear(),
     'tiles.prefetch': async ({ sourceId, bounds, zoom }) => {
