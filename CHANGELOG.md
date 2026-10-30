@@ -5,6 +5,22 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-10-30
+
+The Command Center: WorldView starts by asking Online or Offline and opens on what will still
+work without the internet, with guided walkthroughs whose checks pass only on real evidence.
+Offline content now comes with the app's own tools: the world map downloaded in the app (down
+to the whole planet, continued when it stops), a library WorldView reads itself (ZIM files from
+the Kiwix catalogue, checked three ways), six public-domain emergency references, and all of
+WorldView's data on an external drive or a portable copy. Also a Meshtastic test message, a
+preparedness inventory, local AI and library answers with their sources, links to a view, an
+MCP server, the K index, a Connections tab and self-updating on Windows. Released on the
+operator's decision so it can be installed and tested: checked in the build container only
+(full test suite, typecheck, licence and boundary checks, the Command Center screenshotted in
+the browser demo). Not yet seen on the Windows test laptop or in the packaged app — the reader
+window, a real Kiwix, reference or planet download, and a real external drive are all
+unverified; the laptop gate and the 0.3.0 checklist are still open.
+
 ### Added
 
 - **The Command Center and a start screen.** WorldView now starts by asking Online or Offline
