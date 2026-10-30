@@ -36,7 +36,10 @@ checklist and hardware checks are still open. 0.5.0 (2026-10-20) adds aurora, Ca
 quality, US flooding, ocean buoys, US volcano alerts, rocket launches and GPS interference as
 sources, What's here on the weather overlays, files dropped on the map, alerts that end when a
 source stops listing them, and a sharper globe on Auto (CHANGELOG); the 0.3.0 checklist and
-hardware checks are still open.
+hardware checks are still open. 0.6.0 (2026-10-30) adds the Command Center (Online/Offline at
+start, readiness, walkthroughs), the world map and a built-in ZIM library downloaded in the app,
+public-domain emergency references, and data on an external drive (CHANGELOG); released for
+the operator to test, not yet checked on the laptop.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:
