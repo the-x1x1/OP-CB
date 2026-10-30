@@ -107,6 +107,9 @@ to the internet until you choose. Then the Command Center opens over the map:
 - **Resources**: packs, external drives, local service ports, and devices on your own network
   approved for offline use.
 
+To skip the start screen — a kiosk or cyberdeck that starts WorldView by itself — start it with
+`--mode=offline` or `--mode=online`: that is the choice for that launch.
+
 Every section has **How do I set this up?**: a walkthrough with the steps, real controls, a
 check after each step that passes only on what is really there, troubleshooting, and a final
 test. Progress is kept; Restart starts one again. Esc or **Show the map** closes the Command
