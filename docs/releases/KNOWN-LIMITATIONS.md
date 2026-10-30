@@ -1,4 +1,4 @@
-# Known limitations — 0.6.0
+# Known limitations — 0.6.1
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -355,7 +355,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
-## 0.6.0
+## 0.6.1
 
 - The built-in library reader opens ZIM files whose clusters are zstd-compressed (every Kiwix
   file made since about 2021) and finds pages by **title** only. Files in the older xz format,
