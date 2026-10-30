@@ -32,6 +32,13 @@ import {
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   formatViewLink,
+  LOCAL_SERVICE_IDS,
+  readGuideProgress,
+  readPrepRecord,
+  type LocalServiceId,
+  type ModeState,
+  type OperatingMode,
+  type PrepRecord,
   type AppSettings,
   type Collection,
   type CollectionItem,
@@ -51,6 +58,7 @@ import { SKY_LIMIT_DEFAULT, skyOverhead } from './support/sky-overhead.js';
 import { auroraHere } from './support/aurora-here.js';
 import { zonesFromGeodata, zonesToGeodata } from './support/zone-geodata.js';
 import { mergeObjectTrack } from './support/object-track.js';
+import { libraryPath } from './support/local-services.js';
 import {
   collectionFromGeodata,
   collectionGeodata,
@@ -809,6 +817,78 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       core.feedItems(clampLimit(limit, 50, 500), minimumSeverity),
 
     // ---- offline ---------------------------------------------------------------
+    // ---- the Command Center (2026-10-30) ----------------------------------------
+    // The runtime has no start screen: here the mode is whatever the settings say. The desktop
+    // app overrides both (main.ts) so nothing leaves the computer until the operator chooses.
+    'mode.state': async () => modeState(core, true),
+    'mode.choose': async ({ mode }) => {
+      if (mode !== 'online' && mode !== 'offline') throw new InvalidRequestError('mode must be online or offline');
+      await chooseMode(core, mode);
+      return modeState(core, true);
+    },
+    'services.status': async (_req, ctx) => core.localServices.statusAll(ctx.signal),
+    // Opening a page in the browser is the desktop's; a runtime alone has no browser.
+    'services.open': async ({ id, path: page }) => {
+      requireServiceId(id);
+      if (page !== undefined && !libraryPath(page)) throw new InvalidRequestError('not a library page');
+      return { opened: false };
+    },
+    'library.search': async ({ book, pattern }, ctx) => {
+      if (typeof book !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(book))
+        throw new InvalidRequestError('book must be a book name from the library');
+      if (typeof pattern !== 'string' || !pattern.trim() || pattern.length > 200)
+        throw new InvalidRequestError('pattern must be 1–200 characters');
+      return core.localServices.librarySearch(book, pattern.trim(), ctx.signal);
+    },
+    'ai.test': async (req, ctx) => {
+      if (typeof req?.model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/.test(req.model))
+        throw new InvalidRequestError('model must be an installed model name');
+      if (typeof req.prompt !== 'string' || !req.prompt.trim() || req.prompt.length > 2000)
+        throw new InvalidRequestError('prompt must be 1–2000 characters');
+      const answer = await core.localServices.aiTest({ model: req.model, prompt: req.prompt }, ctx.signal);
+      core.log.info('local AI test', { model: req.model, ok: answer.ok, elapsedMs: answer.elapsedMs });
+      return answer;
+    },
+    'guides.list': async () => core.guides.list(),
+    'guides.save': async (progress) => {
+      const p = readGuideProgress(progress);
+      if (!p) throw new InvalidRequestError('not a guide progress record');
+      return core.guides.save(p);
+    },
+    'guides.reset': async ({ id }) => {
+      requireId(id, 'id');
+      return core.guides.remove(id);
+    },
+    'prep.list': async () => core.preparedness.list(),
+    'prep.save': async (record) => {
+      const r = readPrepRecord(record);
+      if (!r) throw new InvalidRequestError('not a preparedness record');
+      if ((await core.preparedness.list()).length >= 2000 && !(await core.preparedness.get(r.id)))
+        throw new InvalidRequestError('the inventory holds at most 2,000 records');
+      return core.preparedness.save(r);
+    },
+    'prep.delete': async ({ id }) => {
+      requireId(id, 'id');
+      return core.preparedness.remove(id);
+    },
+    'prep.export': async ({ format }) => {
+      if (format !== 'csv' && format !== 'json') throw new InvalidRequestError('format must be csv or json');
+      const records = await core.preparedness.list();
+      const choice = await core.hostBridge.pickSaveFile({
+        title: format === 'csv' ? 'Save the preparedness checklist' : 'Back up the preparedness inventory',
+        defaultPath: suggestedPath(core, format === 'csv' ? 'preparedness-checklist.csv' : 'preparedness.json'),
+        filters: [format === 'csv' ? { name: 'CSV', extensions: ['csv'] } : { name: 'JSON', extensions: ['json'] }],
+      });
+      if ('cancelled' in choice) return { cancelled: true };
+      const body =
+        format === 'csv'
+          ? prepCsv(records)
+          : `${JSON.stringify({ version: 1, kind: 'worldview-preparedness', records }, null, 2)}\n`;
+      await fs.writeFile(choice.path, body, 'utf8');
+      core.log.info('preparedness exported', { format, records: records.length });
+      return { path: choice.path, records: records.length };
+    },
+
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),
     'offline.installPack': async () => {
@@ -1136,6 +1216,67 @@ function isBounds(value: unknown): value is GeoBounds {
   if (typeof value !== 'object' || value === null) return false;
   const b = value as Record<string, unknown>;
   return ['west', 'south', 'east', 'north'].every((k) => typeof b[k] === 'number' && Number.isFinite(b[k] as number));
+}
+
+function requireServiceId(id: unknown): asserts id is LocalServiceId {
+  if (!LOCAL_SERVICE_IDS.includes(id as LocalServiceId)) throw new InvalidRequestError('unknown local service');
+}
+
+/**
+ * The mode as settings hold it. `sessionChosen` is the desktop's: false until the operator has
+ * chosen on the start screen this session.
+ */
+export function modeState(core: RuntimeCore, sessionChosen: boolean): ModeState {
+  const network = core.settings.get().network;
+  const current: OperatingMode = network?.workOffline ? 'offline' : 'online';
+  return {
+    chosen: sessionChosen ? current : null,
+    remembered: network?.chosenAt ? current : null,
+    osOnline: core.osOnline,
+    localHosts: [...(network?.localHosts ?? [])],
+    enforcement: 'app',
+  };
+}
+
+/** Set the mode: Work offline follows it, and the choice is remembered. Approved hosts are kept. */
+export async function chooseMode(core: RuntimeCore, mode: OperatingMode): Promise<void> {
+  const network = core.settings.get().network;
+  await core.settings.patch({
+    network: {
+      ...(network ?? {}),
+      workOffline: mode === 'offline',
+      chosenAt: new Date(core.clock.now()).toISOString(),
+    },
+  });
+}
+
+const PREP_CSV_COLUMNS = [
+  'kind',
+  'category',
+  'name',
+  'quantity',
+  'unit',
+  'expires',
+  'checkedOn',
+  'checkEveryDays',
+  'phone',
+  'notes',
+] as const;
+
+/** The inventory as a checklist to print: one row each, sorted by kind and category. */
+export function prepCsv(records: PrepRecord[]): string {
+  const cell = (v: unknown) => {
+    const t = v === undefined ? '' : String(v);
+    // A leading = + - @ would be read as a formula by a spreadsheet: quote it as text.
+    const safe = /^[=+\-@\t\r]/.test(t) ? `'${t}` : t;
+    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  };
+  const rows = [...records]
+    .sort(
+      (a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category) || a.name.localeCompare(b.name),
+    )
+    .map((r) => PREP_CSV_COLUMNS.map((k) => cell(r[k])).join(','));
+  return `${['checked', ...PREP_CSV_COLUMNS].join(',')}\n${rows.map((r) => `,${r}`).join('\n')}\n`;
 }
 
 function requireId(value: unknown, field: string): asserts value is string {

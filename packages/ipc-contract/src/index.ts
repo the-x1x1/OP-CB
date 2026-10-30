@@ -17,6 +17,17 @@ import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-he
 import type { StateChange, TrackPoint } from '@worldview/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
 import type { ViewLink } from './view-link.js';
+import type {
+  AiTestAnswer,
+  AiTestRequest,
+  GuideProgress,
+  LibrarySearchAnswer,
+  LocalServiceId,
+  LocalServiceStatus,
+  ModeState,
+  OperatingMode,
+  PrepRecord,
+} from './command-center.js';
 
 /**
  * @worldview/ipc-contract — the typed bridge between the WORLDVIEW runtime (Electron
@@ -732,7 +743,27 @@ export interface AppSettings {
    * place search uses the built-in gazetteer, update checks wait. Sources on this computer or
    * the operator's own network keep running. Absent means off.
    */
-  network?: { workOffline: boolean };
+  network?: {
+    workOffline: boolean;
+    /**
+     * (additive, 2026-10-30) When the operator last chose a mode on the start screen or in the
+     * Command Center (ISO). Absent: never chosen, and the start screen offers no default.
+     */
+    chosenAt?: string;
+    /**
+     * (additive, 2026-10-30) Hosts on the operator's own network approved for offline use, one
+     * each (`localHostProblem` in command-center.ts): requests to them pass the offline gate.
+     */
+    localHosts?: string[];
+  };
+  /**
+   * (additive, 2026-10-30) The operator's local services (command-center.ts): the port each is
+   * asked on, on this computer only, and the model the AI test uses. Absent: the usual ports.
+   */
+  services?: {
+    ports?: Partial<Record<LocalServiceId, number>>;
+    aiModel?: string;
+  };
   /**
    * (additive, 2026-10-08, docs/cyberdeck M6, ADR-014) The local read-only API for other programs
    * of this user on this computer (Formicaria): a Unix socket, Linux only, off unless turned on.
@@ -1154,6 +1185,35 @@ export interface WorldRequests {
 
   'feed.recent': { request: { limit?: number; minimumSeverity?: SeverityClass }; response: FeedItem[] };
 
+  /**
+   * (additive, 2026-10-30, the Command Center) The operating mode: `mode.state` reads it,
+   * `mode.choose` sets it — the start screen's choice and the Command Center's switch, without a
+   * restart. Cached data is kept either way.
+   */
+  'mode.state': { request: void; response: ModeState };
+  'mode.choose': { request: { mode: OperatingMode }; response: ModeState };
+  /** (additive, 2026-10-30) The operator's local services, asked now on this computer (loopback). */
+  'services.status': { request: void; response: LocalServiceStatus[] };
+  /** (additive, 2026-10-30) A local service's own page in the browser; the address is built in main. */
+  'services.open': { request: { id: LocalServiceId; path?: string }; response: { opened: boolean } };
+  /** (additive, 2026-10-30) Full-text search of one book in the operator's offline library. */
+  'library.search': { request: { book: string; pattern: string }; response: LibrarySearchAnswer };
+  /** (additive, 2026-10-30) The offline inference test: one prompt to one local model. */
+  'ai.test': { request: AiTestRequest; response: AiTestAnswer };
+  /** (additive, 2026-10-30) Guided setup progress (guides.json). */
+  'guides.list': { request: void; response: GuideProgress[] };
+  'guides.save': { request: GuideProgress; response: GuideProgress[] };
+  'guides.reset': { request: { id: string }; response: GuideProgress[] };
+  /** (additive, 2026-10-30) The preparedness inventory (preparedness.json, this computer only). */
+  'prep.list': { request: void; response: PrepRecord[] };
+  'prep.save': { request: PrepRecord; response: PrepRecord[] };
+  'prep.delete': { request: { id: string }; response: PrepRecord[] };
+  /** A file the operator chooses: CSV (a checklist to print) or JSON (a backup to import later). */
+  'prep.export': {
+    request: { format: 'csv' | 'json' };
+    response: { path: string; records: number } | { cancelled: true };
+  };
+
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
   'field.status': { request: void; response: FieldHostStatus };
@@ -1376,6 +1436,19 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'watchzones.export',
   'watchzones.import',
   'feed.recent',
+  'mode.state',
+  'mode.choose',
+  'services.status',
+  'services.open',
+  'library.search',
+  'ai.test',
+  'guides.list',
+  'guides.save',
+  'guides.reset',
+  'prep.list',
+  'prep.save',
+  'prep.delete',
+  'prep.export',
   'offline.status',
   'field.status',
   'offline.installPack',
@@ -1466,5 +1539,6 @@ export function isIpcError(v: unknown): v is IpcError {
   return typeof v === 'object' && v !== null && 'code' in v && 'channel' in v && 'message' in v;
 }
 
+export * from './command-center.js';
 export * from './local-api.js';
 export * from './view-link.js';

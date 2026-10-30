@@ -7,7 +7,14 @@ import {
   worldQuerySchema,
   type Schema,
 } from '@worldview/world-model';
-import { GEODATA_MAX_FILE_BYTES, MAX_OVERLAY_VALUE_OVERLAYS, MAX_READING_KEYS } from '@worldview/ipc-contract';
+import {
+  GEODATA_MAX_FILE_BYTES,
+  LOCAL_SERVICE_IDS,
+  MAX_OVERLAY_VALUE_OVERLAYS,
+  MAX_READING_KEYS,
+  readGuideProgress,
+  readPrepRecord,
+} from '@worldview/ipc-contract';
 import type {
   RequestChannel,
   RequestOf,
@@ -38,6 +45,17 @@ const voidSchema: Schema<void> = {
       ? { ok: true, value: undefined }
       : { ok: false, issues: [{ path, message: 'expected no payload' }] },
 };
+
+/** A request read by the contract's own reader (command-center.ts): it is the record, or refused whole. */
+function fromReader<T>(read: (value: unknown) => T | undefined, what: string): Schema<T> {
+  return {
+    kind: 'object',
+    parse: (value, path = '') => {
+      const v = read(value);
+      return v === undefined ? { ok: false, issues: [{ path, message: `not a ${what}` }] } : { ok: true, value: v };
+    },
+  } as Schema<T>;
+}
 
 const id = s.string({ min: 1, max: 512 });
 const shortId = s.string({ min: 1, max: 128, pattern: /^[a-zA-Z0-9][a-zA-Z0-9._:-]*$/ });
@@ -405,6 +423,37 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
     { strict: true },
   ) as Schema<RequestOf<'feed.recent'>>,
 
+  'mode.state': voidSchema,
+  'mode.choose': s.object({ mode: s.enum(['online', 'offline'] as const) }, { strict: true }),
+  'services.status': voidSchema,
+  'services.open': s.object(
+    {
+      id: s.enum(LOCAL_SERVICE_IDS as readonly ['ollama', 'kiwix', 'kolibri']),
+      path: s.optional(s.string({ min: 9, max: 1000 })),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'services.open'>>,
+  'library.search': s.object(
+    {
+      book: s.string({ min: 1, max: 200, pattern: /^[A-Za-z0-9][A-Za-z0-9._-]*$/ }),
+      pattern: s.string({ min: 1, max: 200 }),
+    },
+    { strict: true },
+  ),
+  'ai.test': s.object(
+    {
+      model: s.string({ min: 1, max: 200, pattern: /^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$/ }),
+      prompt: s.string({ min: 1, max: 2000 }),
+    },
+    { strict: true },
+  ),
+  'guides.list': voidSchema,
+  'guides.save': fromReader(readGuideProgress, 'guide progress record'),
+  'guides.reset': s.object({ id: s.string({ min: 1, max: 64, pattern: /^[a-z0-9][a-z0-9-]*$/ }) }, { strict: true }),
+  'prep.list': voidSchema,
+  'prep.save': fromReader(readPrepRecord, 'preparedness record'),
+  'prep.delete': s.object({ id: s.string({ min: 1, max: 64, pattern: /^[a-z0-9][a-z0-9-]*$/ }) }, { strict: true }),
+  'prep.export': s.object({ format: s.enum(['csv', 'json'] as const) }, { strict: true }),
   'offline.status': voidSchema,
   'field.status': voidSchema,
   'offline.installPack': voidSchema,

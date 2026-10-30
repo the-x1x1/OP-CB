@@ -31,12 +31,14 @@ import {
 import {
   VIEW_LINK_SCHEME,
   linkInArgs,
+  normaliseLocalHost,
   readViewLink,
   wireChannel,
   type DefinitionsListing,
   type DiagnosticsSnapshot,
 } from '@worldview/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
+import { chooseMode, libraryPath, modeState, serviceOrigin } from '@worldview/runtime';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
 import { APP_ORIGIN, DEV_SERVER_ORIGIN, isTrustedRendererUrl } from '../shared/app-origin.js';
@@ -193,21 +195,34 @@ async function bootstrap(): Promise<void> {
   }
   const settings = startup.settings;
 
-  // Work offline (network-gate.ts): one switch, read at every door out of the app.
-  const workingOffline = () => settings.get().network?.workOffline === true;
+  // Work offline (network-gate.ts): one switch, read at every door out of the app. Until the
+  // operator has chosen a mode on the start screen this session (the Command Center,
+  // 2026-10-30), the doors stay shut whatever was chosen last time: choosing Offline is never
+  // preceded by a burst of online requests. Their own approved local hosts pass either way.
+  let modeChosen = false;
+  const workingOffline = () => !modeChosen || settings.get().network?.workOffline === true;
   const online = () => net.isOnline() && !workingOffline();
+  const approvedHosts = () => new Set((settings.get().network?.localHosts ?? []).map(normaliseLocalHost));
   const offlineLog = hub.logger('offline');
   const blockedHosts = new Set<string>();
-  blockInternetRequests(session.defaultSession, workingOffline, (url) => {
-    const host = new URL(url).hostname;
-    if (blockedHosts.size < 50 && !blockedHosts.has(host)) {
-      blockedHosts.add(host);
-      offlineLog.info('working offline: request not sent', { host });
-    }
-  });
+  blockInternetRequests(
+    session.defaultSession,
+    workingOffline,
+    (url) => {
+      const host = new URL(url).hostname;
+      if (blockedHosts.size < 50 && !blockedHosts.has(host)) {
+        blockedHosts.add(host);
+        offlineLog.info(modeChosen ? 'working offline: request not sent' : 'mode not chosen yet: request not sent', {
+          host,
+        });
+      }
+    },
+    approvedHosts,
+  );
   const netFetch = gatedFetch(
     ((url: string, init?: RequestInit) => net.fetch(url, init)) as typeof fetch,
     workingOffline,
+    approvedHosts,
   );
 
   // Map tiles kept on disk (tile-cache.ts): only catalog sources that allow it, under the
@@ -269,7 +284,7 @@ async function bootstrap(): Promise<void> {
     platform: process.platform,
     host: electronHostBridge(),
     network: { isOnline: online },
-    fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline),
+    fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline, approvedHosts),
     // DuckDB/Parquet unless the operator chose NDJSON (Settings → History); NDJSON-era files
     // are read beside the Parquet ones, nothing converted or deleted (2026-10-05).
     historyBackend: settings.get().history.backend ?? 'duckdb-parquet',
@@ -383,6 +398,28 @@ async function bootstrap(): Promise<void> {
     },
     'credentials.delete': async ({ key }) => {
       await withCredentialErrors(() => credentials.delete(key));
+    },
+    // The operating mode (the Command Center): the start screen's choice opens the doors.
+    'mode.state': async () => ({ ...modeState(runtime.core, modeChosen), osOnline: net.isOnline() }),
+    'mode.choose': async ({ mode }) => {
+      await chooseMode(runtime.core, mode);
+      const first = !modeChosen;
+      modeChosen = true;
+      log.info(first ? 'operating mode chosen' : 'operating mode changed', { mode });
+      if (mode === 'online') blockedHosts.clear();
+      pollNetwork();
+      return { ...modeState(runtime.core, true), osOnline: net.isOnline() };
+    },
+    // A local service's own page in the browser: always http://127.0.0.1 on the port in
+    // settings, built here; the page names only which service and, for the library, a
+    // /content/ path that was read strictly.
+    'services.open': async ({ id, path: page }) => {
+      if (page !== undefined && (id !== 'kiwix' || !libraryPath(page)))
+        throw Object.assign(new Error('not a library page'), { ipcCode: 'INVALID_REQUEST' as const });
+      const url = `${serviceOrigin(settings.get(), id)}${page ?? '/'}`;
+      await shell.openExternal(url);
+      log.info('local service opened', { id });
+      return { opened: true };
     },
     'search.places': async (req, ctx) => places.search(req, ctx.signal),
     'imagery.streetLevel': async (req, ctx) => streetLevel.near(req, ctx.signal),

@@ -11,7 +11,19 @@
 export * from './contract.js';
 export { createWorldRuntime, type ComposedWorldRuntime } from './runtime.js';
 export { RuntimeCore, isLiveMode } from './core.js';
-export { createHandlers } from './handlers.js';
+export { createHandlers, chooseMode, modeState, prepCsv } from './handlers.js';
+export {
+  LocalServices,
+  libraryPath,
+  serviceOrigin,
+  servicePort,
+  readKiwixCatalog,
+  readKiwixSearch,
+  readKolibriInfo,
+  readOllamaGenerate,
+  readOllamaModels,
+  readOllamaVersion,
+} from './support/local-services.js';
 export {
   inProcessHostBridge,
   type HostBridge,

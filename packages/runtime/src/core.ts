@@ -83,9 +83,12 @@ import {
 import { DiagnosticsCollector } from '@worldview/diagnostics';
 import { UpdaterController, createInertAutoUpdater, policyInputFromSettings } from '@worldview/updater';
 import { BUILT_IN_LENSES, type LensDefinition } from '@worldview/render-core';
+import { readGuideProgress, readPrepRecord } from '@worldview/ipc-contract';
 import type {
   AppSettings as ContractSettings,
   Collection,
+  GuideProgress,
+  PrepRecord,
   DiagnosticsSnapshot,
   FeedItem,
   FieldHostStatus,
@@ -129,6 +132,7 @@ import {
   type AviationReference,
 } from './support/flight-info.js';
 import { createDemoProviders } from './demo/index.js';
+import { LocalServices } from './support/local-services.js';
 import { MartinBasemaps } from './martin-basemap.js';
 import {
   validateCollection,
@@ -309,6 +313,12 @@ export class RuntimeCore {
   updater!: UpdaterController;
   providerSettings!: ProviderSettingsStore;
   collections!: JsonDocStore<Collection>;
+  /** Guided setup progress (the Command Center, 2026-10-30). */
+  guides!: JsonDocStore<GuideProgress>;
+  /** The operator's preparedness inventory: this computer only, out only by their export. */
+  preparedness!: JsonDocStore<PrepRecord>;
+  /** The operator's local services (Ollama, kiwix-serve, Kolibri), asked over loopback. */
+  localServices!: LocalServices;
   watchZoneStore!: JsonDocStore<WatchZone>;
   lenses!: JsonDocStore<LensDefinition>;
   gazetteer!: Gazetteer;
@@ -874,6 +884,13 @@ export class RuntimeCore {
     this.watchZoneStore = new JsonDocStore<WatchZone>(this.dirs.watchzonesFile, validateWatchZone, log);
     this.lenses = new JsonDocStore<LensDefinition>(this.dirs.lensesFile, validateLens, log);
     this.cameraStore = new JsonDocStore<StoredCamera>(this.dirs.camerasFile, validateStoredCamera, log);
+    this.guides = new JsonDocStore<GuideProgress>(this.dirs.guidesFile, readGuideProgress, log);
+    this.preparedness = new JsonDocStore<PrepRecord>(this.dirs.preparednessFile, readPrepRecord, log);
+    this.localServices = new LocalServices({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      settings: () => this.settings.get(),
+      now: () => this.clock.now(),
+    });
     await this.collections.load();
     await this.restoreCameras();
     await this.lenses.load();
