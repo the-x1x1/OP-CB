@@ -5,6 +5,15 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-10-30
+
+WorldView is now **OP-CB — Operation Civilization Backup**: the operator's wordmark and mark,
+the mark as the app icon, the new name everywhere it is shown, and a new look (near-black,
+warm off-white, hazard yellow, Chakra Petch captions). Installs over 0.5.0 and 0.6.1 in place
+and keeps its data: the data folder, links, update channel and download file names are
+unchanged. Checked in the build container (full test suite, typecheck, licence and boundary
+checks, the new look screenshotted in the browser demo); not yet seen in the installed app.
+
 ### Changed
 
 - **WorldView is now OP-CB — Operation Civilization Backup.** The new wordmark and mark in the
