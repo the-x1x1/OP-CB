@@ -9,7 +9,7 @@ import {
   PORTABLE_DIR_NAME,
   moveDataTo,
   resolveDataLocation,
-  useUsualData,
+  backToUsualData,
 } from './data-location.js';
 
 async function tmp(): Promise<string> {
@@ -58,7 +58,7 @@ test('moving: the small files are carried, the drive marked, the pointer written
   await fs.rm(drive, { recursive: true });
   assert.match(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing?.reason ?? '', /not there/);
 
-  await useUsualData(usual);
+  await backToUsualData(usual);
   assert.ok(!(await fs.readdir(usual)).includes(POINTER_FILE));
   assert.equal(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing, undefined);
 });
