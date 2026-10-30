@@ -85,6 +85,73 @@ fields and worked examples are in [connectors/OVERVIEW.md](connectors/OVERVIEW.m
 developer machine can draft one from a URL with `pnpm connector:add --url …` and check it
 with `pnpm connector:test`.
 
+## The Command Center
+
+WorldView starts by asking how you will work: **Online** or **Offline**. The last choice is
+offered first, and the computer's own network state is shown for information; nothing is sent
+to the internet until you choose. Then the Command Center opens over the map:
+
+- **Overview**: the mode (switch it here at any time) and readiness — for each capability,
+  Ready, Verification required, Setup required, Degraded or Unavailable, and why.
+- **World & Maps**: Show the map (everything as before), Sources, Settings, the operating
+  profile (Field / Balanced / Docked) and your packs.
+- **Knowledge**: your library — ZIM files WorldView opens itself, books downloaded from the
+  Kiwix catalogue, the emergency references — plus an optional Kiwix server and Kolibri.
+- **Local Intelligence**: Ollama, the model to use, a test question, and questions answered
+  from your library's excerpts (what was retrieved and what the model wrote are labelled apart;
+  neither is emergency or medical advice).
+- **Communications**: your Meshtastic radio (status, radios heard, the test message) and
+  receivers.
+- **Preparedness**: your inventory, contacts and notes; due and expired items; a CSV checklist
+  and a JSON backup.
+- **Resources**: packs, external drives, local service ports, and devices on your own network
+  approved for offline use.
+
+Every section has **How do I set this up?**: a walkthrough with the steps, real controls, a
+check after each step that passes only on what is really there, troubleshooting, and a final
+test. Progress is kept; Restart starts one again. Esc or **Show the map** closes the Command
+Center; the top bar's button or Ctrl+Shift+O opens it.
+
+## Your offline library
+
+Command Center → **Knowledge**.
+
+- **Your library** lists the ZIM files in the library folder (inside WorldView's data folder, so
+  on your external drive when the data is there). **Open** shows a book's start page in the
+  reader window; **Find** looks for pages by the start of their title across every book
+  ("Water" finds "Water purification"). The reader runs no page scripts and loads nothing from
+  the internet; Alt+Left / Alt+Right (or the mouse's side buttons) go back and forward.
+- **Get books from the Kiwix library** (Online mode): search the catalogue, then **Download**.
+  The file goes into the library folder and is checked (size, SHA-256, and the checksum inside
+  the file) before it appears. Stop it, close WorldView, lose the connection — the next
+  Download of the same book carries on. Sizes run from a few MB to about 100 GB (English
+  Wikipedia with pictures); "nopic" and "mini" versions are much smaller.
+- **Emergency references**: **Download all** fetches six public-domain guides (FEMA, U.S. Army,
+  CDC); **Open** shows one in your PDF viewer, offline.
+- Files you already have: **Open the library folder**, copy `.zim` files in, **Look again**.
+  Files made before about 2021 (older xz format) are listed but need kiwix-serve.
+
+## Keeping WorldView on an external drive
+
+Command Center → Resources → **Where WorldView keeps its data** shows the folder that holds
+everything WorldView writes — settings, history, saved places, downloaded maps, the inventory,
+stored keys and logs — and the room left there. Two ways to put it all on an external SSD:
+
+- **Move it** (Windows or Linux, app installed as usual): **Keep all WorldView data on a
+  drive…**, choose an empty folder on the drive (or one WorldView already uses) and restart.
+  Settings, places, zones, walkthroughs, the inventory and keys are copied; history and
+  installed packs stay in the old folder — download maps again with **Save to** that drive.
+  If the drive is not plugged in at the next start, WorldView says so and offers this
+  computer's own data instead; it never writes into an empty mount point.
+- **Portable** (Windows): unzip `WorldView-Portable-<version>.zip` onto the drive and make an
+  empty folder named `WorldView-data` beside `WorldView.exe`. That copy keeps everything in that
+  folder and runs from the drive on any Windows computer. It is told about updates rather than
+  updating itself (download the new portable zip). On Linux the `.deb` installs into `/opt`;
+  move the data instead.
+
+Stored keys are encrypted by the operating system for one user on one computer: on another
+computer they are asked for again.
+
 ## Working offline
 
 Settings → Network → **Work offline** makes WorldView ask nothing of the internet, whether
@@ -102,11 +169,24 @@ it is sent (`apps/desktop/src/main/network-gate.ts`; the log notes each host onc
   cities and towns) plus a pack's places;
 - satellites, moved on from the last element sets by SGP4;
 - sources on this computer or your own network (a local receiver, an MQTT broker, Home
-  Assistant, the camera relay).
+  Assistant, the camera relay). A source WorldView asks over HTTP on another device — readsb
+  on a Raspberry Pi, a weather station — needs that device approved under Command Center →
+  Resources → Local network: one host at a time, private addresses and local names only.
+
+Offline stops WorldView's own requests; it is not a firewall, and programs you run beside it
+are not affected.
 
 Turn it off to go back online; sources resume on their next poll.
 
 ## Offline packs
+
+**Download a map** (Command Center → World & Maps, Online mode): the whole world down to a
+level of detail (zoom 6: cities and main roads; zoom 8: towns; zoom 10: most streets), the
+world plus the area on the map now in street detail, or the whole planet (over 100 GB, for an
+external drive). **Check the size** says exactly how big it is and how much room there is;
+**Download** fetches it, checks it and installs it as a pack like any other. Download again
+later for a newer map: it replaces the older one of the same kind. Map data © OpenStreetMap
+contributors (ODbL), built by Protomaps.
 
 Settings → Offline → Install pack, or:
 
@@ -144,8 +224,11 @@ things it has on the map:
 - **Boat**: NMEA 2000 through your gateway.
 - **Weather station and air**: a Davis WeatherLink Live and a PurpleAir sensor.
 
-Only the address you give is contacted; nothing on your network is searched for, and every
-radio is receive-only. Each is also a source in the Sources tab, with its full detail.
+Only the address you give is contacted; nothing on your network is searched for. The
+receivers (RTL-SDR, AIS) only receive. A Meshtastic radio transmits one thing for WorldView: a
+test message to one node, when you press Send in the Command Center's Meshtastic walkthrough
+(refused while the radio has no region set). Each is also a source in the Sources tab, with its
+full detail.
 
 ## Local ADS-B (readsb / dump1090)
 
@@ -171,7 +254,14 @@ with its uncertainty. Nodes without a position are counted in Source Health but 
 
 Text messages are never read: their words reach no record, log or observation. The mesh can
 carry other people's nodes, so this source's data stays on the computer — no export, packs or
-redistribution. A node over Bluetooth or USB is not read yet.
+redistribution. On Linux a node can also be plugged in by USB (its serial port in the source's
+settings); a node over Bluetooth is not read.
+
+The radio's firmware version, region and preset are shown in the source's status. WorldView
+transmits one thing through it: a test message to one radio, from Command Center →
+Communications, only when you press Transmit, and refused while the radio's region is unset or
+its transmit is off. It shows apart whether your radio accepted it, another radio repeated it
+and the radio it was for acknowledged it.
 
 ## NMEA 2000 (your boat)
 

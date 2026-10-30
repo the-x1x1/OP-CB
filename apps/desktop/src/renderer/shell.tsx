@@ -16,6 +16,8 @@ import { SettingsDialog } from './dialogs/settings-dialog.js';
 import { DiagnosticsDialog } from './dialogs/diagnostics-dialog.js';
 import { AttributionDialog } from './dialogs/attribution-dialog.js';
 import { WelcomeDialog } from './dialogs/welcome-dialog.js';
+import { CommandCenter } from './command-center/command-center.js';
+import { ModeScreen } from './command-center/mode-screen.js';
 import './context/index.js';
 import './shell.css';
 
@@ -76,6 +78,7 @@ export function Shell() {
       <Mark at="time" />
       <TimelineBar />
       <Mark at="end" />
+      <CommandCenter />
       <Notifications />
       <UpdateNotice />
       <PaletteHost />
@@ -84,6 +87,7 @@ export function Shell() {
       <DiagnosticsDialog />
       <AttributionDialog />
       <WelcomeDialog />
+      <ModeScreen />
     </div>
   );
 }

@@ -11,7 +11,29 @@
 export * from './contract.js';
 export { createWorldRuntime, type ComposedWorldRuntime } from './runtime.js';
 export { RuntimeCore, isLiveMode } from './core.js';
-export { createHandlers } from './handlers.js';
+export { createHandlers, chooseMode, modeState, prepCsv, readLibraryOpen } from './handlers.js';
+export { ZimLibrary, LIBRARY_DIR_NAME, type ZimLookup, type ZimItem } from './support/zim-library.js';
+export {
+  LibraryDownloads,
+  KIWIX_CATALOG,
+  kiwixDownloadUrl,
+  readCatalog,
+  readMetalink,
+  zimFileName,
+} from './support/library-downloads.js';
+export { REFERENCES } from './support/references.js';
+export {
+  LocalServices,
+  libraryPath,
+  serviceOrigin,
+  servicePort,
+  readKiwixCatalog,
+  readKiwixSearch,
+  readKolibriInfo,
+  readOllamaGenerate,
+  readOllamaModels,
+  readOllamaVersion,
+} from './support/local-services.js';
 export {
   inProcessHostBridge,
   type HostBridge,

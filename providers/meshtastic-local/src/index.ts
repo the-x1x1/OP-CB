@@ -12,6 +12,9 @@ import {
   type ProviderManifest,
   type ProviderStatus,
   type ProviderSubscription,
+  type TestMessageAnswer,
+  type TestMessageRequest,
+  type TestMessageSource,
   type Unsubscribe,
   type WorldProvider,
 } from '@worldview/provider-sdk';
@@ -21,9 +24,19 @@ import {
   DEFAULT_MESHTASTIC_PORT,
   FrameReader,
   ProtoError,
+  MAX_TEXT_BYTES,
+  PORT_ROUTING,
+  PRESET_NAMES,
+  REGION_NAMES,
+  ROUTING_ERRORS,
   heartbeatFrame,
+  nodeNum,
   readFromRadio,
+  readRoutingError,
+  textPacketFrame,
   wantConfigFrame,
+  type LoraConfig,
+  type MeshPacket,
 } from './wire.js';
 
 export { MESHTASTIC_LOCAL_MANIFEST } from './manifest.js';
@@ -141,9 +154,24 @@ interface Session {
  * once per `flushIntervalMs`. A heartbeat every five minutes keeps the connection open. When
  * the node goes away the provider says so (OFFLINE "no Meshtastic node at host:port") and
  * reconnects — 5 s, doubling to a minute — on its own. Nothing but the one host and port is
- * contacted, and nothing is sent but the two requests.
+ * contacted, and nothing is sent but the two requests — and, on the operator's press only, one
+ * test message to one node (`sendTestMessage`, the operator's decision of 2026-10-30).
  */
-export class MeshtasticLocalProvider implements WorldProvider {
+/** How long a test message waits for its delivery report (the radio retries for about this long). */
+export const TEST_MESSAGE_WAIT_MS = 60_000;
+/** At most one test message this often: the air is shared, and duty-cycle limits apply. */
+export const TEST_MESSAGE_SPACING_MS = 30_000;
+
+interface PendingSend {
+  id: number;
+  to: number;
+  evidence: TestMessageAnswer['evidence'];
+  routingError?: string;
+  timer: unknown;
+  finish: (outcome: TestMessageAnswer['outcome'], message: string) => void;
+}
+
+export class MeshtasticLocalProvider implements WorldProvider, TestMessageSource {
   readonly manifest: ProviderManifest = MESHTASTIC_LOCAL_MANIFEST;
   private context!: ProviderContext;
   private settings: MeshtasticLocalSettings = { host: '127.0.0.1', port: DEFAULT_MESHTASTIC_PORT };
@@ -160,6 +188,10 @@ export class MeshtasticLocalProvider implements WorldProvider {
   private lastError: ProviderError | undefined;
   private lastErrorAt: IsoTimestamp | undefined;
   private configNonce = 0;
+  /** What the radio says about itself: firmware, and its LoRa settings (read, never changed). */
+  readonly radio: { firmwareVersion?: string; lora?: LoraConfig } = {};
+  private pendingSend: PendingSend | undefined;
+  private lastSendAt = 0;
   readonly stats: MeshtasticLocalStats = { frames: 0, invalid: 0, packets: 0, ignored: 0, reconnects: 0 };
 
   constructor(options: MeshtasticLocalOptions = {}) {
@@ -356,7 +388,22 @@ export class MeshtasticLocalProvider implements WorldProvider {
           if (num !== undefined) session.pending.add(num);
           break;
         }
+        case 'metadata':
+          if (message.firmwareVersion) this.radio.firmwareVersion = message.firmwareVersion;
+          break;
+        case 'lora-config':
+          this.radio.lora = message.lora;
+          break;
+        case 'queue-status': {
+          const p = this.pendingSend;
+          if (p && message.meshPacketId === p.id) {
+            if (message.res === 0) p.evidence.accepted = true;
+            else p.finish('refused', `your radio refused the message (queue status ${message.res})`);
+          }
+          break;
+        }
         case 'packet': {
+          if (this.onDeliveryReport(message.packet)) break;
           this.stats.packets++;
           const num = this.nodes.packet(message.packet, nowSec);
           if (num === undefined) this.stats.ignored++;
@@ -386,6 +433,107 @@ export class MeshtasticLocalProvider implements WorldProvider {
         session.flushTimer = undefined;
         this.flush(session);
       }, this.flushIntervalMs);
+  }
+
+  /**
+   * A routing packet that reports on the pending test message: true when it was one. From the
+   * node it was for, with no error: acknowledged. From this radio with no error: another radio
+   * repeated it (an implicit acknowledgement) — it went out over the air — and the wait goes on
+   * for the recipient's own. Any error ends the wait with its name.
+   */
+  private onDeliveryReport(packet: MeshPacket): boolean {
+    const p = this.pendingSend;
+    const d = packet.decoded;
+    if (!p || d?.portnum !== PORT_ROUTING || d.requestId !== p.id) return false;
+    const error = d.payload ? readRoutingError(d.payload) : 0;
+    p.evidence.accepted = true;
+    if (error !== 0) {
+      p.routingError = ROUTING_ERRORS[error] ?? `error ${error}`;
+      p.finish('not-acknowledged', `no acknowledgement: the radio reported ${p.routingError}`);
+    } else if (packet.from === p.to) {
+      p.evidence.relayed = true;
+      p.evidence.acknowledged = true;
+      p.finish('acknowledged', 'the node it was for acknowledged it: a two-way radio link');
+    } else {
+      p.evidence.relayed = true;
+    }
+    return true;
+  }
+
+  /**
+   * One short text to one node, on the operator's press (the operator's decision of
+   * 2026-10-30). Refused, without sending, when the radio has not said its region or has none
+   * (UNSET may not transmit), when its transmit is off, when another test is still waiting, or
+   * within 30 s of the last. The text is written to the radio and not kept anywhere.
+   */
+  async sendTestMessage(request: TestMessageRequest): Promise<TestMessageAnswer> {
+    const evidence = { connected: false, accepted: false, relayed: false, acknowledged: false };
+    const answer = (outcome: TestMessageAnswer['outcome'], message: string, extra: Partial<TestMessageAnswer> = {}) =>
+      ({ outcome, evidence: { ...evidence }, message, at: this.nowIso(), ...extra }) satisfies TestMessageAnswer;
+    const stream = this.session?.stream;
+    if (!this.connected || !stream) return answer('not-connected', 'WorldView is not connected to your radio');
+    evidence.connected = true;
+    const to = nodeNum(request.to);
+    if (to === undefined) return answer('refused', 'that is not a node id (!a1b2c3d4)');
+    if (to === this.nodes.myNodeNum) return answer('refused', 'that is your own radio');
+    if (to === 0xffffffff || to === 0) return answer('refused', 'a test message goes to one node, never to everyone');
+    const lora = this.radio.lora;
+    if (!lora) return answer('refused', 'the radio has not reported its LoRa settings yet');
+    if (lora.region === 0)
+      return answer('refused', "the radio's region is UNSET: it may not transmit until a region is set");
+    if (!lora.txEnabled) return answer('refused', "transmitting is turned off in the radio's LoRa settings");
+    if (this.pendingSend) return answer('refused', 'a test message is still waiting for its report');
+    const now = this.context.clock.now();
+    if (this.lastSendAt && now - this.lastSendAt < TEST_MESSAGE_SPACING_MS)
+      return answer('refused', 'one test message every 30 seconds');
+    const text = request.text.trim();
+    const bytes = new TextEncoder().encode(text).length;
+    if (!bytes || bytes > MAX_TEXT_BYTES) return answer('refused', `the text must be 1–${MAX_TEXT_BYTES} bytes`);
+    const ids = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(ids);
+    const id = ids[0]! || 1;
+    if (!stream.write(textPacketFrame({ to, id, text, channel: 0, hopLimit: lora.hopLimit || 3 })))
+      return answer('refused', 'the message could not be written to the radio');
+    this.lastSendAt = now;
+    this.context.logger.info('Meshtastic test message sent', { to: request.to, bytes });
+    return new Promise<TestMessageAnswer>((resolve) => {
+      const pending: PendingSend = {
+        id,
+        to,
+        evidence,
+        timer: undefined,
+        finish: (outcome, message) => {
+          if (this.pendingSend !== pending) return;
+          this.pendingSend = undefined;
+          if (pending.timer !== undefined) this.timers.clearTimeout(pending.timer);
+          request.signal.removeEventListener('abort', onAbort);
+          resolve(
+            answer(outcome, message, {
+              packetId: id,
+              ...(pending.routingError ? { routingError: pending.routingError } : {}),
+            }),
+          );
+        },
+      };
+      const onAbort = () => pending.finish(this.waitOutcome(evidence), this.waitMessage(evidence, 'stopped waiting'));
+      request.signal.addEventListener('abort', onAbort, { once: true });
+      pending.timer = this.timers.setTimeout(
+        () =>
+          pending.finish(this.waitOutcome(evidence), this.waitMessage(evidence, 'no acknowledgement within a minute')),
+        TEST_MESSAGE_WAIT_MS,
+      );
+      this.pendingSend = pending;
+    });
+  }
+
+  private waitOutcome(e: TestMessageAnswer['evidence']): TestMessageAnswer['outcome'] {
+    return e.relayed ? 'relayed' : e.accepted ? 'accepted' : 'not-acknowledged';
+  }
+
+  private waitMessage(e: TestMessageAnswer['evidence'], why: string): string {
+    if (e.relayed) return `${why} from the node it was for, but another radio repeated it, so it went out over the air`;
+    if (e.accepted) return `${why}: your radio queued it, but nothing shows it was heard`;
+    return `${why}: nothing shows your radio sent it`;
   }
 
   private flush(session: Session): void {
@@ -455,6 +603,10 @@ export class MeshtasticLocalProvider implements WorldProvider {
   private closeSession(session: Session): void {
     if (session.closed) return;
     session.closed = true;
+    this.pendingSend?.finish(
+      this.waitOutcome(this.pendingSend.evidence),
+      'the connection to the radio closed while waiting',
+    );
     if (session.flushTimer !== undefined) this.timers.clearTimeout(session.flushTimer);
     if (session.retryTimer !== undefined) this.timers.clearTimeout(session.retryTimer);
     this.stopHeartbeat(session);
@@ -485,7 +637,13 @@ export class MeshtasticLocalProvider implements WorldProvider {
       : node.batteryPct !== undefined
         ? `battery ${node.batteryPct}%`
         : undefined;
-    return `; this node: ${[who, power, fix?.text].filter(Boolean).join(', ')}`;
+    const lora = this.radio.lora;
+    const radio = [
+      this.radio.firmwareVersion ? `firmware ${this.radio.firmwareVersion}` : undefined,
+      lora ? `region ${REGION_NAMES[lora.region] ?? lora.region}` : undefined,
+      lora && lora.usePreset ? (PRESET_NAMES[lora.modemPreset] ?? `preset ${lora.modemPreset}`) : undefined,
+    ];
+    return `; this node: ${[who, power, fix?.text, ...radio].filter(Boolean).join(', ')}`;
   }
 
   /** This node's fix, structured for the field status strip (no coordinates in it). */

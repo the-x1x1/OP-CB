@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { TILE_ROUTE_PREFIX } from './tile-cache.js';
 import { PACK_BASEMAP_ROUTE } from './pack-basemap.js';
+import { READER_SCHEME } from './library-reader-pages.js';
 
 /**
  * The renderer is served from a custom scheme, not from `file:`.
@@ -122,6 +123,9 @@ export function registerAppScheme(protocol: ProtocolLike): void {
         stream: true, // Cesium range-requests its terrain tiles
       },
     },
+    // The library reader's pages (library-reader.ts): standard so a page's relative links
+    // resolve; handled only in the reader's own session. No fetch API, no CORS.
+    { scheme: READER_SCHEME, privileges: { standard: true, secure: true } },
   ]);
 }
 

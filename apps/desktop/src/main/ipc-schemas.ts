@@ -7,7 +7,16 @@ import {
   worldQuerySchema,
   type Schema,
 } from '@worldview/world-model';
-import { GEODATA_MAX_FILE_BYTES, MAX_OVERLAY_VALUE_OVERLAYS, MAX_READING_KEYS } from '@worldview/ipc-contract';
+import {
+  GEODATA_MAX_FILE_BYTES,
+  LOCAL_SERVICE_IDS,
+  MAX_OVERLAY_VALUE_OVERLAYS,
+  MAX_READING_KEYS,
+  readGuideProgress,
+  readLibraryDownloadRequest,
+  readLibraryOpenRequest,
+  readPrepRecord,
+} from '@worldview/ipc-contract';
 import type {
   RequestChannel,
   RequestOf,
@@ -38,6 +47,17 @@ const voidSchema: Schema<void> = {
       ? { ok: true, value: undefined }
       : { ok: false, issues: [{ path, message: 'expected no payload' }] },
 };
+
+/** A request read by the contract's own reader (command-center.ts): it is the record, or refused whole. */
+function fromReader<T>(read: (value: unknown) => T | undefined, what: string): Schema<T> {
+  return {
+    kind: 'object',
+    parse: (value, path = '') => {
+      const v = read(value);
+      return v === undefined ? { ok: false, issues: [{ path, message: `not a ${what}` }] } : { ok: true, value: v };
+    },
+  } as Schema<T>;
+}
 
 const id = s.string({ min: 1, max: 512 });
 const shortId = s.string({ min: 1, max: 128, pattern: /^[a-zA-Z0-9][a-zA-Z0-9._:-]*$/ });
@@ -405,6 +425,81 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
     { strict: true },
   ) as Schema<RequestOf<'feed.recent'>>,
 
+  'mode.state': voidSchema,
+  'mode.choose': s.object({ mode: s.enum(['online', 'offline'] as const) }, { strict: true }),
+  'services.status': voidSchema,
+  'services.open': s.object(
+    {
+      id: s.enum(LOCAL_SERVICE_IDS as readonly ['ollama', 'kiwix', 'kolibri']),
+      path: s.optional(s.string({ min: 9, max: 1000 })),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'services.open'>>,
+  'library.search': s.object(
+    {
+      book: s.string({ min: 1, max: 200, pattern: /^[A-Za-z0-9][A-Za-z0-9._-]*$/ }),
+      pattern: s.string({ min: 1, max: 200 }),
+    },
+    { strict: true },
+  ),
+  'mesh.sendTest': s.object(
+    { to: s.string({ min: 9, max: 9, pattern: /^![0-9a-f]{8}$/ }), text: s.string({ min: 1, max: 200 }) },
+    { strict: true },
+  ),
+  'ai.test': s.object(
+    {
+      model: s.string({ min: 1, max: 200, pattern: /^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$/ }),
+      prompt: s.string({ min: 1, max: 2000 }),
+    },
+    { strict: true },
+  ),
+  'guides.list': voidSchema,
+  'guides.save': fromReader(readGuideProgress, 'guide progress record'),
+  'guides.reset': s.object({ id: s.string({ min: 1, max: 64, pattern: /^[a-z0-9][a-z0-9-]*$/ }) }, { strict: true }),
+  'prep.list': voidSchema,
+  'prep.save': fromReader(readPrepRecord, 'preparedness record'),
+  'prep.delete': s.object({ id: s.string({ min: 1, max: 64, pattern: /^[a-z0-9][a-z0-9-]*$/ }) }, { strict: true }),
+  'prep.export': s.object({ format: s.enum(['csv', 'json'] as const) }, { strict: true }),
+  'maps.download.plan': s.object(
+    {
+      kind: s.enum(['extract', 'planet'] as const),
+      worldMaxZoom: s.number({ min: 0, max: 15, integer: true }),
+      maxZoom: s.number({ min: 0, max: 15, integer: true }),
+      bounds: s.optional(boundsSchema),
+      name: s.optional(s.string({ min: 1, max: 60 })),
+      vaultId: s.optional(vaultId),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'maps.download.plan'>>,
+  'maps.download.start': voidSchema,
+  'maps.download.status': voidSchema,
+  'maps.download.cancel': voidSchema,
+  'data.location': voidSchema,
+  'data.moveTo': voidSchema,
+  'data.useUsual': voidSchema,
+  'data.restart': voidSchema,
+  'library.shelf': voidSchema,
+  'library.find': s.object(
+    {
+      query: s.string({ min: 1, max: 200 }),
+      bookId: s.optional(s.string({ min: 1, max: 64, pattern: /^[0-9a-z-]+$/ })),
+      limit: s.optional(s.number({ min: 1, max: 50, integer: true })),
+      withText: s.optional(s.boolean()),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'library.find'>>,
+  'library.open': fromReader(readLibraryOpenRequest, 'library request'),
+  'library.catalog': s.object(
+    {
+      query: s.optional(s.string({ min: 0, max: 200 })),
+      language: s.optional(s.string({ min: 2, max: 40, pattern: /^[a-z]{2,3}(,[a-z]{2,3})*$/ })),
+      count: s.optional(s.number({ min: 1, max: 100, integer: true })),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'library.catalog'>>,
+  'library.download.start': fromReader(readLibraryDownloadRequest, 'library download request'),
+  'library.download.status': voidSchema,
+  'library.download.cancel': voidSchema,
   'offline.status': voidSchema,
   'field.status': voidSchema,
   'offline.installPack': voidSchema,

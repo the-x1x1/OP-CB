@@ -7,6 +7,63 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **The Command Center and a start screen.** WorldView now starts by asking Online or Offline
+  (the last choice offered first; the computer's own network state shown, never deciding), and
+  sends nothing to the internet until you choose. Then the Command Center opens over the map:
+  Overview (what will still work if the internet goes, and why the rest will not), World &
+  Maps, Knowledge, Local Intelligence, Communications, Preparedness and Resources. The map and
+  everything on it are one press away (Esc, or **Show the map**); the top bar's new button and
+  Ctrl+Shift+O bring it back. Switch modes at any time without a restart
+  (docs/architecture/COMMAND-CENTER.md).
+- **Download the world map for offline use.** World & Maps → Download a map: the whole world to
+  the level of detail you choose, the world plus an area in full street detail, or the whole
+  planet onto an external drive. The exact size is shown before anything is downloaded; the
+  file is checked after, then installed as a world pack. Map data from Protomaps' daily
+  OpenStreetMap build, © OpenStreetMap contributors (ODbL). `pnpm basemap:extract` does the same
+  from the command line.
+- **A library WorldView reads itself.** Knowledge → Your library: ZIM files (Wikipedia,
+  WikiMed, iFixit, Wikivoyage, survival and medicine collections) open in WorldView with no
+  Kiwix program. Find pages by title across every book; pages open in a separate reader window
+  with page scripts off and nothing loaded from the internet. Get books from the Kiwix catalogue
+  in the app: searched online, downloaded into the library folder, checked against the
+  catalogue's size, its SHA-256 and the checksum every ZIM file ends with; a download that stops
+  carries on where it left off, even after a restart. Questions to a local AI model can now be
+  answered from these books too. kiwix-serve is optional (full-text search, older files).
+- **Emergency references.** Knowledge → Emergency references: one press downloads six
+  public-domain guides — FEMA's _Are You Ready?_, the U.S. Army's _Survival_ (ATP 3-50.21) and
+  _First Aid_ (FM 4-25.11), and CDC sheets on safe water, wound care and practical skills —
+  into the library, each checked to be a PDF and its SHA-256 recorded; they open offline in the
+  computer's PDF viewer.
+- **The whole-planet map carries on.** A stopped or failed whole-planet download (about
+  140 GB) is kept: Check the size and Download again continue from where it was, after a
+  restart too, as long as Protomaps still offers that day's build.
+- **All of WorldView on an external drive.** Resources → Where WorldView keeps its data: move
+  everything (settings, history, maps, inventory, keys, logs) to a folder on an external SSD from
+  the next start, or run the portable copy from the drive with a `WorldView-data` folder beside
+  it. An unplugged drive is never written to: WorldView asks before falling back to this
+  computer's own data.
+- **Guided setup walkthroughs** for offline maps, an offline library (Kiwix), courses
+  (Kolibri), a local AI model (Ollama), a Meshtastic radio, an RTL-SDR receiver and a
+  preparedness inventory: what it does, what you need, the steps with real controls, checks
+  that pass only on what is really there, troubleshooting, and a final test. Progress is kept;
+  a skipped check leaves a walkthrough "not verified", and the Overview calls a capability Ready
+  only when its final test passed.
+- **Devices on your own network while offline.** Resources → Local network: approve one host
+  at a time (a private address or a `.local` name, never a range) and Offline mode lets
+  WorldView reach it, so a receiver on a Raspberry Pi keeps working.
+- **Local services**: Ollama, kiwix-serve and Kolibri are found on this computer (loopback
+  only, on the ports you set) — never installed, started or stopped by WorldView. Search your
+  library and open pages; ask a local model, also from your library's excerpts with retrieved
+  and generated parts labelled apart.
+- **A Meshtastic test message** (the operator's decision of 2026-10-30): one short text to one
+  radio, only when you press Transmit, refused while your radio's region is unset or transmit
+  is off. WorldView shows separately whether your radio accepted it, another radio repeated it
+  and the radio it was for acknowledged it. The radio's firmware version, region and preset are
+  now shown. Receivers (RTL-SDR, AIS, ADS-B) still never transmit.
+- **Preparedness inventory**: supplies with quantities, expiry and check dates, emergency
+  contacts and notes, kept on this computer only; due and expired items on the Overview; a CSV
+  checklist to print and a JSON backup, written only where you choose.
+
 - **Links to a view.** A `worldview://view?lat=…&lon=…` link opens WorldView at that place from an
   email, a chat or a web page: the zoom or camera height, 2D or 3D, the lens, layers shown or
   hidden and one thing to select, all optional. The installer registers the scheme (a portable

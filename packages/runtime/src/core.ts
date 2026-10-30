@@ -58,6 +58,7 @@ import {
   vaultSummary,
   vaultWritable,
   type RegistryVault,
+  type VaultInstallTarget,
 } from '@worldview/offline';
 import {
   CameraHub,
@@ -83,9 +84,12 @@ import {
 import { DiagnosticsCollector } from '@worldview/diagnostics';
 import { UpdaterController, createInertAutoUpdater, policyInputFromSettings } from '@worldview/updater';
 import { BUILT_IN_LENSES, type LensDefinition } from '@worldview/render-core';
+import { readGuideProgress, readPrepRecord } from '@worldview/ipc-contract';
 import type {
   AppSettings as ContractSettings,
   Collection,
+  GuideProgress,
+  PrepRecord,
   DiagnosticsSnapshot,
   FeedItem,
   FieldHostStatus,
@@ -129,6 +133,10 @@ import {
   type AviationReference,
 } from './support/flight-info.js';
 import { createDemoProviders } from './demo/index.js';
+import { LocalServices } from './support/local-services.js';
+import { MapDownloads } from './support/map-download.js';
+import { ZimLibrary } from './support/zim-library.js';
+import { LibraryDownloads } from './support/library-downloads.js';
 import { MartinBasemaps } from './martin-basemap.js';
 import {
   validateCollection,
@@ -309,6 +317,17 @@ export class RuntimeCore {
   updater!: UpdaterController;
   providerSettings!: ProviderSettingsStore;
   collections!: JsonDocStore<Collection>;
+  /** Guided setup progress (the Command Center, 2026-10-30). */
+  guides!: JsonDocStore<GuideProgress>;
+  /** The operator's preparedness inventory: this computer only, out only by their export. */
+  preparedness!: JsonDocStore<PrepRecord>;
+  /** The operator's local services (Ollama, kiwix-serve, Kolibri), asked over loopback. */
+  localServices!: LocalServices;
+  /** Offline maps downloaded in the app (support/map-download.ts). */
+  mapDownloads!: MapDownloads;
+  /** The built-in library: ZIM files read here, and downloads into it (2026-10-30). */
+  zimLibrary!: ZimLibrary;
+  libraryDownloads!: LibraryDownloads;
   watchZoneStore!: JsonDocStore<WatchZone>;
   lenses!: JsonDocStore<LensDefinition>;
   gazetteer!: Gazetteer;
@@ -874,6 +893,31 @@ export class RuntimeCore {
     this.watchZoneStore = new JsonDocStore<WatchZone>(this.dirs.watchzonesFile, validateWatchZone, log);
     this.lenses = new JsonDocStore<LensDefinition>(this.dirs.lensesFile, validateLens, log);
     this.cameraStore = new JsonDocStore<StoredCamera>(this.dirs.camerasFile, validateStoredCamera, log);
+    this.guides = new JsonDocStore<GuideProgress>(this.dirs.guidesFile, readGuideProgress, log);
+    this.preparedness = new JsonDocStore<PrepRecord>(this.dirs.preparednessFile, readPrepRecord, log);
+    this.localServices = new LocalServices({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      settings: () => this.settings.get(),
+      now: () => this.clock.now(),
+    });
+    this.mapDownloads = new MapDownloads({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      registry: () => this.packs,
+      vaultTarget: (id) => this.vaultTarget(id),
+      appPacksDir: this.dirs.worldpacksDir,
+      now: () => this.clock.now(),
+      log: this.loggerHub.logger('offline'),
+      onChange: (st) => {
+        if (st.phase === 'done') this.emitter.emit('offline.changed', this.offlineStatus());
+      },
+    });
+    this.zimLibrary = new ZimLibrary(this.dirs.libraryDir, this.loggerHub.logger('offline'));
+    this.libraryDownloads = new LibraryDownloads({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      dir: this.dirs.libraryDir,
+      now: () => this.clock.now(),
+      log: this.loggerHub.logger('offline'),
+    });
     await this.collections.load();
     await this.restoreCameras();
     await this.lenses.load();
@@ -1473,6 +1517,8 @@ export class RuntimeCore {
     await this.providerHost.dispose().catch(() => undefined);
     this.events.dispose();
     this.state.dispose();
+    this.libraryDownloads?.cancel();
+    await this.zimLibrary?.close().catch(() => undefined);
     await this.cameraRelay?.stop().catch(() => undefined);
     await this.go2rtc?.stop().catch(() => undefined);
     await this.history
@@ -1600,16 +1646,23 @@ export class RuntimeCore {
 
   /** Install a pack onto a vault, re-checking the vault before writing and before activating. */
   async installPackToVault(file: string, vaultId: string): ReturnType<WorldPackRegistry['install']> {
+    const target = this.vaultTarget(vaultId);
+    if (!target) throw new Error('no such data vault');
+    return this.packs.install(file, target);
+  }
+
+  /** A vault as an install target: re-proved the right, writable drive before each write. */
+  vaultTarget(vaultId: string): (VaultInstallTarget & { label: string; path: string }) | undefined {
     const setting = (this.settings.get().storage?.vaults ?? []).find((v) => v.id === vaultId);
     const vault = this.registryVaults().find((v) => v.id === vaultId);
-    if (!setting || !vault) throw new Error('no such data vault');
+    if (!setting || !vault) return undefined;
     const recheck = async (): Promise<{ ok: true; device: number } | { ok: false; reason: string }> => {
       const h = await probeVault(setting, { probeWrite: true });
       if (!vaultWritable(h.state)) return { ok: false, reason: h.message };
       if (h.device === undefined) return { ok: false, reason: `could not tell which drive ${setting.path} is on` };
       return { ok: true, device: h.device };
     };
-    return this.packs.install(file, { vault, recheck });
+    return { vault, recheck, label: setting.label, path: setting.path };
   }
 
   /** Field profile (docs/cyberdeck M5): internet sources poll a third as often; local ones never slow. */

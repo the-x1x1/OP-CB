@@ -13,6 +13,7 @@ export * from './local-files.js';
 export * from './local-listener.js';
 export * from './telemetry.js';
 export * from './object-track.js';
+export * from './test-message.js';
 export * from './object-details.js';
 export * from './flight-route.js';
 export * from './overlay-value.js';

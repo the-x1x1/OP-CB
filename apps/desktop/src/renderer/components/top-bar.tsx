@@ -3,6 +3,7 @@ import type { SearchResult } from '@worldview/ipc-contract';
 import { IconButton, Popover, Search, StatusBadge, formatUtcTime } from '@worldview/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
+import { useCCStore } from '../command-center/use-cc.js';
 import { ONLINE_ROW_ID, onlinePlaceText, searchList, type OnlineSearchState } from './search-items.js';
 
 /** Top bar (directive §53): global search, connection/state badge, UTC clock, app menu. */
@@ -15,6 +16,7 @@ export function TopBar() {
   const demoMode = useAppSlice((s) => s.session.appInfo?.demoMode === true);
   const paletteOpen = useAppSlice((s) => s.ui.paletteOpen);
   const actions = useActions();
+  const commandCenter = useCCStore();
   const now = useNow(1000);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -146,6 +148,7 @@ export function TopBar() {
         <span className="wv-topbar__clock wv-mono" aria-label="UTC time" title="Coordinated Universal Time">
           {formatUtcTime(now)} <span className="wv-topbar__utc">UTC</span>
         </span>
+        <IconButton icon="activity" label="Command Center (Ctrl+Shift+O)" onClick={() => commandCenter.openAt()} />
         <IconButton
           icon="command"
           label="Command palette (Ctrl+K)"

@@ -32,6 +32,17 @@ import {
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   formatViewLink,
+  LOCAL_SERVICE_IDS,
+  readGuideProgress,
+  readPrepRecord,
+  readLibraryDownloadRequest,
+  readLibraryOpenRequest,
+  type LocalServiceId,
+  type LibraryOpenRequest,
+  type MapDownloadRequest,
+  type ModeState,
+  type OperatingMode,
+  type PrepRecord,
   type AppSettings,
   type Collection,
   type CollectionItem,
@@ -51,6 +62,7 @@ import { SKY_LIMIT_DEFAULT, skyOverhead } from './support/sky-overhead.js';
 import { auroraHere } from './support/aurora-here.js';
 import { zonesFromGeodata, zonesToGeodata } from './support/zone-geodata.js';
 import { mergeObjectTrack } from './support/object-track.js';
+import { libraryPath } from './support/local-services.js';
 import {
   collectionFromGeodata,
   collectionGeodata,
@@ -809,6 +821,175 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       core.feedItems(clampLimit(limit, 50, 500), minimumSeverity),
 
     // ---- offline ---------------------------------------------------------------
+    // ---- the Command Center (2026-10-30) ----------------------------------------
+    // The runtime has no start screen: here the mode is whatever the settings say. The desktop
+    // app overrides both (main.ts) so nothing leaves the computer until the operator chooses.
+    'mode.state': async () => modeState(core, true),
+    'mode.choose': async ({ mode }) => {
+      if (mode !== 'online' && mode !== 'offline') throw new InvalidRequestError('mode must be online or offline');
+      await chooseMode(core, mode);
+      return modeState(core, true);
+    },
+    'services.status': async (_req, ctx) => core.localServices.statusAll(ctx.signal),
+    // Opening a page in the browser is the desktop's; a runtime alone has no browser.
+    'services.open': async ({ id, path: page }) => {
+      requireServiceId(id);
+      if (page !== undefined && !libraryPath(page)) throw new InvalidRequestError('not a library page');
+      return { opened: false };
+    },
+    'library.search': async ({ book, pattern }, ctx) => {
+      if (typeof book !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(book))
+        throw new InvalidRequestError('book must be a book name from the library');
+      if (typeof pattern !== 'string' || !pattern.trim() || pattern.length > 200)
+        throw new InvalidRequestError('pattern must be 1–200 characters');
+      return core.localServices.librarySearch(book, pattern.trim(), ctx.signal);
+    },
+    'mesh.sendTest': async (req, ctx) => {
+      if (typeof req?.to !== 'string' || !/^![0-9a-f]{8}$/.test(req.to))
+        throw new InvalidRequestError('to must be a node id such as !a1b2c3d4');
+      if (typeof req.text !== 'string' || !req.text.trim() || req.text.length > 200)
+        throw new InvalidRequestError('text must be 1–200 characters');
+      const answer = await core.providerHost.sendTestMessage(
+        'meshtastic-local',
+        { to: req.to, text: req.text },
+        { signal: ctx.signal },
+      );
+      if (!answer)
+        return {
+          outcome: 'not-connected',
+          evidence: { connected: false, accepted: false, relayed: false, acknowledged: false },
+          message: 'the Meshtastic source is not running',
+          at: new Date(core.clock.now()).toISOString(),
+        };
+      core.log.info('mesh test message', { outcome: answer.outcome });
+      return answer;
+    },
+    'ai.test': async (req, ctx) => {
+      if (typeof req?.model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/.test(req.model))
+        throw new InvalidRequestError('model must be an installed model name');
+      if (typeof req.prompt !== 'string' || !req.prompt.trim() || req.prompt.length > 2000)
+        throw new InvalidRequestError('prompt must be 1–2000 characters');
+      const answer = await core.localServices.aiTest({ model: req.model, prompt: req.prompt }, ctx.signal);
+      core.log.info('local AI test', { model: req.model, ok: answer.ok, elapsedMs: answer.elapsedMs });
+      return answer;
+    },
+    'guides.list': async () => core.guides.list(),
+    'guides.save': async (progress) => {
+      const p = readGuideProgress(progress);
+      if (!p) throw new InvalidRequestError('not a guide progress record');
+      return core.guides.save(p);
+    },
+    'guides.reset': async ({ id }) => {
+      requireId(id, 'id');
+      return core.guides.remove(id);
+    },
+    'prep.list': async () => core.preparedness.list(),
+    'prep.save': async (record) => {
+      const r = readPrepRecord(record);
+      if (!r) throw new InvalidRequestError('not a preparedness record');
+      if ((await core.preparedness.list()).length >= 2000 && !(await core.preparedness.get(r.id)))
+        throw new InvalidRequestError('the inventory holds at most 2,000 records');
+      return core.preparedness.save(r);
+    },
+    'prep.delete': async ({ id }) => {
+      requireId(id, 'id');
+      return core.preparedness.remove(id);
+    },
+    'prep.export': async ({ format }) => {
+      if (format !== 'csv' && format !== 'json') throw new InvalidRequestError('format must be csv or json');
+      const records = await core.preparedness.list();
+      const choice = await core.hostBridge.pickSaveFile({
+        title: format === 'csv' ? 'Save the preparedness checklist' : 'Back up the preparedness inventory',
+        defaultPath: suggestedPath(core, format === 'csv' ? 'preparedness-checklist.csv' : 'preparedness.json'),
+        filters: [format === 'csv' ? { name: 'CSV', extensions: ['csv'] } : { name: 'JSON', extensions: ['json'] }],
+      });
+      if ('cancelled' in choice) return { cancelled: true };
+      const body =
+        format === 'csv'
+          ? prepCsv(records)
+          : `${JSON.stringify({ version: 1, kind: 'worldview-preparedness', records }, null, 2)}\n`;
+      await fs.writeFile(choice.path, body, 'utf8');
+      core.log.info('preparedness exported', { format, records: records.length });
+      return { path: choice.path, records: records.length };
+    },
+
+    'maps.download.plan': async (req) => {
+      const r = readMapDownloadRequest(req);
+      if (typeof r === 'string') throw new InvalidRequestError(r);
+      if (r.vaultId && !core.vaultTarget(r.vaultId)) throw new InvalidRequestError('no such data vault');
+      // Demo mode contacts nothing (the welcome screen and banner say so).
+      if (core.demoMode()) return { phase: 'failed', request: r, message: 'the demo build downloads no maps' };
+      return core.mapDownloads.startPlan(r);
+    },
+    'maps.download.start': async () => core.mapDownloads.start(),
+    'maps.download.status': async () => core.mapDownloads.current(),
+    'maps.download.cancel': async () => core.mapDownloads.cancel(),
+
+    // Moving the data folder is the desktop's (main.ts overrides these); a runtime alone reports.
+    'data.location': async () => ({ root: core.dirs.root, kind: 'usual' as const, usualRoot: core.dirs.root }),
+    'data.moveTo': async () => ({ ok: false, message: 'only the desktop app can move its data', restartNeeded: false }),
+    'data.useUsual': async () => ({
+      ok: false,
+      message: 'only the desktop app can move its data',
+      restartNeeded: false,
+    }),
+    'data.restart': async () => ({ restarting: false }),
+
+    // ---- the built-in library (2026-10-30) ----------------------------------------------------
+    'library.shelf': async () => {
+      const [books, references] = await Promise.all([core.zimLibrary.books(), core.libraryDownloads.references()]);
+      const free = await fs
+        .statfs(core.zimLibrary.dir)
+        .then((st) => Number(st.bavail) * Number(st.bsize))
+        .catch(() => undefined);
+      return { folder: core.zimLibrary.dir, books, references, ...(free !== undefined ? { freeBytes: free } : {}) };
+    },
+    'library.find': async (req) => {
+      if (typeof req?.query !== 'string' || !req.query.trim() || req.query.length > 200)
+        throw new InvalidRequestError('query must be 1–200 characters');
+      if (req.bookId !== undefined && (typeof req.bookId !== 'string' || !/^[0-9a-z-]{1,64}$/.test(req.bookId)))
+        throw new InvalidRequestError('bookId must be a book from the library');
+      if (req.limit !== undefined && (!Number.isInteger(req.limit) || req.limit < 1 || req.limit > 50))
+        throw new InvalidRequestError('limit is 1 to 50');
+      return core.zimLibrary.find({
+        query: req.query,
+        ...(req.bookId ? { bookId: req.bookId } : {}),
+        ...(req.limit ? { limit: req.limit } : {}),
+        ...(req.withText ? { withText: true } : {}),
+      });
+    },
+    // Opening a window or a PDF viewer is the desktop's (main.ts); a runtime alone opens nothing.
+    'library.open': async (req) => {
+      readLibraryOpen(req);
+      return { opened: false, message: 'only the desktop app opens the reader' };
+    },
+    'library.catalog': async (req, ctx) => {
+      if (req?.query !== undefined && (typeof req.query !== 'string' || req.query.length > 200))
+        throw new InvalidRequestError('query is at most 200 characters');
+      if (
+        req?.language !== undefined &&
+        (typeof req.language !== 'string' || !/^[a-z]{2,3}(,[a-z]{2,3})*$/.test(req.language))
+      )
+        throw new InvalidRequestError('language is an ISO 639-3 code such as eng');
+      if (core.demoMode()) return { ok: false, entries: [], message: 'the demo build contacts no catalogue' };
+      return core.libraryDownloads.catalog(
+        {
+          ...(req?.query ? { query: req.query } : {}),
+          ...(req?.language ? { language: req.language } : {}),
+          ...(req?.count ? { count: req.count } : {}),
+        },
+        ctx.signal,
+      );
+    },
+    'library.download.start': async (req) => {
+      if (core.demoMode()) return { phase: 'failed', message: 'the demo build downloads nothing' };
+      const r = readLibraryDownloadRequest(req);
+      if (!r) throw new InvalidRequestError('kind must be zim (with a catalogue entry) or references');
+      return core.libraryDownloads.start(r);
+    },
+    'library.download.status': async () => core.libraryDownloads.current(),
+    'library.download.cancel': async () => core.libraryDownloads.cancel(),
+
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),
     'offline.installPack': async () => {
@@ -1136,6 +1317,109 @@ function isBounds(value: unknown): value is GeoBounds {
   if (typeof value !== 'object' || value === null) return false;
   const b = value as Record<string, unknown>;
   return ['west', 'south', 'east', 'north'].every((k) => typeof b[k] === 'number' && Number.isFinite(b[k] as number));
+}
+
+/** A map download request read strictly, or why not. */
+/** A `library.open` request, checked; throws InvalidRequestError otherwise. */
+export function readLibraryOpen(v: unknown): LibraryOpenRequest {
+  const r = readLibraryOpenRequest(v);
+  if (!r) throw new InvalidRequestError('not a library request: kind book (bookId, key?), reference (id) or folder');
+  return r;
+}
+
+export function readMapDownloadRequest(v: unknown): MapDownloadRequest | string {
+  if (typeof v !== 'object' || v === null) return 'not a map download request';
+  const r = v as Record<string, unknown>;
+  if (r['kind'] !== 'extract' && r['kind'] !== 'planet') return 'kind must be extract or planet';
+  const zoom = (z: unknown) => typeof z === 'number' && Number.isInteger(z) && z >= 0 && z <= 15;
+  if (!zoom(r['worldMaxZoom']) || !zoom(r['maxZoom'])) return 'zooms are whole numbers from 0 to 15';
+  const out: MapDownloadRequest = {
+    kind: r['kind'],
+    worldMaxZoom: r['worldMaxZoom'] as number,
+    maxZoom: r['maxZoom'] as number,
+  };
+  if (r['bounds'] !== undefined) {
+    const b = r['bounds'] as Record<string, unknown>;
+    const n = (k: string, lim: number) => typeof b?.[k] === 'number' && Math.abs(b[k] as number) <= lim;
+    if (!n('west', 180) || !n('east', 180) || !n('south', 90) || !n('north', 90))
+      return 'bounds are degrees on the Earth';
+    out.bounds = {
+      west: b['west'] as number,
+      south: b['south'] as number,
+      east: b['east'] as number,
+      north: b['north'] as number,
+    };
+  }
+  if (r['name'] !== undefined) {
+    if (typeof r['name'] !== 'string' || r['name'].length > 60) return 'the name is at most 60 characters';
+    out.name = r['name'];
+  }
+  if (r['vaultId'] !== undefined) {
+    if (typeof r['vaultId'] !== 'string' || !/^[0-9a-f]{32}$/.test(r['vaultId'])) return 'not a vault id';
+    out.vaultId = r['vaultId'];
+  }
+  return out;
+}
+
+function requireServiceId(id: unknown): asserts id is LocalServiceId {
+  if (!LOCAL_SERVICE_IDS.includes(id as LocalServiceId)) throw new InvalidRequestError('unknown local service');
+}
+
+/**
+ * The mode as settings hold it. `sessionChosen` is the desktop's: false until the operator has
+ * chosen on the start screen this session.
+ */
+export function modeState(core: RuntimeCore, sessionChosen: boolean): ModeState {
+  const network = core.settings.get().network;
+  const current: OperatingMode = network?.workOffline ? 'offline' : 'online';
+  return {
+    chosen: sessionChosen ? current : null,
+    remembered: network?.chosenAt ? current : null,
+    osOnline: core.osOnline,
+    localHosts: [...(network?.localHosts ?? [])],
+    enforcement: 'app',
+  };
+}
+
+/** Set the mode: Work offline follows it, and the choice is remembered. Approved hosts are kept. */
+export async function chooseMode(core: RuntimeCore, mode: OperatingMode): Promise<void> {
+  const network = core.settings.get().network;
+  await core.settings.patch({
+    network: {
+      ...(network ?? {}),
+      workOffline: mode === 'offline',
+      chosenAt: new Date(core.clock.now()).toISOString(),
+    },
+  });
+}
+
+const PREP_CSV_COLUMNS = [
+  'kind',
+  'category',
+  'name',
+  'quantity',
+  'unit',
+  'expires',
+  'checkedOn',
+  'checkEveryDays',
+  'phone',
+  'notes',
+] as const;
+
+/** The inventory as a checklist to print: one row each, sorted by kind and category. */
+export function prepCsv(records: PrepRecord[]): string {
+  const cell = (v: unknown) => {
+    const t = v === undefined ? '' : String(v);
+    // A leading = + - @ would be read as a formula by a spreadsheet: quote it as text.
+    const safe = /^[=+\-@\t\r]/.test(t) ? `'${t}` : t;
+    return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  };
+  const rows = [...records]
+    .sort(
+      (a, b) => a.kind.localeCompare(b.kind) || a.category.localeCompare(b.category) || a.name.localeCompare(b.name),
+    )
+    .map((r) => PREP_CSV_COLUMNS.map((k) => cell(r[k])).join(','));
+  return `${['checked', ...PREP_CSV_COLUMNS].join(',')}\n${rows.map((r) => `,${r}`).join('\n')}\n`;
 }
 
 function requireId(value: unknown, field: string): asserts value is string {

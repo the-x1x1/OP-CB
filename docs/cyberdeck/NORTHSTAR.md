@@ -29,7 +29,8 @@ navigation scheme and no redesign; the cyberdeck is a Linux laptop running the n
 
 The 10 design rules in the implementation prompt (one OS, no containers or app server; WORLDVIEW
 stays standalone; Windows preserved; provider/runtime contracts extended, never bypassed; radios
-receive-only; `docs/PRODUCT-BOUNDARIES.md`; honest LIVE/RECORDED/STALE/OFFLINE state; no GPL
+receive-only — amended 2026-10-30 by the operator: a Meshtastic radio may send a test message on
+the operator's press, never an RTL-SDR or anything not permitted; `docs/PRODUCT-BOUNDARIES.md`; honest LIVE/RECORDED/STALE/OFFLINE state; no GPL
 decoder binaries bundled; minimal dependencies; isolated branch, no merge or publish without the
 operator). Two more that this work added:
 

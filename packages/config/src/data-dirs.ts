@@ -13,8 +13,11 @@ import path from 'node:path';
  *     watchzones.json        watch zones
  *     lenses.json            user lenses
  *     cameras.json           registered camera sources (URLs, no secrets)
+ *     guides.json            guided setup progress (the Command Center)
+ *     preparedness.json      the operator's preparedness inventory (this computer only)
  *     history/               DuckDB partitions (history-store)
  *     worldpacks/            installed offline packs
+ *     library/               ZIM files WorldView reads itself, and references/ (public-domain PDFs)
  *     provider-cache/        provider response caches (bounded, deletable)
  *     tiles/                 map tiles kept by the desktop's tile cache (size-capped)
  *     logs/app.log           RotatingFileSink (JSON lines)
@@ -27,8 +30,11 @@ export interface DataDirs {
   readonly watchzonesFile: string;
   readonly lensesFile: string;
   readonly camerasFile: string;
+  readonly guidesFile: string;
+  readonly preparednessFile: string;
   readonly historyDir: string;
   readonly worldpacksDir: string;
+  readonly libraryDir: string;
   readonly cacheDir: string;
   readonly logsDir: string;
   readonly logFile: string;
@@ -44,8 +50,11 @@ export function dataDirs(root: string): DataDirs {
     watchzonesFile: path.join(abs, 'watchzones.json'),
     lensesFile: path.join(abs, 'lenses.json'),
     camerasFile: path.join(abs, 'cameras.json'),
+    guidesFile: path.join(abs, 'guides.json'),
+    preparednessFile: path.join(abs, 'preparedness.json'),
     historyDir: path.join(abs, 'history'),
     worldpacksDir: path.join(abs, 'worldpacks'),
+    libraryDir: path.join(abs, 'library'),
     // Not `cache`: Electron keeps Chromium's HTTP cache in `<userData>/Cache`, and on
     // Windows (and a default macOS volume) that is the same directory.
     cacheDir: path.join(abs, 'provider-cache'),

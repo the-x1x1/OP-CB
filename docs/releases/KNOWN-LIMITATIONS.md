@@ -357,6 +357,42 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.5.0 (unreleased)
 
+- The built-in library reader opens ZIM files whose clusters are zstd-compressed (every Kiwix
+  file made since about 2021) and finds pages by **title** only. Files in the older xz format,
+  and full-text search, need kiwix-serve. It was tested against the openZIM test files (a 2024
+  Kiwix Wikipedia selection among them) in the container, not yet in the packaged app or with a
+  100 GB Wikipedia. The Kiwix catalogue's answer and the Metalink files were written from
+  libkiwix's own tests and RFC 5854: library.kiwix.org could not be reached from where this was
+  built, so the first real catalogue search and download are the live check. Pages open with
+  page scripts off: a book that needs JavaScript (some interactive ones) shows its text only.
+- The emergency references are fetched from their publishers when you press Download, never
+  bundled. Four of the six addresses were opened on 2026-10-30; FEMA's own address refused the
+  checking tool (a State of New Jersey copy of the same guide is the fallback) and one CDC
+  fallback was not opened. If a publisher moves a file, that reference says so and the others
+  still download.
+- The whole-planet map download continues only with the same day's Protomaps build; builds are
+  kept about two months. Nothing has been downloaded from Protomaps for real yet.
+- Keeping the data on an external drive (moved or portable) is tested in the container with
+  temporary folders only, not yet in the packaged app on a real SSD. Stored keys do not travel
+  between computers; history and installed packs are not copied when the data is moved. The
+  Linux `.deb` itself cannot run from the drive (its sandbox helper must be installed in `/opt`).
+
+- The Command Center's local services (Ollama, kiwix-serve, Kolibri) were built from each
+  project's documented answers and tested against them, not against running copies; the
+  Meshtastic test message was tested against encoded frames, not a radio. Each walkthrough's
+  final test is the proof on real equipment. `HARDWARE_REQUIRED`
+- Offline mode stops WorldView's own requests only; services you run beside it (Ollama, a
+  library server) are not stopped from reaching the internet by it.
+- Map downloads were tested against a fake build server and the PMTiles sample archive, not
+  yet against Protomaps' real builds. Only one map pack is drawn at a time (the newest); an
+  area download includes the world at lower detail for that reason. No world map is shipped
+  inside the installer yet.
+- The Command Center is dark only, like the rest of WorldView.
+- Library pages open in your browser, one book is searched at a time, and "Ask with your
+  library" gives the model search excerpts rather than whole articles.
+- Until a mode is chosen on the start screen nothing is asked of the internet: sources show
+  Offline behind the start screen for those first seconds.
+
 - The first start of 0.6.0 turns Update automatically on, once, in every settings file — an
   operator who had switched it off before cannot be told from one who never touched it, since
   the file holds every setting either way. Switch it off again; from then on it stays off.

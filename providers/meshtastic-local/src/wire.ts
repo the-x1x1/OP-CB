@@ -20,6 +20,41 @@ export const PORT_TEXT_MESSAGE = 1;
 export const PORT_POSITION = 3;
 export const PORT_NODEINFO = 4;
 export const PORT_TELEMETRY = 67;
+/** Delivery reports for a sent packet (`Routing`, with `Data.request_id` naming the packet). */
+export const PORT_ROUTING = 5;
+
+/** The longest text WorldView sends in one test message (bytes of UTF-8). */
+export const MAX_TEXT_BYTES = 200;
+
+/** `Config.LoRaConfig.RegionCode`, by number: the names the Meshtastic clients show. */
+export const REGION_NAMES: readonly string[] = Object.freeze(
+  'UNSET US EU_433 EU_868 CN JP ANZ KR TW RU IN NZ_865 TH LORA_24 UA_433 UA_868 MY_433 MY_919 SG_923 PH_433 PH_868 PH_915 ANZ_433 KZ_433 KZ_863 NP_865 BR_902'.split(
+    ' ',
+  ),
+);
+/** `Config.LoRaConfig.ModemPreset`, by number. */
+export const PRESET_NAMES: readonly string[] = Object.freeze(
+  'LONG_FAST LONG_SLOW VERY_LONG_SLOW MEDIUM_SLOW MEDIUM_FAST SHORT_SLOW SHORT_FAST LONG_MODERATE SHORT_TURBO'.split(
+    ' ',
+  ),
+);
+/** `Routing.Error`, the names of the ones a test message meets. */
+export const ROUTING_ERRORS: Readonly<Record<number, string>> = Object.freeze({
+  0: 'NONE',
+  1: 'NO_ROUTE',
+  2: 'GOT_NAK',
+  3: 'TIMEOUT',
+  4: 'NO_INTERFACE',
+  5: 'MAX_RETRANSMIT',
+  6: 'NO_CHANNEL',
+  7: 'TOO_LARGE',
+  8: 'NO_RESPONSE',
+  9: 'DUTY_CYCLE_LIMIT',
+  32: 'BAD_REQUEST',
+  33: 'NOT_AUTHORIZED',
+  34: 'PKI_FAILED',
+  35: 'PKI_UNKNOWN_PUBKEY',
+});
 
 // ── frames ─────────────────────────────────────────────────────────────────
 
@@ -281,7 +316,9 @@ export interface MeshPacket {
   hopLimit?: number;
   viaMqtt?: boolean;
   /** Only when the node could decrypt it. A text message's payload is never kept. */
-  decoded?: { portnum: number; payload?: Uint8Array };
+  decoded?: { portnum: number; payload?: Uint8Array; requestId?: number };
+  /** The packet's own id (`MeshPacket.id`). */
+  id?: number;
   /** The node could not decrypt it (a channel it does not have the key for). */
   encrypted?: boolean;
 }
@@ -292,7 +329,21 @@ export type FromRadio =
   | { kind: 'node-info'; node: MeshNodeInfo }
   | { kind: 'config-complete'; id: number }
   | { kind: 'rebooted' }
+  /** `FromRadio.metadata`: the firmware the node runs. */
+  | { kind: 'metadata'; firmwareVersion?: string }
+  /** `FromRadio.config` with its `lora` part: the radio settings the node has. */
+  | { kind: 'lora-config'; lora: LoraConfig }
+  /** `FromRadio.queueStatus`: the node's send queue, after a packet was handed to it. */
+  | { kind: 'queue-status'; res: number; free: number; meshPacketId: number }
   | { kind: 'other' };
+
+export interface LoraConfig {
+  region: number;
+  usePreset: boolean;
+  modemPreset: number;
+  hopLimit: number;
+  txEnabled: boolean;
+}
 
 export function readPosition(buf: Uint8Array): MeshPosition {
   const r = new ProtoReader(buf);
@@ -480,18 +531,49 @@ export function readNodeInfo(buf: Uint8Array): MeshNodeInfo {
   return n;
 }
 
-function readData(buf: Uint8Array): { portnum: number; payload?: Uint8Array } {
+function readData(buf: Uint8Array): { portnum: number; payload?: Uint8Array; requestId?: number } {
   const r = new ProtoReader(buf);
   let portnum = 0;
   let payload: Uint8Array | undefined;
+  let requestId: number | undefined;
   for (let f = r.next(); f; f = r.next()) {
     if (f.field === 1) portnum = r.uint32(f.wire);
     else if (f.field === 2) payload = r.bytes(f.wire);
+    else if (f.field === 6) requestId = r.fixed32(f.wire);
     else r.skip(f.wire);
   }
   // What people send each other is not kept, not even as bytes.
   if (portnum === PORT_TEXT_MESSAGE) return { portnum };
-  return payload ? { portnum, payload } : { portnum };
+  return {
+    portnum,
+    ...(payload ? { payload } : {}),
+    ...(requestId !== undefined && requestId !== 0 ? { requestId } : {}),
+  };
+}
+
+/** `Routing.error_reason` (field 3) of a routing packet's payload; 0 (NONE) when absent. */
+export function readRoutingError(buf: Uint8Array): number {
+  const r = new ProtoReader(buf);
+  let error = 0;
+  for (let f = r.next(); f; f = r.next()) {
+    if (f.field === 3) error = r.uint32(f.wire);
+    else r.skip(f.wire);
+  }
+  return error;
+}
+
+function readLoraConfig(buf: Uint8Array): LoraConfig {
+  const r = new ProtoReader(buf);
+  const c: LoraConfig = { region: 0, usePreset: false, modemPreset: 0, hopLimit: 0, txEnabled: false };
+  for (let f = r.next(); f; f = r.next()) {
+    if (f.field === 1) c.usePreset = r.bool(f.wire);
+    else if (f.field === 2) c.modemPreset = r.uint32(f.wire);
+    else if (f.field === 7) c.region = r.uint32(f.wire);
+    else if (f.field === 8) c.hopLimit = r.uint32(f.wire);
+    else if (f.field === 9) c.txEnabled = r.bool(f.wire);
+    else r.skip(f.wire);
+  }
+  return c;
 }
 
 export function readMeshPacket(buf: Uint8Array): MeshPacket {
@@ -507,6 +589,9 @@ export function readMeshPacket(buf: Uint8Array): MeshPacket {
         break;
       case 4:
         p.decoded = readData(r.bytes(f.wire));
+        break;
+      case 6:
+        p.id = r.fixed32(f.wire);
         break;
       case 5:
         r.skip(f.wire);
@@ -566,6 +651,37 @@ export function readFromRadio(buf: Uint8Array): FromRadio {
         r.skip(f.wire);
         out = { kind: 'rebooted' };
         break;
+      case 5: {
+        // Config is a oneof; only its `lora` part (field 6) is read.
+        const c = new ProtoReader(r.bytes(f.wire));
+        for (let g = c.next(); g; g = c.next()) {
+          if (g.field === 6) out = { kind: 'lora-config', lora: readLoraConfig(c.bytes(g.wire)) };
+          else c.skip(g.wire);
+        }
+        break;
+      }
+      case 11: {
+        const q = new ProtoReader(r.bytes(f.wire));
+        const qs = { kind: 'queue-status' as const, res: 0, free: 0, meshPacketId: 0 };
+        for (let g = q.next(); g; g = q.next()) {
+          if (g.field === 1) qs.res = q.int32(g.wire);
+          else if (g.field === 2) qs.free = q.uint32(g.wire);
+          else if (g.field === 4) qs.meshPacketId = q.uint32(g.wire);
+          else q.skip(g.wire);
+        }
+        out = qs;
+        break;
+      }
+      case 13: {
+        const m = new ProtoReader(r.bytes(f.wire));
+        let firmwareVersion: string | undefined;
+        for (let g = m.next(); g; g = m.next()) {
+          if (g.field === 1) firmwareVersion = m.string(g.wire).slice(0, 64);
+          else m.skip(g.wire);
+        }
+        out = firmwareVersion ? { kind: 'metadata', firmwareVersion } : { kind: 'metadata' };
+        break;
+      }
       default:
         r.skip(f.wire);
     }
@@ -597,6 +713,57 @@ export function wantConfigFrame(id: number): Uint8Array {
 /** `ToRadio { heartbeat {} }`, framed: keeps a quiet connection from being dropped by the node. */
 export function heartbeatFrame(): Uint8Array {
   return frame(Uint8Array.from([(7 << 3) | LENGTH, 0]));
+}
+
+function lenField(field: number, bytes: ArrayLike<number>): number[] {
+  return [(field << 3) | LENGTH, ...varintBytes(bytes.length), ...Array.from(bytes)];
+}
+function varintField(field: number, n: number): number[] {
+  return [(field << 3) | VARINT, ...varintBytes(n)];
+}
+function fixed32Field(field: number, n: number): number[] {
+  const v = n >>> 0;
+  return [(field << 3) | FIXED32, v & 0xff, (v >>> 8) & 0xff, (v >>> 16) & 0xff, (v >>> 24) & 0xff];
+}
+
+export interface TextPacket {
+  /** The node it is for (its number). Never the broadcast address: a test goes to one node. */
+  to: number;
+  /** The packet's id: how its delivery report is matched. Non-zero. */
+  id: number;
+  text: string;
+  /** Channel index on the sending node (0 is the primary channel). */
+  channel: number;
+  /** How many times it may be relayed (the node's own LoRa hop limit). */
+  hopLimit: number;
+}
+
+/**
+ * `ToRadio { packet: MeshPacket { to, channel, decoded: Data { portnum: TEXT_MESSAGE_APP,
+ * payload }, id, hop_limit, want_ack: true } }`, framed: one text message to one node, asking
+ * for its acknowledgement. Throws on a broadcast address, an id of 0 or text over 200 bytes.
+ */
+export function textPacketFrame(p: TextPacket): Uint8Array {
+  if (p.to === 0xffffffff || p.to === 0) throw new RangeError('a test message goes to one node');
+  if (!p.id) throw new RangeError('a packet id is needed to match its delivery report');
+  const text = new TextEncoder().encode(p.text);
+  if (!text.length || text.length > MAX_TEXT_BYTES) throw new RangeError(`text must be 1–${MAX_TEXT_BYTES} bytes`);
+  const data = [...varintField(1, PORT_TEXT_MESSAGE), ...lenField(2, text)];
+  const packet = [
+    ...fixed32Field(2, p.to),
+    ...(p.channel ? varintField(3, p.channel) : []),
+    ...lenField(4, data),
+    ...fixed32Field(6, p.id),
+    ...varintField(9, Math.min(7, Math.max(0, p.hopLimit))),
+    ...varintField(10, 1),
+  ];
+  return frame(Uint8Array.from(lenField(1, packet)));
+}
+
+/** `!a1b2c3d4` → its number, or undefined. */
+export function nodeNum(id: string): number | undefined {
+  const m = /^!([0-9a-f]{8})$/.exec(id.trim().toLowerCase());
+  return m ? Number.parseInt(m[1]!, 16) : undefined;
 }
 
 /** The node id as Meshtastic writes it: `!` and eight hex digits. */

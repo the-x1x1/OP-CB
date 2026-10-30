@@ -31,12 +31,14 @@ import {
 import {
   VIEW_LINK_SCHEME,
   linkInArgs,
+  normaliseLocalHost,
   readViewLink,
   wireChannel,
   type DefinitionsListing,
   type DiagnosticsSnapshot,
 } from '@worldview/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
+import { chooseMode, libraryPath, modeState, readLibraryOpen, serviceOrigin } from '@worldview/runtime';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
 import { APP_ORIGIN, DEV_SERVER_ORIGIN, isTrustedRendererUrl } from '../shared/app-origin.js';
@@ -54,6 +56,8 @@ import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch } from './network-gate.js';
+import { moveDataTo, resolveDataLocation, useUsualData } from './data-location.js';
+import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './library-reader.js';
 
 /**
  * Main process bootstrap (ADR-004). Order matters:
@@ -89,6 +93,15 @@ if (process.platform === 'linux') {
   if (store) app.commandLine.appendSwitch('password-store', store);
 }
 
+// Where all data lives (data-location.ts): a portable `WorldView-data` folder beside the app, a
+// folder the operator moved it to, or the usual one. Before the lock, which lives there too.
+const dataLocation = resolveDataLocation({
+  usualRoot: app.getPath('userData'),
+  exeDir: path.dirname(process.execPath),
+  dev: DEV,
+});
+if (dataLocation.root !== dataLocation.usualRoot) app.setPath('userData', dataLocation.root);
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -107,6 +120,23 @@ if (!app.requestSingleInstanceLock()) {
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
+  // The moved data folder is not usable (the drive is out): say so before anything is written.
+  if (dataLocation.missing) {
+    const choice = dialog.showMessageBoxSync({
+      type: 'warning',
+      title: 'WorldView data not found',
+      message: `WorldView keeps its data in ${dataLocation.missing.path}, but ${dataLocation.missing.reason}.`,
+      detail:
+        "Connect the drive and start WorldView again, or start now with this computer's own data (the drive's data is left as it is).",
+      buttons: ['Quit', "Use this computer's data"],
+      defaultId: 0,
+      cancelId: 0,
+    });
+    if (choice === 0) {
+      app.exit(0);
+      return;
+    }
+  }
   const build = buildInfo();
   const dirs = dataDirs(app.getPath('userData'));
 
@@ -142,7 +172,15 @@ async function bootstrap(): Promise<void> {
 
   // Every WebContents — including ones we did not create on purpose — gets the same lockdown.
   const appDir = app.getAppPath();
-  app.on('web-contents-created', (_e, contents) => hardenWebContents(contents, { dev: DEV, appDir, logger: security }));
+  app.on('web-contents-created', (_e, contents) =>
+    hardenWebContents(contents, {
+      dev: DEV,
+      appDir,
+      logger: security,
+      // The library reader moves between pages of a book, and nowhere else (library-reader.ts).
+      alsoAllow: (url) => isReaderContents(contents) && isReaderUrl(url),
+    }),
+  );
   hardenSession(DEV, security);
   if (app.isPackaged) Menu.setApplicationMenu(null);
 
@@ -193,21 +231,34 @@ async function bootstrap(): Promise<void> {
   }
   const settings = startup.settings;
 
-  // Work offline (network-gate.ts): one switch, read at every door out of the app.
-  const workingOffline = () => settings.get().network?.workOffline === true;
+  // Work offline (network-gate.ts): one switch, read at every door out of the app. Until the
+  // operator has chosen a mode on the start screen this session (the Command Center,
+  // 2026-10-30), the doors stay shut whatever was chosen last time: choosing Offline is never
+  // preceded by a burst of online requests. Their own approved local hosts pass either way.
+  let modeChosen = false;
+  const workingOffline = () => !modeChosen || settings.get().network?.workOffline === true;
   const online = () => net.isOnline() && !workingOffline();
+  const approvedHosts = () => new Set((settings.get().network?.localHosts ?? []).map(normaliseLocalHost));
   const offlineLog = hub.logger('offline');
   const blockedHosts = new Set<string>();
-  blockInternetRequests(session.defaultSession, workingOffline, (url) => {
-    const host = new URL(url).hostname;
-    if (blockedHosts.size < 50 && !blockedHosts.has(host)) {
-      blockedHosts.add(host);
-      offlineLog.info('working offline: request not sent', { host });
-    }
-  });
+  blockInternetRequests(
+    session.defaultSession,
+    workingOffline,
+    (url) => {
+      const host = new URL(url).hostname;
+      if (blockedHosts.size < 50 && !blockedHosts.has(host)) {
+        blockedHosts.add(host);
+        offlineLog.info(modeChosen ? 'working offline: request not sent' : 'mode not chosen yet: request not sent', {
+          host,
+        });
+      }
+    },
+    approvedHosts,
+  );
   const netFetch = gatedFetch(
     ((url: string, init?: RequestInit) => net.fetch(url, init)) as typeof fetch,
     workingOffline,
+    approvedHosts,
   );
 
   // Map tiles kept on disk (tile-cache.ts): only catalog sources that allow it, under the
@@ -269,7 +320,7 @@ async function bootstrap(): Promise<void> {
     platform: process.platform,
     host: electronHostBridge(),
     network: { isOnline: online },
-    fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline),
+    fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline, approvedHosts),
     // DuckDB/Parquet unless the operator chose NDJSON (Settings → History); NDJSON-era files
     // are read beside the Parquet ones, nothing converted or deleted (2026-10-05).
     historyBackend: settings.get().history.backend ?? 'duckdb-parquet',
@@ -297,6 +348,11 @@ async function bootstrap(): Promise<void> {
     }),
   });
   await runtime.start();
+  const readerDeps: ReaderDeps = {
+    lookup: (bookId, key) => runtime.core.zimLibrary.lookup(bookId, key),
+    mainKey: (bookId) => runtime.core.zimLibrary.mainKey(bookId),
+    logger: hub.logger('security'),
+  };
 
   // An app that cannot check for updates should still show you a globe. Before this, any
   // throw here became "WorldView could not start" with the raw message and no window at
@@ -306,12 +362,14 @@ async function bootstrap(): Promise<void> {
   const updater = new UpdaterController({
     updater: autoUpdater,
     currentVersion: app.getVersion(),
-    // The installed Windows build updates itself (NSIS); the .deb is the package manager's.
+    // The installed Windows build updates itself (NSIS); the .deb is the package manager's. A
+    // portable copy (WorldView-data beside it) is told, not updated: the installer would put a
+    // second copy on this computer instead of updating the one on the drive.
     policy: () =>
       policyInputFromSettings(settings.get().updater, {
         signed: build.signed,
         packaged: app.isPackaged,
-        canInstall: process.platform === 'win32',
+        canInstall: process.platform === 'win32' && dataLocation.kind !== 'portable',
       }),
     logger: hub.logger('updater'),
   });
@@ -383,6 +441,116 @@ async function bootstrap(): Promise<void> {
     },
     'credentials.delete': async ({ key }) => {
       await withCredentialErrors(() => credentials.delete(key));
+    },
+    // Where the data lives (data-location.ts): read, moved from the next start, restarted into.
+    'data.location': async () => {
+      let freeBytes: number | undefined;
+      let totalBytes: number | undefined;
+      try {
+        const st = await fs.statfs(dirs.root);
+        freeBytes = Number(st.bavail) * Number(st.bsize);
+        totalBytes = Number(st.blocks) * Number(st.bsize);
+      } catch {
+        /* unknown */
+      }
+      return {
+        root: dirs.root,
+        kind: dataLocation.kind,
+        usualRoot: dataLocation.usualRoot,
+        ...(dataLocation.missing ? { missing: dataLocation.missing } : {}),
+        ...(freeBytes !== undefined ? { freeBytes } : {}),
+        ...(totalBytes !== undefined ? { totalBytes } : {}),
+      };
+    },
+    'data.moveTo': async () => {
+      if (dataLocation.kind === 'portable')
+        return {
+          ok: false,
+          message: `this is a portable copy: its data is in ${dirs.root}, beside the app`,
+          restartNeeded: false,
+        };
+      const win = BrowserWindow.getAllWindows()[0];
+      const opts = {
+        title: 'Choose a folder for all WorldView data (an empty folder, or one WorldView already uses)',
+        properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>,
+      };
+      const chosen = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
+      if (chosen.canceled || !chosen.filePaths[0]) return { ok: false, message: 'cancelled', restartNeeded: false };
+      const r = await moveDataTo(chosen.filePaths[0], dirs.root, dataLocation.usualRoot);
+      if (!r.ok) return { ok: false, message: r.reason, restartNeeded: false };
+      log.info('data folder moved', { kind: r.adopted ? 'adopted' : 'new', carried: r.carried.length });
+      return {
+        ok: true,
+        message: r.adopted
+          ? `WorldView will use the data already in ${chosen.filePaths[0]} from the next start`
+          : `From the next start WorldView keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory and keys were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
+        restartNeeded: true,
+      };
+    },
+    'data.useUsual': async () => {
+      if (dataLocation.kind === 'portable')
+        return { ok: false, message: 'a portable copy always uses the folder beside it', restartNeeded: false };
+      await useUsualData(dataLocation.usualRoot);
+      return {
+        ok: true,
+        message: `From the next start WorldView uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,
+        restartNeeded: dataLocation.kind === 'moved',
+      };
+    },
+    'data.restart': async () => {
+      setTimeout(() => {
+        app.relaunch();
+        app.exit(0);
+      }, 200);
+      return { restarting: true };
+    },
+    // The operating mode (the Command Center): the start screen's choice opens the doors.
+    'mode.state': async () => ({ ...modeState(runtime.core, modeChosen), osOnline: net.isOnline() }),
+    'mode.choose': async ({ mode }) => {
+      await chooseMode(runtime.core, mode);
+      const first = !modeChosen;
+      modeChosen = true;
+      log.info(first ? 'operating mode chosen' : 'operating mode changed', { mode });
+      if (mode === 'online') blockedHosts.clear();
+      pollNetwork();
+      return { ...modeState(runtime.core, true), osOnline: net.isOnline() };
+    },
+    // A local service's own page in the browser: always http://127.0.0.1 on the port in
+    // settings, built here; the page names only which service and, for the library, a
+    // /content/ path that was read strictly.
+    'services.open': async ({ id, path: page }) => {
+      if (page !== undefined && (id !== 'kiwix' || !libraryPath(page)))
+        throw Object.assign(new Error('not a library page'), { ipcCode: 'INVALID_REQUEST' as const });
+      const url = `${serviceOrigin(settings.get(), id)}${page ?? '/'}`;
+      await shell.openExternal(url);
+      log.info('local service opened', { id });
+      return { opened: true };
+    },
+    // The library: a book in the reader window, a reference in the system's PDF viewer, or the
+    // library folder in the file manager. Paths are WorldView's own, never from the page.
+    'library.open': async (req) => {
+      const r = readLibraryOpen(req);
+      if (r.kind === 'folder') {
+        await fs.mkdir(runtime.core.zimLibrary.dir, { recursive: true });
+        const err = await shell.openPath(runtime.core.zimLibrary.dir);
+        return err ? { opened: false, message: err } : { opened: true };
+      }
+      if (r.kind === 'reference') {
+        const file = runtime.core.libraryDownloads.referenceFile(r.id);
+        if (!file) return { opened: false, message: 'not a reference WorldView knows' };
+        try {
+          await fs.access(file);
+        } catch {
+          return { opened: false, message: 'that reference has not been downloaded yet' };
+        }
+        const err = await shell.openPath(file);
+        return err ? { opened: false, message: err } : { opened: true };
+      }
+      const key = r.key ?? (await runtime.core.zimLibrary.mainKey(r.bookId));
+      if (key === undefined) return { opened: false, message: 'that book is not readable here' };
+      await openReader(readerDeps, r.bookId, key);
+      log.info('library book opened', { book: r.bookId });
+      return { opened: true };
     },
     'search.places': async (req, ctx) => places.search(req, ctx.signal),
     'imagery.streetLevel': async (req, ctx) => streetLevel.near(req, ctx.signal),

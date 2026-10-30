@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { blockInternetRequests, gatedFetch, leavesThisComputer, WorkingOfflineError } from './network-gate.js';
+import {
+  blockedOffline,
+  blockInternetRequests,
+  gatedFetch,
+  leavesThisComputer,
+  WorkingOfflineError,
+} from './network-gate.js';
 
 test('leavesThisComputer: the internet and the LAN do, this computer and the app scheme do not', () => {
   for (const u of ['https://server.arcgisonline.com/x', 'http://192.168.1.20:8080/', 'wss://stream.example/ws'])
@@ -67,4 +73,42 @@ test('blockInternetRequests: the session cancels what would leave this computer,
   assert.equal(ask('https://gibs.earthdata.nasa.gov/t.png'), true);
   assert.equal(ask('http://127.0.0.1:5173/'), false);
   assert.deepEqual(blocked, ['https://gibs.earthdata.nasa.gov/t.png']);
+});
+
+test('approved local hosts: only the named host passes while offline, never its neighbours or the internet', async () => {
+  const approved = () => new Set(['192.168.1.20', 'pi.local', 'fd00::5']);
+  const sent: string[] = [];
+  const inner = (async (input: string | URL | Request) => {
+    sent.push(String(input));
+    return new Response('ok');
+  }) as typeof fetch;
+  const f = gatedFetch(inner, () => true, approved);
+  await f('http://192.168.1.20:8080/data/aircraft.json');
+  await f('http://PI.local./status');
+  await f('http://[fd00::5]:8080/');
+  await assert.rejects(f('http://192.168.1.21:8080/data/aircraft.json'), WorkingOfflineError);
+  await assert.rejects(f('https://earthquake.usgs.gov/feed'), WorkingOfflineError);
+  assert.equal(sent.length, 3);
+  assert.equal(
+    blockedOffline('http://192.168.1.20/', () => new Set()),
+    true,
+  );
+  assert.equal(blockedOffline('http://127.0.0.1:11434/api/tags'), false);
+});
+
+test('blockInternetRequests: an approved host is let through on the session too', () => {
+  let listener: ((d: { url: string }, cb: (r: { cancel?: boolean }) => void) => void) | undefined;
+  const session = { webRequest: { onBeforeRequest: (_f: { urls: string[] }, l: typeof listener) => (listener = l) } };
+  const blocked: string[] = [];
+  blockInternetRequests(
+    session as never,
+    () => true,
+    (u) => blocked.push(u),
+    () => new Set(['weatherstation.lan']),
+  );
+  const answers: Array<{ cancel?: boolean }> = [];
+  listener!({ url: 'http://weatherstation.lan/v1/current_conditions' }, (r) => answers.push(r));
+  listener!({ url: 'https://tile.openstreetmap.org/1/1/1.png' }, (r) => answers.push(r));
+  assert.deepEqual(answers, [{}, { cancel: true }]);
+  assert.deepEqual(blocked, ['https://tile.openstreetmap.org/1/1/1.png']);
 });

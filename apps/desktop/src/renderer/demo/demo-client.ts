@@ -38,7 +38,17 @@ import type {
   DiagnosticsSnapshot,
   OfflineStatus,
 } from '@worldview/ipc-contract';
-import { EVENT_TYPE_LABELS, IPC_CONTRACT_VERSION, formatViewLink } from '@worldview/ipc-contract';
+import {
+  DEFAULT_SERVICE_PORTS,
+  EMERGENCY_REFERENCES,
+  EVENT_TYPE_LABELS,
+  IPC_CONTRACT_VERSION,
+  LOCAL_SERVICE_IDS,
+  formatViewLink,
+  type GuideProgress,
+  type ModeState,
+  type PrepRecord,
+} from '@worldview/ipc-contract';
 import type { LensDefinition } from '@worldview/render-core';
 import { BUILT_IN_LENSES, resolveMapProviders } from '@worldview/render-core';
 import type { SourceHealthEntry } from '@worldview/source-health';
@@ -100,6 +110,10 @@ export class DemoClient implements WorldClient {
   private collections: Collection[] = [];
   private watchzones: WatchZone[] = [];
   private customLenses: LensDefinition[] = [];
+  /** The Command Center's records: kept in memory for the page's life, never written anywhere. */
+  private guides: GuideProgress[] = [];
+  private prep: PrepRecord[] = [];
+  private modeChosen = false;
   private readonly credentials = new Set<string>();
   private readonly providerSettings = new Map<string, Record<string, import('@worldview/world-model').JsonValue>>();
   private feed: FeedItem[] = [];
@@ -206,6 +220,18 @@ export class DemoClient implements WorldClient {
     set.add(listener as Listener<EventChannel>);
     return () => {
       set?.delete(listener as Listener<EventChannel>);
+    };
+  }
+
+  private modeState(): ModeState {
+    const network = this.settings.network;
+    const current = network?.workOffline ? 'offline' : 'online';
+    return {
+      chosen: this.modeChosen ? current : null,
+      remembered: network?.chosenAt ? current : null,
+      osOnline: typeof navigator === 'undefined' ? true : navigator.onLine,
+      localHosts: [...(network?.localHosts ?? [])],
+      enforcement: 'app',
     };
   }
 
@@ -597,6 +623,116 @@ export class DemoClient implements WorldClient {
         };
       case 'offline.installPackTo':
         return { installed: null, issues: ['No data vaults in the browser demo'] };
+      // The Command Center in the browser demo: the mode is remembered for the page only, local
+      // services are never asked (a page cannot reach them), records live in memory.
+      case 'mode.state':
+        return this.modeState();
+      case 'mode.choose': {
+        const { mode } = request as RequestOf<'mode.choose'>;
+        this.modeChosen = true;
+        this.settings = {
+          ...this.settings,
+          network: {
+            ...this.settings.network,
+            workOffline: mode === 'offline',
+            chosenAt: new Date(nowMs).toISOString(),
+          },
+        };
+        this.emit('settings.changed', this.settings);
+        return this.modeState();
+      }
+      case 'services.status':
+        return LOCAL_SERVICE_IDS.map((id) => ({
+          id,
+          name: {
+            ollama: 'Ollama (local AI models)',
+            kiwix: 'Kiwix library server',
+            kolibri: 'Kolibri learning platform',
+          }[id],
+          endpoint: `http://127.0.0.1:${DEFAULT_SERVICE_PORTS[id]}`,
+          state: 'not-found' as const,
+          detail: 'the browser demo asks no local service',
+          checkedAt: new Date(nowMs).toISOString(),
+        }));
+      case 'services.open':
+        return { opened: false };
+      case 'library.search': {
+        const r = request as RequestOf<'library.search'>;
+        return { ok: false, book: r.book, pattern: r.pattern, hits: [], message: 'the browser demo has no library' };
+      }
+      case 'mesh.sendTest':
+        return {
+          outcome: 'not-connected',
+          evidence: { connected: false, accepted: false, relayed: false, acknowledged: false },
+          message: 'the browser demo has no radio',
+          at: new Date(nowMs).toISOString(),
+        };
+      case 'ai.test':
+        return {
+          ok: false,
+          model: (request as RequestOf<'ai.test'>).model,
+          message: 'the browser demo asks no local AI',
+          elapsedMs: 0,
+          grounded: false,
+          at: new Date(nowMs).toISOString(),
+        };
+      case 'guides.list':
+        return structuredClone(this.guides);
+      case 'guides.save': {
+        const g = request as RequestOf<'guides.save'>;
+        this.guides = [...this.guides.filter((x) => x.id !== g.id), structuredClone(g)];
+        return structuredClone(this.guides);
+      }
+      case 'guides.reset':
+        this.guides = this.guides.filter((x) => x.id !== (request as RequestOf<'guides.reset'>).id);
+        return structuredClone(this.guides);
+      case 'prep.list':
+        return structuredClone(this.prep);
+      case 'prep.save': {
+        const r = request as RequestOf<'prep.save'>;
+        this.prep = [...this.prep.filter((x) => x.id !== r.id), structuredClone(r)];
+        return structuredClone(this.prep);
+      }
+      case 'prep.delete':
+        this.prep = this.prep.filter((x) => x.id !== (request as RequestOf<'prep.delete'>).id);
+        return structuredClone(this.prep);
+      case 'prep.export':
+        return { cancelled: true };
+      // The browser demo downloads nothing: it says so.
+      case 'maps.download.plan':
+        return {
+          phase: 'failed',
+          request: request as RequestOf<'maps.download.plan'>,
+          message: 'the browser demo downloads no maps',
+        };
+      case 'data.location':
+        return { root: '(browser demo: nothing is kept)', kind: 'usual', usualRoot: '(browser demo)' };
+      case 'data.moveTo':
+      case 'data.useUsual':
+        return { ok: false, message: 'the browser demo keeps no data', restartNeeded: false };
+      case 'data.restart':
+        return { restarting: false };
+      case 'maps.download.start':
+      case 'maps.download.status':
+      case 'maps.download.cancel':
+        return { phase: 'idle' };
+      case 'library.shelf':
+        return {
+          folder: '(browser demo: nothing is kept)',
+          books: [],
+          references: EMERGENCY_REFERENCES.map((r) => ({ ...r, urls: [...r.urls] })),
+        };
+      case 'library.find':
+        return { hits: [], searched: 0, notes: ['the browser demo has no library'] };
+      case 'library.open':
+        return { opened: false, message: 'the browser demo opens nothing' };
+      case 'library.catalog':
+        return { ok: false, entries: [], message: 'the browser demo contacts no catalogue' };
+      case 'library.download.start':
+        return { phase: 'failed', message: 'the browser demo downloads nothing' };
+      case 'library.download.status':
+      case 'library.download.cancel':
+        return { phase: 'idle' };
       case 'field.status':
         // A browser cannot read this computer's power or disks: said as unknown, never made up.
         return { power: { source: 'unknown' }, at: new Date(nowMs).toISOString() };

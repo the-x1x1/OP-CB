@@ -30,6 +30,17 @@ export const STATIC_EXTERNAL_HOSTS: readonly string[] = Object.freeze([
   // page and the licence they are used under.
   'sketchfab.com',
   'creativecommons.org',
+  // The Command Center's walkthroughs (2026-10-30): where each project documents its own
+  // install, firmware and downloads. Opened only on the operator's press, in their browser.
+  'meshtastic.org',
+  'flasher.meshtastic.org',
+  'ollama.com',
+  'kiwix.org',
+  'library.kiwix.org',
+  'learningequality.org',
+  'www.rtl-sdr.com',
+  'protomaps.com',
+  'www.ready.gov',
 ]);
 
 export type ExternalHostAllowlist = ReadonlySet<string>;
