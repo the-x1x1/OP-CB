@@ -245,3 +245,62 @@ test('mesh message test: only an acknowledgement from the radio it was for passe
   assert.equal(t(answer('refused', "the radio's region is UNSET")).message, "The radio's region is UNSET.");
   assert.equal(runCheck('mesh.messageAcked', data()).status, 'fail');
 });
+
+test('built-in library: books WorldView can open, references on disk, a find made offline; readiness follows', () => {
+  const book = {
+    id: '0123456789abcdef0123456789abcdef',
+    file: 'wikimed.zim',
+    title: 'WikiMed',
+    sizeBytes: 1e9,
+    entryCount: 10,
+    readable: true,
+    titleSearch: true,
+  };
+  const old = {
+    ...book,
+    id: 'file-1',
+    file: 'old.zim',
+    title: 'old',
+    readable: false,
+    problem: 'older xz compression',
+  };
+  const ref = {
+    id: 'cdc-wound-care',
+    title: 'Wound care',
+    publisher: 'CDC',
+    topic: 'wounds',
+    licence: 'public domain',
+    urls: ['https://example.org/x.pdf'],
+  };
+  const shelf = (books: (typeof book)[], installed: boolean) => ({
+    folder: '/data/library',
+    books,
+    references: [
+      installed ? { ...ref, installed: { sizeBytes: 1, sha256: 'a', downloadedAt: iso(0), from: 'x' } } : ref,
+    ],
+  });
+  assert.equal(runCheck('library.builtInBooks', data({ shelf: shelf([], false) })).status, 'fail');
+  const onlyOld = runCheck('library.builtInBooks', data({ shelf: shelf([old], false) }));
+  assert.equal(onlyOld.status, 'fail');
+  assert.match(onlyOld.message, /xz/);
+  assert.match(
+    runCheck('library.builtInBooks', data({ shelf: shelf([book, old], false) })).message,
+    /1 book .*WikiMed/,
+  );
+  assert.equal(runCheck('library.references', data({ shelf: shelf([], false) })).status, 'fail');
+  assert.equal(runCheck('library.references', data({ shelf: shelf([], true) })).status, 'pass');
+  const find = (offline: boolean, count: number) =>
+    runCheck('library.findOffline', data({ lastLibraryFind: { offline, text: 'Water', count, at: NOW } })).status;
+  assert.equal(find(false, 3), 'fail', 'online does not count');
+  assert.equal(find(true, 0), 'fail');
+  assert.equal(find(true, 3), 'pass');
+
+  const r = (s: ReturnType<typeof shelf> | undefined) =>
+    evaluateReadiness({ ...data(s ? { shelf: s, services: [] } : { services: [] }), guides: [], field: null }).find(
+      (i) => i.id === 'library',
+    )!;
+  assert.equal(r(shelf([book], true)).status, 'verification-required');
+  assert.match(r(shelf([book], true)).reason, /1 book in the library\. 1 emergency reference\./);
+  assert.equal(r(shelf([], true)).status, 'degraded');
+  assert.equal(r(shelf([old], false)).status, 'setup-required');
+});

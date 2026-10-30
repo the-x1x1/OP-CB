@@ -233,3 +233,69 @@ test('map download: offline it asks nothing and says so; a cancel installs nothi
     await h2.dispose();
   }
 });
+
+test('map download: a stopped whole-planet download is kept and, after a restart, carries on from where it was', async () => {
+  const archive = synthetic(6);
+  const half = Math.floor(archive.length / 2);
+  // First run: the server sends half the file, then nothing more until the download is stopped.
+  const stalling = fakeProtomaps(archive);
+  const stallFetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    if (url !== 'https://build.protomaps.com/20261029.pmtiles') return stalling.fetchImpl(input, init);
+    const signal = init?.signal;
+    const body = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.enqueue(new Uint8Array(archive.subarray(0, half)));
+        signal?.addEventListener('abort', () => c.error(signal.reason), { once: true });
+      },
+    });
+    return new Response(body, { status: 200 });
+  }) as typeof fetch;
+  const dataDir = await fs.mkdtemp(path.join((await import('node:os')).tmpdir(), 'worldview-planet-'));
+  try {
+    const h = await startRuntime({ fetchImpl: stallFetch, dataDir });
+    try {
+      await h.client.request('maps.download.plan', { kind: 'planet', worldMaxZoom: 0, maxZoom: 15 });
+      await until(h.client, ['planned']);
+      await h.client.request('maps.download.start', undefined);
+      for (let i = 0; i < 400; i++) {
+        const st = await h.client.request('maps.download.status', undefined);
+        if ((st.progress?.bytesDone ?? 0) >= half) break;
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      await h.client.request('maps.download.cancel', undefined);
+      const stopped = await until(h.client, ['cancelled', 'failed', 'done']);
+      assert.equal(stopped.phase, 'cancelled');
+      assert.match(stopped.message ?? '', /kept, and the next download of this build carries on/);
+      assert.equal((await h.client.request('offline.status', undefined)).packs.length, 0);
+    } finally {
+      await h.dispose();
+    }
+    // Second run, a fresh start of the app: the plan says what is there; the download asks
+    // only for the rest, and the result is the whole file, MD5 and all.
+    const good = fakeProtomaps(archive);
+    const h2 = await startRuntime({ fetchImpl: good.fetchImpl, dataDir });
+    try {
+      await h2.client.request('maps.download.plan', { kind: 'planet', worldMaxZoom: 0, maxZoom: 15 });
+      const planned = await until(h2.client, ['planned', 'failed']);
+      assert.equal(planned.resumedFrom, half);
+      await h2.client.request('maps.download.start', undefined);
+      const done = await until(h2.client, ['done', 'failed']);
+      assert.equal(done.phase, 'done', done.message ?? '');
+      assert.ok(good.asked.includes(`https://build.protomaps.com/20261029.pmtiles bytes=${half}-`));
+      assert.ok(!good.asked.includes('https://build.protomaps.com/20261029.pmtiles'), 'not from the start');
+      const whole = await fs.readFile(path.join(dataDir, 'worldpacks', 'map-planet', 'maps', 'basemap.pmtiles'));
+      assert.ok(whole.equals(archive));
+      // Nothing of the unfinished download is left in the pack (no partial.json).
+      assert.deepEqual(await fs.readdir(path.join(dataDir, 'worldpacks', 'map-planet')).then((x) => x.sort()), [
+        'licenses',
+        'manifest.json',
+        'maps',
+      ]);
+    } finally {
+      await h2.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

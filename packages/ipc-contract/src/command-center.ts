@@ -439,6 +439,8 @@ export interface MapDownloadStatus {
   target?: { label: string; freeBytes?: number };
   progress?: { bytesDone: number; bytesTotal: number; startedAt: string; bytesPerSecond?: number };
   installed?: { id: string; name: string };
+  /** Whole planet: bytes already on disk from an unfinished download of the same build. */
+  resumedFrom?: number;
   message?: string;
 }
 
@@ -467,3 +469,264 @@ export interface DataMoveAnswer {
   /** The change takes effect at the next start. */
   restartNeeded: boolean;
 }
+
+// ---------------------------------------------------------------------------------------------
+// The built-in library: ZIM files read by WorldView itself, Kiwix catalogue downloads, and the
+// emergency references (2026-10-30)
+// ---------------------------------------------------------------------------------------------
+
+/** One ZIM file in the library folder. */
+export interface LibraryBook {
+  /** The file's own UUID (hex). */
+  id: string;
+  /** File name only. */
+  file: string;
+  title: string;
+  description?: string;
+  language?: string;
+  date?: string;
+  creator?: string;
+  publisher?: string;
+  /** Kiwix book name (`wikipedia_en_all`) and flavour (`maxi`), when the file says. */
+  name?: string;
+  flavour?: string;
+  sizeBytes: number;
+  entryCount: number;
+  /** False when WorldView cannot show it (older xz compression, damaged); `problem` says why. */
+  readable: boolean;
+  problem?: string;
+  /** Whether the file carries a title list (title search). */
+  titleSearch: boolean;
+}
+
+/** A public-domain emergency reference WorldView knows how to fetch. */
+export interface ReferenceDoc {
+  id: string;
+  title: string;
+  publisher: string;
+  /** What it covers, in a few words. */
+  topic: string;
+  /** Edition or date as the document gives it. */
+  edition?: string;
+  licence: string;
+  /** Where it is fetched from (first that answers with a PDF). */
+  urls: string[];
+  installed?: { sizeBytes: number; sha256: string; downloadedAt: string; from: string };
+}
+
+export interface LibraryShelf {
+  /** The library folder (inside WorldView's data folder). */
+  folder: string;
+  books: LibraryBook[];
+  references: ReferenceDoc[];
+  freeBytes?: number;
+}
+
+export interface LibraryFindRequest {
+  query: string;
+  /** One book, or every readable book. */
+  bookId?: string;
+  limit?: number;
+  /** Add the start of each article's text (for answers grounded in the library). */
+  withText?: boolean;
+}
+
+export interface LibraryFindHit {
+  bookId: string;
+  bookTitle: string;
+  /** The entry's path in the book, as the reader opens it. */
+  key: string;
+  title: string;
+  /** Plain text from the start of the article (with `withText`). */
+  text?: string;
+}
+
+export interface LibraryFindAnswer {
+  hits: LibraryFindHit[];
+  /** How many books were searched. */
+  searched: number;
+  notes: string[];
+}
+
+export type LibraryOpenRequest =
+  | { kind: 'book'; bookId: string; key?: string }
+  | { kind: 'reference'; id: string }
+  | { kind: 'folder' };
+
+/** One book in the Kiwix catalogue (library.kiwix.org). */
+export interface CatalogEntry {
+  id: string;
+  name: string;
+  title: string;
+  summary?: string;
+  language?: string;
+  flavour?: string;
+  category?: string;
+  articleCount?: number;
+  mediaCount?: number;
+  issued?: string;
+  sizeBytes?: number;
+  /** The acquisition link as the catalogue gives it (a `.meta4` on download.kiwix.org). */
+  url: string;
+}
+
+export interface CatalogRequest {
+  query?: string;
+  /** ISO 639-3, as the catalogue uses (`eng`). */
+  language?: string;
+  count?: number;
+}
+
+export interface CatalogAnswer {
+  ok: boolean;
+  entries: CatalogEntry[];
+  total?: number;
+  message?: string;
+}
+
+export type LibraryDownloadRequest = { kind: 'zim'; entry: CatalogEntry } | { kind: 'references'; ids?: string[] };
+
+export interface LibraryDownloadStatus {
+  phase: 'idle' | 'downloading' | 'verifying' | 'done' | 'failed' | 'cancelled';
+  /** What is being fetched now. */
+  item?: string;
+  /** Queue position, for the references: done of total. */
+  step?: { done: number; total: number };
+  progress?: { bytesDone: number; bytesTotal: number; bytesPerSecond?: number };
+  /** Bytes already on disk from an earlier, unfinished download of the same file. */
+  resumedFrom?: number;
+  message?: string;
+  /** References that could not be fetched, with why. */
+  problems?: string[];
+}
+
+/** A `library.open` request, or undefined. */
+export function readLibraryOpenRequest(v: unknown): LibraryOpenRequest | undefined {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const r = v as Record<string, unknown>;
+  const keys = Object.keys(r);
+  if (r['kind'] === 'folder') return keys.length === 1 ? { kind: 'folder' } : undefined;
+  if (r['kind'] === 'reference')
+    return keys.length === 2 && typeof r['id'] === 'string' && /^[a-z0-9-]{1,64}$/.test(r['id'])
+      ? { kind: 'reference', id: r['id'] }
+      : undefined;
+  if (r['kind'] !== 'book' || typeof r['bookId'] !== 'string' || !/^[0-9a-f]{32}$/.test(r['bookId'])) return undefined;
+  if (keys.some((k) => k !== 'kind' && k !== 'bookId' && k !== 'key')) return undefined;
+  const key = r['key'];
+  if (key !== undefined && (typeof key !== 'string' || key.length > 2000 || key.includes('\0'))) return undefined;
+  return { kind: 'book', bookId: r['bookId'], ...(typeof key === 'string' ? { key } : {}) };
+}
+
+/** A `library.download.start` request, or undefined. A catalogue entry keeps only what a download needs. */
+export function readLibraryDownloadRequest(v: unknown): LibraryDownloadRequest | undefined {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const r = v as Record<string, unknown>;
+  if (r['kind'] === 'references') {
+    const ids = r['ids'];
+    if (ids === undefined) return { kind: 'references' };
+    if (
+      !Array.isArray(ids) ||
+      ids.length > 50 ||
+      ids.some((i) => typeof i !== 'string' || !/^[a-z0-9-]{1,64}$/.test(i))
+    )
+      return undefined;
+    return { kind: 'references', ids: ids as string[] };
+  }
+  if (r['kind'] !== 'zim' || typeof r['entry'] !== 'object' || r['entry'] === null) return undefined;
+  const e = r['entry'] as Record<string, unknown>;
+  const str = (k: string, max: number) =>
+    typeof e[k] === 'string' && (e[k] as string).length >= 1 && (e[k] as string).length <= max;
+  if (!str('id', 100) || !str('name', 200) || !str('title', 300) || !str('url', 1000)) return undefined;
+  const size = e['sizeBytes'];
+  if (size !== undefined && (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 0)) return undefined;
+  return {
+    kind: 'zim',
+    entry: {
+      id: e['id'] as string,
+      name: e['name'] as string,
+      title: e['title'] as string,
+      url: e['url'] as string,
+      ...(typeof size === 'number' ? { sizeBytes: size } : {}),
+    },
+  };
+}
+
+/**
+ * Public-domain emergency references WorldView fetches in one go and keeps in the library
+ * (operator decision 2026-10-30). Works of the U.S. federal government are not under copyright
+ * (17 U.S.C. § 105); the two Army manuals also carry "Approved for public release; distribution
+ * is unlimited."
+ *
+ * Every address below was opened on 2026-10-30 and answered with the document named, except
+ * where "not opened" is noted (found in a search result; the next address is the fallback).
+ * Nothing is bundled: the bytes come from these addresses on the operator's computer, each
+ * checked to be a PDF, and its SHA-256 recorded when it arrives.
+ *
+ * The Army manuals are fetched from the Federation of American Scientists' document archive,
+ * which keeps copies of public-release military publications; the Army's own library does not
+ * list superseded or older public-release manuals.
+ */
+export const PUBLIC_DOMAIN_US = 'U.S. Government work — public domain (17 U.S.C. § 105)';
+
+export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = Object.freeze([
+  {
+    id: 'fema-are-you-ready',
+    title: 'Are You Ready? A Guide to Citizen Preparedness',
+    publisher: 'FEMA',
+    topic: 'Every hazard: plans, kits, shelter, evacuation, recovery',
+    licence: PUBLIC_DOMAIN_US,
+    urls: [
+      // From a search result; not opened (the site refused the reading tool).
+      'https://www.ready.gov/sites/default/files/2021-03/are-you-ready-guide.pdf',
+      // A State of New Jersey copy of the FEMA guide; opened.
+      'https://www.nj.gov/njoem/pdf/areyouready.pdf',
+    ],
+  },
+  {
+    id: 'army-atp-3-50-21',
+    title: 'ATP 3-50.21 Survival',
+    publisher: 'U.S. Army',
+    topic: 'Water, fire, shelter, food, navigation, signalling, first aid in the field',
+    edition: 'September 2018',
+    licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    urls: ['https://irp.fas.org/doddir/army/atp3-50-21.pdf'],
+  },
+  {
+    id: 'army-fm-4-25-11',
+    title: 'FM 4-25.11 First Aid',
+    publisher: 'U.S. Army',
+    topic: 'Bleeding, fractures, burns, shock, breathing, heat and cold injuries',
+    edition: '23 December 2002',
+    licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    urls: ['https://irp.fas.org/doddir/milmed/first.pdf'],
+  },
+  {
+    id: 'cdc-practical-skills',
+    title: 'Prepare Your Health: Practical Skills',
+    publisher: 'CDC',
+    topic: 'CPR, choking, seizures, safe water, wound care, generators',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://stacks.cdc.gov/view/cdc/79987/cdc_79987_DS1.pdf'],
+  },
+  {
+    id: 'cdc-make-water-safe',
+    title: 'Make Water Safe During an Emergency',
+    publisher: 'CDC',
+    topic: 'Boiling, disinfecting with bleach, storing water',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://www.cdc.gov/natural-disasters/media/pdfs/2025/02/make-water-safe-during-emergency-p.pdf'],
+  },
+  {
+    id: 'cdc-wound-care',
+    title: 'Emergency Wound Care After a Natural Disaster',
+    publisher: 'CDC',
+    topic: 'Cleaning and covering wounds, signs of infection, tetanus',
+    edition: '26 October 2017',
+    licence: PUBLIC_DOMAIN_US,
+    urls: [
+      'https://www.cdc.gov/disasters/hurricanes/pdf/woundcare.pdf',
+      // CDC Stacks record 49402's file; named on the record page, not opened itself.
+      'https://stacks.cdc.gov/view/cdc/49402/cdc_49402_DS1.pdf',
+    ],
+  },
+]);

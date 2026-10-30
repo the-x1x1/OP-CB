@@ -786,11 +786,13 @@ export class WorldPackRegistry {
    * A folder to write a pack straight into — the map download, whose one file can be far too big
    * to pass through a `.worldpack` archive: `.downloads/<id>` under where the pack will live
    * (WorldView's own packs folder, or a vault proven writable now), so making it live is a rename
-   * on the same drive. Whatever an earlier, interrupted download left there is cleared.
+   * on the same drive. Whatever an earlier, interrupted download left there is cleared — except,
+   * with `keepPartial`, this pack's own folder, so a download can carry on where it stopped.
    */
   prepareDownload(
     id: string,
     target?: VaultInstallTarget,
+    opts: { keepPartial?: boolean } = {},
   ): Promise<{ ok: true; dir: string; device?: number } | { ok: false; reason: string }> {
     return this.exclusive(async () => {
       if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(id)) return { ok: false as const, reason: 'not a pack id' };
@@ -806,17 +808,29 @@ export class WorldPackRegistry {
         const checked = await target.recheck();
         if (!checked.ok) return { ok: false as const, reason: checked.reason };
         device = checked.device;
-        const prepared = await prepareVaultStaging(target.vault.root, downloads, device);
+        const prepared = await prepareVaultStaging(
+          target.vault.root,
+          downloads,
+          device,
+          opts.keepPartial ? id : undefined,
+        );
         if (prepared) return { ok: false as const, reason: prepared };
       } else {
         await fs.mkdir(downloads, { recursive: true });
         for (const name of await fs.readdir(downloads).catch(() => [] as string[]))
-          await fs.rm(path.join(downloads, name), { recursive: true, force: true }).catch(() => undefined);
+          if (!(opts.keepPartial && name === id))
+            await fs.rm(path.join(downloads, name), { recursive: true, force: true }).catch(() => undefined);
       }
       const dir = path.join(downloads, id);
       await fs.mkdir(dir, { recursive: true });
       return { ok: true as const, dir, ...(device !== undefined ? { device } : {}) };
     });
+  }
+
+  /** Where `prepareDownload` puts this pack's folder (nothing is created or cleared). */
+  downloadDirFor(id: string, target?: VaultInstallTarget): string {
+    const packsRoot = target ? path.join(target.vault.root, VAULT_PACKS_DIR) : this.root;
+    return path.join(packsRoot, DOWNLOADS_DIR, id);
   }
 
   /**
@@ -1224,6 +1238,7 @@ async function prepareVaultStaging(
   vaultRoot: string,
   stagingRoot: string,
   device: number,
+  keep?: string,
 ): Promise<string | undefined> {
   const packsDir = await vaultPacksDir(vaultRoot);
   if (!packsDir.ok) return packsDir.reason;
@@ -1241,7 +1256,8 @@ async function prepareVaultStaging(
   }
   // Our own leftovers only: staging holds nothing else.
   for (const name of await fs.readdir(stagingRoot).catch(() => [] as string[]))
-    await fs.rm(path.join(stagingRoot, name), { recursive: true, force: true }).catch(() => undefined);
+    if (name !== keep)
+      await fs.rm(path.join(stagingRoot, name), { recursive: true, force: true }).catch(() => undefined);
   return undefined;
 }
 

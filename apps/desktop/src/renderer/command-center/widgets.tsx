@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { PrepCategory, PrepRecord } from '@worldview/ipc-contract';
+import type { LibraryFindAnswer, PrepCategory, PrepRecord } from '@worldview/ipc-contract';
 import { Button, Toggle } from '@worldview/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, ago, heardHow } from './checks.js';
@@ -113,6 +113,57 @@ function PlaceSearch() {
       {found ? (
         <ul className="wv-cc-list wv-cc-list--tight">
           {found.length ? found.map((f) => <li key={f}>{f}</li>) : <li className="wv-cc-muted">No place found.</li>}
+        </ul>
+      ) : null}
+    </form>
+  );
+}
+
+/** Find a page by title in the built-in library (records the result for the walkthrough's check). */
+export function LibraryFind() {
+  const [cc, store] = useCC();
+  const [text, setText] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [hits, setHits] = useState<LibraryFindAnswer['hits'] | null>(null);
+  const readable = (cc.shelf?.books ?? []).filter((b) => b.readable);
+  if (!readable.length) return <p className="wv-cc-muted">No books WorldView can open yet.</p>;
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setBusy(true);
+    try {
+      setHits((await store.findInLibrary({ query: text.trim(), limit: 10 })).hits);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form className="wv-cc-inline" onSubmit={(e) => void submit(e)}>
+      <input
+        className="wv-input"
+        placeholder="The start of a page title (Water, Burn…)"
+        value={text}
+        maxLength={200}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <Button size="sm" type="submit" disabled={busy}>
+        {busy ? 'Finding…' : 'Find'}
+      </Button>
+      {hits ? (
+        <ul className="wv-cc-list wv-cc-hits">
+          {hits.length ? null : <li className="wv-cc-muted">No titles start with that.</li>}
+          {hits.map((h) => (
+            <li key={`${h.bookId}/${h.key}`}>
+              <button
+                type="button"
+                className="wv-cc-link"
+                onClick={() => void store.openLibrary({ kind: 'book', bookId: h.bookId, key: h.key })}
+              >
+                {h.title}
+              </button>
+              <span className="wv-cc-muted"> — {h.bookTitle}</span>
+            </li>
+          ))}
         </ul>
       ) : null}
     </form>
@@ -650,6 +701,18 @@ function StepAction({ id }: { id: ActionId }) {
       return button('Open the library', () => store.openService('kiwix'));
     case 'library.search':
       return <LibrarySearch />;
+    case 'library.openKnowledge':
+      return button('Open Knowledge', () => store.show('knowledge'));
+    case 'library.downloadReferences':
+      return button(
+        cc.libraryDownload.phase === 'downloading' ? 'Downloading…' : 'Download the emergency references',
+        () =>
+          store
+            .startLibraryDownload({ kind: 'references' })
+            .then(() => setNote('Downloading: progress is in Knowledge.')),
+      );
+    case 'library.find':
+      return <LibraryFind />;
     case 'learning.open':
       return button('Open Kolibri', () => store.openService('kolibri'));
     case 'prep.openInventory':

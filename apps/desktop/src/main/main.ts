@@ -38,7 +38,7 @@ import {
   type DiagnosticsSnapshot,
 } from '@worldview/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
-import { chooseMode, libraryPath, modeState, serviceOrigin } from '@worldview/runtime';
+import { chooseMode, libraryPath, modeState, readLibraryOpen, serviceOrigin } from '@worldview/runtime';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
 import { APP_ORIGIN, DEV_SERVER_ORIGIN, isTrustedRendererUrl } from '../shared/app-origin.js';
@@ -57,6 +57,7 @@ import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch } from './network-gate.js';
 import { moveDataTo, resolveDataLocation, useUsualData } from './data-location.js';
+import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './library-reader.js';
 
 /**
  * Main process bootstrap (ADR-004). Order matters:
@@ -171,7 +172,15 @@ async function bootstrap(): Promise<void> {
 
   // Every WebContents — including ones we did not create on purpose — gets the same lockdown.
   const appDir = app.getAppPath();
-  app.on('web-contents-created', (_e, contents) => hardenWebContents(contents, { dev: DEV, appDir, logger: security }));
+  app.on('web-contents-created', (_e, contents) =>
+    hardenWebContents(contents, {
+      dev: DEV,
+      appDir,
+      logger: security,
+      // The library reader moves between pages of a book, and nowhere else (library-reader.ts).
+      alsoAllow: (url) => isReaderContents(contents) && isReaderUrl(url),
+    }),
+  );
   hardenSession(DEV, security);
   if (app.isPackaged) Menu.setApplicationMenu(null);
 
@@ -339,6 +348,11 @@ async function bootstrap(): Promise<void> {
     }),
   });
   await runtime.start();
+  const readerDeps: ReaderDeps = {
+    lookup: (bookId, key) => runtime.core.zimLibrary.lookup(bookId, key),
+    mainKey: (bookId) => runtime.core.zimLibrary.mainKey(bookId),
+    logger: hub.logger('security'),
+  };
 
   // An app that cannot check for updates should still show you a globe. Before this, any
   // throw here became "WorldView could not start" with the raw message and no window at
@@ -510,6 +524,32 @@ async function bootstrap(): Promise<void> {
       const url = `${serviceOrigin(settings.get(), id)}${page ?? '/'}`;
       await shell.openExternal(url);
       log.info('local service opened', { id });
+      return { opened: true };
+    },
+    // The library: a book in the reader window, a reference in the system's PDF viewer, or the
+    // library folder in the file manager. Paths are WorldView's own, never from the page.
+    'library.open': async (req) => {
+      const r = readLibraryOpen(req);
+      if (r.kind === 'folder') {
+        await fs.mkdir(runtime.core.zimLibrary.dir, { recursive: true });
+        const err = await shell.openPath(runtime.core.zimLibrary.dir);
+        return err ? { opened: false, message: err } : { opened: true };
+      }
+      if (r.kind === 'reference') {
+        const file = runtime.core.libraryDownloads.referenceFile(r.id);
+        if (!file) return { opened: false, message: 'not a reference WorldView knows' };
+        try {
+          await fs.access(file);
+        } catch {
+          return { opened: false, message: 'that reference has not been downloaded yet' };
+        }
+        const err = await shell.openPath(file);
+        return err ? { opened: false, message: err } : { opened: true };
+      }
+      const key = r.key ?? (await runtime.core.zimLibrary.mainKey(r.bookId));
+      if (key === undefined) return { opened: false, message: 'that book is not readable here' };
+      await openReader(readerDeps, r.bookId, key);
+      log.info('library book opened', { book: r.bookId });
       return { opened: true };
     },
     'search.places': async (req, ctx) => places.search(req, ctx.signal),

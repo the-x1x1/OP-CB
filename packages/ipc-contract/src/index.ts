@@ -20,10 +20,18 @@ import type { ViewLink } from './view-link.js';
 import type {
   AiTestAnswer,
   AiTestRequest,
+  CatalogAnswer,
+  CatalogRequest,
   DataLocationInfo,
   DataMoveAnswer,
   GuideProgress,
+  LibraryDownloadRequest,
+  LibraryDownloadStatus,
+  LibraryFindAnswer,
+  LibraryFindRequest,
+  LibraryOpenRequest,
   LibrarySearchAnswer,
+  LibraryShelf,
   LocalServiceId,
   MapDownloadRequest,
   MapDownloadStatus,
@@ -1242,6 +1250,20 @@ export interface WorldRequests {
   'data.useUsual': { request: void; response: DataMoveAnswer };
   'data.restart': { request: void; response: { restarting: boolean } };
 
+  /**
+   * (additive, 2026-10-30) The built-in library: ZIM files WorldView reads itself (runtime
+   * support/zim-library.ts), the Kiwix catalogue and downloads into the library folder, and the
+   * public-domain emergency references. `library.open` is the desktop's (a reader window, or the
+   * system's PDF viewer).
+   */
+  'library.shelf': { request: void; response: LibraryShelf };
+  'library.find': { request: LibraryFindRequest; response: LibraryFindAnswer };
+  'library.open': { request: LibraryOpenRequest; response: { opened: boolean; message?: string } };
+  'library.catalog': { request: CatalogRequest; response: CatalogAnswer };
+  'library.download.start': { request: LibraryDownloadRequest; response: LibraryDownloadStatus };
+  'library.download.status': { request: void; response: LibraryDownloadStatus };
+  'library.download.cancel': { request: void; response: LibraryDownloadStatus };
+
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
   'field.status': { request: void; response: FieldHostStatus };
@@ -1486,6 +1508,13 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'data.moveTo',
   'data.useUsual',
   'data.restart',
+  'library.shelf',
+  'library.find',
+  'library.open',
+  'library.catalog',
+  'library.download.start',
+  'library.download.status',
+  'library.download.cancel',
   'offline.status',
   'field.status',
   'offline.installPack',

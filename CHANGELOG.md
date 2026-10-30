@@ -21,6 +21,22 @@ Versioning: [semantic versioning](https://semver.org/).
   file is checked after, then installed as a world pack. Map data from Protomaps' daily
   OpenStreetMap build, © OpenStreetMap contributors (ODbL). `pnpm basemap:extract` does the same
   from the command line.
+- **A library WorldView reads itself.** Knowledge → Your library: ZIM files (Wikipedia,
+  WikiMed, iFixit, Wikivoyage, survival and medicine collections) open in WorldView with no
+  Kiwix program. Find pages by title across every book; pages open in a separate reader window
+  with page scripts off and nothing loaded from the internet. Get books from the Kiwix catalogue
+  in the app: searched online, downloaded into the library folder, checked against the
+  catalogue's size, its SHA-256 and the checksum every ZIM file ends with; a download that stops
+  carries on where it left off, even after a restart. Questions to a local AI model can now be
+  answered from these books too. kiwix-serve is optional (full-text search, older files).
+- **Emergency references.** Knowledge → Emergency references: one press downloads six
+  public-domain guides — FEMA's _Are You Ready?_, the U.S. Army's _Survival_ (ATP 3-50.21) and
+  _First Aid_ (FM 4-25.11), and CDC sheets on safe water, wound care and practical skills —
+  into the library, each checked to be a PDF and its SHA-256 recorded; they open offline in the
+  computer's PDF viewer.
+- **The whole-planet map carries on.** A stopped or failed whole-planet download (about
+  140 GB) is kept: Check the size and Download again continue from where it was, after a
+  restart too, as long as Protomaps still offers that day's build.
 - **All of WorldView on an external drive.** Resources → Where WorldView keeps its data: move
   everything (settings, history, maps, inventory, keys, logs) to a folder on an external SSD from
   the next start, or run the portable copy from the drive with a `WorldView-data` folder beside

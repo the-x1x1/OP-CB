@@ -31,6 +31,7 @@ import {
 } from './widgets.js';
 import { MapDownloadPanel } from './map-download-panel.js';
 import { DataLocationCard } from './data-location-card.js';
+import { BuiltInLibrary, EmergencyReferences, KiwixCatalog } from './library-panel.js';
 import './command-center.css';
 
 /** One empty list for selectors: a new [] each read would never settle. */
@@ -444,8 +445,15 @@ function Knowledge() {
   return (
     <div className="wv-cc-section">
       <SectionHead id="knowledge" />
+      <BuiltInLibrary />
+      <EmergencyReferences />
+      <KiwixCatalog />
       <section className="wv-cc-card">
-        <h3 className="wv-cc-caps">Offline library</h3>
+        <h3 className="wv-cc-caps">Kiwix server (optional)</h3>
+        <p className="wv-cc-muted">
+          Not needed to read ZIM files any more. A running kiwix-serve adds full-text search and older files WorldView
+          cannot open itself.
+        </p>
         <ServiceLine id="kiwix" />
         {books.length ? (
           <>
@@ -460,9 +468,6 @@ function Knowledge() {
             <LibrarySearch />
           </>
         ) : null}
-        <p className="wv-cc-muted">
-          WorldView ships no library content: each book keeps its own licence and credits, shown in the library itself.
-        </p>
       </section>
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">Courses (Kolibri)</h3>
@@ -535,15 +540,31 @@ function Intelligence() {
  */
 function GroundedAsk({ model }: { model: string }) {
   const [cc, store] = useCC();
-  const books = (cc.services?.find((s) => s.id === 'kiwix')?.books ?? []).filter((b) => b.name);
+  // The built-in library first (every readable ZIM file); a running kiwix-serve otherwise.
+  const builtIn = (cc.shelf?.books ?? []).filter((b) => b.readable && b.titleSearch);
+  const served = (cc.services?.find((s) => s.id === 'kiwix')?.books ?? []).filter((b) => b.name);
+  const books = builtIn.length
+    ? [
+        { id: '', name: '', title: 'Every book in your library' },
+        ...builtIn.map((b) => ({ id: b.id, name: b.id, title: b.title })),
+      ]
+    : served.map((b) => ({ id: b.id, name: b.name!, title: b.title }));
   const [book, setBook] = useState('');
   const [question, setQuestion] = useState('');
-  const [retrieved, setRetrieved] = useState<Array<{ title: string; path: string; snippet?: string }> | null>(null);
+  const [retrieved, setRetrieved] = useState<Array<{
+    title: string;
+    path: string;
+    snippet?: string;
+    bookId?: string;
+  }> | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void store.refreshShelf();
+  }, [store]);
   if (!books.length) return null;
-  const chosen = book || books[0]!.name!;
+  const chosen = books.some((b) => b.name === book) ? book : books[0]!.name;
   const ask = async (e: FormEvent) => {
     e.preventDefault();
     const q = question.trim();
@@ -552,11 +573,33 @@ function GroundedAsk({ model }: { model: string }) {
     setProblem(null);
     setAnswer(null);
     try {
-      const found = await store.librarySearch(chosen, q);
-      const hits = found.hits.filter((h) => h.snippet).slice(0, 4);
+      let hits: Array<{ title: string; path: string; snippet?: string; bookId?: string }>;
+      if (builtIn.length) {
+        const found = await store.findInLibrary({
+          query: q,
+          withText: true,
+          limit: 8,
+          ...(chosen ? { bookId: chosen } : {}),
+        });
+        hits = found.hits
+          .filter((h) => h.text)
+          .slice(0, 4)
+          .map((h) => ({ title: h.title, path: h.key, snippet: h.text!.slice(0, 450), bookId: h.bookId }));
+      } else {
+        const found = await store.librarySearch(chosen, q);
+        if (!found.ok) {
+          setRetrieved([]);
+          return setProblem(found.message ?? 'The library did not answer.');
+        }
+        hits = found.hits.filter((h) => h.snippet).slice(0, 4);
+      }
       setRetrieved(hits);
-      if (!found.ok) return setProblem(found.message ?? 'The library did not answer.');
-      if (!hits.length) return setProblem('Nothing in that book matched, so the model was not asked.');
+      if (!hits.length)
+        return setProblem(
+          builtIn.length
+            ? 'No page title matched the words of the question, so the model was not asked. Try naming the subject (water purification, burns…).'
+            : 'Nothing in that book matched, so the model was not asked.',
+        );
       const excerpts = hits.map((h, i) => `[${i + 1}] ${h.title}: ${h.snippet}`).join('\n');
       const prompt =
         `Answer the question using only the numbered excerpts below, and cite them like [1]. If they do not answer it, say so.\n\nExcerpts:\n${excerpts}\n\nQuestion: ${q}`.slice(
@@ -576,7 +619,7 @@ function GroundedAsk({ model }: { model: string }) {
       <form className="wv-cc-inline" onSubmit={(e) => void ask(e)}>
         <select className="wv-input" value={chosen} onChange={(e) => setBook(e.target.value)} aria-label="Book">
           {books.map((b) => (
-            <option key={b.id} value={b.name}>
+            <option key={b.id || 'all'} value={b.name}>
               {b.title}
             </option>
           ))}
@@ -597,7 +640,15 @@ function GroundedAsk({ model }: { model: string }) {
           <ol>
             {retrieved.map((h) => (
               <li key={h.path}>
-                <button type="button" className="wv-cc-link" onClick={() => void store.openService('kiwix', h.path)}>
+                <button
+                  type="button"
+                  className="wv-cc-link"
+                  onClick={() =>
+                    void (h.bookId
+                      ? store.openLibrary({ kind: 'book', bookId: h.bookId, key: h.path })
+                      : store.openService('kiwix', h.path))
+                  }
+                >
                   {h.title}
                 </button>
                 <span className="wv-cc-muted"> — {h.snippet}</span>

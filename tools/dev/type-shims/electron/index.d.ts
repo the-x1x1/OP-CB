@@ -98,6 +98,11 @@ export interface WebPreferences {
   experimentalFeatures?: boolean;
   backgroundThrottling?: boolean;
   disableBlinkFeatures?: string;
+  /** Run page scripts at all (the library reader turns this off). */
+  javascript?: boolean;
+  /** A session other than the default, from `session.fromPartition`. */
+  session?: Session;
+  images?: boolean;
 }
 
 export interface BrowserWindowConstructorOptions {
@@ -164,6 +169,25 @@ export interface WebContents {
     listener: (event: Event, level: number, message: string, line: number, sourceId: string) => void,
   ): this;
   on(event: 'destroyed', listener: () => void): this;
+  on(event: 'before-input-event', listener: (event: Event, input: InputEvent) => void): this;
+  on(event: 'page-title-updated', listener: (event: Event, title: string) => void): this;
+  readonly navigationHistory: NavigationHistory;
+}
+
+export interface InputEvent {
+  type: 'keyDown' | 'keyUp' | 'rawKeyDown' | 'char';
+  key: string;
+  alt: boolean;
+  control: boolean;
+  shift: boolean;
+  meta: boolean;
+}
+
+export interface NavigationHistory {
+  canGoBack(): boolean;
+  canGoForward(): boolean;
+  goBack(): void;
+  goForward(): void;
 }
 
 export declare class BrowserWindow {
@@ -182,8 +206,11 @@ export declare class BrowserWindow {
   isMinimized(): boolean;
   restore(): void;
   setMenuBarVisibility(visible: boolean): void;
+  setTitle(title: string): void;
   on(event: 'closed', listener: () => void): this;
   on(event: 'ready-to-show', listener: () => void): this;
+  /** Windows: mouse back/forward buttons and media keys (`browser-backward`, `browser-forward`). */
+  on(event: 'app-command', listener: (event: Event, command: string) => void): this;
   once(event: 'ready-to-show', listener: () => void): this;
 }
 
@@ -203,6 +230,15 @@ export interface HeadersReceivedResponse {
 }
 
 export interface WebRequest {
+  onBeforeRequest(
+    filter: { urls: string[] },
+    listener:
+      | ((
+          details: { url: string; method: string; resourceType: string },
+          callback: (response: { cancel?: boolean }) => void,
+        ) => void)
+      | null,
+  ): void;
   onHeadersReceived(
     listener:
       | ((details: OnHeadersReceivedListenerDetails, callback: (response: HeadersReceivedResponse) => void) => void)
@@ -262,6 +298,9 @@ export interface PermissionCheckDetails {
 
 export interface Session {
   readonly webRequest: WebRequest;
+  /** This session's own scheme handlers (a scheme handled here is not handled anywhere else). */
+  readonly protocol: Protocol;
+  on(event: 'will-download', listener: (event: Event) => void): this;
   setPermissionRequestHandler(
     handler:
       | ((

@@ -300,6 +300,10 @@ test('search, collections, watch zones, camera snapshot, exports and every chann
     'prep.delete': { id: 'water-1' },
     'prep.export': { format: 'csv' },
     'maps.download.plan': { kind: 'extract', worldMaxZoom: 3, maxZoom: 3 },
+    'library.find': { query: 'water' },
+    'library.open': { kind: 'folder' },
+    'library.catalog': { query: 'medicine', language: 'eng' },
+    'library.download.start': { kind: 'references' },
   };
   for (const channel of REQUEST_CHANNELS) {
     // A page of a snapshot nobody paged: implemented, and it says the snapshot is gone.

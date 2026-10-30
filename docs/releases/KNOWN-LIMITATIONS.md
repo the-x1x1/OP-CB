@@ -357,6 +357,21 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.5.0 (unreleased)
 
+- The built-in library reader opens ZIM files whose clusters are zstd-compressed (every Kiwix
+  file made since about 2021) and finds pages by **title** only. Files in the older xz format,
+  and full-text search, need kiwix-serve. It was tested against the openZIM test files (a 2024
+  Kiwix Wikipedia selection among them) in the container, not yet in the packaged app or with a
+  100 GB Wikipedia. The Kiwix catalogue's answer and the Metalink files were written from
+  libkiwix's own tests and RFC 5854: library.kiwix.org could not be reached from where this was
+  built, so the first real catalogue search and download are the live check. Pages open with
+  page scripts off: a book that needs JavaScript (some interactive ones) shows its text only.
+- The emergency references are fetched from their publishers when you press Download, never
+  bundled. Four of the six addresses were opened on 2026-10-30; FEMA's own address refused the
+  checking tool (a State of New Jersey copy of the same guide is the fallback) and one CDC
+  fallback was not opened. If a publisher moves a file, that reference says so and the others
+  still download.
+- The whole-planet map download continues only with the same day's Protomaps build; builds are
+  kept about two months. Nothing has been downloaded from Protomaps for real yet.
 - Keeping the data on an external drive (moved or portable) is tested in the container with
   temporary folders only, not yet in the packaged app on a real SSD. Stored keys do not travel
   between computers; history and installed packs are not copied when the data is moved. The

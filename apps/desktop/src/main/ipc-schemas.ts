@@ -13,6 +13,8 @@ import {
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   readGuideProgress,
+  readLibraryDownloadRequest,
+  readLibraryOpenRequest,
   readPrepRecord,
 } from '@worldview/ipc-contract';
 import type {
@@ -476,6 +478,28 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
   'data.moveTo': voidSchema,
   'data.useUsual': voidSchema,
   'data.restart': voidSchema,
+  'library.shelf': voidSchema,
+  'library.find': s.object(
+    {
+      query: s.string({ min: 1, max: 200 }),
+      bookId: s.optional(s.string({ min: 1, max: 64, pattern: /^[0-9a-z-]+$/ })),
+      limit: s.optional(s.number({ min: 1, max: 50, integer: true })),
+      withText: s.optional(s.boolean()),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'library.find'>>,
+  'library.open': fromReader(readLibraryOpenRequest, 'library request'),
+  'library.catalog': s.object(
+    {
+      query: s.optional(s.string({ min: 0, max: 200 })),
+      language: s.optional(s.string({ min: 2, max: 40, pattern: /^[a-z]{2,3}(,[a-z]{2,3})*$/ })),
+      count: s.optional(s.number({ min: 1, max: 100, integer: true })),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'library.catalog'>>,
+  'library.download.start': fromReader(readLibraryDownloadRequest, 'library download request'),
+  'library.download.status': voidSchema,
+  'library.download.cancel': voidSchema,
   'offline.status': voidSchema,
   'field.status': voidSchema,
   'offline.installPack': voidSchema,

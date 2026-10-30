@@ -854,3 +854,27 @@
   height: 100%;
   background: var(--wv-accent);
 }
+
+/* The built-in library: a book or reference on the left, its action on the right. */
+.wv-cc-libbook {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--wv-space-2);
+  border-bottom: 1px solid var(--wv-border);
+}
+
+.wv-cc-libbook > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+button.wv-cc-chip {
+  cursor: pointer;
+  font: inherit;
+}
+
+button.wv-cc-chip:disabled {
+  cursor: default;
+  opacity: 0.5;
+}

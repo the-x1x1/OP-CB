@@ -1,6 +1,7 @@
 import type { WorldObject } from '@worldview/world-model';
 import type {
   AiTestAnswer,
+  LibraryShelf,
   LocalServiceStatus,
   MeshTestAnswer,
   ModeState,
@@ -41,13 +42,18 @@ export interface CheckData {
   receiverObjects?: number;
   lastPlaceSearch?: LastSearch;
   lastLibrarySearch?: LastSearch & { book: string };
+  /** The built-in library (ZIM files WorldView reads itself), when asked for. */
+  shelf?: LibraryShelf | null;
+  lastLibraryFind?: LastSearch;
   lastAiTest?: { offline: boolean; answer: AiTestAnswer };
   lastMeshTest?: { to: string; name: string; answer: MeshTestAnswer };
 }
 
 /** What a check needs fetched beyond the slices the shell already has. */
-export function checkNeeds(id: CheckId): { meshNodes?: true; receivers?: true; services?: true } {
+export function checkNeeds(id: CheckId): { meshNodes?: true; receivers?: true; services?: true; shelf?: true } {
   if (id === 'mesh.otherNodeHeard' || id === 'mesh.onMap') return { meshNodes: true };
+  if (id === 'library.builtInBooks' || id === 'library.references' || id === 'library.findOffline')
+    return { shelf: true };
   if (id === 'sdr.receiving') return { receivers: true };
   if (id.startsWith('ai.') || id.startsWith('library.') || id === 'learning.running') return { services: true };
   return {};
@@ -270,6 +276,35 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
       if (!s.offline) return fail('That search ran with WorldView online. Switch to Offline mode and search again.');
       if (!s.count) return fail(`No pages for "${s.text}" in ${s.book}.`);
       return pass(`"${s.text}" found ${s.count} page${s.count === 1 ? '' : 's'} in ${s.book}, offline.`);
+    }
+    case 'library.builtInBooks': {
+      const books = d.shelf?.books ?? [];
+      const readable = books.filter((b) => b.readable);
+      if (readable.length)
+        return pass(
+          `${readable.length} book${readable.length === 1 ? '' : 's'} WorldView can open: ${readable
+            .slice(0, 3)
+            .map((b) => b.title)
+            .join(', ')}${readable.length > 3 ? '…' : ''}.`,
+        );
+      if (books.length) return fail(`${books[0]!.file}: ${books[0]!.problem ?? 'not readable here'}.`);
+      return fail('No ZIM files in the library folder yet.');
+    }
+    case 'library.references': {
+      const refs = d.shelf?.references ?? [];
+      const got = refs.filter((r) => r.installed);
+      if (got.length)
+        return pass(
+          `${got.length} of ${refs.length} emergency references are in the library (SHA-256 recorded for each).`,
+        );
+      return fail('No emergency reference downloaded yet.');
+    }
+    case 'library.findOffline': {
+      const s = d.lastLibraryFind;
+      if (!s) return fail('Find a page first.');
+      if (!s.offline) return fail('That search ran with WorldView online. Switch to Offline mode and find again.');
+      if (!s.count) return fail(`No page titles start with "${s.text}".`);
+      return pass(`"${s.text}" found ${s.count} page${s.count === 1 ? '' : 's'} in your library, offline.`);
     }
     case 'learning.running': {
       const s = service(d, 'kolibri');

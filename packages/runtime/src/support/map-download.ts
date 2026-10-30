@@ -50,6 +50,18 @@ export const PROTOMAPS_POLICY: WorldPackSourcePolicy = Object.freeze({
   termsUrl: 'https://docs.protomaps.com/basemaps/downloads',
 });
 
+/** Beside an unfinished whole-planet download: which build it is (so it is carried on, not mixed). */
+const PARTIAL_FILE = 'partial.json';
+
+async function readPartial(dir: string): Promise<{ key: string } | undefined> {
+  try {
+    const v = JSON.parse(await fs.readFile(path.join(dir, PARTIAL_FILE), 'utf8')) as Record<string, unknown>;
+    return typeof v['key'] === 'string' ? { key: v['key'] } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Kept free on the drive beyond the map itself. */
 export const SPACE_MARGIN_BYTES = 1024 ** 3;
 export interface MapDownloadsDeps {
@@ -130,13 +142,26 @@ export class MapDownloads {
     return this.current();
   }
 
-  private async latestBuild(signal: AbortSignal): Promise<MapBuildInfo> {
+  private async buildList(signal: AbortSignal): Promise<MapBuildInfo[]> {
     const res = await this.deps.fetchImpl(PROTOMAPS_BUILDS_LIST, { signal });
     if (!res.ok) throw new Error(`the build list answered ${res.status}`);
     const builds = readBuildList(await res.json());
-    const latest = builds[0];
-    if (!latest) throw new Error('the build list names no build');
-    return latest;
+    if (!builds[0]) throw new Error('the build list names no build');
+    return builds;
+  }
+
+  /** Where an unfinished whole-planet download of this request would be, if there is one. */
+  private async partialFor(req: MapDownloadRequest): Promise<{ key: string; bytes: number } | undefined> {
+    const vault = req.vaultId ? this.deps.vaultTarget(req.vaultId) : undefined;
+    const dir = this.deps.registry().downloadDirFor(packIdentity(req).id, vault);
+    try {
+      const v = JSON.parse(await fs.readFile(path.join(dir, PARTIAL_FILE), 'utf8')) as Record<string, unknown>;
+      if (typeof v['key'] !== 'string') return undefined;
+      const st = await fs.stat(path.join(dir, 'maps', 'basemap.pmtiles'));
+      return st.size > 0 ? { key: v['key'], bytes: st.size } : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   /** Read the newest build's directories for this request and say exactly how big it is. */
@@ -156,10 +181,22 @@ export class MapDownloads {
     this.set({ phase: 'planning', request: req, message: 'reading the newest map build' });
     void (async () => {
       try {
-        const build = await this.latestBuild(ac.signal);
+        const builds = await this.buildList(ac.signal);
+        let build = builds[0]!;
         if (req.kind === 'planet') {
+          // An unfinished download of a build still offered carries on with that build.
+          const partial = await this.partialFor(req);
+          const same = partial ? builds.find((b) => b.key === partial.key) : undefined;
+          if (same && partial && partial.bytes < same.sizeBytes) build = same;
           this.plan = { req, build };
-          this.set({ phase: 'planned', request: req, build, sizeBytes: build.sizeBytes, ...(await this.target(req)) });
+          this.set({
+            phase: 'planned',
+            request: req,
+            build,
+            sizeBytes: build.sizeBytes,
+            ...(same && partial && partial.bytes < same.sizeBytes ? { resumedFrom: partial.bytes } : {}),
+            ...(await this.target(req)),
+          });
           return;
         }
         let dirBytes = 0;
@@ -210,7 +247,8 @@ export class MapDownloads {
     const { req, build } = planned;
     const size = planned.extract ? planned.extract.totalBytes : build.sizeBytes;
     const free = this.status.target?.freeBytes;
-    if (free !== undefined && free < size + SPACE_MARGIN_BYTES) {
+    const already = this.status.resumedFrom ?? 0;
+    if (free !== undefined && free < size - already + SPACE_MARGIN_BYTES) {
       this.set({
         ...this.status,
         phase: 'failed',
@@ -235,7 +273,8 @@ export class MapDownloads {
     void (async () => {
       const { id, name } = packIdentity(req);
       const vault = req.vaultId ? this.deps.vaultTarget(req.vaultId) : undefined;
-      const prepared = await this.deps.registry().prepareDownload(id, vault);
+      const whole = !planned.extract;
+      const prepared = await this.deps.registry().prepareDownload(id, vault, { keepPartial: whole });
       if (!prepared.ok) {
         this.set({ ...base, phase: 'failed', message: prepared.reason });
         return;
@@ -245,6 +284,7 @@ export class MapDownloads {
       try {
         await fs.mkdir(mapsDir, { recursive: true });
         let done = 0;
+        let fromBefore = 0;
         let lastReport = 0;
         const report = (n: number) => {
           done += n;
@@ -255,15 +295,31 @@ export class MapDownloads {
           this.set({
             ...base,
             phase: 'downloading',
+            ...(fromBefore ? { resumedFrom: fromBefore } : {}),
             progress: {
               bytesDone: done,
               bytesTotal: size,
               startedAt: new Date(started).toISOString(),
-              bytesPerSecond: Math.round(done / secs),
+              bytesPerSecond: Math.round((done - fromBefore) / secs),
             },
           });
         };
-        const handle = await fs.open(file, 'w');
+        // The whole planet carries on from an unfinished download of the same build.
+        let resumeAt = 0;
+        if (whole) {
+          const prev = await readPartial(prepared.dir);
+          const have = await fs
+            .stat(file)
+            .then((x) => x.size)
+            .catch(() => 0);
+          if (prev?.key === build.key && have > 0 && have < size) resumeAt = have;
+          else await fs.rm(file, { force: true });
+          await fs.writeFile(
+            path.join(prepared.dir, PARTIAL_FILE),
+            JSON.stringify({ key: build.key, sizeBytes: size }),
+          );
+        }
+        const handle = await fs.open(file, resumeAt ? 'r+' : 'w');
         let sha256: string;
         try {
           if (planned.extract) {
@@ -281,7 +337,17 @@ export class MapDownloads {
             );
             sha256 = r.sha256;
           } else {
-            sha256 = await this.downloadWhole(build, handle, ac.signal, report);
+            if (resumeAt) {
+              this.set({
+                ...base,
+                phase: 'downloading',
+                resumedFrom: resumeAt,
+                message: `checking the ${gb(resumeAt)} already downloaded`,
+              });
+              done = resumeAt;
+              fromBefore = resumeAt;
+            }
+            sha256 = await this.downloadWhole(build, handle, ac.signal, report, file, resumeAt);
           }
         } finally {
           await handle.close();
@@ -305,6 +371,7 @@ export class MapDownloads {
           await fh.close();
         }
         this.set({ ...base, phase: 'installing', message: 'making it live' });
+        await fs.rm(path.join(prepared.dir, PARTIAL_FILE), { force: true });
         await this.writeManifest(prepared.dir, id, name, req, build, st.size, sha256);
         const adopted = await this.deps
           .registry()
@@ -322,11 +389,22 @@ export class MapDownloads {
         this.plan = undefined;
         this.set({ ...base, phase: 'done', installed: { id, name }, message: `${name} is installed` });
       } catch (err) {
-        await fs.rm(prepared.dir, { recursive: true, force: true }).catch(() => undefined);
+        // A whole-planet download is kept to carry on from (Check the size, then Download, again);
+        // a cut-down map is quick to make again and is cleared.
+        // (A complete file that failed its checks is not kept: it would only fail again.)
+        const onDisk = whole
+          ? await fs
+              .stat(file)
+              .then((x) => x.size)
+              .catch(() => 0)
+          : 0;
+        const kept = onDisk < size ? onDisk : 0;
+        if (!kept) await fs.rm(prepared.dir, { recursive: true, force: true }).catch(() => undefined);
+        const keptText = kept ? `; ${gb(kept)} kept, and the next download of this build carries on from there` : '';
         this.set(
           ac.signal.aborted
-            ? { ...base, phase: 'cancelled', message: 'stopped; nothing was installed' }
-            : { ...base, phase: 'failed', message: failureText(err) },
+            ? { ...base, phase: 'cancelled', message: `stopped; nothing was installed${keptText}` }
+            : { ...base, phase: 'failed', message: `${failureText(err)}${keptText}` },
         );
       }
     })();
@@ -339,13 +417,26 @@ export class MapDownloads {
     handle: FileHandle,
     signal: AbortSignal,
     report: (n: number) => void,
+    file: string,
+    resumeAt = 0,
   ): Promise<string> {
     const sha = createHash('sha256');
     const md5 = createHash('md5');
-    let at = 0;
-    for (let attempt = 0; at < build.sizeBytes; attempt++) {
+    let at = resumeAt;
+    if (resumeAt > 0)
+      for await (const chunk of createReadStream(file, {
+        start: 0,
+        end: resumeAt - 1,
+        highWaterMark: 4 * 1024 * 1024,
+      })) {
+        signal.throwIfAborted();
+        sha.update(chunk as Buffer);
+        md5.update(chunk as Buffer);
+      }
+    let failures = 0;
+    while (at < build.sizeBytes) {
       signal.throwIfAborted();
-      if (attempt > 8) throw new Error('the download kept breaking off');
+      if (failures > 12) throw new Error('the download kept breaking off');
       try {
         const res = await this.deps.fetchImpl(PROTOMAPS_BUILD_BASE + build.key, {
           headers: at ? { Range: `bytes=${at}-` } : {},
@@ -357,16 +448,19 @@ export class MapDownloads {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
+          if (at + value.length > build.sizeBytes) throw new Error('the server sent more than the build holds');
           await handle.write(value, 0, value.length, at);
           sha.update(value);
           md5.update(value);
           at += value.length;
+          failures = 0;
           report(value.length);
         }
       } catch (err) {
         if (signal.aborted) throw err;
+        failures++;
         this.deps.log.warn('map download interrupted; resuming', { at, error: failureText(err) });
-        await new Promise((r) => setTimeout(r, 2000));
+        await new Promise((r) => setTimeout(r, Math.min(30_000, 1000 * 2 ** Math.min(failures, 5))));
       }
     }
     if (at !== build.sizeBytes) throw new Error(`got ${at} bytes, the build is ${build.sizeBytes}`);

@@ -1,6 +1,14 @@
 import type {
   AiTestAnswer,
+  CatalogAnswer,
+  CatalogRequest,
   GuideProgress,
+  LibraryDownloadRequest,
+  LibraryDownloadStatus,
+  LibraryFindAnswer,
+  LibraryFindRequest,
+  LibraryOpenRequest,
+  LibraryShelf,
   LibrarySearchAnswer,
   LocalServiceStatus,
   MapDownloadRequest,
@@ -42,6 +50,10 @@ export interface CommandCenterState {
   meshBusy: boolean;
   /** The map download, as the runtime last said (polled while it runs). */
   mapDownload: MapDownloadStatus;
+  /** The built-in library: books, references, and the download into it (polled while it runs). */
+  shelf: LibraryShelf | null;
+  libraryDownload: LibraryDownloadStatus;
+  lastLibraryFind?: LastSearch;
 }
 
 export const INITIAL_CC_STATE: CommandCenterState = {
@@ -59,6 +71,8 @@ export const INITIAL_CC_STATE: CommandCenterState = {
   aiBusy: false,
   meshBusy: false,
   mapDownload: { phase: 'idle' },
+  shelf: null,
+  libraryDownload: { phase: 'idle' },
 };
 
 type Listener = () => void;
@@ -102,6 +116,7 @@ export class CommandCenterStore {
   openAt(section: SectionId = this.state.section, guideId: string | null = null): void {
     this.set({ open: true, section, guideId });
     void this.refreshServices();
+    void this.refreshShelf();
   }
   close(): void {
     this.set({ open: false, guideId: null });
@@ -226,6 +241,77 @@ export class CommandCenterStore {
   async cancelMap(): Promise<void> {
     this.set({ mapDownload: await this.client.request('maps.download.cancel', undefined) });
     this.watchMap();
+  }
+
+  // ---- the built-in library -----------------------------------------------------------------
+  private libraryTimer: ReturnType<typeof setInterval> | undefined;
+
+  async refreshShelf(): Promise<LibraryShelf | null> {
+    try {
+      const shelf = await this.client.request('library.shelf', undefined);
+      this.set({ shelf });
+      return shelf;
+    } catch {
+      return this.state.shelf;
+    }
+  }
+
+  async findInLibrary(req: LibraryFindRequest): Promise<LibraryFindAnswer> {
+    const offline = this.isOffline();
+    const answer = await this.client.request('library.find', req);
+    this.set({ lastLibraryFind: { offline, text: req.query, count: answer.hits.length, at: this.now() } });
+    return answer;
+  }
+
+  async openLibrary(req: LibraryOpenRequest): Promise<{ opened: boolean; message?: string }> {
+    try {
+      return await this.client.request('library.open', req);
+    } catch (err) {
+      return { opened: false, message: err instanceof Error ? err.message : 'not opened' };
+    }
+  }
+
+  async searchCatalog(req: CatalogRequest): Promise<CatalogAnswer> {
+    try {
+      return await this.client.request('library.catalog', req);
+    } catch (err) {
+      return { ok: false, entries: [], message: err instanceof Error ? err.message : 'the catalogue did not answer' };
+    }
+  }
+
+  private watchLibrary(): void {
+    if (this.libraryTimer) return;
+    this.libraryTimer = setInterval(() => void this.refreshLibraryDownload(), 1000);
+  }
+
+  async refreshLibraryDownload(): Promise<LibraryDownloadStatus> {
+    try {
+      const st = await this.client.request('library.download.status', undefined);
+      const was = this.state.libraryDownload.phase;
+      this.set({ libraryDownload: st });
+      if (st.phase !== 'downloading' && st.phase !== 'verifying') {
+        if (this.libraryTimer) clearInterval(this.libraryTimer);
+        this.libraryTimer = undefined;
+        if (was === 'downloading' || was === 'verifying') void this.refreshShelf();
+      }
+      return st;
+    } catch {
+      return this.state.libraryDownload;
+    }
+  }
+
+  async startLibraryDownload(req: LibraryDownloadRequest): Promise<void> {
+    try {
+      this.set({ libraryDownload: await this.client.request('library.download.start', req) });
+      this.watchLibrary();
+    } catch (err) {
+      this.set({ libraryDownload: { phase: 'failed', message: err instanceof Error ? err.message : 'refused' } });
+    }
+  }
+
+  async cancelLibraryDownload(): Promise<void> {
+    this.set({ libraryDownload: await this.client.request('library.download.cancel', undefined) });
+    this.watchLibrary();
   }
 
   notePlaceSearch(text: string, count: number): void {

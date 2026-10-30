@@ -25,13 +25,23 @@ export interface MainWindowOptions {
  * creates (main.ts hooks `web-contents-created`) so the rules hold even for
  * contents we did not anticipate.
  */
-export function hardenWebContents(contents: WebContents, opts: { dev: boolean; appDir: string; logger: Logger }): void {
+export function hardenWebContents(
+  contents: WebContents,
+  opts: {
+    dev: boolean;
+    appDir: string;
+    logger: Logger;
+    /** More addresses this WebContents may move to (the library reader's own pages). */
+    alsoAllow?: (url: string) => boolean;
+  },
+): void {
   contents.setWindowOpenHandler((details) => {
     opts.logger.warn('security: window.open blocked', { url: details.url.slice(0, 200) });
     return { action: 'deny' };
   });
   const guard = (event: { preventDefault(): void }, url: string, what: string) => {
     if (isTrustedRendererUrl(url, { dev: opts.dev, appDir: opts.appDir })) return;
+    if (opts.alsoAllow?.(url)) return;
     event.preventDefault();
     opts.logger.warn(`security: ${what} blocked`, { url: url.slice(0, 200) });
   };

@@ -91,95 +91,98 @@ export const SDR_GUIDE: GuideDefinition = {
   ],
 };
 
-/** The offline library: kiwix-serve and ZIM files, the operator's own install. */
+/**
+ * The offline library (version 2, 2026-10-30): ZIM files WorldView opens itself, books from the
+ * Kiwix catalogue, and the public-domain emergency references. kiwix-serve is optional now.
+ */
 export const LIBRARY_GUIDE: GuideDefinition = {
   id: 'library',
-  version: 1,
+  version: 2,
   section: 'knowledge',
-  title: 'Offline library (Wikipedia, manuals, books)',
-  summary: 'Keep Wikipedia, manuals and reference books on this computer and search them offline.',
+  title: 'Offline library (Wikipedia, manuals, emergency guides)',
+  summary: 'Keep Wikipedia, medical and repair references and emergency guides on this computer, readable offline.',
   whatItDoes:
-    'Kiwix is free software that serves whole websites — Wikipedia, WikiHow, Project Gutenberg, medical and repair references — from single files called ZIM files, with no internet. WorldView finds your Kiwix library server on this computer, lists its books and searches them, and opens pages in your browser.',
+    'Kiwix publishes whole websites — Wikipedia, WikiMed, iFixit, WikiHow, Wikivoyage, survival and medicine collections — as single files called ZIM files. WorldView opens ZIM files itself, finds pages by title, and shows them in a reader window with no internet. It also fetches public-domain emergency guides from FEMA, the CDC and the U.S. Army.',
   prerequisites: [
-    'kiwix-serve (part of kiwix-tools) installed on this computer',
-    'One or more ZIM files, downloaded while online',
+    'The internet once, to download books and guides (reading them needs none)',
     'Room for them: from tens of megabytes for one topic to around 100 GB for all of English Wikipedia with pictures',
   ],
-  equipment: [{ kind: 'Storage', items: ['An external SSD for large libraries'] }],
+  equipment: [
+    { kind: 'Storage', items: ['An external SSD for large libraries (keep WorldView’s data on it: Resources)'] },
+  ],
   steps: [
     {
       id: 'intro',
       title: 'What you can keep offline',
       body: [
-        "library.kiwix.org lists what is available, by language and topic, with each file's size. Examples: Wikipedia (all, or a topic such as medicine), WikiMed, Wikibooks and Wikiversity courses, iFixit repair guides, Project Gutenberg books, Stack Exchange sites (electronics, gardening, outdoors), WikiHow.",
-        "Each file keeps its own licence and credits (Wikipedia's are CC BY-SA). WorldView ships no library content: what you install is yours to choose.",
-        'Many Wikipedia files come in sizes: "maxi" with pictures, "nopic" without pictures, and "mini" with only the start of each article.',
+        'The Kiwix library lists what is available, by language and topic, with each file’s size. Wikipedia comes in sizes: "maxi" with pictures, "nopic" without, "mini" with only the start of each article. Topic selections (medicine, climate, history) are much smaller.',
+        'Each file keeps its own licence and credits (Wikipedia’s are CC BY-SA), shown in the book. WorldView ships no library content: what you download is yours to choose.',
       ],
       links: [{ label: 'Kiwix library', url: 'https://library.kiwix.org/' }],
     },
     {
-      id: 'install',
-      title: 'Install kiwix-serve and your files',
-      body: [
-        'Install kiwix-tools: on Debian or Ubuntu with "sudo apt install kiwix-tools"; on Windows from the kiwix-tools download on kiwix.org. Download your ZIM files while online, and keep them together in one folder (an external drive is fine).',
-        'Start the server on this computer only, on port 8080: kiwix-serve --address=127.0.0.1 --port=8080 /path/to/your/*.zim',
-        'If you use another port, set it below in Resources → Local services.',
-      ],
-      needsInternet:
-        'Installing kiwix-tools and downloading ZIM files need the internet. Serving and searching them do not.',
-      links: [{ label: 'Kiwix downloads', url: 'https://kiwix.org/en/applications/' }],
-    },
-    {
-      id: 'found',
-      title: 'Find the library server',
-      body: ["WorldView asks http://127.0.0.1 on the library's port. This passes when kiwix-serve answers there."],
-      actions: ['services.refresh'],
-      check: 'library.running',
-      troubleshooting: [
-        {
-          problem: 'Nothing answers',
-          fix: 'Start kiwix-serve, and check the port matches. Another program may already use 8080: pick another port for one of them.',
-        },
-        {
-          problem: '"Something else answers"',
-          fix: 'Another program is on that port (Kolibri also likes 8080). Give kiwix-serve its own port and set it here.',
-        },
-      ],
-    },
-    {
       id: 'books',
-      title: 'Your books',
-      body: ['This passes when the library lists at least one book.'],
-      actions: ['services.refresh'],
-      check: 'library.hasBooks',
+      title: 'Get books',
+      body: [
+        'In Knowledge, search the Kiwix catalogue and press Download: the file goes into the library folder, is checked against the catalogue and its own checksum, and appears in Your library. A download that stops carries on where it left off.',
+        'Or copy .zim files you already have into the library folder (Open the library folder) and press Look again.',
+        'This passes when the library holds a book WorldView can open.',
+      ],
+      actions: ['library.openKnowledge'],
+      check: 'library.builtInBooks',
+      needsInternet: 'Downloading books needs the internet. Reading them does not.',
       troubleshooting: [
         {
-          problem: 'Empty library',
-          fix: 'Give kiwix-serve the ZIM files on its command line, or a library file made with kiwix-manage.',
+          problem: '"older xz compression"',
+          fix: 'The file was made before about 2021. Download the current version from the catalogue, or open it with kiwix-serve (below).',
+        },
+        {
+          problem: 'Not enough space',
+          fix: 'Choose a smaller version (nopic or mini), or keep WorldView’s data on an external drive (Resources).',
         },
       ],
     },
     {
-      id: 'search',
-      title: 'Search it offline',
+      id: 'references',
+      title: 'Emergency references',
       body: [
-        'Switch to Offline mode, choose a book and search it. This is the final test: it passes when a search answered with at least one page while WorldView was offline. Open a page to read it in your browser.',
+        'Six public-domain guides: FEMA’s Are You Ready?, the Army’s Survival and First Aid manuals, and CDC sheets on safe water, wound care and practical skills. One press downloads them; each is checked to be a PDF and its SHA-256 recorded.',
       ],
-      actions: ['mode.offline', 'library.search'],
-      check: 'library.search',
+      actions: ['library.downloadReferences'],
+      check: 'library.references',
+      needsInternet: 'Downloading needs the internet; the guides then open offline in your PDF viewer.',
+    },
+    {
+      id: 'find',
+      title: 'Find a page offline',
+      body: [
+        'Switch to Offline mode and find a page by the start of its title. Open it to read it in the reader window. This is the final test: it passes when a page was found while WorldView was offline.',
+      ],
+      actions: ['mode.offline', 'library.find'],
+      check: 'library.findOffline',
       final: true,
       troubleshooting: [
         {
-          problem: 'No results',
-          fix: "Try a common word in the book's language. A ZIM file without a full-text index can only be browsed, not searched.",
+          problem: 'Nothing found',
+          fix: 'Titles are matched from their start: "Water" finds "Water purification"; "purification" does not. Try the first word of the subject.',
         },
       ],
+    },
+    {
+      id: 'server',
+      title: 'Optional: kiwix-serve for full-text search',
+      body: [
+        'WorldView finds pages by title. For searching inside the text of every page, or for files in the older xz format, run kiwix-serve on this computer: kiwix-serve --address=127.0.0.1 --port=8080 /path/to/your/*.zim — WorldView finds it and searches it too (Knowledge → Kiwix server). Skip this step if you do not need it.',
+      ],
+      actions: ['services.refresh'],
+      check: 'library.running',
+      links: [{ label: 'Kiwix downloads', url: 'https://kiwix.org/en/applications/' }],
     },
     {
       id: 'manage',
       title: 'Update or remove books',
       body: [
-        'New versions of most files come out every few months. Download the new file while online, swap it into the folder and restart kiwix-serve. Delete a ZIM file to remove a book. WorldView keeps nothing of the library itself.',
+        'New versions of most files come out every few months: download the new one, then delete the old file from the library folder. Deleting a ZIM file removes the book; WorldView keeps nothing of it elsewhere.',
       ],
     },
   ],

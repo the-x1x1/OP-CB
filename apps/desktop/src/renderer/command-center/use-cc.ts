@@ -42,6 +42,8 @@ export function checkData(cc: CommandCenterState, facts: ReturnType<typeof useSh
     ...(cc.receiverObjects !== null ? { receiverObjects: cc.receiverObjects } : {}),
     ...(cc.lastPlaceSearch ? { lastPlaceSearch: cc.lastPlaceSearch } : {}),
     ...(cc.lastLibrarySearch ? { lastLibrarySearch: cc.lastLibrarySearch } : {}),
+    shelf: cc.shelf,
+    ...(cc.lastLibraryFind ? { lastLibraryFind: cc.lastLibraryFind } : {}),
     ...(cc.lastAiTest ? { lastAiTest: cc.lastAiTest } : {}),
     ...(cc.lastMeshTest ? { lastMeshTest: cc.lastMeshTest } : {}),
   };
@@ -59,6 +61,7 @@ export function useRunCheck(): (id: CheckId) => Promise<CheckResult> {
       if (needs.meshNodes) work.push(store.refreshMeshNodes());
       if (needs.receivers) work.push(store.refreshReceivers());
       if (needs.services) work.push(store.refreshServices());
+      if (needs.shelf) work.push(store.refreshShelf());
       await Promise.all(work);
       // Read the store after the fetches: the hook's state is the render's, not the newest.
       return runCheck(id, checkData(store.get(), facts, Date.now()));

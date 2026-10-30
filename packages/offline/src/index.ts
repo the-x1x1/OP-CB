@@ -34,3 +34,4 @@ export * from './basemaps/martin.js';
 export * from './pmtiles.js';
 export * from './pmtiles-extract.js';
 export * from './protomaps-builds.js';
+export * from './zim.js';

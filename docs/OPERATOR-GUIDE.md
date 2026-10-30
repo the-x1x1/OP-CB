@@ -95,8 +95,8 @@ to the internet until you choose. Then the Command Center opens over the map:
   Ready, Verification required, Setup required, Degraded or Unavailable, and why.
 - **World & Maps**: Show the map (everything as before), Sources, Settings, the operating
   profile (Field / Balanced / Docked) and your packs.
-- **Knowledge**: your Kiwix library server (books, full-text search, pages opened in the
-  browser) and Kolibri.
+- **Knowledge**: your library — ZIM files WorldView opens itself, books downloaded from the
+  Kiwix catalogue, the emergency references — plus an optional Kiwix server and Kolibri.
 - **Local Intelligence**: Ollama, the model to use, a test question, and questions answered
   from your library's excerpts (what was retrieved and what the model wrote are labelled apart;
   neither is emergency or medical advice).
@@ -111,6 +111,25 @@ Every section has **How do I set this up?**: a walkthrough with the steps, real 
 check after each step that passes only on what is really there, troubleshooting, and a final
 test. Progress is kept; Restart starts one again. Esc or **Show the map** closes the Command
 Center; the top bar's button or Ctrl+Shift+O opens it.
+
+## Your offline library
+
+Command Center → **Knowledge**.
+
+- **Your library** lists the ZIM files in the library folder (inside WorldView's data folder, so
+  on your external drive when the data is there). **Open** shows a book's start page in the
+  reader window; **Find** looks for pages by the start of their title across every book
+  ("Water" finds "Water purification"). The reader runs no page scripts and loads nothing from
+  the internet; Alt+Left / Alt+Right (or the mouse's side buttons) go back and forward.
+- **Get books from the Kiwix library** (Online mode): search the catalogue, then **Download**.
+  The file goes into the library folder and is checked (size, SHA-256, and the checksum inside
+  the file) before it appears. Stop it, close WorldView, lose the connection — the next
+  Download of the same book carries on. Sizes run from a few MB to about 100 GB (English
+  Wikipedia with pictures); "nopic" and "mini" versions are much smaller.
+- **Emergency references**: **Download all** fetches six public-domain guides (FEMA, U.S. Army,
+  CDC); **Open** shows one in your PDF viewer, offline.
+- Files you already have: **Open the library folder**, copy `.zim` files in, **Look again**.
+  Files made before about 2021 (older xz format) are listed but need kiwix-serve.
 
 ## Keeping WorldView on an external drive
 

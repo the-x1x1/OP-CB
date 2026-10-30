@@ -40,6 +40,7 @@ import type {
 } from '@worldview/ipc-contract';
 import {
   DEFAULT_SERVICE_PORTS,
+  EMERGENCY_REFERENCES,
   EVENT_TYPE_LABELS,
   IPC_CONTRACT_VERSION,
   LOCAL_SERVICE_IDS,
@@ -714,6 +715,23 @@ export class DemoClient implements WorldClient {
       case 'maps.download.start':
       case 'maps.download.status':
       case 'maps.download.cancel':
+        return { phase: 'idle' };
+      case 'library.shelf':
+        return {
+          folder: '(browser demo: nothing is kept)',
+          books: [],
+          references: EMERGENCY_REFERENCES.map((r) => ({ ...r, urls: [...r.urls] })),
+        };
+      case 'library.find':
+        return { hits: [], searched: 0, notes: ['the browser demo has no library'] };
+      case 'library.open':
+        return { opened: false, message: 'the browser demo opens nothing' };
+      case 'library.catalog':
+        return { ok: false, entries: [], message: 'the browser demo contacts no catalogue' };
+      case 'library.download.start':
+        return { phase: 'failed', message: 'the browser demo downloads nothing' };
+      case 'library.download.status':
+      case 'library.download.cancel':
         return { phase: 'idle' };
       case 'field.status':
         // A browser cannot read this computer's power or disks: said as unknown, never made up.

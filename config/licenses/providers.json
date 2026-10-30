@@ -2846,6 +2846,52 @@
       },
       "commercialReview": "approved",
       "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) and KartaView (field shape not yet confirmed from a live answer) are not asked."
+    },
+    {
+      "providerId": "kiwix-library",
+      "name": "Kiwix library — catalogue and ZIM file downloads (library.kiwix.org, download.kiwix.org)",
+      "sourceUrl": "https://library.kiwix.org/catalog/v2/entries",
+      "termsUrl": "https://kiwix.org/en/",
+      "license": "Per file: each ZIM file carries its own content licence (Wikipedia and Wikimedia projects CC BY-SA; others as the file states). The catalogue is a public listing.",
+      "category": "reference-library",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": false,
+        "commercialUseAllowed": true,
+        "attributionRequired": true,
+        "attributionText": "Library content: as credited inside each book (Kiwix / openZIM files)",
+        "termsUrl": "https://kiwix.org/en/"
+      },
+      "commercialReview": "approved",
+      "notes": "Operator decision 2026-10-30 (built-in ZIM reader and catalogue downloads). The operator chooses and downloads each file onto their own computer; WorldView bundles no library content and redistributes nothing (redistribution/offline-pack flags false for that reason, not because the content forbids it). Credits and licence stay inside each file and are shown in the reader. Downloads only from download.kiwix.org links (and https mirrors named in its Metalink files), checked by size, SHA-256 when given, and the ZIM file's own MD5."
+    },
+    {
+      "providerId": "us-federal-preparedness",
+      "name": "Public-domain emergency references (FEMA, CDC, U.S. Army)",
+      "sourceUrl": "https://www.ready.gov/ ; https://www.cdc.gov/ ; Army manuals via https://irp.fas.org/doddir/army/",
+      "termsUrl": "https://www.usa.gov/government-copyright",
+      "license": "U.S. Government work — public domain (17 U.S.C. § 105); the Army manuals are also marked approved for public release, distribution unlimited",
+      "category": "reference-library",
+      "plannedStatus": "optional",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": true,
+        "normalizedRetentionAllowed": true,
+        "redistributionAllowed": true,
+        "offlinePackAllowed": true,
+        "exportAllowed": true,
+        "commercialUseAllowed": true,
+        "attributionRequired": false,
+        "attributionText": "FEMA, CDC and U.S. Army publications (public domain)",
+        "termsUrl": "https://www.usa.gov/government-copyright"
+      },
+      "commercialReview": "approved",
+      "notes": "Operator decision 2026-10-30. Six documents, listed in packages/ipc-contract command-center.ts EMERGENCY_REFERENCES with every address and whether it was opened on 2026-10-30. Fetched on the operator's press, never bundled; each checked to be a PDF and its SHA-256 recorded. Some federal documents include third-party photographs; none is reused outside the document."
     }
   ]
 }

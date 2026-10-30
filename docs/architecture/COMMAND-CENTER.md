@@ -164,3 +164,46 @@ history and packs stay; a folder WorldView already uses is adopted unchanged); b
 usual folder; restart. A portable copy keeps everything in `WorldView-data` beside the app. A
 moved folder without WorldView's marker (the drive not mounted) is never used: the start asks.
 Tested with temporary folders in the container; not yet in the packaged app on a real SSD.
+
+## 10. The built-in library and the emergency references (2026-10-30)
+
+The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
+
+- **Reading ZIM files** (`packages/offline/src/zim.ts`): header, MIME list, the URL-sorted entry
+  list (binary search by namespace + path), the title-sorted list (the header's, or the front
+  articles' `X/listing/titleOrdered/v1`), redirects, metadata (`M/`), the main page, clusters
+  plain or zstd (Node's `zlib.zstdDecompress`, 512 MB cap), large plain clusters read blob by
+  blob, and the MD5 the file ends with. xz clusters are refused with words saying so. Written
+  from the format, no openZIM code; checked on 2026-10-30 against the openZIM testing suite's
+  files (old and new namespace schemes, `wikipedia_en_climate_change_mini_2024-06`, and every
+  damaged file there: each either refused or read only where undamaged), which are not in the
+  repository. Unit tests build their own files.
+- **The library** (`runtime/src/support/zim-library.ts`): every `.zim` in `<data>/library`,
+  opened lazily, re-read when files change; title search across books (and, for a question,
+  each longer word of it); plain text of an article for grounded answers.
+- **The reader** (`main/library-reader.ts`, `library-reader-pages.ts`, ADR-004 amendment): a
+  separate window and session, scripts off, a strict CSP, nothing off the book.
+- **Downloads** (`runtime/src/support/library-downloads.ts`): the Kiwix OPDS catalogue
+  (`library.kiwix.org/catalog/v2/entries?q=&lang=&count=`, shape from libkiwix's tests), only
+  download links on `download.kiwix.org`, made https; the Metalink file (RFC 5854) for size,
+  SHA-256 and https mirrors; Range continuation from `<library>/.downloads/<file>.part` across
+  restarts; size, SHA-256 and the ZIM MD5 (computed while downloading) before the file is
+  renamed into the library. Licence register: `kiwix-library`.
+- **Emergency references** (`EMERGENCY_REFERENCES` in the contract): six U.S. federal
+  public-domain PDFs with their addresses and which were opened on 2026-10-30; fetched on the
+  operator's press into `<library>/references/`, `%PDF-` checked, SHA-256 recorded in
+  `references.json`; opened with the system's PDF viewer. Licence register:
+  `us-federal-preparedness`.
+- **The planet map** now continues (`map-download.ts`): `partial.json` beside an unfinished
+  whole-planet file names its build; the plan picks that build while the list still offers it;
+  the download re-hashes what is there and asks for the rest by Range. Cut-down maps are still
+  cleared on failure (quick to make again).
+- **Walkthrough**: the library guide is version 2 (books, references, find offline as the final
+  test; kiwix-serve an optional step). Readiness counts readable built-in books first.
+
+Evidence: unit tests (`zim.test.ts`, `library-reader.test.ts`, `checks.test.ts`) and runtime
+integration tests (`library.test.ts`: listing, title search through redirects, catalogue,
+download from a Metalink mirror, SHA-256 refusal, MD5 refusal, continuation after a restart,
+references with a fallback and a refused web page, Offline mode; `map-download.test.ts`: the
+planet continued after a restart). Not yet seen: the reader window on a screen, a real Kiwix
+download, a real reference download, a real planet download.

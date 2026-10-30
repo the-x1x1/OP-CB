@@ -32,7 +32,7 @@ export function bytesText(n: number): string {
   return `${Math.max(1, Math.round(n / 1e3))} kB`;
 }
 
-function etaText(done: number, total: number, rate?: number): string {
+export function etaText(done: number, total: number, rate?: number): string {
   if (!rate || rate <= 0) return '';
   const s = (total - done) / rate;
   if (s < 90) return ` · about ${Math.ceil(s)} s left`;
@@ -128,7 +128,8 @@ export function MapDownloadPanel() {
         </label>
       ) : (
         <p className="wv-cc-muted">
-          The whole Protomaps build: every zoom to 15 everywhere. Over 100 GB: choose an external drive.
+          The whole Protomaps build: every zoom to 15 everywhere, about 140 GB. If it stops — a dropped connection, the
+          laptop shut, WorldView closed — Check the size and Download again carry on from where it was.
         </p>
       )}
       {kind === 'area' ? (
@@ -220,7 +221,9 @@ function MapDownloadState() {
       ) : null}
       {st.phase === 'planned' && st.sizeBytes !== undefined ? (
         <p>
-          <strong>{bytesText(st.sizeBytes)}</strong> to download to {st.target?.label ?? 'this computer'}
+          <strong>{bytesText(st.sizeBytes - (st.resumedFrom ?? 0))}</strong> to download to{' '}
+          {st.target?.label ?? 'this computer'}
+          {st.resumedFrom ? ` (${bytesText(st.resumedFrom)} of ${bytesText(st.sizeBytes)} is already there)` : ''}
           {st.target?.freeBytes !== undefined ? ` (${bytesText(st.target.freeBytes)} free there)` : ''}.
           {st.target?.freeBytes !== undefined && st.target.freeBytes < st.sizeBytes + 1e9
             ? ' Not enough room: choose a lower detail or another drive.'
@@ -236,6 +239,7 @@ function MapDownloadState() {
             {bytesText(p.bytesDone)} of {bytesText(p.bytesTotal)}
             {p.bytesPerSecond ? ` · ${bytesText(p.bytesPerSecond)}/s` : ''}
             {etaText(p.bytesDone, p.bytesTotal, p.bytesPerSecond)}
+            {st.resumedFrom ? ` · carried on from ${bytesText(st.resumedFrom)}` : ''}
           </p>
         </>
       ) : null}

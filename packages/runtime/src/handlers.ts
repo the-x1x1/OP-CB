@@ -35,7 +35,10 @@ import {
   LOCAL_SERVICE_IDS,
   readGuideProgress,
   readPrepRecord,
+  readLibraryDownloadRequest,
+  readLibraryOpenRequest,
   type LocalServiceId,
+  type LibraryOpenRequest,
   type MapDownloadRequest,
   type ModeState,
   type OperatingMode,
@@ -932,6 +935,61 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     }),
     'data.restart': async () => ({ restarting: false }),
 
+    // ---- the built-in library (2026-10-30) ----------------------------------------------------
+    'library.shelf': async () => {
+      const [books, references] = await Promise.all([core.zimLibrary.books(), core.libraryDownloads.references()]);
+      const free = await fs
+        .statfs(core.zimLibrary.dir)
+        .then((st) => Number(st.bavail) * Number(st.bsize))
+        .catch(() => undefined);
+      return { folder: core.zimLibrary.dir, books, references, ...(free !== undefined ? { freeBytes: free } : {}) };
+    },
+    'library.find': async (req) => {
+      if (typeof req?.query !== 'string' || !req.query.trim() || req.query.length > 200)
+        throw new InvalidRequestError('query must be 1–200 characters');
+      if (req.bookId !== undefined && (typeof req.bookId !== 'string' || !/^[0-9a-z-]{1,64}$/.test(req.bookId)))
+        throw new InvalidRequestError('bookId must be a book from the library');
+      if (req.limit !== undefined && (!Number.isInteger(req.limit) || req.limit < 1 || req.limit > 50))
+        throw new InvalidRequestError('limit is 1 to 50');
+      return core.zimLibrary.find({
+        query: req.query,
+        ...(req.bookId ? { bookId: req.bookId } : {}),
+        ...(req.limit ? { limit: req.limit } : {}),
+        ...(req.withText ? { withText: true } : {}),
+      });
+    },
+    // Opening a window or a PDF viewer is the desktop's (main.ts); a runtime alone opens nothing.
+    'library.open': async (req) => {
+      readLibraryOpen(req);
+      return { opened: false, message: 'only the desktop app opens the reader' };
+    },
+    'library.catalog': async (req, ctx) => {
+      if (req?.query !== undefined && (typeof req.query !== 'string' || req.query.length > 200))
+        throw new InvalidRequestError('query is at most 200 characters');
+      if (
+        req?.language !== undefined &&
+        (typeof req.language !== 'string' || !/^[a-z]{2,3}(,[a-z]{2,3})*$/.test(req.language))
+      )
+        throw new InvalidRequestError('language is an ISO 639-3 code such as eng');
+      if (core.demoMode()) return { ok: false, entries: [], message: 'the demo build contacts no catalogue' };
+      return core.libraryDownloads.catalog(
+        {
+          ...(req?.query ? { query: req.query } : {}),
+          ...(req?.language ? { language: req.language } : {}),
+          ...(req?.count ? { count: req.count } : {}),
+        },
+        ctx.signal,
+      );
+    },
+    'library.download.start': async (req) => {
+      if (core.demoMode()) return { phase: 'failed', message: 'the demo build downloads nothing' };
+      const r = readLibraryDownloadRequest(req);
+      if (!r) throw new InvalidRequestError('kind must be zim (with a catalogue entry) or references');
+      return core.libraryDownloads.start(r);
+    },
+    'library.download.status': async () => core.libraryDownloads.current(),
+    'library.download.cancel': async () => core.libraryDownloads.cancel(),
+
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),
     'offline.installPack': async () => {
@@ -1262,6 +1320,13 @@ function isBounds(value: unknown): value is GeoBounds {
 }
 
 /** A map download request read strictly, or why not. */
+/** A `library.open` request, checked; throws InvalidRequestError otherwise. */
+export function readLibraryOpen(v: unknown): LibraryOpenRequest {
+  const r = readLibraryOpenRequest(v);
+  if (!r) throw new InvalidRequestError('not a library request: kind book (bookId, key?), reference (id) or folder');
+  return r;
+}
+
 export function readMapDownloadRequest(v: unknown): MapDownloadRequest | string {
   if (typeof v !== 'object' || v === null) return 'not a map download request';
   const r = v as Record<string, unknown>;

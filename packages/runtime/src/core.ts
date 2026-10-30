@@ -135,6 +135,8 @@ import {
 import { createDemoProviders } from './demo/index.js';
 import { LocalServices } from './support/local-services.js';
 import { MapDownloads } from './support/map-download.js';
+import { ZimLibrary } from './support/zim-library.js';
+import { LibraryDownloads } from './support/library-downloads.js';
 import { MartinBasemaps } from './martin-basemap.js';
 import {
   validateCollection,
@@ -323,6 +325,9 @@ export class RuntimeCore {
   localServices!: LocalServices;
   /** Offline maps downloaded in the app (support/map-download.ts). */
   mapDownloads!: MapDownloads;
+  /** The built-in library: ZIM files read here, and downloads into it (2026-10-30). */
+  zimLibrary!: ZimLibrary;
+  libraryDownloads!: LibraryDownloads;
   watchZoneStore!: JsonDocStore<WatchZone>;
   lenses!: JsonDocStore<LensDefinition>;
   gazetteer!: Gazetteer;
@@ -905,6 +910,13 @@ export class RuntimeCore {
       onChange: (st) => {
         if (st.phase === 'done') this.emitter.emit('offline.changed', this.offlineStatus());
       },
+    });
+    this.zimLibrary = new ZimLibrary(this.dirs.libraryDir, this.loggerHub.logger('offline'));
+    this.libraryDownloads = new LibraryDownloads({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      dir: this.dirs.libraryDir,
+      now: () => this.clock.now(),
+      log: this.loggerHub.logger('offline'),
     });
     await this.collections.load();
     await this.restoreCameras();
@@ -1505,6 +1517,8 @@ export class RuntimeCore {
     await this.providerHost.dispose().catch(() => undefined);
     this.events.dispose();
     this.state.dispose();
+    this.libraryDownloads?.cancel();
+    await this.zimLibrary?.close().catch(() => undefined);
     await this.cameraRelay?.stop().catch(() => undefined);
     await this.go2rtc?.stop().catch(() => undefined);
     await this.history

@@ -112,24 +112,44 @@ export function evaluateReadiness(input: ReadinessInput): ReadinessItem[] {
           }),
     });
 
-  // Offline library.
+  // Offline library: the built-in reader's books first, a running kiwix-serve otherwise.
   {
     const s = svc('kiwix');
     const base = { id: 'library', label: 'Offline library', section: 'knowledge' as const, guideId: 'library' };
-    if (!input.services)
-      out.push({ ...base, status: 'unavailable', reason: 'Local services have not been asked yet.' });
+    const readable = (input.shelf?.books ?? []).filter((b) => b.readable);
+    const refs = (input.shelf?.references ?? []).filter((r) => r.installed).length;
+    const refsText = refs ? ` ${refs} emergency reference${refs === 1 ? '' : 's'}.` : '';
+    if (readable.length)
+      out.push({
+        ...base,
+        ...verifiedOr(
+          input,
+          'library',
+          `${readable.length} book${readable.length === 1 ? '' : 's'} in the library.${refsText}`,
+        ),
+      });
     else if (s?.state === 'running' && s.books?.length)
       out.push({
         ...base,
-        ...verifiedOr(input, 'library', `${s.books.length} book${s.books.length === 1 ? '' : 's'} at ${s.endpoint}.`),
+        ...verifiedOr(
+          input,
+          'library',
+          `${s.books.length} book${s.books.length === 1 ? '' : 's'} at ${s.endpoint}.${refsText}`,
+        ),
       });
-    else if (s?.state === 'running')
-      out.push({ ...base, status: 'degraded', reason: 'The library server answers but lists no books.' });
+    else if (input.shelf === undefined && !input.services)
+      out.push({ ...base, status: 'unavailable', reason: 'The library has not been looked at yet.' });
+    else if (refs)
+      out.push({
+        ...base,
+        status: 'degraded',
+        reason: `${refs} emergency reference${refs === 1 ? '' : 's'}, but no books yet: download some in Knowledge.`,
+      });
     else
       out.push({
         ...base,
         status: 'setup-required',
-        reason: `No library server found at ${s?.endpoint ?? 'its port'}.`,
+        reason: 'No books yet: download them in Knowledge, or put ZIM files in the library folder.',
       });
   }
 
