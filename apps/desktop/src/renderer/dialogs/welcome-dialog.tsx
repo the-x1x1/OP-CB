@@ -14,7 +14,7 @@ export function WelcomeDialog() {
   return (
     <Dialog
       open
-      title="Welcome to WORLDVIEW"
+      title="Welcome to Operation Civilization Backup"
       onClose={finish}
       size="md"
       description="A local-first browser for the physical world — live, historical and offline."
@@ -55,7 +55,7 @@ export function WelcomeDialog() {
           </h3>
           <Toggle
             label="Open at my home view"
-            description="Off: WORLDVIEW opens on the whole Earth. On: after the map appears it flies to a home view you set yourself — from any view, in Settings → Home view; Home or Shift+H returns there. WORLDVIEW never looks up where you are."
+            description="Off: OP-CB opens on the whole Earth. On: after the map appears it flies to a home view you set yourself — from any view, in Settings → Home view; Home or Shift+H returns there. OP-CB never looks up where you are."
             checked={session.settings?.home?.flyOnStart ?? false}
             onChange={(v) => void actions.setHomeFlyOnStart(v)}
           />

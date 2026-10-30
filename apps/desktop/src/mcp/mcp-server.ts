@@ -39,25 +39,25 @@ function query(params: Record<string, string | number | undefined>): string {
 export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
   {
     name: 'worldview_status',
-    title: 'WorldView status',
+    title: 'OP-CB status',
     description:
-      'Whether WorldView is running and connected: online or offline, how many of its sources are live, whether what it shows is recorded (demo) data, and the app version.',
+      'Whether OP-CB is running and connected: online or offline, how many of its sources are live, whether what it shows is recorded (demo) data, and the app version.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     path: () => '/v1/health',
   },
   {
     name: 'worldview_sources',
-    title: 'WorldView sources',
+    title: 'OP-CB sources',
     description:
-      'Every data source WorldView has (aircraft, ships, satellites, earthquakes, weather, alerts, local receivers…): on or off, its state, and — when its licence lets its data out of the app — how many objects it has and when it last reported.',
+      'Every data source OP-CB has (aircraft, ships, satellites, earthquakes, weather, alerts, local receivers…): on or off, its state, and — when its licence lets its data out of the app — how many objects it has and when it last reported.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     path: () => '/v1/sources',
   },
   {
     name: 'worldview_objects',
-    title: 'Objects on WorldView’s map',
+    title: 'Objects on OP-CB’s map',
     description:
-      'Objects WorldView holds now — aircraft, vessels, satellites, earthquakes, storms, weather stations, fires, sensors and more — optionally within a radius of a place and of given types. Each comes with its position, labels, freshness and source. Only objects every source of which allows its data out of the app are listed. Page with `cursor`.',
+      'Objects OP-CB holds now — aircraft, vessels, satellites, earthquakes, storms, weather stations, fires, sensors and more — optionally within a radius of a place and of given types. Each comes with its position, labels, freshness and source. Only objects every source of which allows its data out of the app are listed. Page with `cursor`.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -115,9 +115,9 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
   },
   {
     name: 'worldview_offline',
-    title: 'WorldView offline readiness',
+    title: 'OP-CB offline readiness',
     description:
-      'What WorldView can do without the internet now: the connection, whether Work offline is on, what works locally, the offline packs installed and the data vaults.',
+      'What OP-CB can do without the internet now: the connection, whether Work offline is on, what works locally, the offline packs installed and the data vaults.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     path: () => '/v1/offline',
   },
@@ -152,7 +152,7 @@ function toolText(text: string, isError = false): Record<string, unknown> {
 }
 
 const NOT_RUNNING =
-  'WorldView is not running, or its local API is off. Open WorldView and turn on Settings → Local API ("Let other programs on this computer read WORLDVIEW").';
+  'OP-CB is not running, or its local API is off. Open OP-CB and turn on Settings → Local API ("Let other programs on this computer read OP-CB").';
 
 /**
  * One message in, at most one message out (none for a notification). Unknown methods are
@@ -176,9 +176,9 @@ export async function handleMcpMessage(raw: unknown, get: LocalApiGet, info: { v
       return ok({
         protocolVersion,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: MCP_SERVER_NAME, title: 'WorldView', version: info.version },
+        serverInfo: { name: MCP_SERVER_NAME, title: 'OP-CB', version: info.version },
         instructions:
-          'Read-only access to what WorldView, a map of the live physical world, holds on this computer: its sources, objects near a place, tracks and offline readiness. Positions are WGS 84 decimal degrees; times are ISO 8601 UTC.',
+          'Read-only access to what OP-CB, a map of the live physical world, holds on this computer: its sources, objects near a place, tracks and offline readiness. Positions are WGS 84 decimal degrees; times are ISO 8601 UTC.',
       });
     }
     case 'notifications/initialized':
@@ -212,10 +212,7 @@ export async function handleMcpMessage(raw: unknown, get: LocalApiGet, info: { v
       } catch (err) {
         const why = err instanceof Error ? err.message : String(err);
         return ok(
-          toolText(
-            /ENOENT|ECONNREFUSED|not running/i.test(why) ? NOT_RUNNING : `WorldView did not answer: ${why}`,
-            true,
-          ),
+          toolText(/ENOENT|ECONNREFUSED|not running/i.test(why) ? NOT_RUNNING : `OP-CB did not answer: ${why}`, true),
         );
       }
     }

@@ -96,8 +96,8 @@ export function CommandCenter() {
     <div className="wv-cc" role="dialog" aria-modal="false" aria-label="Command Center">
       <nav className="wv-cc__nav" aria-label="Command Center sections">
         <div className="wv-cc__brand">
-          <span>WORLDVIEW</span>
-          <span className="wv-cc-caps">Command Center</span>
+          <span className="wv-brand-wordmark wv-cc__wordmark" role="img" aria-label="OP-CB" />
+          <span className="wv-brand-caption wv-cc__brandline">Command Center</span>
         </div>
         <ModeSwitch compact />
         <ul>
@@ -250,7 +250,7 @@ function Overview() {
           <ModeSwitch />
           <p>
             {mode?.chosen === 'offline'
-              ? 'Offline: WorldView sends nothing to the internet. Sources on the internet are paused; what is on this computer keeps working.'
+              ? 'Offline: OP-CB sends nothing to the internet. Sources on the internet are paused; what is on this computer keeps working.'
               : 'Online: internet sources, map tiles and updates are in use.'}
           </p>
           <p className="wv-cc-muted">
@@ -259,7 +259,7 @@ function Overview() {
             {mode?.localHosts.length
               ? ` ${mode.localHosts.length} device(s) on your network approved for offline use.`
               : ''}{' '}
-            Offline is enforced on WorldView&apos;s own requests; it is not a firewall for other programs.
+            Offline is enforced on OP-CB&apos;s own requests; it is not a firewall for other programs.
           </p>
         </section>
         <section className="wv-cc-card">
@@ -451,7 +451,7 @@ function Knowledge() {
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">Kiwix server (optional)</h3>
         <p className="wv-cc-muted">
-          Not needed to read ZIM files any more. A running kiwix-serve adds full-text search and older files WorldView
+          Not needed to read ZIM files any more. A running kiwix-serve adds full-text search and older files OP-CB
           cannot open itself.
         </p>
         <ServiceLine id="kiwix" />
@@ -516,7 +516,7 @@ function Intelligence() {
         ) : null}
         <p className="wv-cc-muted">
           Runs entirely on this computer. On a laptop processor expect a few words a second, a long first answer while
-          the model loads, and a lot of battery use. WorldView works the same without it.
+          the model loads, and a lot of battery use. OP-CB works the same without it.
         </p>
       </section>
       {chosen && ollama?.state === 'running' ? (
@@ -754,7 +754,7 @@ function Comms() {
             </p>
           );
         })}
-        <p className="wv-cc-muted">An RTL-SDR only receives: WorldView never transmits through a receiver.</p>
+        <p className="wv-cc-muted">An RTL-SDR only receives: OP-CB never transmits through a receiver.</p>
         {cc.receiverObjects !== null ? (
           <p className="wv-cc-muted">{cc.receiverObjects} objects heard by your own receivers now.</p>
         ) : null}
@@ -960,7 +960,7 @@ function ServicesPorts() {
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">Local services</h3>
       <p className="wv-cc-muted">
-        Asked on this computer only (127.0.0.1). WorldView never installs, starts or stops them.
+        Asked on this computer only (127.0.0.1). OP-CB never installs, starts or stops them.
       </p>
       <ul className="wv-cc-table">
         {LOCAL_SERVICE_IDS.map((id) => (
@@ -1010,9 +1010,8 @@ function LocalHosts() {
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">Local network (offline)</h3>
       <p className="wv-cc-muted">
-        In Offline mode WorldView reaches only this computer — and these devices on your own network, one each: a
-        receiver on a Raspberry Pi, a weather station. Only private addresses and local names are taken; a whole range
-        never is.
+        In Offline mode OP-CB reaches only this computer — and these devices on your own network, one each: a receiver
+        on a Raspberry Pi, a weather station. Only private addresses and local names are taken; a whole range never is.
       </p>
       <ul className="wv-cc-table">
         {hosts.map((h) => (

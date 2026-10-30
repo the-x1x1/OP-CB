@@ -633,7 +633,7 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
     },
     {
       id: 'welcome.open',
-      title: 'About WORLDVIEW',
+      title: 'About OP-CB',
       group: 'App',
       icon: 'globe',
       run: () => actions.openDialog('welcome'),

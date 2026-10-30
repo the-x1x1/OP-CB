@@ -951,7 +951,7 @@ export class WorldPackRegistry {
     if (!pack) return false;
     if (pack.vault)
       throw new VaultPackError(
-        `"${pack.summary.name}" is on the vault "${pack.vault.label}". WorldView does not delete files on a vault: switch the pack off here, or delete ${pack.dir} yourself.`,
+        `"${pack.summary.name}" is on the vault "${pack.vault.label}". OP-CB does not delete files on a vault: switch the pack off here, or delete ${pack.dir} yourself.`,
       );
     await fs.rm(pack.dir, { recursive: true, force: true });
     const state = await this.readState();

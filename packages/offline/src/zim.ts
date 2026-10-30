@@ -187,7 +187,7 @@ async function zstdDecompress(data: Uint8Array): Promise<Uint8Array> {
       err
         ? reject(
             err instanceof RangeError || /maxOutputLength|buffer/i.test(err.message)
-              ? new ZimError('a cluster is larger than WorldView reads', 'too-large')
+              ? new ZimError('a cluster is larger than OP-CB reads', 'too-large')
               : new ZimError(`a cluster could not be decompressed (${err.message})`, 'damaged'),
           )
         : resolve(new Uint8Array(out.buffer, out.byteOffset, out.byteLength)),
@@ -358,11 +358,11 @@ export class ZimArchive {
       data = await zstdDecompress(await this.readExact(start + 1, end - start - 1));
     } else if (compression === 4) {
       throw new ZimError(
-        'this ZIM file uses the older xz compression, which WorldView does not read; open it with kiwix-serve or download a newer copy',
+        'this ZIM file uses the older xz compression, which OP-CB does not read; open it with kiwix-serve or download a newer copy',
         'unsupported',
       );
     } else {
-      throw new ZimError(`cluster compression ${compression} is not one WorldView reads`, 'unsupported');
+      throw new ZimError(`cluster compression ${compression} is not one OP-CB reads`, 'unsupported');
     }
     return { offsets: offsetsFrom(data, width), data };
   }
@@ -401,10 +401,10 @@ export class ZimArchive {
     if (a < 0) {
       const from = -a - 1;
       const to = -b - 1;
-      if (to - from > maxBytes) throw new ZimError('the item is larger than WorldView shows', 'too-large');
+      if (to - from > maxBytes) throw new ZimError('the item is larger than OP-CB shows', 'too-large');
       return { mimeType: target.mimeType, data: await this.readExact(from, to - from) };
     }
-    if (b - a > maxBytes) throw new ZimError('the item is larger than WorldView shows', 'too-large');
+    if (b - a > maxBytes) throw new ZimError('the item is larger than OP-CB shows', 'too-large');
     return { mimeType: target.mimeType, data: c.data.subarray(a, b) };
   }
 

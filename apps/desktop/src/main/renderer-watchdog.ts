@@ -82,10 +82,10 @@ export function diagnosticScript(detail: string): string {
     var host = document.body || document.documentElement;
     var box = document.createElement('div');
     box.id = 'wv-diagnostic';
-    box.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:28px 32px;background:#0b0f14;color:#c8d4e0;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace');
+    box.setAttribute('style', 'position:fixed;inset:0;z-index:2147483647;overflow:auto;padding:28px 32px;background:#121211;color:#c8d4e0;font:13px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace');
     var h = document.createElement('div');
     h.setAttribute('style', 'font:600 17px/1.4 system-ui,sans-serif;color:#e0b24a;margin-bottom:6px');
-    h.textContent = 'WORLDVIEW loaded but drew nothing';
+    h.textContent = 'OP-CB loaded but drew nothing';
     var sub = document.createElement('div');
     sub.setAttribute('style', 'color:#8ea0b4;margin-bottom:18px;font:13px/1.6 system-ui,sans-serif');
     sub.textContent = 'The window and the main process are fine. This is what the renderer reported:';

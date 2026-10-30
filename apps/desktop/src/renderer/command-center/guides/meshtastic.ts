@@ -15,7 +15,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
   title: 'Meshtastic radio (LoRa mesh)',
   summary: 'Plug in a Meshtastic radio and see your mesh on the map, with no internet or phone signal.',
   whatItDoes:
-    'A Meshtastic radio talks to other Meshtastic radios directly, over the air, with no phone network and no internet. WorldView reads your radio and shows where the radios on your mesh are, how strong they are heard and their batteries. It never reads the text messages people send, and it transmits only one thing: a test message, when you press Send.',
+    'A Meshtastic radio talks to other Meshtastic radios directly, over the air, with no phone network and no internet. OP-CB reads your radio and shows where the radios on your mesh are, how strong they are heard and their batteries. It never reads the text messages people send, and it transmits only one thing: a test message, when you press Send.',
   prerequisites: [
     'A Meshtastic-ready radio (this guide helps you check yours) with its antenna',
     'A USB data cable (some cables only charge), or a radio with Wi-Fi on your network',
@@ -86,7 +86,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       },
       byChoice: {
         'generic-lora': [
-          'WorldView can only read radios running Meshtastic firmware. A board that is not on the Meshtastic hardware list may not run it at all; check the list before going further, or use one of the radios above.',
+          'OP-CB can only read radios running Meshtastic firmware. A board that is not on the Meshtastic hardware list may not run it at all; check the list before going further, or use one of the radios above.',
         ],
       },
       links: [{ label: 'Meshtastic supported hardware', url: 'https://meshtastic.org/docs/hardware/devices/' }],
@@ -123,9 +123,9 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       id: 'firmware',
       title: 'Meshtastic firmware',
       body: [
-        'Radios bought "Meshtastic pre-installed" are ready. Others need the firmware once. Installing it is done with Meshtastic\'s own tools, not WorldView, and needs the internet to download: do this before you go offline.',
+        'Radios bought "Meshtastic pre-installed" are ready. Others need the firmware once. Installing it is done with Meshtastic\'s own tools, not OP-CB, and needs the internet to download: do this before you go offline.',
         'The web flasher works in Chrome or Edge: pick your board, connect, and install. An nRF52 radio (T-Echo, RAK4631) can instead show up as a USB drive: double-press its reset button and copy the .uf2 file onto it.',
-        "WorldView never installs firmware or changes a radio's settings by itself.",
+        "OP-CB never installs firmware or changes a radio's settings by itself.",
       ],
       needsInternet:
         'Downloading Meshtastic firmware and opening the web flasher need the internet. Everything after this step works offline.',
@@ -140,7 +140,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       title: 'Set the region and channel',
       body: [
         'A new Meshtastic radio will not transmit until its region is set, and the region decides the frequencies and power it may use. Set it to where you will actually operate the radio — not where you bought it, and not where your computer thinks it is.',
-        'Do this in a Meshtastic client: the Meshtastic app on a phone (Bluetooth), the web client in Chrome or Edge, or the meshtastic command-line tool. WorldView shows the region the radio reports, but does not change radio settings.',
+        'Do this in a Meshtastic client: the Meshtastic app on a phone (Bluetooth), the web client in Chrome or Edge, or the meshtastic command-line tool. OP-CB shows the region the radio reports, but does not change radio settings.',
       ],
       choice: {
         prompt: 'I will operate this radio in',
@@ -164,7 +164,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
         'Channel: radios only understand each other on the same channel name, settings ("preset", LONG_FAST by default) and key. To join a group, scan their channel QR code or open their channel link in your Meshtastic client.',
         "The key: the default channel's key is public, so anyone with Meshtastic can read it. For a private group, make a channel with a new random key and share its QR code only with your group. Keep it like a password.",
         'GPS: turn on "GPS" in the radio\'s position settings if it has one. A fixed base with no GPS can be given a fixed position instead.',
-        "To let WorldView read it over the network instead of USB, turn on the radio's Wi-Fi and its network API (port 4403) in the network settings.",
+        "To let OP-CB read it over the network instead of USB, turn on the radio's Wi-Fi and its network API (port 4403) in the network settings.",
       ],
       links: [
         { label: 'LoRa region settings', url: 'https://meshtastic.org/docs/configuration/radio/lora/' },
@@ -179,10 +179,10 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
     },
     {
       id: 'connect',
-      title: 'Connect it to WorldView',
+      title: 'Connect it to OP-CB',
       body: [
-        'WorldView reads the radio through its "Meshtastic mesh" source: by USB on Linux, or over the network from a radio with Wi-Fi (or from meshtasticd on this computer) on any system.',
-        "Switch the source on below, then open its settings and give it the radio's USB port (Linux) or its network address. WorldView contacts only the address you give; it does not search your network.",
+        'OP-CB reads the radio through its "Meshtastic mesh" source: by USB on Linux, or over the network from a radio with Wi-Fi (or from meshtasticd on this computer) on any system.',
+        "Switch the source on below, then open its settings and give it the radio's USB port (Linux) or its network address. OP-CB contacts only the address you give; it does not search your network.",
         'This step passes when the source is connected to your radio and has its node list. Its model, battery, GPS state, firmware version, region and preset are shown as the radio reports them; anything it does not report is left out, never guessed.',
       ],
       actions: ['mesh.enable', 'mesh.openSettings'],
@@ -198,7 +198,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
         },
         {
           problem: 'On Windows, there is no USB port setting',
-          fix: "WorldView reads a Meshtastic radio over USB on Linux only. On Windows, turn on the radio's Wi-Fi and network API and give WorldView its address, or run meshtasticd.",
+          fix: "OP-CB reads a Meshtastic radio over USB on Linux only. On Windows, turn on the radio's Wi-Fi and network API and give OP-CB its address, or run meshtasticd.",
         },
         {
           problem: 'The source says it cannot reach the address',
@@ -218,7 +218,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       id: 'gps',
       title: 'Your own position',
       body: [
-        "If your radio has GPS, WorldView can show where you are from it. It takes the position only from your own radio's GPS — never from another radio on the mesh — and shows NO FIX, with no position at all, until the GPS has one.",
+        "If your radio has GPS, OP-CB can show where you are from it. It takes the position only from your own radio's GPS — never from another radio on the mesh — and shows NO FIX, with no position at all, until the GPS has one.",
         'A first fix outdoors with a clear view of the sky can take a few minutes; indoors it may never come.',
       ],
       check: 'mesh.ownFix',
@@ -236,7 +236,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       title: 'First radio test: hear a second radio',
       body: [
         'This proves the radios reach each other over the air. You need a second Meshtastic radio, switched on, on the same region and channel, within range, and with a position (its own GPS, or a fixed position set in its settings) so it can be placed.',
-        'WorldView looks for another radio heard in the last 15 minutes, and says how: directly, over relays, or only through the internet (which does not count).',
+        'OP-CB looks for another radio heard in the last 15 minutes, and says how: directly, over relays, or only through the internet (which does not count).',
       ],
       check: 'mesh.otherNodeHeard',
       troubleshooting: [
@@ -301,7 +301,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
       title: 'Your mesh on the map',
       body: [
         'Radios with a position appear on the map as Meshtastic nodes, with how long ago each was heard, its signal (SNR) and its battery when it reports them. Click one for details.',
-        "Other people's radios may be on your mesh. Their positions are shown live and are not kept in WorldView's history, exported or put into packs.",
+        "Other people's radios may be on your mesh. Their positions are shown live and are not kept in OP-CB's history, exported or put into packs.",
       ],
       actions: ['mesh.showOnMap'],
       check: 'mesh.onMap',
@@ -317,7 +317,7 @@ export const MESHTASTIC_GUIDE: GuideDefinition = {
         'Height and a clear line of sight make range; walls, hills and trees take it.',
         'Source not connecting: cable, port permission (Linux dialout), another program holding the port.',
         'NO FIX: open sky and a few minutes.',
-        'WorldView sends only a test message, on your press; chat and read messages in the Meshtastic app.',
+        'OP-CB sends only a test message, on your press; chat and read messages in the Meshtastic app.',
       ],
     },
   ],

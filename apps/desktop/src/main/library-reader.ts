@@ -72,7 +72,7 @@ export async function openReader(deps: ReaderDeps, bookId: string, key: string):
       minWidth: 480,
       minHeight: 360,
       show: false,
-      title: 'WorldView library',
+      title: 'OP-CB library',
       backgroundColor: '#ffffff',
       autoHideMenuBar: true,
       ...(deps.iconPath ? { icon: deps.iconPath } : {}),
@@ -92,7 +92,7 @@ export async function openReader(deps: ReaderDeps, bookId: string, key: string):
     win.setMenuBarVisibility(false);
     win.webContents.on('page-title-updated', (event, title) => {
       event.preventDefault();
-      win.setTitle(`${title.slice(0, 200)} — WorldView library`);
+      win.setTitle(`${title.slice(0, 200)} — OP-CB library`);
     });
     // Back and forward: Alt+Left/Right, Backspace, and the mouse's side buttons.
     win.webContents.on('before-input-event', (event, input) => {

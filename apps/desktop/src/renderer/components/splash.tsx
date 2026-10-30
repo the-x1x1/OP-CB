@@ -72,7 +72,8 @@ export function Splash() {
   if (phase === 'gone') return null;
   return (
     <div className={`wv-splash${phase === 'fading' ? ' wv-splash--fading' : ''}`} aria-hidden="true">
-      <span className="wv-splash__wordmark">WORLDVIEW</span>
+      <span className="wv-brand-wordmark wv-splash__wordmark" />
+      <span className="wv-brand-caption wv-splash__caption">Operation Civilization Backup</span>
       <span className="wv-splash__status">
         {session.status === 'booting' ? 'Starting the runtime' : 'Drawing the map'}
       </span>

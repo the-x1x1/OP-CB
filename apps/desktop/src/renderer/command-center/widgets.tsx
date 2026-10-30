@@ -126,7 +126,7 @@ export function LibraryFind() {
   const [busy, setBusy] = useState(false);
   const [hits, setHits] = useState<LibraryFindAnswer['hits'] | null>(null);
   const readable = (cc.shelf?.books ?? []).filter((b) => b.readable);
-  if (!readable.length) return <p className="wv-cc-muted">No books WorldView can open yet.</p>;
+  if (!readable.length) return <p className="wv-cc-muted">No books OP-CB can open yet.</p>;
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
@@ -252,7 +252,7 @@ export function AiTest() {
             <div className="wv-cc-muted">
               {(t.answer.elapsedMs / 1000).toFixed(1)} s
               {t.answer.tokensPerSecond !== undefined ? ` · ${t.answer.tokensPerSecond} tokens/s` : ''}
-              {t.offline ? ' · WorldView offline' : ''}
+              {t.offline ? ' · OP-CB offline' : ''}
             </div>
           </div>
         ) : (
@@ -274,7 +274,7 @@ export function MeshTest() {
   const [cc, store] = useCC();
   const nodes = (cc.meshNodes ?? []).filter((o) => o.properties['thisNode'] !== true);
   const [to, setTo] = useState('');
-  const [text, setText] = useState('WorldView radio check');
+  const [text, setText] = useState('OP-CB radio check');
   const [armed, setArmed] = useState(false);
   const target = nodes.find((o) => o.properties['nodeId'] === to) ?? nodes[0];
   const id = typeof target?.properties['nodeId'] === 'string' ? target.properties['nodeId'] : '';

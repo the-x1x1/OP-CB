@@ -223,7 +223,7 @@ function diskItem(field: FieldHostStatus | null): FieldItem | undefined {
     label: 'DISK',
     value: gb(d.freeBytes),
     tone,
-    title: `${gb(d.freeBytes)} free of ${gb(d.totalBytes)} where WORLDVIEW keeps its data`,
+    title: `${gb(d.freeBytes)} free of ${gb(d.totalBytes)} where OP-CB keeps its data`,
   };
 }
 

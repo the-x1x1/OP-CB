@@ -119,7 +119,7 @@ export class GdalImportProvider extends FileBackedProvider {
     if (!current.found)
       throw new ProviderError(
         'OFFLINE',
-        `ogr2ogr was not found (${current.reason}); install GDAL to import ${this.path} — WORLDVIEW never installs or downloads it`,
+        `ogr2ogr was not found (${current.reason}); install GDAL to import ${this.path} — OP-CB never installs or downloads it`,
         { retryable: true },
       );
   }

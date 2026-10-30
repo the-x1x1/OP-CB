@@ -460,7 +460,7 @@ export class DesktopRendererHost implements RendererHostLike {
     this.recoveries = this.recoveries.filter((t) => now - t < CONTEXT_RECOVERY_WINDOW_MS);
     if (this.recoveries.length >= CONTEXT_RECOVERIES) {
       const failure = {
-        message: `The graphics driver reset ${CONTEXT_RECOVERIES + 1} times in ${CONTEXT_RECOVERY_WINDOW_MS / 60_000} minutes; restart WorldView, or lower Settings → Rendering → Graphics quality`,
+        message: `The graphics driver reset ${CONTEXT_RECOVERIES + 1} times in ${CONTEXT_RECOVERY_WINDOW_MS / 60_000} minutes; restart OP-CB, or lower Settings → Rendering → Graphics quality`,
         fatal: true,
       };
       this.options.onError?.(failure);

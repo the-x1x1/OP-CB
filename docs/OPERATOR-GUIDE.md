@@ -1,7 +1,13 @@
 # Operator guide
 
-Everything an administrator or power user needs after installing WORLDVIEW. For
-building from source see [DEVELOPMENT.md](DEVELOPMENT.md).
+Everything an administrator or power user needs after installing OP-CB (Operation Civilization
+Backup, formerly WorldView). For building from source see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+The rename is in everything you see: the app, its windows, the Start menu entry and the
+installer's name in Apps & features. Some names underneath stay WorldView so nothing you
+already have breaks: the data folder (`@worldview\desktop`, `WorldView-data` for a portable
+copy), `worldview://` links, the update channel, and — for now — the downloaded files
+(`WorldView-Setup-<version>.exe`, `WorldView-Portable-<version>.zip`, `WorldView.exe`).
 
 ## Install
 

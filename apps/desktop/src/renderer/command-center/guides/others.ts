@@ -35,11 +35,11 @@ export const SDR_GUIDE: GuideDefinition = {
       id: 'decoder',
       title: 'Run a decoder',
       body: [
-        "WorldView does not drive the radio itself; a decoder program does, and WorldView reads what it decodes. WorldView does not bundle these programs (their licences do not allow it to): install them from your system's packages or their projects.",
+        "OP-CB does not drive the radio itself; a decoder program does, and OP-CB reads what it decodes. OP-CB does not bundle these programs (their licences do not allow it to): install them from your system's packages or their projects.",
       ],
       bullets: [
         'Aircraft: readsb (or dump1090-fa) serves the aircraft it hears as aircraft.json over HTTP, usually on port 8080 at /data/aircraft.json.',
-        'Ships: AIS-catcher (or rtl_ais) decodes AIS and serves the sentences (NMEA) over TCP; WorldView connects to it, on port 10110 unless you give another.',
+        'Ships: AIS-catcher (or rtl_ais) decodes AIS and serves the sentences (NMEA) over TCP; OP-CB connects to it, on port 10110 unless you give another.',
         'Linux: the kernel\'s DVB driver can grab the dongle first; decoders usually blacklist it (dvb_usb_rtl28xxu). Your user needs access to the USB device (the "plugdev" group or the decoder\'s udev rule).',
         'Windows: the dongle needs the WinUSB driver (installed with Zadig) for most decoders.',
       ],
@@ -48,7 +48,7 @@ export const SDR_GUIDE: GuideDefinition = {
     },
     {
       id: 'connect',
-      title: 'Connect it to WorldView',
+      title: 'Connect it to OP-CB',
       body: [
         'Switch on the source for your decoder below — "Local ADS-B receiver (readsb)" for aircraft, "Local AIS receiver" for ships — and give it the decoder\'s address in its settings. On this computer that is 127.0.0.1; a decoder on another computer of yours (a Raspberry Pi, say) is reached by its address, which you approve for offline use under Resources → Local network.',
       ],
@@ -73,7 +73,7 @@ export const SDR_GUIDE: GuideDefinition = {
       id: 'receive',
       title: 'First reception test',
       body: [
-        'This passes when WorldView has objects from your own receiver — aircraft or ships it really heard — not from the internet sources. Near an airport or a coast it is quick; elsewhere it can take a while, and at night there are fewer aircraft.',
+        'This passes when OP-CB has objects from your own receiver — aircraft or ships it really heard — not from the internet sources. Near an airport or a coast it is quick; elsewhere it can take a while, and at night there are fewer aircraft.',
       ],
       check: 'sdr.receiving',
       final: true,
@@ -102,21 +102,19 @@ export const LIBRARY_GUIDE: GuideDefinition = {
   title: 'Offline library (Wikipedia, manuals, emergency guides)',
   summary: 'Keep Wikipedia, medical and repair references and emergency guides on this computer, readable offline.',
   whatItDoes:
-    'Kiwix publishes whole websites — Wikipedia, WikiMed, iFixit, WikiHow, Wikivoyage, survival and medicine collections — as single files called ZIM files. WorldView opens ZIM files itself, finds pages by title, and shows them in a reader window with no internet. It also fetches public-domain emergency guides from FEMA, the CDC and the U.S. Army.',
+    'Kiwix publishes whole websites — Wikipedia, WikiMed, iFixit, WikiHow, Wikivoyage, survival and medicine collections — as single files called ZIM files. OP-CB opens ZIM files itself, finds pages by title, and shows them in a reader window with no internet. It also fetches public-domain emergency guides from FEMA, the CDC and the U.S. Army.',
   prerequisites: [
     'The internet once, to download books and guides (reading them needs none)',
     'Room for them: from tens of megabytes for one topic to around 100 GB for all of English Wikipedia with pictures',
   ],
-  equipment: [
-    { kind: 'Storage', items: ['An external SSD for large libraries (keep WorldView’s data on it: Resources)'] },
-  ],
+  equipment: [{ kind: 'Storage', items: ['An external SSD for large libraries (keep OP-CB’s data on it: Resources)'] }],
   steps: [
     {
       id: 'intro',
       title: 'What you can keep offline',
       body: [
         'The Kiwix library lists what is available, by language and topic, with each file’s size. Wikipedia comes in sizes: "maxi" with pictures, "nopic" without, "mini" with only the start of each article. Topic selections (medicine, climate, history) are much smaller.',
-        'Each file keeps its own licence and credits (Wikipedia’s are CC BY-SA), shown in the book. WorldView ships no library content: what you download is yours to choose.',
+        'Each file keeps its own licence and credits (Wikipedia’s are CC BY-SA), shown in the book. OP-CB ships no library content: what you download is yours to choose.',
       ],
       links: [{ label: 'Kiwix library', url: 'https://library.kiwix.org/' }],
     },
@@ -126,7 +124,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
       body: [
         'In Knowledge, search the Kiwix catalogue and press Download: the file goes into the library folder, is checked against the catalogue and its own checksum, and appears in Your library. A download that stops carries on where it left off.',
         'Or copy .zim files you already have into the library folder (Open the library folder) and press Look again.',
-        'This passes when the library holds a book WorldView can open.',
+        'This passes when the library holds a book OP-CB can open.',
       ],
       actions: ['library.openKnowledge'],
       check: 'library.builtInBooks',
@@ -138,7 +136,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
         },
         {
           problem: 'Not enough space',
-          fix: 'Choose a smaller version (nopic or mini), or keep WorldView’s data on an external drive (Resources).',
+          fix: 'Choose a smaller version (nopic or mini), or keep OP-CB’s data on an external drive (Resources).',
         },
       ],
     },
@@ -156,7 +154,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
       id: 'find',
       title: 'Find a page offline',
       body: [
-        'Switch to Offline mode and find a page by the start of its title. Open it to read it in the reader window. This is the final test: it passes when a page was found while WorldView was offline.',
+        'Switch to Offline mode and find a page by the start of its title. Open it to read it in the reader window. This is the final test: it passes when a page was found while OP-CB was offline.',
       ],
       actions: ['mode.offline', 'library.find'],
       check: 'library.findOffline',
@@ -172,7 +170,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
       id: 'server',
       title: 'Optional: kiwix-serve for full-text search',
       body: [
-        'WorldView finds pages by title. For searching inside the text of every page, or for files in the older xz format, run kiwix-serve on this computer: kiwix-serve --address=127.0.0.1 --port=8080 /path/to/your/*.zim — WorldView finds it and searches it too (Knowledge → Kiwix server). Skip this step if you do not need it.',
+        'OP-CB finds pages by title. For searching inside the text of every page, or for files in the older xz format, run kiwix-serve on this computer: kiwix-serve --address=127.0.0.1 --port=8080 /path/to/your/*.zim — OP-CB finds it and searches it too (Knowledge → Kiwix server). Skip this step if you do not need it.',
       ],
       actions: ['services.refresh'],
       check: 'library.running',
@@ -182,7 +180,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
       id: 'manage',
       title: 'Update or remove books',
       body: [
-        'New versions of most files come out every few months: download the new one, then delete the old file from the library folder. Deleting a ZIM file removes the book; WorldView keeps nothing of it elsewhere.',
+        'New versions of most files come out every few months: download the new one, then delete the old file from the library folder. Deleting a ZIM file removes the book; OP-CB keeps nothing of it elsewhere.',
       ],
     },
   ],
@@ -196,7 +194,7 @@ export const LEARNING_GUIDE: GuideDefinition = {
   title: 'Courses and lessons (Kolibri)',
   summary: 'Optional: offline courses, videos and exercises through Kolibri.',
   whatItDoes:
-    'Kolibri, from Learning Equality, is a free offline learning platform: channels of courses, videos and exercises (Khan Academy, CK-12 and many more) imported once and used with no internet. WorldView finds it on this computer and opens it in your browser.',
+    'Kolibri, from Learning Equality, is a free offline learning platform: channels of courses, videos and exercises (Khan Academy, CK-12 and many more) imported once and used with no internet. OP-CB finds it on this computer and opens it in your browser.',
   prerequisites: ['Kolibri installed on this computer', 'Channels imported while online, or from a drive'],
   steps: [
     {
@@ -250,7 +248,7 @@ export const AI_GUIDE: GuideDefinition = {
       title: 'What to expect',
       body: [
         'On a laptop processor a small model writes a few words a second, and its first answer waits while the model loads (up to a minute or two). It uses a lot of power: on battery, prefer short questions, and the Field profile.',
-        'WorldView does not need it. Everything else works without it.',
+        'OP-CB does not need it. Everything else works without it.',
       ],
     },
     {
@@ -258,7 +256,7 @@ export const AI_GUIDE: GuideDefinition = {
       title: 'Install Ollama and a model',
       body: [
         'Install Ollama from ollama.com for your system, and start it (on Linux it runs as a service). Then download a model, for example a small one: ollama pull llama3.2',
-        'WorldView does not run install scripts or download models for you.',
+        'OP-CB does not run install scripts or download models for you.',
       ],
       needsInternet: 'Installing Ollama and downloading models need the internet. Asking questions does not.',
       links: [
@@ -269,7 +267,7 @@ export const AI_GUIDE: GuideDefinition = {
     {
       id: 'found',
       title: 'Find Ollama',
-      body: ['WorldView asks http://127.0.0.1:11434 (or the port you set). This passes when Ollama answers there.'],
+      body: ['OP-CB asks http://127.0.0.1:11434 (or the port you set). This passes when Ollama answers there.'],
       actions: ['services.refresh'],
       check: 'ai.running',
       troubleshooting: [
@@ -324,7 +322,7 @@ export const PREP_GUIDE: GuideDefinition = {
       id: 'intro',
       title: 'Your records stay here',
       body: [
-        "What you enter is kept on this computer only, in WorldView's folder, and is never sent anywhere. It leaves only when you export it, to a file you choose.",
+        "What you enter is kept on this computer only, in OP-CB's folder, and is never sent anywhere. It leaves only when you export it, to a file you choose.",
         "For how much to keep (water per person per day, food, medicines), follow official guidance: Ready.gov in the United States, or your own country's agency.",
       ],
       links: [{ label: 'Ready.gov: build a kit', url: 'https://www.ready.gov/kit' }],
@@ -375,16 +373,16 @@ export const START_GUIDE: GuideDefinition = {
   title: 'Getting started: online and offline',
   summary: 'How Online and Offline mode work, and what to set up before you lose the internet.',
   whatItDoes:
-    'WorldView works with the internet, and without it from what is installed on this computer. The Command Center shows what is ready for offline use and what still needs setting up.',
+    'OP-CB works with the internet, and without it from what is installed on this computer. The Command Center shows what is ready for offline use and what still needs setting up.',
   prerequisites: [],
   steps: [
     {
       id: 'modes',
       title: 'Online and Offline',
       body: [
-        'Online: WorldView reads its internet sources — aircraft, ships, satellites, weather, hazards — and can download updates and map tiles.',
-        'Offline: WorldView sends nothing to the internet. It shows what is on this computer: installed maps and packs, your history and saved places, your own receivers and radios, and local services such as an offline library. Reconnecting Wi-Fi does not turn the internet sources back on; only you switching back to Online does.',
-        'Offline is enforced by WorldView on its own requests. It is not a firewall: other programs on the computer, including services you run beside WorldView, are not stopped by it.',
+        'Online: OP-CB reads its internet sources — aircraft, ships, satellites, weather, hazards — and can download updates and map tiles.',
+        'Offline: OP-CB sends nothing to the internet. It shows what is on this computer: installed maps and packs, your history and saved places, your own receivers and radios, and local services such as an offline library. Reconnecting Wi-Fi does not turn the internet sources back on; only you switching back to Online does.',
+        'Offline is enforced by OP-CB on its own requests. It is not a firewall: other programs on the computer, including services you run beside OP-CB, are not stopped by it.',
       ],
     },
     {

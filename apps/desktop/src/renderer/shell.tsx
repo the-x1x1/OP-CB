@@ -48,7 +48,7 @@ export function Shell() {
   if (session.status === 'error') {
     return (
       <div className="wv-shell wv-shell--error">
-        <ErrorState title="WORLDVIEW could not start" message={session.error ?? 'The runtime did not answer.'} />
+        <ErrorState title="OP-CB could not start" message={session.error ?? 'The runtime did not answer.'} />
       </div>
     );
   }

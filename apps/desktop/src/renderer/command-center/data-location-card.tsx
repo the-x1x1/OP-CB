@@ -35,7 +35,7 @@ export function DataLocationCard() {
   if (!info) return null;
   return (
     <section className="wv-cc-card">
-      <h3 className="wv-cc-caps">Where WorldView keeps its data</h3>
+      <h3 className="wv-cc-caps">Where OP-CB keeps its data</h3>
       {info.missing ? (
         <p className="wv-cc-problem">
           Your data folder {info.missing.path} could not be used at this start ({info.missing.reason}): this
@@ -49,16 +49,16 @@ export function DataLocationCard() {
           : '.'}
       </p>
       <p className="wv-cc-muted">
-        Everything WorldView writes lives here: settings, history, saved places, downloaded maps, the inventory, stored
-        keys and logs. To keep all of it on an external SSD, move it there; to carry WorldView between computers, unzip
-        the portable copy onto the drive and make a folder named <code>WorldView-data</code> beside{' '}
+        Everything OP-CB writes lives here: settings, history, saved places, downloaded maps, the inventory, stored keys
+        and logs. To keep all of it on an external SSD, move it there; to carry OP-CB between computers, unzip the
+        portable copy onto the drive and make a folder named <code>WorldView-data</code> beside{' '}
         <code>WorldView.exe</code>. Stored keys are locked to one computer by the operating system and are asked for
         again on another.
       </p>
       {info.kind !== 'portable' ? (
         <div className="wv-cc-actions">
           <Button size="sm" disabled={busy} onClick={() => void act('data.moveTo')}>
-            Keep all WorldView data on a drive…
+            Keep all OP-CB data on a drive…
           </Button>
           {info.kind === 'moved' ? (
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => void act('data.useUsual')}>
@@ -72,7 +72,7 @@ export function DataLocationCard() {
           <p className={note.ok ? '' : 'wv-cc-problem'}>{note.text}.</p>
           {note.restart ? (
             <Button size="sm" variant="primary" onClick={() => void client.request('data.restart', undefined)}>
-              Restart WorldView now
+              Restart OP-CB now
             </Button>
           ) : null}
         </div>

@@ -84,7 +84,7 @@ export const CREDENTIAL_KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,127}$/i;
 export const MAX_CREDENTIAL_LENGTH = 4096;
 
 export const ENCRYPTION_UNAVAILABLE_MESSAGE =
-  'Secure storage is not available on this system (the OS keychain/DPAPI could not be used), so the key was not saved. WORLDVIEW never stores credentials unencrypted.';
+  'Secure storage is not available on this system (the OS keychain/DPAPI could not be used), so the key was not saved. OP-CB never stores credentials unencrypted.';
 
 export interface CredentialStoreOptions {
   file: string;

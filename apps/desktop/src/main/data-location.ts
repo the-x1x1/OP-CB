@@ -81,7 +81,7 @@ export function resolveDataLocation(opts: { usualRoot: string; exeDir: string; d
   if (!hasMarker(f, named))
     return {
       ...usual,
-      missing: { path: named, reason: 'the folder is not the one WorldView marked (the drive may not be mounted)' },
+      missing: { path: named, reason: 'the folder is not the one OP-CB marked (the drive may not be mounted)' },
     };
   return { root: named, kind: 'moved', usualRoot: opts.usualRoot };
 }
@@ -129,7 +129,7 @@ export async function moveDataTo(
   const carried: string[] = [];
   if (!adopted) {
     const existing = (await p.readdir(resolved)).filter((n) => !n.startsWith('.'));
-    if (existing.length) return { ok: false, reason: 'choose an empty folder (or one WorldView already uses)' };
+    if (existing.length) return { ok: false, reason: 'choose an empty folder (or one OP-CB already uses)' };
     for (const name of CARRIED_FILES) {
       try {
         await p.copyFile(path.join(from, name), path.join(resolved, name));

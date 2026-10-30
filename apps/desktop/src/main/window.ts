@@ -67,8 +67,8 @@ export function createMainWindow(opts: MainWindowOptions): BrowserWindow {
     minWidth: 960,
     minHeight: 600,
     show: false,
-    title: 'WorldView',
-    backgroundColor: '#0b0f14',
+    title: 'OP-CB',
+    backgroundColor: '#121211',
     autoHideMenuBar: true,
     ...(opts.iconPath ? { icon: opts.iconPath } : {}),
     webPreferences: {

@@ -43,8 +43,8 @@ export function BuiltInLibrary() {
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">Your library</h3>
       <p className="wv-cc-muted">
-        ZIM files WorldView opens itself — no Kiwix program needed. Put .zim files in the library folder, or download
-        them below.
+        ZIM files OP-CB opens itself — no Kiwix program needed. Put .zim files in the library folder, or download them
+        below.
         {shelf?.freeBytes !== undefined ? ` ${bytesText(shelf.freeBytes)} free on that drive.` : ''}
       </p>
       {books.length ? (

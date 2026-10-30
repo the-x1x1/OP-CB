@@ -92,7 +92,7 @@ export async function readerResponse(deps: ReaderSource, rawUrl: string): Promis
     });
   } catch (err) {
     return notFound(
-      `WorldView could not read this page: ${(err instanceof Error ? err.message : String(err)).replace(/[<>&]/g, ' ')}`,
+      `OP-CB could not read this page: ${(err instanceof Error ? err.message : String(err)).replace(/[<>&]/g, ' ')}`,
     );
   }
 }

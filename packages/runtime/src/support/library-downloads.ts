@@ -284,7 +284,7 @@ export class LibraryDownloads {
       const ids = req.ids?.length ? req.ids : REFERENCES.map((r) => r.id);
       const unknown = ids.filter((id) => !REFERENCES.some((r) => r.id === id));
       if (unknown.length) {
-        this.set({ phase: 'failed', message: `not a reference WorldView knows: ${unknown.join(', ')}` });
+        this.set({ phase: 'failed', message: `not a reference OP-CB knows: ${unknown.join(', ')}` });
         return this.current();
       }
       this.set({ phase: 'downloading', item: 'emergency references', step: { done: 0, total: ids.length } });
@@ -544,6 +544,6 @@ function gb(n: number): string {
 
 function failureText(err: unknown): string {
   if ((err as { name?: string })?.name === 'WorkingOfflineError')
-    return 'WorldView is in Offline mode: switch to Online to download';
+    return 'OP-CB is in Offline mode: switch to Online to download';
   return err instanceof Error ? err.message : String(err);
 }

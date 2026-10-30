@@ -31,7 +31,7 @@ export function gpuRenderer(): string | undefined {
  */
 export function noWebGlMessage(platform: string | undefined): string {
   const base =
-    'This computer gave WORLDVIEW no hardware 3D graphics (WebGL2), so the map cannot be drawn. ' +
+    'This computer gave OP-CB no hardware 3D graphics (WebGL2), so the map cannot be drawn. ' +
     'Search, sources, the feed, history and exports still work.';
   if (platform === 'linux')
     return `${base} On Linux, check that the Mesa graphics driver is installed, and that you are not on a remote or virtual display; Settings → Diagnostics shows the GPU the window saw.`;

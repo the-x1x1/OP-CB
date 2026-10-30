@@ -25,12 +25,12 @@ test('update notice: downloading in the background, then restart to update', () 
     availableVersion: '0.6.0',
     message: 'downloading 40%',
   });
-  assert.equal(downloading?.title, 'WorldView 0.6.0 is available');
+  assert.equal(downloading?.title, 'OP-CB 0.6.0 is available');
   assert.match(downloading?.body ?? '', /downloading 40%/);
   assert.equal(downloading?.action, undefined, 'nothing to press while it downloads');
 
   const ready = updateNoticeModel({ ...base, status: 'downloaded', availableVersion: '0.6.0' });
-  assert.equal(ready?.title, 'WorldView 0.6.0 is ready');
+  assert.equal(ready?.title, 'OP-CB 0.6.0 is ready');
   assert.match(ready?.body ?? '', /You are on 0\.5\.0/);
   assert.deepEqual(ready?.action, { label: 'Restart to update', kind: 'restart' });
 });

@@ -665,7 +665,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
               ? { name: 'KML placemarks', extensions: ['kml'] }
               : geo === 'geojson'
                 ? { name: 'GeoJSON', extensions: ['geojson'] }
-                : { name: 'WorldView collection', extensions: ['json'] },
+                : { name: 'OP-CB collection', extensions: ['json'] },
         ],
       });
       if ('cancelled' in choice) return { cancelled: true };
@@ -995,7 +995,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     'offline.installPack': async () => {
       const choice = await core.hostBridge.pickOpenFile({
         title: 'Install world pack',
-        filters: [{ name: 'WorldView pack', extensions: ['worldpack'] }],
+        filters: [{ name: 'OP-CB pack', extensions: ['worldpack'] }],
       });
       if ('cancelled' in choice) return { installed: null, issues: ['cancelled'] };
       const result = await core.packs.install(choice.path);
@@ -1008,7 +1008,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         throw new InvalidRequestError('no such data vault');
       const choice = await core.hostBridge.pickOpenFile({
         title: 'Install world pack onto the vault',
-        filters: [{ name: 'WorldView pack', extensions: ['worldpack'] }],
+        filters: [{ name: 'OP-CB pack', extensions: ['worldpack'] }],
       });
       if ('cancelled' in choice) return { installed: null, issues: ['cancelled'] };
       const result = await core.installPackToVault(choice.path, vaultId);
@@ -1019,7 +1019,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       if (!core.hostBridge.pickFolder)
         return { status: core.offlineStatus(), added: null, issues: ['this window cannot choose folders'] };
       const choice = await core.hostBridge.pickFolder({
-        title: 'Choose a folder for WorldView data (an external drive)',
+        title: 'Choose a folder for OP-CB data (an external drive)',
       });
       if ('cancelled' in choice) return { status: core.offlineStatus(), added: null, issues: ['cancelled'] };
       const label = choice.path.split(/[\\/]/).filter(Boolean).pop() ?? 'Vault';
@@ -1029,7 +1029,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       return {
         status: core.offlineStatus(),
         added,
-        issues: r.adopted ? [`"${added}" was already a WorldView vault; its packs are read from it again`] : [],
+        issues: r.adopted ? [`"${added}" was already a OP-CB vault; its packs are read from it again`] : [],
       };
     },
     'offline.removeVault': async ({ id }) => {
@@ -1070,7 +1070,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     'offline.importPublisher': async () => {
       const choice = await core.hostBridge.pickOpenFile({
         title: 'Add a pack publisher',
-        filters: [{ name: 'WorldView publisher key', extensions: ['worldpack-pub'] }],
+        filters: [{ name: 'OP-CB publisher key', extensions: ['worldpack-pub'] }],
       });
       if ('cancelled' in choice) return { status: core.offlineStatus(), added: null, issues: ['cancelled'] };
       let text: string;
@@ -1236,14 +1236,14 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const body = `Sent from Diagnostics at ${at.toISOString().slice(11, 19)} UTC. A watch zone's or a pass alert's notice arrives this way.`;
       core.emitter.emit('notification', {
         id: `notification:test:${at.getTime()}`,
-        title: 'WorldView test notification',
+        title: 'OP-CB test notification',
         body,
         severity: 'INFO',
       });
       let desktop = false;
       try {
         desktop =
-          core.hostBridge.showNotification({ title: 'WorldView test notification', body, severity: 'INFO' }) !== false;
+          core.hostBridge.showNotification({ title: 'OP-CB test notification', body, severity: 'INFO' }) !== false;
       } catch {
         desktop = false;
       }
