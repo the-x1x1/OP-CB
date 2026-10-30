@@ -643,7 +643,11 @@ export class DemoClient implements WorldClient {
       case 'services.status':
         return LOCAL_SERVICE_IDS.map((id) => ({
           id,
-          name: id,
+          name: {
+            ollama: 'Ollama (local AI models)',
+            kiwix: 'Kiwix library server',
+            kolibri: 'Kolibri learning platform',
+          }[id],
           endpoint: `http://127.0.0.1:${DEFAULT_SERVICE_PORTS[id]}`,
           state: 'not-found' as const,
           detail: 'the browser demo asks no local service',
