@@ -5,6 +5,22 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-10-30
+
+Security and maintenance on top of 0.7.0; nothing changes in how OP-CB looks or works.
+
+### Security
+
+- **Electron 44.10** (from 44.5.1), which carries Electron's fix for GHSA-jr5w-w6x2-84p9.
+- **DOMPurify 3.4.17** under the 3D globe (GHSA-cg2g-xh64-v4q7, GHSA-mrv2-3pqr-j5jr), and patched
+  undici, zod and fast-uri in the build tools; Vite 8.3.5. `pnpm audit --audit-level high`
+  reports no known vulnerabilities.
+
+### Fixed
+
+- The checks CI runs on every push (formatting, lint, the dependency audit) pass again; they
+  had failed since 0.6.0 while the release builds stayed green.
+
 ## [0.7.0] — 2026-10-30
 
 WorldView is now **OP-CB — Operation Civilization Backup**: the operator's wordmark and mark,
