@@ -111,7 +111,10 @@ export const contentSchema: Schema<WorldPackContent> = s.refine(
     {
       path: s.string({ min: 1, max: 255 }),
       kind: s.enum(['pmtiles', 'geojson', 'parquet', 'ndjson', 'search-index', 'notices', 'definitions'] as const),
-      sizeBytes: s.number({ min: 0, max: 0xffff_ffff, integer: true }),
+      // Up to 2^53 (2026-10-30, ADR-007 amendment): a downloaded world map is one file of many
+      // gigabytes, written straight into its pack folder; a .worldpack archive keeps its own
+      // 4 GiB limit (zip.ts).
+      sizeBytes: s.number({ min: 0, max: Number.MAX_SAFE_INTEGER, integer: true }),
       sha256: s.string({ pattern: SHA256 }),
       providerId: s.optional(s.string({ min: 2, max: 64, pattern: KEBAB })),
       objectType: s.optional(s.string({ min: 1, max: 64, pattern: /^[a-z0-9][a-z0-9-]*$/ })),

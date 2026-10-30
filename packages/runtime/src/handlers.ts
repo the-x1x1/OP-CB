@@ -36,6 +36,7 @@ import {
   readGuideProgress,
   readPrepRecord,
   type LocalServiceId,
+  type MapDownloadRequest,
   type ModeState,
   type OperatingMode,
   type PrepRecord,
@@ -909,6 +910,18 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       return { path: choice.path, records: records.length };
     },
 
+    'maps.download.plan': async (req) => {
+      const r = readMapDownloadRequest(req);
+      if (typeof r === 'string') throw new InvalidRequestError(r);
+      if (r.vaultId && !core.vaultTarget(r.vaultId)) throw new InvalidRequestError('no such data vault');
+      // Demo mode contacts nothing (the welcome screen and banner say so).
+      if (core.demoMode()) return { phase: 'failed', request: r, message: 'the demo build downloads no maps' };
+      return core.mapDownloads.startPlan(r);
+    },
+    'maps.download.start': async () => core.mapDownloads.start(),
+    'maps.download.status': async () => core.mapDownloads.current(),
+    'maps.download.cancel': async () => core.mapDownloads.cancel(),
+
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),
     'offline.installPack': async () => {
@@ -1236,6 +1249,41 @@ function isBounds(value: unknown): value is GeoBounds {
   if (typeof value !== 'object' || value === null) return false;
   const b = value as Record<string, unknown>;
   return ['west', 'south', 'east', 'north'].every((k) => typeof b[k] === 'number' && Number.isFinite(b[k] as number));
+}
+
+/** A map download request read strictly, or why not. */
+export function readMapDownloadRequest(v: unknown): MapDownloadRequest | string {
+  if (typeof v !== 'object' || v === null) return 'not a map download request';
+  const r = v as Record<string, unknown>;
+  if (r['kind'] !== 'extract' && r['kind'] !== 'planet') return 'kind must be extract or planet';
+  const zoom = (z: unknown) => typeof z === 'number' && Number.isInteger(z) && z >= 0 && z <= 15;
+  if (!zoom(r['worldMaxZoom']) || !zoom(r['maxZoom'])) return 'zooms are whole numbers from 0 to 15';
+  const out: MapDownloadRequest = {
+    kind: r['kind'],
+    worldMaxZoom: r['worldMaxZoom'] as number,
+    maxZoom: r['maxZoom'] as number,
+  };
+  if (r['bounds'] !== undefined) {
+    const b = r['bounds'] as Record<string, unknown>;
+    const n = (k: string, lim: number) => typeof b?.[k] === 'number' && Math.abs(b[k] as number) <= lim;
+    if (!n('west', 180) || !n('east', 180) || !n('south', 90) || !n('north', 90))
+      return 'bounds are degrees on the Earth';
+    out.bounds = {
+      west: b['west'] as number,
+      south: b['south'] as number,
+      east: b['east'] as number,
+      north: b['north'] as number,
+    };
+  }
+  if (r['name'] !== undefined) {
+    if (typeof r['name'] !== 'string' || r['name'].length > 60) return 'the name is at most 60 characters';
+    out.name = r['name'];
+  }
+  if (r['vaultId'] !== undefined) {
+    if (typeof r['vaultId'] !== 'string' || !/^[0-9a-f]{32}$/.test(r['vaultId'])) return 'not a vault id';
+    out.vaultId = r['vaultId'];
+  }
+  return out;
 }
 
 function requireServiceId(id: unknown): asserts id is LocalServiceId {

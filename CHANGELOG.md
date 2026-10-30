@@ -15,6 +15,12 @@ Versioning: [semantic versioning](https://semver.org/).
   everything on it are one press away (Esc, or **Show the map**); the top bar's new button and
   Ctrl+Shift+O bring it back. Switch modes at any time without a restart
   (docs/architecture/COMMAND-CENTER.md).
+- **Download the world map for offline use.** World & Maps → Download a map: the whole world to
+  the level of detail you choose, the world plus an area in full street detail, or the whole
+  planet onto an external drive. The exact size is shown before anything is downloaded; the
+  file is checked after, then installed as a world pack. Map data from Protomaps' daily
+  OpenStreetMap build, © OpenStreetMap contributors (ODbL). `pnpm basemap:extract` does the same
+  from the command line.
 - **Guided setup walkthroughs** for offline maps, an offline library (Kiwix), courses
   (Kolibri), a local AI model (Ollama), a Meshtastic radio, an RTL-SDR receiver and a
   preparedness inventory: what it does, what you need, the steps with real controls, checks

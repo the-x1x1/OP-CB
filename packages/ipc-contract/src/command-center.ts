@@ -396,3 +396,48 @@ export interface MeshTestAnswer {
   routingError?: string;
   at: string;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Offline maps downloaded in the app
+// ---------------------------------------------------------------------------------------------
+
+/** One Protomaps daily build, as its build list names it. */
+export interface MapBuildInfo {
+  /** `20261029.pmtiles`. */
+  key: string;
+  /** `2026-10-29`: the OpenStreetMap data's date. */
+  date: string;
+  sizeBytes: number;
+  version: string;
+  /** Base64 MD5 of the whole file, from the build list. */
+  md5?: string;
+}
+
+/**
+ * What to download. `extract`: the whole world from zoom 0 to `worldMaxZoom`, plus, with
+ * `bounds`, more detail inside them down to `maxZoom`. `planet`: the whole build file, every
+ * zoom everywhere (well over 100 GB). Onto a data vault with `vaultId`, else the app's folder.
+ */
+export interface MapDownloadRequest {
+  kind: 'extract' | 'planet';
+  worldMaxZoom: number;
+  maxZoom: number;
+  bounds?: { west: number; south: number; east: number; north: number };
+  /** A name for an area ("O'ahu"); the pack is named after it. */
+  name?: string;
+  vaultId?: string;
+}
+
+export interface MapDownloadStatus {
+  phase: 'idle' | 'planning' | 'planned' | 'downloading' | 'verifying' | 'installing' | 'done' | 'failed' | 'cancelled';
+  request?: MapDownloadRequest;
+  build?: MapBuildInfo;
+  /** Exact size of the file to be written (known once planned). */
+  sizeBytes?: number;
+  tiles?: number;
+  /** Where it goes, and the room there. */
+  target?: { label: string; freeBytes?: number };
+  progress?: { bytesDone: number; bytesTotal: number; startedAt: string; bytesPerSecond?: number };
+  installed?: { id: string; name: string };
+  message?: string;
+}

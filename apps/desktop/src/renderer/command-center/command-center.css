@@ -831,3 +831,26 @@
 .wv-cc-steps__item--ok .wv-cc-steps__n {
   background: var(--wv-surface-3);
 }
+
+/* ---- map download ---- */
+.wv-cc-mapdl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wv-space-3);
+  align-items: flex-start;
+}
+
+.wv-cc-bar {
+  width: 100%;
+  height: 6px;
+  margin: var(--wv-space-2) 0;
+  overflow: hidden;
+  border-radius: var(--wv-radius-pill);
+  background: var(--wv-surface-3);
+}
+
+.wv-cc-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--wv-accent);
+}

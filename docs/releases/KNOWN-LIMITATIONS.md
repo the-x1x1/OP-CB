@@ -363,8 +363,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   final test is the proof on real equipment. `HARDWARE_REQUIRED`
 - Offline mode stops WorldView's own requests only; services you run beside it (Ollama, a
   library server) are not stopped from reaching the internet by it.
-- A world pack can be installed from a file but not downloaded or built from the app: a
-  licence-free basemap to build packs from is still being prepared.
+- Map downloads were tested against a fake build server and the PMTiles sample archive, not
+  yet against Protomaps' real builds. Only one map pack is drawn at a time (the newest); an
+  area download includes the world at lower detail for that reason. No world map is shipped
+  inside the installer yet.
 - The Command Center is dark only, like the rest of WorldView.
 - Library pages open in your browser, one book is searched at a time, and "Ask with your
   library" gives the model search excerpts rather than whole articles.

@@ -2,12 +2,12 @@ import type { GuideDefinition } from '../guide-types.js';
 
 /**
  * Offline maps: on WorldView's own world packs (`.worldpack`), data vaults and place index —
- * nothing replaced. A pack is installed from a file; building one from map data is the worldpack
- * tool's job and is said plainly as the advanced route.
+ * nothing replaced. A map is downloaded in the app (runtime support/map-download.ts) or a pack
+ * installed from a file.
  */
 export const MAPS_GUIDE: GuideDefinition = {
   id: 'offline-maps',
-  version: 1,
+  version: 2,
   section: 'world',
   title: 'Offline maps',
   summary: 'Install a map of your area that works with no internet, and prove it does.',
@@ -62,14 +62,15 @@ export const MAPS_GUIDE: GuideDefinition = {
     },
     {
       id: 'get',
-      title: 'Get a world pack',
+      title: 'Download a map (or install one you have)',
       body: [
-        'Install a .worldpack file you have: one you built, or one from someone you trust. Installing checks every file in it before it is used, and a pack signed by a publisher you have not trusted yet says so.',
-        "Advanced — building one: the worldpack tool that comes with WorldView's source builds a pack from map data you have the right to use, for a named region (Hawaiian Islands, O'ahu, Japan, California, the UK and Ireland, Western Europe, Eastern Australia, the US Gulf Coast) or any box. A licence-free basemap source for building packs is still being prepared, so WorldView cannot yet download a ready-made map for you.",
+        "Download the world map: WorldView takes it from Protomaps' daily build of OpenStreetMap, the whole world down to the level of detail you choose. Each level of detail roughly doubles the size, and WorldView tells you the exact size before anything is downloaded. Zoom 6 shows countries, cities and main roads; zoom 8 adds towns and more roads; zoom 10 most streets in towns; full detail (zoom 15, every building) is the whole planet, well over 100 GB — for an external drive.",
+        'For more detail where you live or travel, choose "The world plus this area": the world at a lower detail, and the area on the map now down to street level. Give it a name.',
+        'The map is checked after downloading — every part of the file must hold together, and the whole-planet file must match the build\'s published checksum — then installed as a world pack, credited "© OpenStreetMap contributors" (ODbL).',
+        'Or install a .worldpack file you already have: one you built, or one from someone you trust. Installing checks every file in it before it is used.',
       ],
-      needsInternet:
-        'Fetching a pack or its map data, if you do not already have the file, needs the internet. Installing a file you have does not.',
-      actions: ['maps.installPack'],
+      needsInternet: 'Downloading a map needs the internet (and Online mode). Using it afterwards does not.',
+      actions: ['maps.download', 'maps.installPack'],
       check: 'maps.packActive',
       troubleshooting: [
         {
@@ -121,7 +122,7 @@ export const MAPS_GUIDE: GuideDefinition = {
       id: 'manage',
       title: 'Keep your maps current',
       body: [
-        "Under Command Center → Resources you can switch a pack off and on, remove it (its file is deleted from WorldView's folder or the vault), and see which vault it is on. To update, install the newer pack file; an update pack applies to the version it was made for.",
+        "Under Command Center → Resources you can switch a pack off and on, remove it (its file is deleted from WorldView's folder or the vault), and see which vault it is on. To update a downloaded map, download it again: the newer build replaces it. To update another pack, install the newer pack file; an update pack applies to the version it was made for.",
         'To back up a pack, copy its .worldpack file somewhere safe; to move it, install it onto another vault.',
       ],
     },

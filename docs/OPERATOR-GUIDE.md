@@ -140,6 +140,14 @@ Turn it off to go back online; sources resume on their next poll.
 
 ## Offline packs
 
+**Download a map** (Command Center → World & Maps, Online mode): the whole world down to a
+level of detail (zoom 6: cities and main roads; zoom 8: towns; zoom 10: most streets), the
+world plus the area on the map now in street detail, or the whole planet (over 100 GB, for an
+external drive). **Check the size** says exactly how big it is and how much room there is;
+**Download** fetches it, checks it and installs it as a pack like any other. Download again
+later for a newer map: it replaces the older one of the same kind. Map data © OpenStreetMap
+contributors (ODbL), built by Protomaps.
+
 Settings → Offline → Install pack, or:
 
 ```

@@ -23,6 +23,8 @@ import type {
   GuideProgress,
   LibrarySearchAnswer,
   LocalServiceId,
+  MapDownloadRequest,
+  MapDownloadStatus,
   LocalServiceStatus,
   MeshTestAnswer,
   MeshTestRequest,
@@ -1218,6 +1220,16 @@ export interface WorldRequests {
     response: { path: string; records: number } | { cancelled: true };
   };
 
+  /**
+   * (additive, 2026-10-30) Offline maps downloaded in the app (runtime support/map-download.ts):
+   * `plan` reads the newest Protomaps build's directories and says the exact size; `start`
+   * downloads what was planned into a world pack; `status` is polled while it runs.
+   */
+  'maps.download.plan': { request: MapDownloadRequest; response: MapDownloadStatus };
+  'maps.download.start': { request: void; response: MapDownloadStatus };
+  'maps.download.status': { request: void; response: MapDownloadStatus };
+  'maps.download.cancel': { request: void; response: MapDownloadStatus };
+
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
   'field.status': { request: void; response: FieldHostStatus };
@@ -1454,6 +1466,10 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'prep.save',
   'prep.delete',
   'prep.export',
+  'maps.download.plan',
+  'maps.download.start',
+  'maps.download.status',
+  'maps.download.cancel',
   'offline.status',
   'field.status',
   'offline.installPack',

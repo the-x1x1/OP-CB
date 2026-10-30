@@ -697,6 +697,17 @@ export class DemoClient implements WorldClient {
         return structuredClone(this.prep);
       case 'prep.export':
         return { cancelled: true };
+      // The browser demo downloads nothing: it says so.
+      case 'maps.download.plan':
+        return {
+          phase: 'failed',
+          request: request as RequestOf<'maps.download.plan'>,
+          message: 'the browser demo downloads no maps',
+        };
+      case 'maps.download.start':
+      case 'maps.download.status':
+      case 'maps.download.cancel':
+        return { phase: 'idle' };
       case 'field.status':
         // A browser cannot read this computer's power or disks: said as unknown, never made up.
         return { power: { source: 'unknown' }, at: new Date(nowMs).toISOString() };

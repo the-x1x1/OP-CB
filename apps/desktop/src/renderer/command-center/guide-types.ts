@@ -51,6 +51,7 @@ export type ActionId =
   | 'mode.offline'
   | 'mode.online'
   | 'maps.installPack'
+  | 'maps.download'
   | 'maps.addVault'
   | 'maps.openMap'
   | 'maps.searchPlace'

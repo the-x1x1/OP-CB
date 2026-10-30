@@ -3,6 +3,8 @@ import type {
   GuideProgress,
   LibrarySearchAnswer,
   LocalServiceStatus,
+  MapDownloadRequest,
+  MapDownloadStatus,
   MeshTestAnswer,
   ModeState,
   OperatingMode,
@@ -38,6 +40,8 @@ export interface CommandCenterState {
   aiBusy: boolean;
   lastMeshTest?: { to: string; name: string; answer: MeshTestAnswer };
   meshBusy: boolean;
+  /** The map download, as the runtime last said (polled while it runs). */
+  mapDownload: MapDownloadStatus;
 }
 
 export const INITIAL_CC_STATE: CommandCenterState = {
@@ -54,6 +58,7 @@ export const INITIAL_CC_STATE: CommandCenterState = {
   receiverObjects: null,
   aiBusy: false,
   meshBusy: false,
+  mapDownload: { phase: 'idle' },
 };
 
 type Listener = () => void;
@@ -178,6 +183,49 @@ export class CommandCenterStore {
     } finally {
       this.set({ meshBusy: false });
     }
+  }
+
+  // ---- map download --------------------------------------------------------------------------
+  private mapTimer: ReturnType<typeof setInterval> | undefined;
+
+  private watchMap(): void {
+    if (this.mapTimer) return;
+    this.mapTimer = setInterval(() => void this.refreshMap(), 1000);
+  }
+
+  async refreshMap(): Promise<MapDownloadStatus> {
+    try {
+      const st = await this.client.request('maps.download.status', undefined);
+      this.set({ mapDownload: st });
+      if (!['planning', 'downloading', 'verifying', 'installing'].includes(st.phase) && this.mapTimer) {
+        clearInterval(this.mapTimer);
+        this.mapTimer = undefined;
+      }
+      return st;
+    } catch {
+      return this.state.mapDownload;
+    }
+  }
+
+  async planMap(req: MapDownloadRequest): Promise<void> {
+    try {
+      this.set({ mapDownload: await this.client.request('maps.download.plan', req) });
+      this.watchMap();
+    } catch (err) {
+      this.set({
+        mapDownload: { phase: 'failed', request: req, message: err instanceof Error ? err.message : 'refused' },
+      });
+    }
+  }
+
+  async startMap(): Promise<void> {
+    this.set({ mapDownload: await this.client.request('maps.download.start', undefined) });
+    this.watchMap();
+  }
+
+  async cancelMap(): Promise<void> {
+    this.set({ mapDownload: await this.client.request('maps.download.cancel', undefined) });
+    this.watchMap();
   }
 
   notePlaceSearch(text: string, count: number): void {

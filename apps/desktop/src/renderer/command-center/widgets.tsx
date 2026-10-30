@@ -5,6 +5,7 @@ import { useActions, useAppSlice } from '../store/store.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, ago, heardHow } from './checks.js';
 import type { ActionId } from './guide-types.js';
 import { useCC, useShellFacts } from './use-cc.js';
+import { MapDownloadPanel } from './map-download-panel.js';
 
 /** One empty list for selectors: a new [] each read would never settle. */
 const NONE: readonly never[] = Object.freeze([]);
@@ -590,6 +591,8 @@ function StepAction({ id }: { id: ActionId }) {
           {note ? <span className="wv-cc-muted"> {note}</span> : null}
         </span>
       );
+    case 'maps.download':
+      return <MapDownloadPanel />;
     case 'maps.addVault':
       return button('Add a folder on an external drive…', () =>
         actions.addDataVault().then((r) => setNote(r.added ? `Added ${r.added}.` : r.issues.join('; ') || null)),

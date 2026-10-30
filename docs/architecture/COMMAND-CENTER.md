@@ -98,9 +98,8 @@ over loopback; WorldView ships none of their code or content.
 
 ## 6. Known limitations
 
-- A world pack can be installed from a file; WorldView cannot yet download or build one from a
-  GUI: the licence-free basemap source (B1) is still blocked on data. The worldpack CLI remains
-  the way to build one.
+- One map pack is drawn at a time (the newest). An area download therefore carries the world at
+  lower detail too, so the map never goes blank outside the area.
 - No light theme: WorldView's design tokens are dark-only, and the Command Center uses them.
 - The library is searched one book at a time (kiwix-serve's rule for multi-book search is one
   language); pages open in the browser, not inside WorldView (an embedded view would need the
@@ -119,3 +118,39 @@ offline; a pack installed, the network cut, the map used; a T-Beam configured, c
 two-radio message acknowledged; a ZIM library searched offline and an article opened; a local
 model answering offline; a start with no network and the SSD unplugged; and the existing map,
 sources, history, devices and exports used as before.
+
+## 8. Map download (2026-10-30, the operator's "world map, not just O'ahu")
+
+World & Maps → **Download a map for offline use**, and the offline-maps walkthrough's
+"Download a map" step:
+
+- **The world** down to a chosen zoom (5–10), **the world plus the area on the map** down to
+  street level (12–15), or **the whole planet** (the build file itself, every zoom; over 100 GB).
+- Source: Protomaps' daily OpenStreetMap build (`build.protomaps.com/<date>.pmtiles`), the
+  newest named by `build-metadata.protomaps.dev/builds.json` (read live 2026-10-30: 61 builds,
+  newest `20261029.pmtiles`, 139,191,612,225 bytes, version 4.15.2). Licence: the register's
+  `protomaps-builds` record (ODbL; attribution "Protomaps · © OpenStreetMap contributors (ODbL)"),
+  checked by a test against `config/licenses/providers.json`.
+- **Check the size** reads only the build's header and the directories that hold wanted tiles;
+  the exact size and the free space where it goes are shown before anything is downloaded, and
+  a download that would leave less than 1 GB free is refused.
+- The extract is written straight into a pack folder (`worldpacks/.downloads/<id>`, or a
+  vault's), tile data in coalesced byte ranges (four at a time, retried), hashed as written,
+  read back and checked (every directory, every entry inside the file), then given a manifest
+  and `licenses/NOTICES.md` and renamed into place (`WorldPackRegistry.adoptDownload`). The
+  whole-planet file is streamed with resume and must match the build list's MD5. A cancel or a
+  failure removes the folder: nothing half-written is ever live.
+- Online only: in Offline mode the gated fetch refuses and the panel says to switch.
+- PMTiles is read and written by WorldView's own code (`packages/offline/src/pmtiles.ts`,
+  `pmtiles-extract.ts`) from the published v3 specification; no new dependency.
+- `pnpm basemap:extract --world-zoom N [--plan-only]` does the same from the command line:
+  how the size of a world map to ship inside the installer will be measured.
+
+Evidence: tile ids against the specification's table (including 12/3423/1763 → 19078479);
+synthetic archives extracted and compared tile by tile (world and area, sea deduplicated,
+leaves when the root would not fit); the whole flow in the runtime against a fake Protomaps
+server (plan, download, verify, install, MD5 refusal, cancel, Offline refusal). Outside the
+repository, the specification's Protomaps sample archive (Florence, 92 tiles, zooms 0–15) was
+extracted whole and in part and every tile read back byte-identical. **Not yet done:** a
+download from the real build server (the container's network refuses it), and a world map
+shipped inside the installer (its size has to be measured first, then the operator decides).

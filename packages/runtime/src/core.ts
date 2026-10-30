@@ -58,6 +58,7 @@ import {
   vaultSummary,
   vaultWritable,
   type RegistryVault,
+  type VaultInstallTarget,
 } from '@worldview/offline';
 import {
   CameraHub,
@@ -133,6 +134,7 @@ import {
 } from './support/flight-info.js';
 import { createDemoProviders } from './demo/index.js';
 import { LocalServices } from './support/local-services.js';
+import { MapDownloads } from './support/map-download.js';
 import { MartinBasemaps } from './martin-basemap.js';
 import {
   validateCollection,
@@ -319,6 +321,8 @@ export class RuntimeCore {
   preparedness!: JsonDocStore<PrepRecord>;
   /** The operator's local services (Ollama, kiwix-serve, Kolibri), asked over loopback. */
   localServices!: LocalServices;
+  /** Offline maps downloaded in the app (support/map-download.ts). */
+  mapDownloads!: MapDownloads;
   watchZoneStore!: JsonDocStore<WatchZone>;
   lenses!: JsonDocStore<LensDefinition>;
   gazetteer!: Gazetteer;
@@ -890,6 +894,17 @@ export class RuntimeCore {
       fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
       settings: () => this.settings.get(),
       now: () => this.clock.now(),
+    });
+    this.mapDownloads = new MapDownloads({
+      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      registry: () => this.packs,
+      vaultTarget: (id) => this.vaultTarget(id),
+      appPacksDir: this.dirs.worldpacksDir,
+      now: () => this.clock.now(),
+      log: this.loggerHub.logger('offline'),
+      onChange: (st) => {
+        if (st.phase === 'done') this.emitter.emit('offline.changed', this.offlineStatus());
+      },
     });
     await this.collections.load();
     await this.restoreCameras();
@@ -1617,16 +1632,23 @@ export class RuntimeCore {
 
   /** Install a pack onto a vault, re-checking the vault before writing and before activating. */
   async installPackToVault(file: string, vaultId: string): ReturnType<WorldPackRegistry['install']> {
+    const target = this.vaultTarget(vaultId);
+    if (!target) throw new Error('no such data vault');
+    return this.packs.install(file, target);
+  }
+
+  /** A vault as an install target: re-proved the right, writable drive before each write. */
+  vaultTarget(vaultId: string): (VaultInstallTarget & { label: string; path: string }) | undefined {
     const setting = (this.settings.get().storage?.vaults ?? []).find((v) => v.id === vaultId);
     const vault = this.registryVaults().find((v) => v.id === vaultId);
-    if (!setting || !vault) throw new Error('no such data vault');
+    if (!setting || !vault) return undefined;
     const recheck = async (): Promise<{ ok: true; device: number } | { ok: false; reason: string }> => {
       const h = await probeVault(setting, { probeWrite: true });
       if (!vaultWritable(h.state)) return { ok: false, reason: h.message };
       if (h.device === undefined) return { ok: false, reason: `could not tell which drive ${setting.path} is on` };
       return { ok: true, device: h.device };
     };
-    return this.packs.install(file, { vault, recheck });
+    return { vault, recheck, label: setting.label, path: setting.path };
   }
 
   /** Field profile (docs/cyberdeck M5): internet sources poll a third as often; local ones never slow. */

@@ -31,3 +31,6 @@ export * from './vault.js';
 
 export const OFFLINE_CONTRACT_VERSION = 'architecture-contract-v1';
 export * from './basemaps/martin.js';
+export * from './pmtiles.js';
+export * from './pmtiles-extract.js';
+export * from './protomaps-builds.js';

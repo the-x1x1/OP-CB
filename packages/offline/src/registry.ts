@@ -160,6 +160,8 @@ const STATE_FILE = 'state.json';
 const TRUST_FILE = 'trust.json';
 const MAX_PUBLISHERS = 64;
 const STAGING_DIR = '.staging';
+/** Map downloads in progress (registry `prepareDownload`); a dot-folder, so a scan passes it by. */
+const DOWNLOADS_DIR = '.downloads';
 /** Place indexes built by the app from its packs (SQLite), one file per pack. */
 const INDEX_DIR = '.index';
 const MAX_INDEX_BYTES = 256 * 1024 * 1024;
@@ -778,6 +780,111 @@ export class WorldPackRegistry {
     });
     this.emitChanged();
     return { installed: this.get(manifest.id)?.summary ?? null, issues: notes, verification };
+  }
+
+  /**
+   * A folder to write a pack straight into — the map download, whose one file can be far too big
+   * to pass through a `.worldpack` archive: `.downloads/<id>` under where the pack will live
+   * (WorldView's own packs folder, or a vault proven writable now), so making it live is a rename
+   * on the same drive. Whatever an earlier, interrupted download left there is cleared.
+   */
+  prepareDownload(
+    id: string,
+    target?: VaultInstallTarget,
+  ): Promise<{ ok: true; dir: string; device?: number } | { ok: false; reason: string }> {
+    return this.exclusive(async () => {
+      if (!/^[a-z0-9][a-z0-9-]{1,63}$/.test(id)) return { ok: false as const, reason: 'not a pack id' };
+      const packsRoot = target ? path.join(target.vault.root, VAULT_PACKS_DIR) : this.root;
+      const downloads = path.join(packsRoot, DOWNLOADS_DIR);
+      let device: number | undefined;
+      if (target) {
+        if (!vaultWritable(target.vault.state))
+          return {
+            ok: false as const,
+            reason: `the vault "${target.vault.label}" cannot be written to (${target.vault.state})`,
+          };
+        const checked = await target.recheck();
+        if (!checked.ok) return { ok: false as const, reason: checked.reason };
+        device = checked.device;
+        const prepared = await prepareVaultStaging(target.vault.root, downloads, device);
+        if (prepared) return { ok: false as const, reason: prepared };
+      } else {
+        await fs.mkdir(downloads, { recursive: true });
+        for (const name of await fs.readdir(downloads).catch(() => [] as string[]))
+          await fs.rm(path.join(downloads, name), { recursive: true, force: true }).catch(() => undefined);
+      }
+      const dir = path.join(downloads, id);
+      await fs.mkdir(dir, { recursive: true });
+      return { ok: true as const, dir, ...(device !== undefined ? { device } : {}) };
+    });
+  }
+
+  /**
+   * Make a downloaded pack live: its manifest read and its files' sizes checked exactly as at
+   * every scan (the download hashed them as it wrote), then renamed into place, replacing a pack
+   * of the same id where it is. On a vault, only while it is still the same drive.
+   */
+  adoptDownload(
+    dir: string,
+    target?: VaultInstallTarget & { device?: number },
+  ): Promise<{ installed: WorldPackSummary | null; issues: string[] }> {
+    return this.exclusive(async () => {
+      const id = path.basename(dir);
+      const packsRoot = target ? path.join(target.vault.root, VAULT_PACKS_DIR) : this.root;
+      if (path.resolve(path.dirname(dir)) !== path.resolve(packsRoot, DOWNLOADS_DIR))
+        return { installed: null, issues: ['not a download folder'] };
+      const loaded = await this.loadPack(id, dir, true, new Date(this.clock.now()).toISOString());
+      if (loaded.summary.status === 'invalid')
+        return { installed: null, issues: [loaded.summary.message ?? 'invalid'] };
+      if (target) {
+        const checked = await target.recheck();
+        if (!checked.ok) return { installed: null, issues: [`not activated: ${checked.reason}`] };
+        if (target.device !== undefined && checked.device !== target.device)
+          return { installed: null, issues: ['not activated: the drive changed during the download'] };
+      }
+      const installed = this.get(id);
+      const targetDir = path.join(packsRoot, id);
+      if (installed && path.resolve(installed.dir) !== path.resolve(targetDir))
+        return {
+          installed: null,
+          issues: [
+            `"${id}" is already installed ${installed.vault ? `on the vault "${installed.vault.label}"` : 'on this computer'}; remove it there first`,
+          ],
+        };
+      const old = `${dir}-replaced-${randomBytes(4).toString('hex')}`;
+      try {
+        await fs.rename(targetDir, old).catch((err: unknown) => {
+          if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+        });
+        await fs.rename(dir, targetDir);
+      } catch (err) {
+        return { installed: null, issues: [`activation failed: ${errorText(err)}`] };
+      }
+      await fs.rm(old, { recursive: true, force: true }).catch(() => undefined);
+      const state = await this.readState();
+      state.packs[id] = {
+        installedAt: new Date(this.clock.now()).toISOString(),
+        enabled: true,
+        sourceFile: 'download',
+        sizeBytes: loaded.summary.sizeBytes,
+        ...(target
+          ? {
+              vault: {
+                id: target.vault.id,
+                label: target.vault.label,
+                name: loaded.summary.name,
+                version: loaded.summary.version,
+                bounds: loaded.summary.bounds,
+              },
+            }
+          : {}),
+      };
+      await this.writeState(state);
+      await this.scan();
+      this.log.info('worldpack downloaded', { id, sizeBytes: loaded.summary.sizeBytes });
+      this.emitChanged();
+      return { installed: this.get(id)?.summary ?? null, issues: [] };
+    });
   }
 
   /**

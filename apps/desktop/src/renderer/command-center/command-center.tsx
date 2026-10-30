@@ -29,6 +29,7 @@ import {
   categoryLabel,
   useAddStarter,
 } from './widgets.js';
+import { MapDownloadPanel } from './map-download-panel.js';
 import './command-center.css';
 
 /** One empty list for selectors: a new [] each read would never settle. */
@@ -347,6 +348,10 @@ function World() {
           </p>
         </section>
       </div>
+      <section className="wv-cc-card">
+        <h3 className="wv-cc-caps">Download a map for offline use</h3>
+        <MapDownloadPanel />
+      </section>
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">Offline maps</h3>
         <p>
