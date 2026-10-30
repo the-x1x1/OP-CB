@@ -26,7 +26,7 @@ export function updateNoticeModel(state: UpdaterState | null | undefined): Updat
   if (state.canInstall === false) {
     if (state.status !== 'available' && state.status !== 'downloaded') return null;
     return {
-      title: `WorldView ${v} is available`,
+      title: `OP-CB ${v} is available`,
       body: `You are on ${state.currentVersion}. Download the new package from the release page and install it with your package manager.`,
       action: { label: 'Open the release page', kind: 'release' },
     };
@@ -34,18 +34,18 @@ export function updateNoticeModel(state: UpdaterState | null | undefined): Updat
   switch (state.status) {
     case 'downloading':
       return {
-        title: `WorldView ${v} is available`,
+        title: `OP-CB ${v} is available`,
         body: `Downloading it in the background (${state.message ?? 'downloading'}). You can keep working; it will ask to restart when it is ready.`,
       };
     case 'downloaded':
       return {
-        title: `WorldView ${v} is ready`,
+        title: `OP-CB ${v} is ready`,
         body: `You are on ${state.currentVersion}. Restart to update: it takes a few seconds and opens where you were.`,
         action: { label: 'Restart to update', kind: 'restart' },
       };
     case 'available':
       return {
-        title: `WorldView ${v} is available`,
+        title: `OP-CB ${v} is available`,
         body: `You are on ${state.currentVersion}.${state.automatic ? '' : ' Download it now and restart into it.'}`,
         action: { label: 'Download and restart', kind: 'download' },
       };

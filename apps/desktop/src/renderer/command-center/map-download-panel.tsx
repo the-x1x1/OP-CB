@@ -129,7 +129,7 @@ export function MapDownloadPanel() {
       ) : (
         <p className="wv-cc-muted">
           The whole Protomaps build: every zoom to 15 everywhere, about 140 GB. If it stops — a dropped connection, the
-          laptop shut, WorldView closed — Check the size and Download again carry on from where it was.
+          laptop shut, OP-CB closed — Check the size and Download again carry on from where it was.
         </p>
       )}
       {kind === 'area' ? (

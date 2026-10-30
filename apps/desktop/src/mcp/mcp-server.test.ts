@@ -69,7 +69,7 @@ test('mcp: refusals and failures are tool errors the model can read, not protoco
     },
     info,
   );
-  assert.match(JSON.stringify(down?.result), /WorldView is not running, or its local API is off/);
+  assert.match(JSON.stringify(down?.result), /OP-CB is not running, or its local API is off/);
   const unknown = await call(11, 'worldview_delete_everything');
   assert.equal((unknown?.error as { code: number }).code, -32602);
   const method = await handleMcpMessage({ jsonrpc: '2.0', id: 12, method: 'resources/list' }, get, info);

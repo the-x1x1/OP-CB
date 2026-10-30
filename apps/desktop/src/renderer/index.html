@@ -21,7 +21,7 @@
       It is linked from the staged Cesium assets rather than imported through the bundler
       so that it stays the file Cesium ships (scripts/cesium-assets.mjs stages it next to
       Workers and Assets, and CESIUM_BASE_URL points at the same directory). This is a
-      stylesheet only — no @cesium/widgets JavaScript is loaded anywhere in WORLDVIEW; see
+      stylesheet only — no @cesium/widgets JavaScript is loaded anywhere in OP-CB; see
       packages/render-cesium/src/cesium-module.ts for why that matters.
     -->
     <link rel="stylesheet" href="./cesium/Widgets/widgets.css" />
@@ -34,7 +34,7 @@
       ships and the typecheck's declaration shims are not asked to resolve a .css file.
     -->
     <link rel="stylesheet" href="./maplibre/maplibre-gl.css" />
-    <title>WORLDVIEW</title>
+    <title>OP-CB — Operation Civilization Backup</title>
   </head>
   <body>
     <div id="root"></div>

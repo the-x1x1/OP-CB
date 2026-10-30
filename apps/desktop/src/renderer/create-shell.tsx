@@ -5,6 +5,7 @@ import { Shell } from './shell.js';
 import type { RendererHostLike } from './renderer-host-like.js';
 import type { RootState } from './store/types.js';
 import '@worldview/ui/base.css';
+import './brand/brand.css';
 
 export interface CreateShellOptions {
   /** The only runtime API the shell may use (preload bridge in Electron, DemoClient in the browser). */

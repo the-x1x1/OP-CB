@@ -1,8 +1,8 @@
-# WORLDVIEW
+# OP-CB — Operation Civilization Backup
 
-A local-first browser for the physical world.
+A local-first browser for the physical world, and what keeps working when the internet does not.
 
-WORLDVIEW puts aircraft, vessels, satellites, earthquakes, fires, weather alerts,
+OP-CB (formerly WorldView; renamed 2026-10-30) puts aircraft, vessels, satellites, earthquakes, fires, weather alerts,
 cameras and infrastructure into one coherent model — live, historical and offline — and
 lets you inspect it on a 3D globe or a 2D map. It runs on your machine. There is no
 account, no cloud backend, and nothing is uploaded.

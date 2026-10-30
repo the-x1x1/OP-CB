@@ -106,7 +106,7 @@ export function parseVaultMarker(bytes: Buffer): { ok: true; marker: VaultMarker
   }
   const m = raw as Partial<VaultMarker>;
   if (!m || typeof m !== 'object' || m.formatVersion !== 1 || m.app !== 'worldview')
-    return { ok: false, reason: 'marker file is not a WorldView vault marker' };
+    return { ok: false, reason: 'marker file is not a OP-CB vault marker' };
   if (typeof m.id !== 'string' || !ID_PATTERN.test(m.id)) return { ok: false, reason: 'marker id is malformed' };
   return {
     ok: true,
@@ -166,7 +166,7 @@ export async function probeVault(vault: VaultSetting, opts: ProbeOptions = {}): 
   if (marker.id !== vault.id)
     return result(
       'foreign',
-      `${vault.path} holds a different WorldView vault${marker.label ? ` ("${marker.label}")` : ''}, not "${vault.label}"`,
+      `${vault.path} holds a different OP-CB vault${marker.label ? ` ("${marker.label}")` : ''}, not "${vault.label}"`,
       { device },
     );
 
@@ -219,9 +219,9 @@ export function vaultPathProblem(folder: string, appDataDir?: string): string | 
     const app = path.resolve(appDataDir);
     const rel = path.relative(app, resolved);
     if (rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel)))
-      return "the vault cannot be inside WorldView's own data folder";
+      return "the vault cannot be inside OP-CB's own data folder";
     const back = path.relative(resolved, app);
-    if (!back.startsWith('..') && !path.isAbsolute(back)) return "the vault cannot contain WorldView's own data folder";
+    if (!back.startsWith('..') && !path.isAbsolute(back)) return "the vault cannot contain OP-CB's own data folder";
   }
   return undefined;
 }
@@ -304,7 +304,7 @@ export async function initVault(
     if (here !== undefined && here === app)
       return {
         ok: false,
-        reason: `${real} is on the same drive as WorldView's own data. A vault is for another drive — if it is a mount point, is the drive mounted?`,
+        reason: `${real} is on the same drive as OP-CB's own data. A vault is for another drive — if it is a mount point, is the drive mounted?`,
       };
   }
   const packs = await vaultPacksDir(real);

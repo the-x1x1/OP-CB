@@ -54,7 +54,7 @@ test('moving: the small files are carried, the drive marked, the pointer written
   const out = resolveDataLocation({ usualRoot: usual, exeDir, dev: false });
   assert.equal(out.kind, 'usual');
   assert.equal(out.root, usual);
-  assert.match(out.missing?.reason ?? '', /not the one WorldView marked/);
+  assert.match(out.missing?.reason ?? '', /not the one OP-CB marked/);
   await fs.rm(drive, { recursive: true });
   assert.match(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing?.reason ?? '', /not there/);
 

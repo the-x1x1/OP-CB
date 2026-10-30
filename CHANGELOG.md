@@ -5,6 +5,16 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **WorldView is now OP-CB — Operation Civilization Backup.** The new wordmark and mark in the
+  top bar, the Command Center, the start screen and the splash; the mark as the app icon; the
+  name in window titles, messages, the Start menu and Apps & features. A new look to go with
+  it: near-black, warm off-white text, hazard-yellow accents, and Chakra Petch for captions and
+  section titles (bundled, SIL OFL). The data folder, `worldview://` links, the update channel
+  and the downloaded file names are unchanged, so an installed copy upgrades in place and keeps
+  its data.
+
 ## [0.6.1] — 2026-10-30
 
 0.6.0 was tagged but its build failed and it was never published: one test read a Linux

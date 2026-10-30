@@ -1,5 +1,6 @@
 /*
- * WORLDVIEW design tokens (directive §55). Dark, technical, restrained.
+ * OP-CB design tokens (directive §55; restyled 2026-10-30 for Operation Civilization Backup):
+ * near-black, warm off-white text, a hazard-yellow accent, Chakra Petch for captions.
  * Every colour used by a component comes from here; components never hardcode colours.
  *
  * Contrast (WCAG AA, ≥ 4.5:1), checked by tools/dev/design-tokens.test.ts rather than asserted here:
@@ -24,6 +25,8 @@
 
   /* ---- typography ---- */
   --wv-font-ui: Inter, 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Captions, section titles, the wordmark's line (bundled by the renderer: brand/brand.css). */
+  --wv-font-display: 'Chakra Petch', var(--wv-font-ui);
   --wv-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   /* Base size is scaled by --wv-text-scale (Settings → text scale); components use rem. */
   --wv-text-scale: 1;
@@ -41,29 +44,29 @@
   --wv-tracking-caps: 0.06em;
 
   /* ---- colour: background & surfaces ---- */
-  --wv-bg: #0b0f14;
-  --wv-surface-1: #111721;
-  --wv-surface-2: #161d28;
-  --wv-surface-3: #1c2532;
-  --wv-surface-hover: #202a38;
-  --wv-surface-active: #26324233;
-  --wv-overlay: rgba(4, 7, 11, 0.72);
-  --wv-border: #243040;
-  --wv-border-strong: #33425a;
-  --wv-border-focus: #62d9e6;
+  --wv-bg: #121211;
+  --wv-surface-1: #171715;
+  --wv-surface-2: #1c1b19;
+  --wv-surface-3: #22211e;
+  --wv-surface-hover: #292824;
+  --wv-surface-active: #f5c51824;
+  --wv-overlay: rgba(6, 6, 5, 0.74);
+  --wv-border: #2e2c28;
+  --wv-border-strong: #46423a;
+  --wv-border-focus: #f5c518;
 
   /* ---- colour: text ---- */
-  --wv-text-primary: #e6edf3;
-  --wv-text-secondary: #a3b3c4;
-  --wv-text-muted: #8391a1;
-  --wv-text-inverse: #0b0f14;
-  --wv-text-link: #62d9e6;
+  --wv-text-primary: #f3ecdc;
+  --wv-text-secondary: #c2baa9;
+  --wv-text-muted: #9c9483;
+  --wv-text-inverse: #121211;
+  --wv-text-link: #f5c518;
 
-  /* ---- colour: accent (restrained cyan/teal) ---- */
-  --wv-accent: #3ec5d5;
-  --wv-accent-strong: #62d9e6;
-  --wv-accent-soft: rgba(62, 197, 213, 0.14);
-  --wv-accent-border: rgba(62, 197, 213, 0.45);
+  /* ---- colour: accent (hazard yellow, from the OP-CB mark) ---- */
+  --wv-accent: #f5c518;
+  --wv-accent-strong: #ffd43b;
+  --wv-accent-soft: rgba(245, 197, 24, 0.14);
+  --wv-accent-border: rgba(245, 197, 24, 0.5);
 
   /* ---- colour: freshness (world-model FreshnessClass) ---- */
   --wv-fresh-live: #35c98a;
@@ -85,7 +88,7 @@
   --wv-status-auth-required: #c9a0ff;
   --wv-status-offline: #e57976;
   --wv-status-error: #e57976;
-  --wv-status-starting: #3ec5d5;
+  --wv-status-starting: #f5c518;
   --wv-status-disabled: #9aa3ad;
 
   /* ---- colour: severity (world-model SeverityClass) ---- */

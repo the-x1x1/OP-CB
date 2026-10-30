@@ -27,10 +27,15 @@
 }
 
 .wv-cc-start__brand {
-  color: var(--wv-text-link);
-  font-family: var(--wv-font-mono);
-  font-size: var(--wv-text-sm);
-  letter-spacing: 0.3em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--wv-space-2);
+  font-size: var(--wv-text-xs);
+}
+
+.wv-cc-start__wordmark {
+  height: 40px;
 }
 
 .wv-cc-start__title {
@@ -140,11 +145,16 @@
 .wv-cc__brand {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--wv-space-2);
   padding: 0 var(--wv-space-2);
-  color: var(--wv-text-link);
-  font-family: var(--wv-font-mono);
-  letter-spacing: 0.2em;
+}
+
+.wv-cc__wordmark {
+  height: 38px;
+}
+
+.wv-cc__brandline {
+  font-size: var(--wv-text-xs);
 }
 
 .wv-cc__nav ul {
@@ -261,10 +271,11 @@
 }
 
 .wv-cc-caps {
-  color: var(--wv-text-muted);
-  font-size: var(--wv-text-xs);
+  color: var(--wv-accent);
+  font-family: var(--wv-font-display);
+  font-size: var(--wv-text-sm);
   font-weight: var(--wv-weight-semibold);
-  letter-spacing: var(--wv-tracking-caps);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 

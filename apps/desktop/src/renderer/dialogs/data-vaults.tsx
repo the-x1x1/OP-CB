@@ -54,9 +54,9 @@ export function DataVaults({ status }: { status: OfflineStatus | null | undefine
     <div className="wv-vaults">
       <h4 className="wv-vaults__title">Data vaults</h4>
       <p className="wv-ctx-muted">
-        Folders on an external drive for large packs. WorldView marks a folder when you add it and only ever uses it
-        while that mark is there, so an unplugged drive is never written to by mistake. Settings, keys and history stay
-        on this computer.
+        Folders on an external drive for large packs. OP-CB marks a folder when you add it and only ever uses it while
+        that mark is there, so an unplugged drive is never written to by mistake. Settings, keys and history stay on
+        this computer.
       </p>
       {vaults.length ? (
         <ul className="wv-vaults__list">

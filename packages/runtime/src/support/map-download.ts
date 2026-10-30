@@ -531,7 +531,7 @@ function gb(n: number): string {
 
 function failureText(err: unknown): string {
   if ((err as { name?: string })?.name === 'WorkingOfflineError')
-    return 'WorldView is in Offline mode: switch to Online to download a map';
+    return 'OP-CB is in Offline mode: switch to Online to download a map';
   return err instanceof Error ? err.message : String(err);
 }
 

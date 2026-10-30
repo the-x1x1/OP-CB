@@ -106,8 +106,12 @@ export function TopBar() {
 
   return (
     <header className="wv-topbar" role="banner">
-      <div className="wv-topbar__brand" aria-label="WORLDVIEW">
-        <span className="wv-topbar__wordmark">WORLDVIEW</span>
+      <div className="wv-topbar__brand">
+        <span
+          className="wv-brand-wordmark wv-topbar__wordmark"
+          role="img"
+          aria-label="OP-CB — Operation Civilization Backup"
+        />
         {demoMode ? <span className="wv-topbar__demo">demo</span> : null}
       </div>
       <div className="wv-topbar__search" id="wv-global-search">
@@ -241,7 +245,7 @@ export function TopBar() {
                 className="wv-menu__item"
                 onClick={pick(() => actions.openDialog('welcome'))}
               >
-                About WORLDVIEW
+                About OP-CB
               </button>
             </li>
           </ul>

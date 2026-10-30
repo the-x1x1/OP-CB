@@ -50,9 +50,9 @@ test('vaultPathProblem: relative paths, drive roots and the app folder are refus
   assert.match(vaultPathProblem('relative/dir') ?? '', /absolute/);
   assert.match(vaultPathProblem(path.parse(process.cwd()).root) ?? '', /drive root/);
   const app = path.join(os.tmpdir(), 'app-data');
-  assert.match(vaultPathProblem(path.join(app, 'packs'), app) ?? '', /inside WorldView/);
-  assert.match(vaultPathProblem(app, app) ?? '', /inside WorldView/);
-  assert.match(vaultPathProblem(os.tmpdir(), app) ?? '', /contain WorldView/);
+  assert.match(vaultPathProblem(path.join(app, 'packs'), app) ?? '', /inside OP-CB/);
+  assert.match(vaultPathProblem(app, app) ?? '', /inside OP-CB/);
+  assert.match(vaultPathProblem(os.tmpdir(), app) ?? '', /contain OP-CB/);
   assert.equal(vaultPathProblem(path.join(os.tmpdir(), 'ssd'), app), undefined);
 });
 
@@ -218,7 +218,7 @@ test('initVault: a folder on the same drive as the app data is refused — an em
   const mountPoint = await tmp(); // same filesystem as appData: what /mnt/ssd is with nothing mounted
   const r = await initVault(mountPoint, 'SSD', { appDataDir: appData });
   assert.equal(r.ok, false);
-  assert.match(!r.ok ? r.reason : '', /same drive as WorldView's own data.*is the drive mounted/);
+  assert.match(!r.ok ? r.reason : '', /same drive as OP-CB's own data.*is the drive mounted/);
   assert.deepEqual(await listing(mountPoint), [], 'nothing written');
   assert.equal((await initVault(mountPoint, 'SSD', { appDataDir: appData, allowSameDrive: true })).ok, true);
 });

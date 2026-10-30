@@ -1,0 +1,55 @@
+/*
+ * OP-CB — Operation Civilization Backup (the operator's rename, 2026-10-30).
+ *
+ * The wordmark and the mark are the operator's own artwork (opcb-wordmark.png, opcb-mark.png);
+ * the display face is Chakra Petch (SIL OFL 1.1, fonts/OFL.txt), bundled so it draws the same
+ * offline. Body text stays the system UI face.
+ */
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('./fonts/ChakraPetch-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('./fonts/ChakraPetch-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Chakra Petch';
+  src: url('./fonts/ChakraPetch-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* The OP-CB wordmark: an image, named for screen readers by the element that carries it. */
+.wv-brand-wordmark {
+  display: inline-block;
+  aspect-ratio: 720 / 151;
+  height: 22px;
+  background: url('./opcb-wordmark.png') left center / contain no-repeat;
+  flex: none;
+}
+
+/* The mark alone (the O with the trefoil). */
+.wv-brand-mark {
+  display: inline-block;
+  aspect-ratio: 1;
+  height: 28px;
+  background: url('./opcb-mark.png') center / contain no-repeat;
+  flex: none;
+}
+
+/* OPERATION CIVILIZATION BACKUP and the other tracked captions. */
+.wv-brand-caption {
+  font-family: var(--wv-font-display);
+  font-weight: var(--wv-weight-semibold);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--wv-text-secondary);
+}

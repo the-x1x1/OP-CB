@@ -27,7 +27,7 @@ export function ModeScreen() {
   if (!cc.mode || cc.mode.chosen !== null) {
     if (cc.modeError && !cc.mode)
       return (
-        <div className="wv-cc-start" role="dialog" aria-modal="true" aria-label="Start WorldView">
+        <div className="wv-cc-start" role="dialog" aria-modal="true" aria-label="Start OP-CB">
           <div className="wv-cc-start__panel">
             <p className="wv-cc-start__problem">The runtime did not answer: {cc.modeError}</p>
             <Button onClick={() => void store.refreshMode()}>Try again</Button>
@@ -74,7 +74,10 @@ export function ModeScreen() {
   return (
     <div className="wv-cc-start" role="dialog" aria-modal="true" aria-labelledby="wv-cc-start-title">
       <div className="wv-cc-start__panel">
-        <div className="wv-cc-start__brand">WORLDVIEW</div>
+        <div className="wv-cc-start__brand">
+          <span className="wv-brand-wordmark wv-cc-start__wordmark" role="img" aria-label="OP-CB" />
+          <span className="wv-brand-caption">Operation Civilization Backup</span>
+        </div>
         <h1 id="wv-cc-start-title" className="wv-cc-start__title">
           How will you work today?
         </h1>
@@ -102,7 +105,7 @@ export function ModeScreen() {
           {demo ? ' Demo build: recorded data only, in either mode.' : ''}
         </p>
         <p className="wv-cc-start__note">
-          Offline stops WorldView&apos;s own requests. It is not a firewall: other programs on this computer are not
+          Offline stops OP-CB&apos;s own requests. It is not a firewall: other programs on this computer are not
           affected. You can switch at any time from the Command Center without restarting.
         </p>
         {cc.modeError ? <p className="wv-cc-start__problem">{cc.modeError}</p> : null}

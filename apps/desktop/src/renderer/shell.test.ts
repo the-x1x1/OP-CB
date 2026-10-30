@@ -61,7 +61,7 @@ test('main screen (Overview): layout landmarks, lens names, LIVE, Sources tab, R
     BUILT_IN_LENSES.length - 1,
     'all on by default',
   );
-  assert.ok(html.includes('WORLDVIEW'));
+  assert.ok(html.includes('OP-CB — Operation Civilization Backup'));
   assert.ok(html.includes('RECORDED DATA'), 'demo banner');
   assert.ok(html.includes('>LIVE<'), 'timeline live badge');
   assert.ok(html.includes('DEGRADED'), 'connection badge reflects mixed source states');
@@ -165,7 +165,7 @@ test('sources, feed, settings, diagnostics-ready, attribution, welcome and offli
   s = rootReducer(state, { type: 'ui/dialog', dialog: 'welcome' });
   html = render(s);
   assert.ok(
-    html.includes('Welcome to WORLDVIEW') &&
+    html.includes('Welcome to Operation Civilization Backup') &&
       html.includes('Start with Earth') &&
       html.includes('Privacy boundary') &&
       html.includes('never people'),

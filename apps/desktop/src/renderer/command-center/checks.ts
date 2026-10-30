@@ -105,8 +105,8 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
   switch (id) {
     case 'mode.offline':
       return d.mode?.chosen === 'offline'
-        ? pass('WorldView is in Offline mode: it sends nothing to the internet.')
-        : fail('WorldView is in Online mode. Switch to Offline to test.');
+        ? pass('OP-CB is in Offline mode: it sends nothing to the internet.')
+        : fail('OP-CB is in Online mode. Switch to Offline to test.');
 
     case 'maps.vaultReady': {
       const vaults = d.offline?.vaults ?? [];
@@ -250,7 +250,7 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
       if (!t.answer.ok) return fail(t.answer.message ?? 'The model did not answer.');
       const speed = t.answer.tokensPerSecond !== undefined ? `, ${t.answer.tokensPerSecond} tokens/s` : '';
       return pass(
-        `"${t.answer.model}" answered in ${(t.answer.elapsedMs / 1000).toFixed(1)} s${speed}${t.offline ? ', with WorldView offline' : ''}.`,
+        `"${t.answer.model}" answered in ${(t.answer.elapsedMs / 1000).toFixed(1)} s${speed}${t.offline ? ', with OP-CB offline' : ''}.`,
       );
     }
 
@@ -273,7 +273,7 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
     case 'library.search': {
       const s = d.lastLibrarySearch;
       if (!s) return fail('Search a book first.');
-      if (!s.offline) return fail('That search ran with WorldView online. Switch to Offline mode and search again.');
+      if (!s.offline) return fail('That search ran with OP-CB online. Switch to Offline mode and search again.');
       if (!s.count) return fail(`No pages for "${s.text}" in ${s.book}.`);
       return pass(`"${s.text}" found ${s.count} page${s.count === 1 ? '' : 's'} in ${s.book}, offline.`);
     }
@@ -282,7 +282,7 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
       const readable = books.filter((b) => b.readable);
       if (readable.length)
         return pass(
-          `${readable.length} book${readable.length === 1 ? '' : 's'} WorldView can open: ${readable
+          `${readable.length} book${readable.length === 1 ? '' : 's'} OP-CB can open: ${readable
             .slice(0, 3)
             .map((b) => b.title)
             .join(', ')}${readable.length > 3 ? '…' : ''}.`,
@@ -302,7 +302,7 @@ export function runCheck(id: CheckId, d: CheckData): CheckResult {
     case 'library.findOffline': {
       const s = d.lastLibraryFind;
       if (!s) return fail('Find a page first.');
-      if (!s.offline) return fail('That search ran with WorldView online. Switch to Offline mode and find again.');
+      if (!s.offline) return fail('That search ran with OP-CB online. Switch to Offline mode and find again.');
       if (!s.count) return fail(`No page titles start with "${s.text}".`);
       return pass(`"${s.text}" found ${s.count} page${s.count === 1 ? '' : 's'} in your library, offline.`);
     }

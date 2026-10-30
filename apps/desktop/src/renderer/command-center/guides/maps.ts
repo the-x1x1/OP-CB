@@ -12,7 +12,7 @@ export const MAPS_GUIDE: GuideDefinition = {
   title: 'Offline maps',
   summary: 'Install a map of your area that works with no internet, and prove it does.',
   whatItDoes:
-    'Online, WorldView draws its maps from map servers on the internet. Offline, it can only draw what is stored on this computer: the small world map that ships with it, map tiles it has already shown you (kept in its tile cache), and world packs — files holding a detailed map of one region, with its place names for search.',
+    'Online, OP-CB draws its maps from map servers on the internet. Offline, it can only draw what is stored on this computer: the small world map that ships with it, map tiles it has already shown you (kept in its tile cache), and world packs — files holding a detailed map of one region, with its place names for search.',
   prerequisites: [
     'A world pack file (.worldpack) for your region, or the means to build one (advanced)',
     'Space for it: on this computer or an external drive',
@@ -42,7 +42,7 @@ export const MAPS_GUIDE: GuideDefinition = {
       id: 'storage',
       title: 'Where to keep it',
       body: [
-        "Small packs can live in WorldView's own folder on this computer. Large ones are better on an external drive, which WorldView calls a data vault: a folder it marks as its own so it can tell that drive from another, and that it never writes to while it is unplugged.",
+        "Small packs can live in OP-CB's own folder on this computer. Large ones are better on an external drive, which OP-CB calls a data vault: a folder it marks as its own so it can tell that drive from another, and that it never writes to while it is unplugged.",
         'If the drive is unplugged later, its packs are listed as missing, not deleted, and come back when it is plugged in again.',
       ],
       actions: ['maps.addVault'],
@@ -55,16 +55,16 @@ export const MAPS_GUIDE: GuideDefinition = {
         },
         {
           problem: 'The drive is "absent"',
-          fix: 'It is unplugged or not mounted: the folder at that path is not the vault WorldView marked. Plug it in; nothing is written until it is back.',
+          fix: 'It is unplugged or not mounted: the folder at that path is not the vault OP-CB marked. Plug it in; nothing is written until it is back.',
         },
-        { problem: 'No external drive', fix: "Skip this step: packs go into WorldView's own folder." },
+        { problem: 'No external drive', fix: "Skip this step: packs go into OP-CB's own folder." },
       ],
     },
     {
       id: 'get',
       title: 'Download a map (or install one you have)',
       body: [
-        "Download the world map: WorldView takes it from Protomaps' daily build of OpenStreetMap, the whole world down to the level of detail you choose. Each level of detail roughly doubles the size, and WorldView tells you the exact size before anything is downloaded. Zoom 6 shows countries, cities and main roads; zoom 8 adds towns and more roads; zoom 10 most streets in towns; full detail (zoom 15, every building) is the whole planet, well over 100 GB — for an external drive.",
+        "Download the world map: OP-CB takes it from Protomaps' daily build of OpenStreetMap, the whole world down to the level of detail you choose. Each level of detail roughly doubles the size, and OP-CB tells you the exact size before anything is downloaded. Zoom 6 shows countries, cities and main roads; zoom 8 adds towns and more roads; zoom 10 most streets in towns; full detail (zoom 15, every building) is the whole planet, well over 100 GB — for an external drive.",
         'For more detail where you live or travel, choose "The world plus this area": the world at a lower detail, and the area on the map now down to street level. Give it a name.',
         'The map is checked after downloading — every part of the file must hold together, and the whole-planet file must match the build\'s published checksum — then installed as a world pack, credited "© OpenStreetMap contributors" (ODbL).',
         'Or install a .worldpack file you already have: one you built, or one from someone you trust. Installing checks every file in it before it is used.',
@@ -79,7 +79,7 @@ export const MAPS_GUIDE: GuideDefinition = {
         },
         {
           problem: 'Refused: needs a newer app',
-          fix: 'The pack was made for a later WorldView. Update WorldView while online.',
+          fix: 'The pack was made for a later OP-CB. Update OP-CB while online.',
         },
         {
           problem: 'Signed by an untrusted publisher',
@@ -95,8 +95,8 @@ export const MAPS_GUIDE: GuideDefinition = {
       id: 'offline-test',
       title: 'Test it with the internet off',
       body: [
-        'Switch WorldView to Offline mode, then look at your region on the map. This step passes when WorldView is offline and an installed pack is active as its local map.',
-        'For a stronger test, also turn off Wi-Fi (or unplug the network cable) and restart WorldView: the map of your region should still be there.',
+        'Switch OP-CB to Offline mode, then look at your region on the map. This step passes when OP-CB is offline and an installed pack is active as its local map.',
+        'For a stronger test, also turn off Wi-Fi (or unplug the network cable) and restart OP-CB: the map of your region should still be there.',
       ],
       actions: ['mode.offline', 'maps.openMap'],
       check: 'maps.offlineMap',
@@ -122,7 +122,7 @@ export const MAPS_GUIDE: GuideDefinition = {
       id: 'manage',
       title: 'Keep your maps current',
       body: [
-        "Under Command Center → Resources you can switch a pack off and on, remove it (its file is deleted from WorldView's folder or the vault), and see which vault it is on. To update a downloaded map, download it again: the newer build replaces it. To update another pack, install the newer pack file; an update pack applies to the version it was made for.",
+        "Under Command Center → Resources you can switch a pack off and on, remove it (its file is deleted from OP-CB's folder or the vault), and see which vault it is on. To update a downloaded map, download it again: the newer build replaces it. To update another pack, install the newer pack file; an update pack applies to the version it was made for.",
         'To back up a pack, copy its .worldpack file somewhere safe; to move it, install it onto another vault.',
       ],
     },

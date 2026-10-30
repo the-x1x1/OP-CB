@@ -37,15 +37,12 @@
 
 .wv-topbar__brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--wv-space-2);
 }
 
 .wv-topbar__wordmark {
-  font-size: var(--wv-text-md);
-  font-weight: var(--wv-weight-semibold);
-  letter-spacing: 0.12em;
-  color: var(--wv-text-primary);
+  height: 22px;
 }
 
 .wv-topbar__demo {
@@ -210,10 +207,11 @@
 }
 
 .wv-splash__wordmark {
-  color: var(--wv-text-primary);
-  font-size: 28px;
-  font-weight: 600;
-  letter-spacing: 0.32em;
+  height: 64px;
+}
+
+.wv-splash__caption {
+  font-size: var(--wv-text-sm);
 }
 
 .wv-splash__status {

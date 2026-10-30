@@ -58,7 +58,7 @@ asarUnpack:
 # (HKCU\Software\Classes\worldview); the .deb's menu entry declares
 # x-scheme-handler/worldview with %U on its Exec line.
 protocols:
-  - name: WorldView link
+  - name: OP-CB link
     schemes: [worldview]
 
 extraResources:
@@ -97,8 +97,11 @@ nsis:
   allowElevation: false
   deleteAppDataOnUninstall: false
   artifactName: WorldView-Setup-${version}.${ext}
-  shortcutName: WorldView
-  uninstallDisplayName: WorldView
+  # Shown in the Start menu and in Apps & features (the operator's rename to OP-CB, 2026-10-30).
+  # productName, the executable and the file names stay WorldView for now so an installed copy
+  # upgrades in place and its data folder and update channel are unchanged.
+  shortcutName: OP-CB
+  uninstallDisplayName: OP-CB — Operation Civilization Backup
   # `license:` (the installer EULA page) is added once the project's own licence text exists
   # at the repository root — a legal decision tracked in docs/legal/COMMERCIAL-DISTRIBUTION-REVIEW.md.
 
@@ -116,15 +119,15 @@ linux:
   # 512 px source; electron-builder generates the hicolor sizes from it.
   icon: build/icon.png
   category: Science
-  synopsis: A local-first browser for the physical world — live, historical and offline.
+  synopsis: Operation Civilization Backup — the world live, and what keeps working offline.
   description: >-
-    WORLDVIEW shows aircraft, ships, satellites, earthquakes, weather and infrastructure from
+    OP-CB (Operation Civilization Backup) shows aircraft, ships, satellites, earthquakes, weather and infrastructure from
     documented sources, each labelled with its freshness and provenance, and keeps working
     offline from installed packs and recorded history.
   desktop:
     entry:
-      Name: WorldView
-      GenericName: World map
+      Name: OP-CB
+      GenericName: Operation Civilization Backup
       Categories: Science;Geography;Education;
       Keywords: map;globe;aircraft;ships;satellites;offline;
   # No fileAssociations: nothing is opened by double-click yet. .worldpack import goes through

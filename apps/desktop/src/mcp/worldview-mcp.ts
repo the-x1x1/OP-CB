@@ -34,7 +34,7 @@ export function localApiGet(socketPath: string | undefined, timeoutMs = 8000): L
   return (apiPath) =>
     new Promise((resolve, reject) => {
       if (!socketPath) {
-        reject(new Error('not running: no session to find WorldView in'));
+        reject(new Error('not running: no session to find OP-CB in'));
         return;
       }
       const req = http.request({ socketPath, path: apiPath, method: 'GET', timeout: timeoutMs }, (res) => {

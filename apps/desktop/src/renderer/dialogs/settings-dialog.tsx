@@ -252,7 +252,7 @@ export function SettingsDialog() {
             {s.home?.view
               ? `Home: ${describeHome(s.home.view)}. Home or Shift+H flies there.`
               : 'No home view yet. Move the map to where you want to start, then use the current view.'}{' '}
-            It is only ever a place you chose; WORLDVIEW does not look up where you are.
+            It is only ever a place you chose; OP-CB does not look up where you are.
           </p>
           <div className="wv-ctx-actions" role="group" aria-label="Home view">
             <Button size="sm" icon="pin" onClick={() => void actions.setHomeFromView()}>
@@ -294,7 +294,7 @@ export function SettingsDialog() {
         <Section title="Network">
           <Toggle
             label="Work offline"
-            description="WORLDVIEW asks nothing of the internet: sources on the internet pause, the map draws from the tile cache, your packs and the bundled world, search uses the built-in places, and update checks wait. History, the timeline and sources on this computer or your own network keep working. Turn it off to go back online."
+            description="OP-CB asks nothing of the internet: sources on the internet pause, the map draws from the tile cache, your packs and the bundled world, search uses the built-in places, and update checks wait. History, the timeline and sources on this computer or your own network keep working. Turn it off to go back online."
             checked={s.network?.workOffline === true}
             onChange={(v) => void actions.updateSettings({ network: { workOffline: v } })}
           />
@@ -302,7 +302,7 @@ export function SettingsDialog() {
         {session.appInfo?.platform === 'linux' || session.appInfo?.platform === 'win32' ? (
           <Section title="Local API">
             <Toggle
-              label="Let other programs on this computer read WORLDVIEW"
+              label="Let other programs on this computer read OP-CB"
               description="A read-only connection for your own programs and AI clients (Formicaria, or an AI assistant through the MCP server): source status, objects near a place, tracks and offline status, through a socket or named pipe only your user can write to — never the network. Data whose source does not allow it out of the app (a Meshtastic mesh, your household, among others) is never given. Off unless you turn it on."
               checked={s.localApi?.enabled === true}
               onChange={(v) => void actions.updateSettings({ localApi: { ...s.localApi, enabled: v } })}
@@ -477,7 +477,7 @@ export function SettingsDialog() {
         <Section title="Privacy">
           <FieldList
             rows={[
-              { label: 'Telemetry', value: 'Off — WORLDVIEW sends no usage data' },
+              { label: 'Telemetry', value: 'Off — OP-CB sends no usage data' },
               {
                 label: 'Credentials',
                 value: 'Stored in the operating system secure store; never shown in the UI or logs',
@@ -899,7 +899,7 @@ function MartinField({
       </div>
       <span className="wv-credential__state">
         {!saved.url
-          ? 'Not configured. The source must use the Protomaps basemap schema; WORLDVIEW draws it with its own styles.'
+          ? 'Not configured. The source must use the Protomaps basemap schema; OP-CB draws it with its own styles.'
           : entry?.available
             ? `In the Basemap list as "${entry.name}" and its light version`
             : `Not usable: ${entry?.unavailableReason ?? 'not read yet'}`}
@@ -1073,7 +1073,7 @@ function AddCameraForm() {
         </p>
       ) : null}
       <p className="wv-ctx-muted">
-        A login in the URL is moved to the operating system credential store on save and never shown again. WORLDVIEW
+        A login in the URL is moved to the operating system credential store on save and never shown again. OP-CB
         contacts only this address; it never scans your network.
       </p>
       <div className="wv-ctx-actions">

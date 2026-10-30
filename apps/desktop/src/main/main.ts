@@ -109,7 +109,7 @@ if (!app.requestSingleInstanceLock()) {
   void bootstrap().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     try {
-      dialog.showErrorBox('WorldView could not start', message);
+      dialog.showErrorBox('OP-CB could not start', message);
     } catch {
       /* headless */
     }
@@ -124,10 +124,10 @@ async function bootstrap(): Promise<void> {
   if (dataLocation.missing) {
     const choice = dialog.showMessageBoxSync({
       type: 'warning',
-      title: 'WorldView data not found',
-      message: `WorldView keeps its data in ${dataLocation.missing.path}, but ${dataLocation.missing.reason}.`,
+      title: 'OP-CB data not found',
+      message: `OP-CB keeps its data in ${dataLocation.missing.path}, but ${dataLocation.missing.reason}.`,
       detail:
-        "Connect the drive and start WorldView again, or start now with this computer's own data (the drive's data is left as it is).",
+        "Connect the drive and start OP-CB again, or start now with this computer's own data (the drive's data is left as it is).",
       buttons: ['Quit', "Use this computer's data"],
       defaultId: 0,
       cancelId: 0,
@@ -220,7 +220,7 @@ async function bootstrap(): Promise<void> {
   const startup = await new StartupValidator({ dirs, checks: [credentialCheck], logger: log }).run();
   if (!startup.usable) {
     dialog.showErrorBox(
-      'WorldView cannot use its data directory',
+      'OP-CB cannot use its data directory',
       startup.findings
         .filter((f) => f.severity === 'error')
         .map((f) => f.message)
@@ -478,7 +478,7 @@ async function bootstrap(): Promise<void> {
         };
       const win = BrowserWindow.getAllWindows()[0];
       const opts = {
-        title: 'Choose a folder for all WorldView data (an empty folder, or one WorldView already uses)',
+        title: 'Choose a folder for all OP-CB data (an empty folder, or one OP-CB already uses)',
         properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>,
       };
       const chosen = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
@@ -489,8 +489,8 @@ async function bootstrap(): Promise<void> {
       return {
         ok: true,
         message: r.adopted
-          ? `WorldView will use the data already in ${chosen.filePaths[0]} from the next start`
-          : `From the next start WorldView keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory and keys were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
+          ? `OP-CB will use the data already in ${chosen.filePaths[0]} from the next start`
+          : `From the next start OP-CB keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory and keys were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
         restartNeeded: true,
       };
     },
@@ -500,7 +500,7 @@ async function bootstrap(): Promise<void> {
       await useUsualData(dataLocation.usualRoot);
       return {
         ok: true,
-        message: `From the next start WorldView uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,
+        message: `From the next start OP-CB uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,
         restartNeeded: dataLocation.kind === 'moved',
       };
     },
@@ -544,7 +544,7 @@ async function bootstrap(): Promise<void> {
       }
       if (r.kind === 'reference') {
         const file = runtime.core.libraryDownloads.referenceFile(r.id);
-        if (!file) return { opened: false, message: 'not a reference WorldView knows' };
+        if (!file) return { opened: false, message: 'not a reference OP-CB knows' };
         try {
           await fs.access(file);
         } catch {

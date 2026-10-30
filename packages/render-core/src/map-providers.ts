@@ -73,7 +73,7 @@ export const MAP_PROVIDER_CATALOG: readonly MapProviderEntry[] = Object.freeze([
   },
   {
     id: DEFAULT_2D_BASEMAP_ID,
-    name: 'WORLDVIEW dark (offline vector)',
+    name: 'OP-CB dark (offline vector)',
     kind: 'basemap',
     modes: ['2D'],
     attribution: '© OpenMapTiles © OpenStreetMap contributors',
@@ -90,7 +90,7 @@ export const MAP_PROVIDER_CATALOG: readonly MapProviderEntry[] = Object.freeze([
   },
   {
     id: 'worldview-light',
-    name: 'WORLDVIEW light (offline vector)',
+    name: 'OP-CB light (offline vector)',
     kind: 'basemap',
     modes: ['2D'],
     attribution: '© OpenMapTiles © OpenStreetMap contributors',

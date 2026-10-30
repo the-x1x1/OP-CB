@@ -45,7 +45,7 @@ export const FOLDER_SETTING_DEFINITION: ProviderSettingDefinition = {
   label: 'Folder',
   kind: 'string',
   description:
-    "The folder WORLDVIEW may read this source's file from. Nothing outside it is read, and links that lead out of it are refused.",
+    "The folder OP-CB may read this source's file from. Nothing outside it is read, and links that lead out of it are refused.",
   placeholder: 'C:\\Users\\you\\Documents\\GIS',
 };
 

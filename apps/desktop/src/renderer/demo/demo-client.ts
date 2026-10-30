@@ -888,7 +888,7 @@ export class DemoClient implements WorldClient {
       case 'notifications.test':
         this.emit('notification', {
           id: `notification:test:${nowMs}`,
-          title: 'WorldView test notification',
+          title: 'OP-CB test notification',
           body: 'Sent from Diagnostics. In the browser demo there is no desktop notification.',
           severity: 'INFO',
         });

@@ -627,10 +627,10 @@ test('integration: a test notification takes the same paths a real one would, an
       'the fake host shows one (it answers nothing, which counts as shown)',
     );
     assert.equal(notifications.length, 1, 'the in-app event');
-    assert.equal(notifications[0]!.title, 'WorldView test notification');
+    assert.equal(notifications[0]!.title, 'OP-CB test notification');
     assert.equal(notifications[0]!.severity, 'INFO');
     assert.equal(h.host.notifications.length, 1, 'the host was asked for one');
-    assert.equal(h.host.notifications[0]!.title, 'WorldView test notification');
+    assert.equal(h.host.notifications[0]!.title, 'OP-CB test notification');
     // A host without notifications says so.
     h.host.showNotification = () => false;
     assert.deepEqual(await h.client.request('notifications.test', undefined), { inApp: true, desktop: false });

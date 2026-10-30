@@ -831,6 +831,86 @@
       "sizeBytes": 268447,
       "decision": "bundle",
       "notes": "LICENSE of the source repository is the CC0 1.0 Universal legal code (read 2026-09-28): no conditions on copying, modifying or redistributing, commercial use included. Credit is given anyway, in THIRD_PARTY_NOTICES and beside every name the context panel shows. Chosen over OpenFlights airlines.dat (ODbL, share-alike). The source commit and date are recorded in the file's provenance block; rebuild with tools/dev/aviation-reference/build.mjs <standing-data checkout>. Used only to name an airline from a callsign's ICAO designator and a type from its designator — no registration, owner or operator data is bundled (the standing-data aircraft/ tables are not read)."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/fonts/ChakraPetch-Medium.ttf",
+      "description": "Chakra Petch Medium (TrueType), the display face for captions and section titles",
+      "sourceUrl": "https://github.com/google/fonts/tree/6157dfaa640ca5738b4d1a7070fe389c3036d7fc/ofl/chakrapetch",
+      "license": "SIL Open Font License 1.1",
+      "attribution": "Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch.git)",
+      "sizeBytes": 78600,
+      "decision": "bundle",
+      "notes": "Added 2026-10-30 for the OP-CB look (operator's request). Unmodified; SHA-256 d480f4f97405fac3600652e2e14fd0b14339031c0af4da11582994878f04d919. Shipped with fonts/OFL.txt beside it; bundled with software as the OFL permits, never sold by itself."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/fonts/ChakraPetch-SemiBold.ttf",
+      "description": "Chakra Petch SemiBold (TrueType), the display face for captions and section titles",
+      "sourceUrl": "https://github.com/google/fonts/tree/6157dfaa640ca5738b4d1a7070fe389c3036d7fc/ofl/chakrapetch",
+      "license": "SIL Open Font License 1.1",
+      "attribution": "Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch.git)",
+      "sizeBytes": 78604,
+      "decision": "bundle",
+      "notes": "Added 2026-10-30 for the OP-CB look (operator's request). Unmodified; SHA-256 45264de3204ddbd5fb3e14a2402acd5c630d16650ae5fc221d2c52da46a6734b. Shipped with fonts/OFL.txt beside it; bundled with software as the OFL permits, never sold by itself."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/fonts/ChakraPetch-Bold.ttf",
+      "description": "Chakra Petch Bold (TrueType), the display face for captions and section titles",
+      "sourceUrl": "https://github.com/google/fonts/tree/6157dfaa640ca5738b4d1a7070fe389c3036d7fc/ofl/chakrapetch",
+      "license": "SIL Open Font License 1.1",
+      "attribution": "Copyright 2018 The Chakra Petch Project Authors (https://github.com/m4rc1e/Chakra-Petch.git)",
+      "sizeBytes": 78384,
+      "decision": "bundle",
+      "notes": "Added 2026-10-30 for the OP-CB look (operator's request). Unmodified; SHA-256 65fbf76d95651697275e19db4d717c0e95a789ddd3476478b05292104db278a0. Shipped with fonts/OFL.txt beside it; bundled with software as the OFL permits, never sold by itself."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/fonts/OFL.txt",
+      "description": "SIL Open Font License 1.1 text for Chakra Petch",
+      "sourceUrl": "https://github.com/google/fonts/tree/6157dfaa640ca5738b4d1a7070fe389c3036d7fc/ofl/chakrapetch/OFL.txt",
+      "license": "SIL Open Font License 1.1 (text)",
+      "attribution": "Copyright 2018 The Chakra Petch Project Authors",
+      "sizeBytes": 4396,
+      "decision": "bundle",
+      "notes": "Must accompany the font files."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/opcb-wordmark.png",
+      "description": "The OP-CB wordmark (header, Command Center, start screen, splash)",
+      "sourceUrl": "Supplied by the project owner in the 2026-10-30 rename to OP-CB (Operation Civilization Backup)",
+      "license": "Project artwork (owner-supplied)",
+      "attribution": "OP-CB project",
+      "sizeBytes": 80951,
+      "decision": "bundle",
+      "notes": "The owner's own artwork, cropped and resized (Pillow) from the images they supplied; the radiation trefoil is the international ionising-radiation symbol (ISO 361), not anyone's mark."
+    },
+    {
+      "path": "apps/desktop/src/renderer/brand/opcb-mark.png",
+      "description": "The OP-CB mark: the O with the radiation trefoil",
+      "sourceUrl": "Supplied by the project owner in the 2026-10-30 rename to OP-CB (Operation Civilization Backup)",
+      "license": "Project artwork (owner-supplied)",
+      "attribution": "OP-CB project",
+      "sizeBytes": 42618,
+      "decision": "bundle",
+      "notes": "The owner's own artwork, cropped and resized (Pillow) from the images they supplied; the radiation trefoil is the international ionising-radiation symbol (ISO 361), not anyone's mark."
+    },
+    {
+      "path": "apps/desktop/build/icon.png",
+      "description": "App icon, 512 px (Linux; the OP-CB mark)",
+      "sourceUrl": "Supplied by the project owner in the 2026-10-30 rename to OP-CB (Operation Civilization Backup)",
+      "license": "Project artwork (owner-supplied)",
+      "attribution": "OP-CB project",
+      "sizeBytes": 151285,
+      "decision": "bundle",
+      "notes": "The owner's own artwork, cropped and resized (Pillow) from the images they supplied; the radiation trefoil is the international ionising-radiation symbol (ISO 361), not anyone's mark."
+    },
+    {
+      "path": "apps/desktop/build/icon.ico",
+      "description": "App icon, 16–256 px (Windows executable and installer; the OP-CB mark)",
+      "sourceUrl": "Supplied by the project owner in the 2026-10-30 rename to OP-CB (Operation Civilization Backup)",
+      "license": "Project artwork (owner-supplied)",
+      "attribution": "OP-CB project",
+      "sizeBytes": 77564,
+      "decision": "bundle",
+      "notes": "The owner's own artwork, cropped and resized (Pillow) from the images they supplied; the radiation trefoil is the international ionising-radiation symbol (ISO 361), not anyone's mark."
     }
   ]
 }
