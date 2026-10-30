@@ -4,6 +4,7 @@ import {
   blockedOffline,
   blockInternetRequests,
   gatedFetch,
+  launchModeFromArgs,
   leavesThisComputer,
   WorkingOfflineError,
 } from './network-gate.js';
@@ -111,4 +112,13 @@ test('blockInternetRequests: an approved host is let through on the session too'
   listener!({ url: 'https://tile.openstreetmap.org/1/1/1.png' }, (r) => answers.push(r));
   assert.deepEqual(answers, [{}, { cancel: true }]);
   assert.deepEqual(blocked, ['https://tile.openstreetmap.org/1/1/1.png']);
+});
+
+test('launch mode: only --mode=online or --mode=offline exactly; nothing else chooses', () => {
+  assert.equal(launchModeFromArgs(['/opt/WorldView/worldview', '--mode=offline']), 'offline');
+  assert.equal(launchModeFromArgs(['worldview.exe', '--mode=online']), 'online');
+  assert.equal(launchModeFromArgs(['worldview.exe']), undefined);
+  assert.equal(launchModeFromArgs(['worldview.exe', '--mode', 'online']), undefined);
+  assert.equal(launchModeFromArgs(['worldview.exe', '--mode=Online']), undefined);
+  assert.equal(launchModeFromArgs(['worldview.exe', 'worldview://view?mode=online']), undefined);
 });

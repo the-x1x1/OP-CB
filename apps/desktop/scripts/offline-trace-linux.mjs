@@ -10,8 +10,10 @@
  * 1. Launch once with an isolated XDG_CONFIG_HOME until the renderer has mounted, then quit: the
  *    app writes a settings.json of its own current schema.
  * 2. Turn on Settings → Network → Work offline in that file.
- * 3. Launch again under `strace -f -e trace=connect` for `--seconds`, sandbox on, and read every
- *    connect() the whole process tree made.
+ * 3. Launch again under `strace -f -e trace=connect` for `--seconds`, sandbox on, with
+ *    `--mode=offline` (or `--mode=online` for the control) so the mode is chosen as on the start
+ *    screen — without it the app sends nothing until someone chooses, and the control could
+ *    never reach out — and read every connect() the whole process tree made.
  *
  * A connect() to a Unix socket (D-Bus, X) or to loopback (127.0.0.0/8, ::1) is this computer;
  * anything else is an attempt to leave it, and so is any connect() to port 53 — a DNS lookup,
@@ -99,7 +101,7 @@ const before = logMessages().length;
 const startedAt = Date.now();
 await runUntil(
   'strace',
-  ['-f', '-qq', '-e', 'trace=connect', '-o', traceFile, executable],
+  ['-f', '-qq', '-e', 'trace=connect', '-o', traceFile, executable, control ? '--mode=online' : '--mode=offline'],
   () => Date.now() - startedAt >= seconds * 1000,
   (seconds + 30) * 1000,
 );
@@ -134,9 +136,11 @@ const mounted = after.some((r) => r.message === 'renderer media');
 const result = {
   executable,
   // Control: the app must have tried to reach out, or the trace proves nothing.
-  ok: mounted && (control ? !quiet : quiet),
+  ok: mounted && after.some((r) => r.message === 'operating mode chosen at launch') && (control ? !quiet : quiet),
   seconds,
   workOffline: !control,
+  launchMode: control ? 'online' : 'offline',
+  modeChosenAtLaunch: after.some((r) => r.message === 'operating mode chosen at launch'),
   rendererMounted: after.some((r) => r.message === 'renderer media'),
   connects: { unix: unix.length, loopback: loopback.length, dnsLookups: dns.length, outside: outside.length },
   outside: outside.slice(0, 50),

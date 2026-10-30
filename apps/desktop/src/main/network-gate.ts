@@ -108,3 +108,17 @@ export function blockInternetRequests(
     },
   );
 }
+
+/**
+ * A mode given on the command line (`--mode=online` or `--mode=offline`) is the operator's
+ * choice for that launch, made before the window opens: the start screen is not shown. For a
+ * kiosk or cyberdeck that starts WorldView itself, and for the release workflow's network trace.
+ * Anything else on the command line is no choice at all.
+ */
+export function launchModeFromArgs(argv: readonly string[]): 'online' | 'offline' | undefined {
+  for (const a of argv) {
+    if (a === '--mode=online') return 'online';
+    if (a === '--mode=offline') return 'offline';
+  }
+  return undefined;
+}

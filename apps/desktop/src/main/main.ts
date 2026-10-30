@@ -55,7 +55,7 @@ import { TileCache } from './tile-cache.js';
 import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
-import { blockInternetRequests, gatedFetch } from './network-gate.js';
+import { blockInternetRequests, gatedFetch, launchModeFromArgs } from './network-gate.js';
 import { moveDataTo, resolveDataLocation, useUsualData } from './data-location.js';
 import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './library-reader.js';
 
@@ -348,6 +348,13 @@ async function bootstrap(): Promise<void> {
     }),
   });
   await runtime.start();
+  // `--mode=online|offline` on the command line is the choice for this launch (network-gate.ts).
+  const launchMode = launchModeFromArgs(process.argv);
+  if (launchMode) {
+    await chooseMode(runtime.core, launchMode);
+    modeChosen = true;
+    log.info('operating mode chosen at launch', { mode: launchMode });
+  }
   const readerDeps: ReaderDeps = {
     lookup: (bookId, key) => runtime.core.zimLibrary.lookup(bookId, key),
     mainKey: (bookId) => runtime.core.zimLibrary.mainKey(bookId),
