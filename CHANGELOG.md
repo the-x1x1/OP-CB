@@ -7,6 +7,36 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **The Command Center and a start screen.** WorldView now starts by asking Online or Offline
+  (the last choice offered first; the computer's own network state shown, never deciding), and
+  sends nothing to the internet until you choose. Then the Command Center opens over the map:
+  Overview (what will still work if the internet goes, and why the rest will not), World &
+  Maps, Knowledge, Local Intelligence, Communications, Preparedness and Resources. The map and
+  everything on it are one press away (Esc, or **Show the map**); the top bar's new button and
+  Ctrl+Shift+O bring it back. Switch modes at any time without a restart
+  (docs/architecture/COMMAND-CENTER.md).
+- **Guided setup walkthroughs** for offline maps, an offline library (Kiwix), courses
+  (Kolibri), a local AI model (Ollama), a Meshtastic radio, an RTL-SDR receiver and a
+  preparedness inventory: what it does, what you need, the steps with real controls, checks
+  that pass only on what is really there, troubleshooting, and a final test. Progress is kept;
+  a skipped check leaves a walkthrough "not verified", and the Overview calls a capability Ready
+  only when its final test passed.
+- **Devices on your own network while offline.** Resources → Local network: approve one host
+  at a time (a private address or a `.local` name, never a range) and Offline mode lets
+  WorldView reach it, so a receiver on a Raspberry Pi keeps working.
+- **Local services**: Ollama, kiwix-serve and Kolibri are found on this computer (loopback
+  only, on the ports you set) — never installed, started or stopped by WorldView. Search your
+  library and open pages; ask a local model, also from your library's excerpts with retrieved
+  and generated parts labelled apart.
+- **A Meshtastic test message** (the operator's decision of 2026-10-30): one short text to one
+  radio, only when you press Transmit, refused while your radio's region is unset or transmit
+  is off. WorldView shows separately whether your radio accepted it, another radio repeated it
+  and the radio it was for acknowledged it. The radio's firmware version, region and preset are
+  now shown. Receivers (RTL-SDR, AIS, ADS-B) still never transmit.
+- **Preparedness inventory**: supplies with quantities, expiry and check dates, emergency
+  contacts and notes, kept on this computer only; due and expired items on the Overview; a CSV
+  checklist to print and a JSON backup, written only where you choose.
+
 - **Links to a view.** A `worldview://view?lat=…&lon=…` link opens WorldView at that place from an
   email, a chat or a web page: the zoom or camera height, 2D or 3D, the lens, layers shown or
   hidden and one thing to select, all optional. The installer registers the scheme (a portable

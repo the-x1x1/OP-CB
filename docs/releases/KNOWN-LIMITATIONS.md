@@ -357,6 +357,20 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.5.0 (unreleased)
 
+- The Command Center's local services (Ollama, kiwix-serve, Kolibri) were built from each
+  project's documented answers and tested against them, not against running copies; the
+  Meshtastic test message was tested against encoded frames, not a radio. Each walkthrough's
+  final test is the proof on real equipment. `HARDWARE_REQUIRED`
+- Offline mode stops WorldView's own requests only; services you run beside it (Ollama, a
+  library server) are not stopped from reaching the internet by it.
+- A world pack can be installed from a file but not downloaded or built from the app: a
+  licence-free basemap to build packs from is still being prepared.
+- The Command Center is dark only, like the rest of WorldView.
+- Library pages open in your browser, one book is searched at a time, and "Ask with your
+  library" gives the model search excerpts rather than whole articles.
+- Until a mode is chosen on the start screen nothing is asked of the internet: sources show
+  Offline behind the start screen for those first seconds.
+
 - The first start of 0.6.0 turns Update automatically on, once, in every settings file — an
   operator who had switched it off before cannot be told from one who never touched it, since
   the file holds every setting either way. Switch it off again; from then on it stays off.

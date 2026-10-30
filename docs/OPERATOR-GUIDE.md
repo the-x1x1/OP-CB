@@ -85,6 +85,33 @@ fields and worked examples are in [connectors/OVERVIEW.md](connectors/OVERVIEW.m
 developer machine can draft one from a URL with `pnpm connector:add --url …` and check it
 with `pnpm connector:test`.
 
+## The Command Center
+
+WorldView starts by asking how you will work: **Online** or **Offline**. The last choice is
+offered first, and the computer's own network state is shown for information; nothing is sent
+to the internet until you choose. Then the Command Center opens over the map:
+
+- **Overview**: the mode (switch it here at any time) and readiness — for each capability,
+  Ready, Verification required, Setup required, Degraded or Unavailable, and why.
+- **World & Maps**: Show the map (everything as before), Sources, Settings, the operating
+  profile (Field / Balanced / Docked) and your packs.
+- **Knowledge**: your Kiwix library server (books, full-text search, pages opened in the
+  browser) and Kolibri.
+- **Local Intelligence**: Ollama, the model to use, a test question, and questions answered
+  from your library's excerpts (what was retrieved and what the model wrote are labelled apart;
+  neither is emergency or medical advice).
+- **Communications**: your Meshtastic radio (status, radios heard, the test message) and
+  receivers.
+- **Preparedness**: your inventory, contacts and notes; due and expired items; a CSV checklist
+  and a JSON backup.
+- **Resources**: packs, external drives, local service ports, and devices on your own network
+  approved for offline use.
+
+Every section has **How do I set this up?**: a walkthrough with the steps, real controls, a
+check after each step that passes only on what is really there, troubleshooting, and a final
+test. Progress is kept; Restart starts one again. Esc or **Show the map** closes the Command
+Center; the top bar's button or Ctrl+Shift+O opens it.
+
 ## Working offline
 
 Settings → Network → **Work offline** makes WorldView ask nothing of the internet, whether
@@ -102,7 +129,12 @@ it is sent (`apps/desktop/src/main/network-gate.ts`; the log notes each host onc
   cities and towns) plus a pack's places;
 - satellites, moved on from the last element sets by SGP4;
 - sources on this computer or your own network (a local receiver, an MQTT broker, Home
-  Assistant, the camera relay).
+  Assistant, the camera relay). A source WorldView asks over HTTP on another device — readsb
+  on a Raspberry Pi, a weather station — needs that device approved under Command Center →
+  Resources → Local network: one host at a time, private addresses and local names only.
+
+Offline stops WorldView's own requests; it is not a firewall, and programs you run beside it
+are not affected.
 
 Turn it off to go back online; sources resume on their next poll.
 
@@ -174,7 +206,14 @@ with its uncertainty. Nodes without a position are counted in Source Health but 
 
 Text messages are never read: their words reach no record, log or observation. The mesh can
 carry other people's nodes, so this source's data stays on the computer — no export, packs or
-redistribution. A node over Bluetooth or USB is not read yet.
+redistribution. On Linux a node can also be plugged in by USB (its serial port in the source's
+settings); a node over Bluetooth is not read.
+
+The radio's firmware version, region and preset are shown in the source's status. WorldView
+transmits one thing through it: a test message to one radio, from Command Center →
+Communications, only when you press Transmit, and refused while the radio's region is unset or
+its transmit is off. It shows apart whether your radio accepted it, another radio repeated it
+and the radio it was for acknowledged it.
 
 ## NMEA 2000 (your boat)
 
