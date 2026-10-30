@@ -19,7 +19,7 @@ Current builds are unsigned, so SmartScreen warns on first run
 
 ### Where data lives
 
-| Path (`%APPDATA%\WorldView\`)                        | Contents                                                                                                                        |
+| Path (`%APPDATA%\@worldview\desktop\`)               | Contents                                                                                                                        |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `settings.json`                                      | application settings (atomic writes, migrated on upgrade)                                                                       |
 | `credentials.json`                                   | API keys, encrypted with Windows DPAPI                                                                                          |
@@ -31,7 +31,8 @@ Current builds are unsigned, so SmartScreen warns on first run
 | `tiles/`                                             | map tiles kept for Esri World Imagery, under the cap set in Settings                                                            |
 | `logs/`                                              | rotating structured logs, redacted; a warning repeated every poll is written once, then as a `repeated: N` summary every 10 min |
 
-The portable build uses the same paths, so an installed and a portable copy share data.
+The portable build uses the same paths, so an installed and a portable copy share data. On
+Linux the same files are under `~/.config/@worldview/desktop/` (the XDG config folder).
 
 ## Providers and credentials
 
@@ -70,7 +71,7 @@ in a commercial setting.
 
 A feed that publishes JSON, GeoJSON or CSV over HTTPS, or JSON over a WebSocket, can be
 added without a release: write a definition file and put it in
-`%APPDATA%\WorldView\connectors\` (one `.json` per source). It is read at the next start
+`%APPDATA%\@worldview\desktop\connectors\` (one `.json` per source). It is read at the next start
 and appears in Settings → Sources under its own name, off until you switch it on, with the
 attribution and terms you wrote into it and any credential it names in the Credentials
 section. A file that does not validate is skipped and the reason is in the log
@@ -125,6 +126,26 @@ its PMTiles extract, online or off; without one they are listed but cannot be ch
 Import verifies structure, paths, checksums and source policies before writing
 anything; a tampered or hostile pack is refused and leaves nothing behind. Packs
 contain data only — never code.
+
+## Connections
+
+The **Connections** tab (right rail; or "Connections" in the command palette) has your own
+receivers and servers in one place, each with its switch, whether it is answering and how many
+things it has on the map:
+
+- **Home Assistant**: the address (`http://homeassistant.local:8123`, `192.168.1.20`,
+  `https://ha.example.lan`) and a long-lived access token once, for all four Home Assistant
+  sources, and which to show — zones, weather, sensors, and the people of your household and
+  their phones (off unless you choose it; not kept in history). **Connect** saves the token to
+  the operating system's secure store and switches the chosen ones on.
+- **Radios**: an RTL-SDR decoding aircraft (readsb or dump1090) or ships (an AIS decoder
+  sending NMEA over TCP), and a Meshtastic node on your network — or, on Linux, plugged in by
+  USB. **Address** opens each one's own settings.
+- **Boat**: NMEA 2000 through your gateway.
+- **Weather station and air**: a Davis WeatherLink Live and a PurpleAir sensor.
+
+Only the address you give is contacted; nothing on your network is searched for, and every
+radio is receive-only. Each is also a source in the Sources tab, with its full detail.
 
 ## Local ADS-B (readsb / dump1090)
 
@@ -225,6 +246,22 @@ and the answer is kept for a day. "fly to", "go to" and "take me to" are not sen
 Hilo" asks for Hilo, and "fly to" alone asks where to. Settings → Search switches online
 search off. Ctrl+K opens the command palette; `/` puts the cursor in the search box.
 
+### Links to a view
+
+A `worldview://` link opens WorldView at the place it names, from an email, a chat or a web
+page; the installer registers the scheme (the portable copy registers itself the first time it
+starts). **Copy a link to this view** in the command palette (Ctrl+K) puts the view on the
+clipboard: the place, the zoom (2D) or camera height (3D), the lens and the selection. A link
+pasted into the search box opens the same way.
+
+    worldview://view?lat=19.4069&lon=-155.2834&z=11&mode=3d&show=disasters&select=…
+
+`lat` and `lon` are needed; `z` (zoom 0–22) or `alt` (camera height in metres), `mode` (`2d` or
+`3d`), `lens`, `show` and `hide` (layer ids, comma-separated) and `select` (an object or event id)
+are optional. A link only moves the view and turns those switches: nothing in it is fetched or
+run. One that cannot be read is refused, with the reason, and parameters this version does not
+read are named in a notice rather than half read.
+
 ## Map tools
 
 - **HUD** (H, Settings → Rendering): the view centre in degrees and degrees-minutes-seconds,
@@ -298,6 +335,12 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
   ground at sea level; it agrees with Astronomy Engine within seconds for the Sun and a couple
   of minutes for the Moon, more loosely beyond the polar circles.
 
+**Street view** on the card asks Panoramax — the open, federated street-level imagery project,
+no key — for pictures within 150 m, on that press only, and shows the nearest with when it was
+taken, how far and which way it looks, its author and its own licence (mostly CC BY-SA 4.0); a
+click opens it on Panoramax, Previous and Next step through the rest. Pictures are shown live
+and never kept. Off with online lookups (Settings → Search) and offline.
+
 ## The sky overhead
 
 The **Sky** tab (on in the Space lens; anywhere from the command palette, "Open the sky")
@@ -323,6 +366,11 @@ above the plot gives the chance of aurora overhead at the same place — "Aurora
 overhead at 20:08 UTC", the band of SWPC's forecast the place lies in and the time it is for —
 and says when the sky there is not dark enough to see it. The same areas are drawn faintly on
 the map. Outside every area, or with the source off, there is no line.
+
+The line under it is the **planetary K index**: how disturbed the Earth's magnetic field is,
+0 to 9 for the whole planet, for the latest three hours — "Kp 3.3 (unsettled)", and from Kp 5 a
+geomagnetic storm on NOAA's scale (G1–G5), when aurora reaches lower latitudes. It is asked of
+NOAA SWPC only while the Sky tab is open, at most every 15 minutes, and not while offline.
 
 ## Watch zones and notifications
 
@@ -395,14 +443,23 @@ reason rather than a false pass.
 
 ## Updates
 
-Settings → Updates: channel (`stable` or `prerelease`) and automatic updates. While
-builds are unsigned, WORLDVIEW checks for updates and tells you one exists but never
-installs on its own; download and run the installer yourself. A prerelease never
-replaces a stable installation unless you opt in (ADR-012).
+WorldView keeps itself current. Shortly after it starts, and every four hours while it runs, it
+asks the project's GitHub releases whether there is a newer version. On Windows a newer version
+downloads in the background, and a card over the map says **WorldView X is ready — Restart to
+update**: press it and the app closes, installs the update without the installer's wizard and
+opens again; press **Later** and it installs the next time you quit. Nothing is asked while
+working offline.
+
+Settings → Updates: **Update automatically** (on by default; off, the card offers **Download and
+restart** instead), **Include pre-release builds**, and **Check now**. Builds are not code-signed
+yet: a download is checked against the hash the release itself publishes, the same check as
+downloading the installer by hand. A prerelease never replaces a stable installation unless you
+opt in, and an older version never replaces a newer one (ADR-012). On Linux the `.deb` is
+installed by the package manager, so the card only says a new version exists.
 
 ## Backups
 
-Everything worth keeping is JSON or Parquet under `%APPDATA%\WorldView\`. Copy that
+Everything worth keeping is JSON or Parquet under `%APPDATA%\@worldview\desktop\`. Copy that
 directory while the app is closed. To move to another machine, copy it across —
 `credentials.json` will not decrypt there (it is bound to the Windows account), so
 re-enter keys. Collections and lenses can also be exported individually from the

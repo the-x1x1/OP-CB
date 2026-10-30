@@ -1275,10 +1275,17 @@ export class ProviderHost {
     events: ProviderSocketEvents,
     opts?: ProviderSocketOptions,
   ): Promise<ProviderSocketHandle> {
-    if (!h.http.isHostAllowed(url) || !/^wss:/.test(url))
-      throw new ProviderError('HOST_NOT_ALLOWED', 'websocket host not allowed (wss only, allowlisted hosts)', {
-        retryable: false,
-      });
+    // wss:// to an allowlisted host; ws:// only to loopback or the host the user named for this
+    // provider — their own server on their own network, Home Assistant's usual address
+    // (ADR-003 amendment 2026-10-20, the same rule as http:// in the HTTP client).
+    const secure = /^wss:/i.test(url);
+    const plain = /^ws:/i.test(url) && h.http.allowsPlain(url);
+    if (!h.http.isHostAllowed(url) || !(secure || plain))
+      throw new ProviderError(
+        'HOST_NOT_ALLOWED',
+        'websocket host not allowed (wss to allowlisted hosts; ws only to loopback or the host you named)',
+        { retryable: false },
+      );
     if (!this.online) throw new ProviderError('OFFLINE', 'application offline');
     const Impl = this.deps.webSocketImpl ?? (globalThis as { WebSocket?: typeof WebSocket }).WebSocket;
     if (!Impl) throw new ProviderError('UNSUPPORTED', 'WebSocket not available in this runtime', { retryable: false });

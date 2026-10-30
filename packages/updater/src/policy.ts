@@ -3,7 +3,10 @@ import type { AppSettings } from '@worldview/ipc-contract';
 /**
  * Update trust policy (ADR-012).
  *
- *  - unsigned build → check + notify only; never download or install in the background
+ *  - unsigned build where the updater can install (Windows, ADR-012 amendment 2026-10-20) and
+ *    automatic on → background download from the GitHub release, checked against the sha512
+ *    its latest.yml gives, installed on restart (the window offers it) or when the app quits
+ *  - unsigned build elsewhere (the Linux .deb) → check + notify only
  *  - signed + automatic → background download, install on quit
  *  - signed + manual → check + notify, download on explicit request
  *  - prerelease channel only when the user opted in; a prerelease can never replace a
@@ -21,6 +24,11 @@ export interface UpdatePolicyInput {
   signed: boolean;
   /** False for unpackaged/dev runs — no update checks at all. */
   packaged: boolean;
+  /**
+   * Whether this installation can install an update itself (electron-updater's NSIS path on
+   * Windows). The .deb cannot: it is installed by the package manager. Absent → false.
+   */
+  canInstall?: boolean;
 }
 
 export interface UpdatePolicyDecision {
@@ -30,6 +38,11 @@ export interface UpdatePolicyDecision {
   autoInstallOnAppQuit: boolean;
   /** Always true: the UI must present install as a button, never a timer. */
   installRequiresUserAction: true;
+  /**
+   * Whether `install` may download and run an update here at all. False for the .deb, which
+   * is the package manager's to install: the app only says a version exists.
+   */
+  canInstall: boolean;
   /** Human-readable summary shown in Settings → Updates and in diagnostics. */
   reason: string;
 }
@@ -43,7 +56,19 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: false,
       autoInstallOnAppQuit: false,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: 'update checks are disabled for unpackaged (development) runs',
+    };
+  }
+  if (!input.signed && input.automatic && input.canInstall) {
+    return {
+      enabled: true,
+      allowPrerelease,
+      autoDownload: true,
+      autoInstallOnAppQuit: true,
+      installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
+      reason: `automatic updates on (${input.channel} channel): a new version downloads in the background from the GitHub release, is checked against the release's own hash, and installs when you restart (unsigned build: no code signature to check yet)`,
     };
   }
   if (!input.signed) {
@@ -53,7 +78,10 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: false,
       autoInstallOnAppQuit: false,
       installRequiresUserAction: true,
-      reason: 'unsigned build: updates are checked and shown, never downloaded or installed automatically',
+      canInstall: input.canInstall === true,
+      reason: input.canInstall
+        ? 'automatic updates off: updates are checked and shown, and download when you ask'
+        : 'updates are checked and shown; this installation is updated by its package manager (download the new package from the release)',
     };
   }
   if (input.automatic) {
@@ -63,6 +91,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
       autoDownload: true,
       autoInstallOnAppQuit: true,
       installRequiresUserAction: true,
+      canInstall: input.canInstall === true,
       reason: `signed build, automatic updates on (${input.channel} channel): downloaded in the background, installed when you quit or on request`,
     };
   }
@@ -72,6 +101,7 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
     autoDownload: false,
     autoInstallOnAppQuit: false,
     installRequiresUserAction: true,
+    canInstall: input.canInstall === true,
     reason: `signed build, automatic updates off (${input.channel} channel): you will be told when an update exists`,
   };
 }
@@ -79,13 +109,14 @@ export function resolveUpdatePolicy(input: UpdatePolicyInput): UpdatePolicyDecis
 /** Channel + automatic flag are derived from AppSettings; the signed flag is injected by the build. */
 export function policyInputFromSettings(
   updater: AppSettings['updater'],
-  build: { signed: boolean; packaged: boolean },
+  build: { signed: boolean; packaged: boolean; canInstall?: boolean },
 ): UpdatePolicyInput {
   return {
     channel: updater.prerelease ? 'prerelease' : 'stable',
     automatic: updater.automatic,
     signed: build.signed,
     packaged: build.packaged,
+    canInstall: build.canInstall === true,
   };
 }
 

@@ -3,7 +3,14 @@ import assert from 'node:assert/strict';
 import type { ProviderDataPolicy } from '@worldview/provider-sdk';
 import type { SourceHealthEntry } from '@worldview/source-health';
 import type { WorldObject } from '@worldview/world-model';
-import { LOCAL_API_LIMITS, handleLocalApi, type LocalApiDeps } from './local-api.js';
+import {
+  LOCAL_API_LIMITS,
+  defaultSocketPath,
+  handleLocalApi,
+  isNamedPipe,
+  windowsPipePath,
+  type LocalApiDeps,
+} from './local-api.js';
 
 // Every object, place and node here is invented.
 const NOW = Date.parse('2026-10-08T20:00:00Z');
@@ -25,6 +32,8 @@ const POLICIES: Record<string, ProviderDataPolicy> = {
   'readsb-local': policy(true),
   'usgs-earthquakes': policy(true),
   'meshtastic-local': policy(false, false),
+  // The household's people (home-assistant.ts closes this policy in code, whatever the JSON says).
+  'home-assistant-people': policy(false, false),
   'no-history': policy(true, false),
   'ais-closed': policy(false, true),
 };
@@ -54,6 +63,10 @@ const OBJECTS: WorldObject[] = [
   // Mesh nodes: other people's precise positions. Never out.
   obj('sensor:meshtastic:!11111111', 'meshtastic-local', 21.31, -157.86, { properties: { thisNode: true } }),
   obj('sensor:meshtastic:!22222222', 'meshtastic-local', 21.32, -157.87),
+  // The household: where Home Assistant placed a person and a phone. Never out either.
+  obj('sensor:home-assistant-people:person.alex', 'home-assistant-people', 21.30695, -157.85828, {
+    labels: { name: 'Alex' },
+  }),
   // Merged from an exportable and a non-exportable source: the stricter wins.
   obj('aircraft:icao24:a00004', 'readsb-local', 21.3, -157.9, {
     sourceRefs: [
@@ -209,6 +222,10 @@ test('local API: objects near a point — bounded, paged, and only what the data
   // Both mesh nodes, the aircraft merged with a mesh source, the source with no known policy, and
   // the vessel a closed source once fed: left out without a trace — not even a count.
   assert.ok(!JSON.stringify(near).includes('meshtastic'), 'no word of the mesh in the answer');
+  assert.ok(
+    !JSON.stringify(near).includes('Alex') && !JSON.stringify(near).includes('person.'),
+    'nor of the household',
+  );
   assert.ok(!JSON.stringify(near).includes('closed source'));
   assert.equal((near as unknown as Record<string, unknown>)['withheld'], undefined);
 
@@ -257,6 +274,7 @@ test('local API: a track only where the sources allow keeping and letting it out
     { at: iso(0), latitude: 21.31, longitude: -157.91, altitudeM: 900 },
   ]);
   assert.equal((await get('/v1/track?id=sensor:meshtastic:!22222222')).status, 403, 'a mesh node');
+  assert.equal((await get('/v1/track?id=sensor:home-assistant-people:person.alex')).status, 403, 'a person');
   assert.equal((await get('/v1/track?id=aircraft:icao24:a00004')).status, 403, 'merged with a mesh source');
   assert.equal((await get('/v1/track?id=earthquake:nohist:1')).status, 403, 'a source that keeps no history');
   assert.equal(
@@ -346,4 +364,17 @@ test('local API: the contract fixtures are what the router answers', async () =>
       file,
     );
   }
+});
+
+test('local API on Windows: a named pipe per user, the name made safe', () => {
+  assert.equal(windowsPipePath({ USERNAME: 'Temp' }), '\\\\.\\pipe\\worldview-api-temp');
+  assert.equal(windowsPipePath({ USERNAME: 'J Conn/../x' }), '\\\\.\\pipe\\worldview-api-j_conn_.._x');
+  assert.equal(windowsPipePath({}), undefined);
+  assert.equal(
+    defaultSocketPath({ USERNAME: 'temp', XDG_RUNTIME_DIR: '/run/user/1000' }, 'win32'),
+    '\\\\.\\pipe\\worldview-api-temp',
+  );
+  assert.equal(defaultSocketPath({ XDG_RUNTIME_DIR: '/run/user/1000' }, 'linux'), '/run/user/1000/worldview/api.sock');
+  assert.equal(isNamedPipe('\\\\.\\pipe\\worldview-api-temp'), true);
+  assert.equal(isNamedPipe('/run/user/1000/worldview/api.sock'), false);
 });

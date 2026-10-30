@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { NearbyPlaceResult, OverlayValueResult } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@worldview/ipc-contract';
+import { streetLevelText } from './whats-here-text.js';
 import type { GeoPosition, JsonValue } from '@worldview/world-model';
 import { Button } from '@worldview/ui';
 import type { RendererHostLike } from '../renderer-host-like.js';
@@ -111,6 +112,19 @@ export function WhatsHere({
     };
   }, [actions, overlayKey, position, askedFor]);
 
+  // Street-level pictures (main/street-level.ts): asked once, on the operator's press, for the
+  // point the card is at; a new point starts again. The picture is shown live from its service
+  // with its own licence and author, never kept.
+  const [street, setStreet] = useState<{ for: string; answer: StreetLevelAnswer | 'asking' } | undefined>();
+  const pointKey = `${position.latitude},${position.longitude}`;
+  const streetHere = street?.for === pointKey ? street.answer : undefined;
+  const askStreet = () => {
+    setStreet({ for: pointKey, answer: 'asking' });
+    void actions.streetLevelNear(position).then((answer) => {
+      setStreet((s) => (s?.for === pointKey ? { for: pointKey, answer } : s));
+    });
+  };
+
   // Beside its point, wherever the map has moved it; hidden while the point is out of sight.
   const place = useCallback(() => {
     const el = ref.current;
@@ -185,7 +199,23 @@ export function WhatsHere({
           </div>
         ))}
       </dl>
+      {streetHere === undefined ? null : streetHere === 'asking' ? (
+        <p className="wv-ctx-muted wv-whats-here__street">Asking Panoramax for pictures near here…</p>
+      ) : (
+        <StreetPictures answer={streetHere} />
+      )}
       <div className="wv-ctx-actions" role="group" aria-label="What's here actions">
+        {streetHere === undefined ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            icon="camera"
+            title="Street-level pictures near here (Panoramax)"
+            onClick={askStreet}
+          >
+            Street view
+          </Button>
+        ) : null}
         <Button
           size="sm"
           variant="ghost"
@@ -242,5 +272,56 @@ export function WhatsHere({
         ) : null}
       </div>
     </div>
+  );
+}
+
+/** The nearest street-level picture with its credit, or why there is none. */
+function StreetPictures({ answer }: { answer: StreetLevelAnswer }) {
+  const actions = useActions();
+  const [shown, setShown] = useState(0);
+  const text = streetLevelText(answer);
+  const pic = answer.pictures[shown];
+  if (!pic)
+    return (
+      <p className="wv-ctx-muted wv-whats-here__street" role="status">
+        {text}
+      </p>
+    );
+  return (
+    <figure className="wv-whats-here__street">
+      <button
+        type="button"
+        className="wv-whats-here__photo"
+        title="Open on Panoramax"
+        onClick={() => void actions.openExternal(pic.pageUrl)}
+      >
+        <img src={pic.thumbUrl} alt={`Street-level picture ${pic.distanceM} m from here`} loading="lazy" />
+      </button>
+      <figcaption>
+        <span>{text}</span>
+        <span className="wv-ctx-muted">
+          {pic.author ? `${pic.author} · ` : ''}
+          {pic.license} · Panoramax
+        </span>
+        {answer.pictures.length > 1 ? (
+          <span className="wv-whats-here__street-nav">
+            <Button size="sm" variant="ghost" disabled={shown === 0} onClick={() => setShown((i) => i - 1)}>
+              Previous
+            </Button>
+            <span className="wv-num">
+              {shown + 1} / {answer.pictures.length}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={shown >= answer.pictures.length - 1}
+              onClick={() => setShown((i) => i + 1)}
+            >
+              Next
+            </Button>
+          </span>
+        ) : null}
+      </figcaption>
+    </figure>
   );
 }

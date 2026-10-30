@@ -90,6 +90,7 @@ import type {
   FeedItem,
   FieldHostStatus,
   OfflineStatus,
+  ViewLink,
   WatchZone,
   WorldFlightInfo,
 } from '@worldview/ipc-contract';
@@ -102,6 +103,7 @@ import {
 import type { HostBridge, RuntimeCredentialStore, WorldRuntimeDeps } from './deps.js';
 import { inProcessHostBridge } from './deps.js';
 import { RuntimeEmitter } from './support/emitter.js';
+import { KpIndex } from './support/kp-index.js';
 import { hardwareLines, scanLocalHardware } from './support/local-hardware.js';
 import { readPower } from './support/power.js';
 import { JsonDocStore } from './support/json-doc-store.js';
@@ -239,6 +241,37 @@ export class RuntimeCore {
   readonly subscriptions = new SubscriptionRegistry();
   /** The unfetched rest of paged world.subscribe snapshots (support/snapshot-pages.ts). */
   readonly snapshotPages = new SnapshotPages(() => this.clock.now());
+  /** The planetary K index for the Sky tab, asked for only while it asks (support/kp-index.ts). */
+  readonly kpIndex = new KpIndex({
+    fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+    now: () => this.clock.now(),
+    isOnline: () => this.providerHost?.isOnline() ?? false,
+    onProblem: (message) =>
+      this.loggerHub.logger('provider').warn('K index not read', { message: message.slice(0, 200) }),
+  });
+  /** A worldview:// link waiting for the window (ADR-004 amendment 2026-10-20). */
+  private pendingLink: ViewLink | null = null;
+
+  /** Whether a window has booted and asked `link.take`: from then on links are events only. */
+  private windowTookLinks = false;
+
+  /**
+   * A link opened from outside: once a window is up (it has asked `link.take` at boot) it is
+   * an event, `link.opened`, and nothing is kept; before that (the app was started by the
+   * link) it waits for that first `link.take`. Never both, so a window reloaded or re-created
+   * later does not open an old link again, and a link is never opened twice.
+   */
+  openLink(link: ViewLink): void {
+    if (this.windowTookLinks) this.emitter.emit('link.opened', link);
+    else this.pendingLink = link;
+  }
+
+  takeLink(): ViewLink | null {
+    this.windowTookLinks = true;
+    const link = this.pendingLink;
+    this.pendingLink = null;
+    return link;
+  }
 
   settings!: SettingsStore;
   providerHost!: ProviderHost;

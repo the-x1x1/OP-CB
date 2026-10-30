@@ -128,7 +128,7 @@ pnpm connector:add --url https://data.example.org/things.geojson    # draft a de
 pnpm connector:test connectors/examples/usgs-earthquakes-geojson.json # the shared suite
 ```
 
-Your own definitions go in `%APPDATA%\WorldView\connectors\`. See
+Your own definitions go in `%APPDATA%\@worldview\desktop\connectors\`. See
 [docs/connectors/OVERVIEW.md](docs/connectors/OVERVIEW.md).
 
 ## Offline

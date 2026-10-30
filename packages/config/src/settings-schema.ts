@@ -15,7 +15,8 @@ const defaults: AppSettings = {
   activeLensId: 'overview',
   reducedMotion: false,
   textScale: 1,
-  updater: { automatic: false, prerelease: false },
+  // On (migration 008): a new version downloads in the background; the window offers a restart.
+  updater: { automatic: true, prerelease: false },
   cameras: { go2rtcPath: '' },
   demoMode: false,
   privacy: { telemetry: false },

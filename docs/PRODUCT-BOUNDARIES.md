@@ -14,6 +14,19 @@ owns. It is a browser for places, objects and events — not a people-tracking s
 - stalker workflows: following a specific individual, alerting on a private person's movements;
 - brute-force camera discovery, credential attacks or exposed-camera scanning.
 
+### The operator's own household (decision of 2026-10-20)
+
+One exception to private-device tracking, by the operator's decision: the people and phones the
+operator's **own Home Assistant** already locates (`person` and `device_tracker` entities) may
+be shown, through the shipped `home-assistant-people` definition only. It is off until the
+operator turns it on and gives their own server's address and token; it reads nothing Home
+Assistant does not already hold; where those people were is not written to history, put in an
+offline pack, exported or given to other programs — a closed data policy the connector sets in
+code for any definition that reads these domains, whatever its JSON says. They are ordinary
+objects of the map otherwise: searchable by name and inside watch zones like anything else, which
+is why it stays off unless the people it shows agree. Every other Home Assistant definition
+still drops these entities as they arrive.
+
 ## What the camera system does
 
 Public documented cameras and user-owned cameras are placed on the map and their

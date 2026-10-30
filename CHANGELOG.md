@@ -5,6 +5,63 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Links to a view.** A `worldview://view?lat=…&lon=…` link opens WorldView at that place from an
+  email, a chat or a web page: the zoom or camera height, 2D or 3D, the lens, layers shown or
+  hidden and one thing to select, all optional. The installer registers the scheme (a portable
+  copy registers itself); **Copy a link to this view** in the command palette puts the view on
+  the clipboard, and a link pasted into search opens the same way. A link only moves the view
+  and turns switches — nothing in it is fetched or run — and one that cannot be read is refused
+  with the reason (docs/OPERATOR-GUIDE.md, "Links to a view").
+- **Home Assistant ships with the app.** Its zones, weather, sensors and — new — the people of
+  your household and their phones (`home-assistant-people`) are in Sources, off until you give
+  your server's address and token. The people definition is the operator's decision of
+  2026-10-20 for their own household (docs/PRODUCT-BOUNDARIES.md): every other definition still
+  drops `person` and `device_tracker` entities, and where people were is not written to history,
+  put in a pack or shared.
+
+- **Street view in What's here.** Pictures taken at street level near the point, from Panoramax
+  (the open, federated imagery project; no key), on the operator's press only: the nearest
+  first, with when it was taken, how far and which way it looks, its author and its own licence,
+  and a click opens it on Panoramax. Shown live, never kept, packed or exported.
+- **An MCP server, and the local API on Windows.** Formicaria's tools or any Model Context
+  Protocol client on this computer can read what WorldView holds — status, sources,
+  objects near a place, a track, offline readiness, this computer's position by its own
+  permission — as read-only tools (docs/cyberdeck/LOCAL-API.md has the client configuration).
+  Each tool is one read of the local API, which now also runs on Windows, on a named pipe only
+  your user can write to; it stays off until Settings → Local API is turned on (ADR-014
+  amendment 2026-10-20).
+- **The planetary K index in the Sky tab.** How disturbed the Earth's magnetic field is, 0 to 9,
+  for the latest three hours, and the geomagnetic storm level from Kp 5 (NOAA SWPC, public
+  domain): asked only while the Sky tab is open, at most every 15 minutes, never offline.
+- **A Connections tab.** Your own receivers and servers in one place: Home Assistant's address and
+  token once for all of its sources, the RTL-SDR's aircraft (readsb) and ships (AIS), a
+  Meshtastic node, NMEA 2000, the weather station and air sensor — each with its switch, whether
+  it is answering and how many things it has on the map (docs/OPERATOR-GUIDE.md, "Connections").
+- **WorldView updates itself.** Shortly after it starts and every four hours, it asks the GitHub
+  releases for a newer version; on Windows the new version downloads in the background and a
+  card over the map offers **Restart to update** (or it installs when you next quit). Update
+  automatically is now on by default, also in existing settings (once; switching it off stays
+  off). Until builds are signed the download is checked against the release's own SHA-512
+  (ADR-012 amendment 2026-10-20). The Linux `.deb` is told about a new version, not updated.
+
+### Changed
+
+- **The shell's bars render only when what they show changes.** The top bar, the lens rail, the
+  field strip, the notices and the timeline bar used to render on every world change — the
+  whole tree reconciled for a delta that changed nothing they show, which the perf log's
+  `shellParts` put at 55–156 ms of "wait" before the shell's first part in the slow windows on
+  the test laptop (2026-10-20). Each now reads only the slice of the state it shows
+  (`useAppSlice`) and is left alone otherwise. The log also showed `shellParts` cut to 40
+  characters in builds before `0d69583`; it is whole now.
+- **Home Assistant over plain `ws://`.** A source's socket may now be `ws://` to this computer
+  or to the one host you named for it — Home Assistant on your network without TLS goes live
+  over its WebSocket API instead of reading `/api/states` once a minute (ADR-003 amendment).
+
+- **The docs name the data folder the app uses**, `%APPDATA%\@worldview\desktop\`
+  (`~/.config/@worldview/desktop/` on Linux), not `%APPDATA%\WorldView\`.
+
 ## [0.5.0] — 2026-10-20
 
 The world's hazards as sources and What's here on the weather: aurora, Canadian air quality,

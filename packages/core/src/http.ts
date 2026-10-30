@@ -150,6 +150,21 @@ export class HttpClient {
     return this.opts.allowedHosts.some((h) => host === h.toLowerCase() || host.endsWith(`.${h.toLowerCase()}`));
   }
 
+  /**
+   * Whether an unencrypted connection to `url` may be made: to loopback, or to the one host
+   * the user named for this provider (their own server on their own network). The same rule
+   * for http:// here and ws:// in the provider host (ADR-003 amendment 2026-10-20).
+   */
+  allowsPlain(url: string): boolean {
+    let host: string;
+    try {
+      host = new URL(url).hostname;
+    } catch {
+      return false;
+    }
+    return isLoopback(host) || this.isTrusted(host);
+  }
+
   /** Exactly a host the user named (never its subdomains). */
   private isTrusted(host: string): boolean {
     const h = host.toLowerCase();

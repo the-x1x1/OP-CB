@@ -460,6 +460,76 @@ test('a socket credential as a URL query is dialed by the host, never handed to 
     (e: Error & { code?: string }) => e.code === 'INTERNAL',
   );
   assert.ok(!JSON.stringify(sink.records).includes('s3cret'), 'the secret is in no log line');
+  // Unencrypted sockets: never to an allowlisted host on the internet.
+  await assert.rejects(
+    ctx!.sockets.open('ws://feeds.example.org/api/socket', events),
+    (e: Error & { code?: string }) => e.code === 'HOST_NOT_ALLOWED',
+  );
+  await host.dispose();
+});
+
+test('a ws:// socket opens to loopback or the host the user named, and nowhere else', async () => {
+  const clock = new testing.VirtualClock();
+  const dialed: string[] = [];
+  class FakeWebSocket {
+    onopen: (() => void) | null = null;
+    onmessage: ((e: { data: unknown }) => void) | null = null;
+    onclose: ((e: { code: number; reason: string }) => void) | null = null;
+    onerror: (() => void) | null = null;
+    readyState = 1;
+    constructor(url: string) {
+      dialed.push(url);
+      setImmediate(() => this.onopen?.());
+    }
+    send(): void {}
+    close(): void {}
+  }
+  const settings = new testing.MemorySettings({ host: '192.168.1.20' });
+  const host = new ProviderHost({
+    clock,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [] }),
+    manualScheduling: true,
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock, allowed),
+    settingsStore: () => settings,
+    webSocketImpl: FakeWebSocket as unknown as typeof WebSocket,
+  });
+  const usgs = createProvider();
+  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  host.register({
+    manifest: {
+      ...usgs.manifest,
+      id: 'local-socket-probe',
+      transport: 'local-process',
+      allowedHosts: ['127.0.0.1', 'localhost'],
+      trustedHostSetting: 'host',
+      settings: [{ key: 'host', label: 'Host', kind: 'string' }],
+      credentials: [],
+    },
+    initialize: async (c) => {
+      ctx = c;
+    },
+    start: async () => {},
+    stop: async () => {},
+    health: async () => ({
+      providerId: 'local-socket-probe',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+  });
+  await host.start();
+  const events = { onOpen: () => {}, onMessage: () => {}, onClose: () => {}, onError: () => {} };
+  await ctx!.sockets.open('ws://127.0.0.1:8123/api/websocket', events);
+  await ctx!.sockets.open('ws://192.168.1.20:8123/api/websocket', events);
+  assert.deepEqual(dialed, ['ws://127.0.0.1:8123/api/websocket', 'ws://192.168.1.20:8123/api/websocket']);
+  await assert.rejects(
+    ctx!.sockets.open('ws://192.168.1.21:8123/api/websocket', events),
+    (e: Error & { code?: string }) => e.code === 'HOST_NOT_ALLOWED',
+    'another machine on the network is not the one the user named',
+  );
   await host.dispose();
 });
 

@@ -33,6 +33,7 @@ import {
   nextVisualStyle,
   splitCandidates,
   zoomToAltitudeM,
+  altitudeToZoom,
   type ImagerySplit,
   type RenderMode,
   type VisualStyleId,
@@ -45,7 +46,16 @@ import type {
   SkyOverheadAnswer,
   WorldClient,
 } from '@worldview/ipc-contract';
-import { GEODATA_MAX_FILE_BYTES, MAX_OVERLAY_VALUE_OVERLAYS } from '@worldview/ipc-contract';
+import {
+  GEODATA_MAX_FILE_BYTES,
+  MAX_OVERLAY_VALUE_OVERLAYS,
+  isViewLink,
+  readViewLink,
+  type StreetLevelAnswer,
+  type ViewLink,
+} from '@worldview/ipc-contract';
+import { linkForView, linkHiddenLayers } from './view-link.js';
+import { HOME_ASSISTANT_TOKEN_KEY } from '../panels/connections-model.js';
 import {
   MAX_IMPORTED_FILES,
   importedTarget,
@@ -74,6 +84,9 @@ export const DEFAULT_PASS_ALERTS: PassAlertSettings = Object.freeze({
   visibleOnly: true,
   desktop: false,
 }) as PassAlertSettings;
+
+/** A search result that is a worldview:// link (its text after the prefix). */
+const LINK_RESULT_PREFIX = 'link:';
 
 export interface FlyTarget {
   position: GeoPosition;
@@ -370,6 +383,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
   }
 
   async function goTo(result: SearchResult): Promise<void> {
+    if (result.id.startsWith(LINK_RESULT_PREFIX)) {
+      const read = readViewLink(result.id.slice(LINK_RESULT_PREFIX.length));
+      if (read.ok) await actions.openViewLink(read.link);
+      else notify('Link not opened', `This link cannot be opened: ${read.reason}.`, 'MINOR');
+      return;
+    }
     if (result.kind === 'object' || result.kind === 'event') {
       await select(result.id, { kind: result.kind, fly: true });
       const s = getState();
@@ -542,6 +561,20 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     flyTo,
     goTo,
     async search(text: string, limit = 12): Promise<SearchResult[]> {
+      // A worldview:// link pasted into search opens like one clicked elsewhere.
+      if (isViewLink(text)) {
+        const read = readViewLink(text);
+        return [
+          {
+            kind: 'command',
+            id: `${LINK_RESULT_PREFIX}${text.trim()}`,
+            title: read.ok ? 'Open this link' : 'This link cannot be opened',
+            subtitle: read.ok ? `${read.link.latitude.toFixed(4)}, ${read.link.longitude.toFixed(4)}` : read.reason,
+            source: 'parser',
+            score: 1,
+          },
+        ];
+      }
       const center = getState().world.view.center;
       try {
         // The channel takes at most 500 characters; past that nothing is found anyway.
@@ -809,6 +842,41 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         fail('Credential not stored', err);
         return false;
       }
+    },
+    /**
+     * Home Assistant in one step (the Connections tab): the address and the token for every
+     * Home Assistant source at once, and the ones asked for switched on. The token goes to the
+     * OS secure store, as from any credential field; only the sources named are turned on.
+     */
+    async connectHomeAssistant(opts: {
+      address: { host: string; port: number; tls: boolean };
+      token?: string;
+      enable: readonly string[];
+      providerIds: readonly string[];
+    }): Promise<boolean> {
+      if (opts.token?.trim() && !(await actions.setCredential(HOME_ASSISTANT_TOKEN_KEY, opts.token.trim())))
+        return false;
+      try {
+        for (const providerId of opts.providerIds) {
+          const current =
+            getState().sources.providerSettings[providerId] ??
+            (await client.request('sources.settings.get', { providerId }));
+          const next = { ...current, host: opts.address.host, port: opts.address.port, tls: opts.address.tls };
+          await client.request('sources.settings.set', { providerId, settings: next });
+          dispatch({ type: 'sources/settings', providerId, settings: next });
+          // Each Home Assistant source is switched as picked: an unticked one goes off, so
+          // unticking the household and pressing Connect stops reading them.
+          await client.request('sources.setEnabled', { providerId, enabled: opts.enable.includes(providerId) });
+        }
+      } catch (err) {
+        fail('Home Assistant not connected', err);
+        return false;
+      }
+      notify(
+        'Home Assistant connected',
+        `${opts.address.tls ? 'https' : 'http'}://${opts.address.host}:${opts.address.port} — ${opts.enable.length} source${opts.enable.length === 1 ? '' : 's'} on.`,
+      );
+      return true;
     },
     async deleteCredential(key: string): Promise<void> {
       try {
@@ -1340,6 +1408,16 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         return null;
       }
     },
+    /** Street-level pictures near a point (main/street-level.ts), on the operator's ask. */
+    async streetLevelNear(position: GeoPosition): Promise<StreetLevelAnswer> {
+      try {
+        return await client.request('imagery.streetLevel', {
+          position: { latitude: position.latitude, longitude: position.longitude },
+        });
+      } catch (err) {
+        return { status: 'unavailable', pictures: [], attribution: '', message: describeError(err) };
+      }
+    },
     /** Start measuring from a point: the measure tool on, with it as the first point. */
     measureFrom(position: GeoPosition) {
       dispatch({
@@ -1473,6 +1551,52 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       await updateSettings({ home: { ...(current.home ?? NO_HOME), flyOnStart: on } });
     },
     /** Home, Shift+H: fly to the home view, or say how to set one. */
+    /**
+     * Opens a worldview:// link (store/view-link.ts): 2D or 3D, the lens, the layers it turns,
+     * the place, and the thing to select. Only what the link names changes; whatever else it
+     * named that is no switch or lens here is said in one notice.
+     */
+    async openViewLink(link: ViewLink): Promise<void> {
+      const s = getState();
+      const unknown: string[] = [];
+      if (s.ui.orbit || s.ui.followId) dispatch({ type: 'ui/cameraMode', orbit: false, followId: null });
+      if (link.mode && link.mode !== s.ui.activeMode && (link.mode === '2D' || s.ui.supports3D))
+        await actions.setMode(link.mode);
+      if (link.lensId) {
+        if (lensById(link.lensId, s.lenses.lenses)) {
+          if (link.lensId !== s.lenses.activeId) await actions.setLens(link.lensId);
+        } else unknown.push(`lens ${link.lensId}`);
+      }
+      if (link.show?.length || link.hide?.length) {
+        const turned = linkHiddenLayers(getState().session.settings?.hiddenLayers ?? [], link);
+        unknown.push(...turned.unknown);
+        await setHiddenLayers(turned.hidden);
+      }
+      const position = { latitude: link.latitude, longitude: link.longitude };
+      const zoom = link.zoom ?? (link.altitudeM !== undefined ? altitudeToZoom(link.altitudeM, link.latitude) : 10);
+      const altitudeM = link.altitudeM ?? zoomToAltitudeM(zoom, link.latitude);
+      void flyTo({ position, zoom, altitudeM }, { durationMs: s.session.settings?.reducedMotion ? 0 : 2500 });
+      if (link.select) void select(link.select);
+      if (unknown.length) notify('Link opened', `Not here, so left out: ${unknown.join(', ')}.`, 'INFO');
+    },
+
+    /** The link for the view on the map, onto the clipboard (the host writes it; the window may not). */
+    async copyViewLink(): Promise<void> {
+      const host = hosts.get();
+      if (!host) return;
+      const s = getState();
+      const link = linkForView(host.getView(), s.ui.activeMode, {
+        lensId: s.lenses.activeId,
+        selectedId: s.world.selectedId,
+      });
+      try {
+        const { url, copied } = await client.request('link.copy', { link });
+        notify(copied ? 'Link copied' : 'Link to this view', copied ? url : `Copy it from here: ${url}`);
+      } catch (err) {
+        fail('Link not copied', err);
+      }
+    },
+
     goHome(): void {
       const s = getState();
       const home = s.session.settings?.home?.view;

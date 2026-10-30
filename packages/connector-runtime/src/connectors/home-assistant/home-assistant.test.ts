@@ -25,7 +25,7 @@ import {
 import {
   MAX_POSITIONS,
   MAX_SELECTORS,
-  REFUSED_DOMAINS,
+  PEOPLE_DOMAINS,
   enrich,
   matches,
   parsePositions,
@@ -36,7 +36,7 @@ import {
 } from './entities.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..');
-const examplesDir = path.join(root, 'connectors', 'examples', 'home-assistant');
+const examplesDir = path.join(root, 'connectors', 'enabled');
 const read = (rel: string) => readFileSync(path.join(root, rel), 'utf8');
 const fixture = (name: string) => read(`fixtures/connectors/home-assistant/${name}`);
 const example = (name: string): Record<string, unknown> =>
@@ -175,10 +175,13 @@ interface Sidecar {
   expect?: Array<{ externalId: string; position?: { latitude: number; longitude: number }; payload?: object }>;
 }
 
-const exampleFiles = readdirSync(examplesDir).filter((f) => f.endsWith('.json') && !f.endsWith('.test.json'));
+const exampleFiles = readdirSync(examplesDir).filter(
+  (f) => f.startsWith('home-assistant-') && f.endsWith('.json') && !f.endsWith('.test.json'),
+);
 
 test('home-assistant: there are examples, each with a sidecar', () => {
   assert.deepEqual(exampleFiles.sort(), [
+    'home-assistant-people.json',
     'home-assistant-sensors.json',
     'home-assistant-weather.json',
     'home-assistant-zones.json',
@@ -223,12 +226,21 @@ for (const file of exampleFiles) {
 // ---------------------------------------------------------------------------------------
 // Definition, manifest, settings.
 
-test('home-assistant: the examples are user-configured, disabled, open no policy and hold no address or secret', () => {
+test('home-assistant: the shipped definitions are off, keep the household out of packs and shares, and hold no address or secret', () => {
   for (const f of exampleFiles) {
     const doc = JSON.parse(readFileSync(path.join(examplesDir, f), 'utf8')) as Record<string, unknown>;
-    assert.equal(doc['review'], 'user-configured', f);
+    assert.equal(doc['review'], 'commercially-reviewed', f);
     assert.equal(doc['enabled'], false, f);
-    assert.equal(doc['dataPolicy'], undefined, f);
+    const policy = doc['dataPolicy'] as Record<string, unknown>;
+    assert.equal(policy['redistributionAllowed'], false, f);
+    assert.equal(policy['offlinePackAllowed'], false, f);
+    assert.equal(policy['rawPayloadRetentionAllowed'], false, f);
+    // Where the people were is not written to history.
+    // Where the people were is not written to history, exported, or given to other programs.
+    if (f === 'home-assistant-people.json') {
+      assert.equal(policy['normalizedRetentionAllowed'], false, f);
+      assert.equal(policy['exportAllowed'], false, f);
+    }
     assert.equal(doc['endpoint'], undefined, f);
     assert.equal(doc['websocket'], undefined, f);
     const text = JSON.stringify(doc);
@@ -252,7 +264,7 @@ test('home-assistant: the manifest is a local source — loopback plus the one h
   assert.equal(m.trustedHostSetting, 'host');
   assert.deepEqual(m.allowedHosts, ['127.0.0.1', 'localhost']);
   assert.equal(m.enabledByDefault, false);
-  assert.equal(m.commercialReview, 'manual-review-required');
+  assert.equal(m.commercialReview, 'approved', "the operator's own data");
   assert.deepEqual(
     m.credentials.map((c) => [c.key, c.required]),
     [[TOKEN_KEY, true]],
@@ -262,7 +274,7 @@ test('home-assistant: the manifest is a local source — loopback plus the one h
     ['host', 'port', 'tls', 'entities', 'positions'],
   );
   assert.equal(m.dataPolicy.redistributionAllowed, false);
-  assert.equal(m.dataPolicy.commercialUseAllowed, 'unknown');
+  assert.equal(m.dataPolicy.commercialUseAllowed, true);
   assert.equal(m.refreshPolicy.intervalMs, 60_000);
   assert.ok(m.refreshPolicy.maxRequestsPerMinute * m.refreshPolicy.intervalMs >= 60_000);
 });
@@ -320,7 +332,7 @@ test('home-assistant: validation refuses an address, a missing or second credent
     }),
   );
   assert.ok(warned.ok);
-  assert.match(warned.warnings.join(), /person, device_tracker entities are never read/);
+  assert.match(warned.warnings.join(), /reads person, device_tracker entities/);
 });
 
 // ---------------------------------------------------------------------------------------
@@ -344,27 +356,34 @@ test('home-assistant: the snapshot is one GET /api/states with the token as a be
   assert.match(health.message ?? '', /reading \/api\/states once a minute/);
 });
 
-test('home-assistant: person and device_tracker entities never become observations, whatever selects them', async () => {
+test('home-assistant: person and device_tracker entities only reach a definition that names them', async () => {
   for (const name of ['sensors', 'weather', 'zones']) {
     const h = await harness(name, { settings: { entities: 'person.*, device_tracker.*, *.*' } });
     const obs = await h.poll();
     assert.ok(obs.length > 0, name);
-    for (const o of obs) assert.ok(!REFUSED_DOMAINS.has(o.externalId!.split('.')[0]!), `${name}: ${o.externalId}`);
+    for (const o of obs) assert.ok(!PEOPLE_DOMAINS.has(o.externalId!.split('.')[0]!), `${name}: ${o.externalId}`);
+    assert.ok(h.provider.stats.refused >= 2, name);
   }
-  // A definition that asks for them outright gets nothing — they were dropped before mapping.
-  const h = await harness('zones', {
-    patch: {
-      mapping: {
-        externalId: 'entity_id',
-        observedAt: 'last_updated',
-        position: { latLon: '_position' },
-        labels: { name: 'attributes.friendly_name' },
-        filter: [{ path: '_domain', in: ['person', 'device_tracker'] }],
-      },
-    },
+  // The people definition (operator decision 2026-10-20) reads them, where Home Assistant puts them.
+  const h = await harness('people');
+  const obs = await h.poll();
+  assert.deepEqual(obs.map((o) => o.externalId).sort(), ['device_tracker.alex_phone', 'person.alex']);
+  const person = obs.find((o) => o.externalId === 'person.alex')!;
+  assert.deepEqual(person.position && { lat: person.position.latitude, lon: person.position.longitude }, {
+    lat: 21.30695,
+    lon: -157.85828,
   });
-  assert.deepEqual(await h.poll(), []);
-  assert.ok(h.provider.stats.refused >= 2);
+  assert.equal(h.provider.stats.refused, 0);
+  // The closed policy is the code's, not the JSON's: a definition opened by hand stays closed.
+  const opened = homeAssistantManifest(
+    definition('people', {
+      dataPolicy: { exportAllowed: true, normalizedRetentionAllowed: true, offlinePackAllowed: true },
+    }),
+  );
+  assert.equal(opened.dataPolicy.exportAllowed, false);
+  assert.equal(opened.dataPolicy.normalizedRetentionAllowed, false);
+  assert.equal(opened.dataPolicy.offlinePackAllowed, false);
+  assert.equal(opened.dataPolicy.redistributionAllowed, false);
 });
 
 test('home-assistant: the entities setting narrows what the definition selects; bad patterns are reported', async () => {

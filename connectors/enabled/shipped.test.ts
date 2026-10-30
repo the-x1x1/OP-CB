@@ -106,6 +106,13 @@ const OVERLAY_CONNECTORS = ['wms', 'wmts'];
 const SPACE = ['launch-library-2'];
 /** Environment and Climate Change Canada: its data servers' end-use licence, credit required; on by default. */
 const CANADA = ['eccc-aqhi'];
+/** The operator's own Home Assistant (2026-10-20): shipped off, read only once its host and token are given. */
+const HOME_ASSISTANT = [
+  'home-assistant-sensors',
+  'home-assistant-weather',
+  'home-assistant-zones',
+  'home-assistant-people',
+];
 const GDACS = [
   'gdacs-earthquakes',
   'gdacs-tropical-cyclones',
@@ -118,7 +125,17 @@ const GDACS = [
 test('the shipped set is the hazard layers, and each passes the shared suite from its sidecar', async () => {
   assert.deepEqual(
     [...byId.keys()].sort(),
-    [...PUBLIC_DOMAIN, ...GIBS, ...EUMETSAT, ...TRUE_COLOUR, ...LIGHTNING, ...SPACE, ...CANADA, ...GDACS].sort(),
+    [
+      ...PUBLIC_DOMAIN,
+      ...GIBS,
+      ...EUMETSAT,
+      ...TRUE_COLOUR,
+      ...LIGHTNING,
+      ...SPACE,
+      ...CANADA,
+      ...GDACS,
+      ...HOME_ASSISTANT,
+    ].sort(),
   );
   for (const file of files) {
     const r = await runConnectorSuite(docOf(file), loadSidecar(sidecarPathFor(file), root), defaultConnectorRegistry);
@@ -236,8 +253,11 @@ test('Overview: each is filed under the Weather, Disasters, Space or Environment
   for (const id of byId.keys()) {
     const d = definition(id);
     assert.ok(d.categories?.length, id);
+    // Home Assistant's zones are places the operator named, drawn as a zone's shape, not a layer's type.
+    if (id === 'home-assistant-zones') continue;
     for (const c of d.categories!) {
-      assert.ok(c === 'weather' || c === 'disasters' || c === 'space' || c === 'environment', `${id}: ${c}`);
+      const own = HOME_ASSISTANT.includes(id) && c === 'infrastructure';
+      assert.ok(own || c === 'weather' || c === 'disasters' || c === 'space' || c === 'environment', `${id}: ${c}`);
       // An overlay is not an object: its switch is the source itself. The rest must be drawn by their layer.
       if (!OVERLAY_CONNECTORS.includes(d.connector))
         assert.ok(lenses.get(c)!.objectTypes.includes(d.objectType), `${id} in ${c}`);

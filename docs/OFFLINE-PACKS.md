@@ -256,7 +256,7 @@ the `definitions` kind) — it fails closed.
 ```
 pnpm worldpack regions                       # list presets
 pnpm worldpack build --region hawaii --include map,places,airports,earthquakes \
-    --pmtiles hawaii.pmtiles --history-dir "%APPDATA%/WorldView" --out hawaii.worldpack
+    --pmtiles hawaii.pmtiles --history-dir "%APPDATA%/@worldview/desktop" --out hawaii.worldpack
 pnpm worldpack build --bbox -161,18.5,-154.5,22.5 --include places,airports
 pnpm worldpack build --center 21.3,-157.9 --radius-km 150 --include places
 pnpm worldpack verify hawaii.worldpack

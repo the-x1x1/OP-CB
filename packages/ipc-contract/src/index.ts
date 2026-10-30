@@ -16,6 +16,7 @@ import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '
 import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
 import type { StateChange, TrackPoint } from '@worldview/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
+import type { ViewLink } from './view-link.js';
 
 /**
  * @worldview/ipc-contract — the typed bridge between the WORLDVIEW runtime (Electron
@@ -321,6 +322,24 @@ export interface SkyOverheadAnswer {
    * weather-alert areas, which carry `auroraChancePct`. Absent when no such area is held.
    */
   aurora?: SkyAurora;
+  /**
+   * (additive, 2026-10-20) The planetary K index now: one reading for the whole Earth from NOAA
+   * SWPC, asked by the runtime itself while the Sky tab asks (runtime support/kp-index.ts).
+   * Absent offline, before the first answer, or when the newest reading is over nine hours old.
+   */
+  kp?: SkyKp;
+}
+
+export interface SkyKp {
+  /** 0–9. */
+  kp: number;
+  /** The start of the three hours it is for. */
+  at: string;
+  /** How old that is now. */
+  ageMs: number;
+  /** NOAA's geomagnetic storm level for it, from Kp 5 (G1) to 9 (G5). */
+  storm?: 'G1' | 'G2' | 'G3' | 'G4' | 'G5';
+  attribution: string;
 }
 
 export interface SkyAurora {
@@ -332,6 +351,34 @@ export interface SkyAurora {
   forecastFor?: string;
   /** The source's credit. */
   attribution?: string;
+}
+
+/** One street-level picture near a point (`imagery.streetLevel`). */
+export interface StreetLevelPicture {
+  id: string;
+  /** Where it was taken. */
+  position: GeoPosition;
+  /** Metres from the asked point. */
+  distanceM: number;
+  /** Which way the camera looked, degrees clockwise from north, when known. */
+  headingDeg?: number;
+  takenAt?: string;
+  /** A small picture to show (https). */
+  thumbUrl: string;
+  /** The picture's page on its service, to open in the browser. */
+  pageUrl: string;
+  /** Its own licence (per picture: CC-BY-SA-4.0, etalab-2.0 …) and who took it. */
+  license: string;
+  author?: string;
+  service: 'panoramax';
+}
+
+export interface StreetLevelAnswer {
+  status: 'ok' | 'offline' | 'disabled' | 'busy' | 'unavailable';
+  pictures: StreetLevelPicture[];
+  /** The services' credit line. */
+  attribution: string;
+  message?: string;
 }
 
 export interface CollectionItem {
@@ -567,6 +614,8 @@ export interface UpdaterState {
   signed: boolean;
   message?: string;
   lastCheckedAt?: string;
+  /** (additive, 2026-10-20) Whether this installation installs updates itself; false for the .deb. */
+  canInstall?: boolean;
 }
 
 export interface AppSettings {
@@ -1025,6 +1074,15 @@ export interface WorldRequests {
   'search.query': { request: { text: string; bias?: GeoPosition; limit?: number }; response: SearchResult[] };
   /** Places from an online geocoder (additive, 2026-09-28): see PlaceSearchAnswer. */
   'search.places': { request: { text: string; bias?: GeoPosition; limit?: number }; response: PlaceSearchAnswer };
+  /**
+   * (additive, 2026-10-20) Street-level pictures near a point, from open imagery services that
+   * need no key (Panoramax), asked by the main process on the operator's request from What's
+   * here — never while the map moves. Each picture carries its own licence and author.
+   */
+  'imagery.streetLevel': {
+    request: { position: GeoPosition; radiusM?: number; limit?: number };
+    response: StreetLevelAnswer;
+  };
   /** The places nearest a point, nearest first (additive, 2026-10-05): see NearbyPlaceResult. */
   'search.nearest': {
     request: {
@@ -1177,6 +1235,13 @@ export interface WorldRequests {
    * desktop without notification support).
    */
   'notifications.test': { request: void; response: { inApp: true; desktop: boolean } };
+  /**
+   * (additive, 2026-10-20) The link the app was started with, once: a link that arrives
+   * before the window is up waits here (view-link.ts). Null when there is none.
+   */
+  'link.take': { request: void; response: ViewLink | null };
+  /** (additive, 2026-10-20) The link for a view, put on the clipboard by the host. */
+  'link.copy': { request: { link: ViewLink }; response: { url: string; copied: boolean } };
   /** The page telling the runtime what it draws with, for Diagnostics and the exported bundle. */
   'diagnostics.renderer': {
     request: { active: '2D' | '3D'; webgl2: boolean; gpu?: string; fps?: number };
@@ -1242,6 +1307,8 @@ export interface WorldEvents {
   'field.changed': FieldHostStatus;
   'settings.changed': AppSettings;
   'lenses.changed': LensDefinition[];
+  /** (additive, 2026-10-20) A worldview:// link was opened from outside the app (view-link.ts). */
+  'link.opened': ViewLink;
 }
 
 export type EventChannel = keyof WorldEvents;
@@ -1292,6 +1359,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'timeline.set',
   'search.query',
   'search.places',
+  'imagery.streetLevel',
   'search.nearest',
   'sky.overhead',
   'lenses.list',
@@ -1333,6 +1401,8 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'diagnostics.export',
   'diagnostics.renderer',
   'notifications.test',
+  'link.take',
+  'link.copy',
   'updater.state',
   'updater.check',
   'updater.install',
@@ -1355,6 +1425,7 @@ export const EVENT_CHANNELS: readonly EventChannel[] = Object.freeze([
   'field.changed',
   'settings.changed',
   'lenses.changed',
+  'link.opened',
 ]);
 
 /** Channel names as they appear on the wire (namespaced to avoid collisions with Electron internals). */
@@ -1396,3 +1467,4 @@ export function isIpcError(v: unknown): v is IpcError {
 }
 
 export * from './local-api.js';
+export * from './view-link.js';

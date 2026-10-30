@@ -36,11 +36,11 @@ class ComposedRuntime implements WorldRuntime {
   localApiLine(): { id: string; status: 'not-configured' | 'stopped' | 'running' | 'error'; message: string } {
     const id = 'local-api';
     const wanted = this.core.settings.get().localApi?.enabled === true;
-    if (this.core.platform !== 'linux')
+    if (this.core.platform !== 'linux' && this.core.platform !== 'win32')
       return {
         id,
         status: 'not-configured',
-        message: 'Linux only (a Unix socket in the login session’s runtime folder)',
+        message: 'Linux and Windows only (a socket or a named pipe only this user can write to)',
       };
     if (!wanted) return { id, status: 'not-configured', message: 'off (Settings → Local API)' };
     const server = this.localApi;
@@ -50,7 +50,9 @@ class ComposedRuntime implements WorldRuntime {
         status: 'stopped',
         message: this.socketPath
           ? `on in Settings but not listening at ${this.socketPath} (see the log: "local API not started")`
-          : 'on in Settings but no XDG_RUNTIME_DIR for its socket',
+          : this.core.platform === 'win32'
+            ? 'on in Settings but no user name for its pipe'
+            : 'on in Settings but no XDG_RUNTIME_DIR for its socket',
       };
     const s = server.stats();
     const last =
@@ -60,7 +62,7 @@ class ComposedRuntime implements WorldRuntime {
     return {
       id,
       status: 'running',
-      message: `${server.socketPath} (0600, this user only): ${s.answered} answered, ${s.refused} refused${last}`,
+      message: `${server.socketPath} (${this.core.platform === 'win32' ? 'named pipe, this user writes' : '0600, this user only'}): ${s.answered} answered, ${s.refused} refused${last}`,
     };
   }
 
@@ -93,10 +95,12 @@ class ComposedRuntime implements WorldRuntime {
     };
   }
 
-  /** Start or stop the local API to match the settings (Linux only; off by default). */
+  /** Start or stop the local API to match the settings (Linux and Windows; off by default). */
   private syncLocalApi(): Promise<void> {
     this.localApiSync = this.localApiSync.then(async () => {
-      const want = this.core.platform === 'linux' && this.core.settings.get().localApi?.enabled === true;
+      const want =
+        (this.core.platform === 'linux' || this.core.platform === 'win32') &&
+        this.core.settings.get().localApi?.enabled === true;
       if (want && !this.localApi) {
         if (!this.socketPath) {
           this.core.log.warn('local API not started: no XDG_RUNTIME_DIR for its socket', {});

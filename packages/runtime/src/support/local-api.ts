@@ -399,9 +399,33 @@ export interface LocalApiServerOptions {
  * login session creates (mode 0700, on tmpfs, removed at logout). No XDG_RUNTIME_DIR, no API:
  * a socket in a shared /tmp is exactly what this design avoids.
  */
-export function defaultSocketPath(env: NodeJS.ProcessEnv = process.env): string | undefined {
+export function defaultSocketPath(
+  env: NodeJS.ProcessEnv = process.env,
+  platform: NodeJS.Platform = process.platform,
+): string | undefined {
+  if (platform === 'win32') return windowsPipePath(env);
   const dir = env['XDG_RUNTIME_DIR'];
   return dir && path.isAbsolute(dir) ? path.join(dir, 'worldview', 'api.sock') : undefined;
+}
+
+/**
+ * Windows (ADR-014 amendment 2026-10-20): a named pipe per signed-in user,
+ * `\\.\pipe\worldview-api-<user>`. A pipe made without a security descriptor gets Windows'
+ * default for pipes — full control for this user (its creator), SYSTEM and administrators, and
+ * read-only for everyone else — and a client that can only read cannot send a request. The name
+ * is not a secret; who can write to it is the control.
+ */
+export function windowsPipePath(env: NodeJS.ProcessEnv = process.env): string | undefined {
+  const user = (env['USERNAME'] ?? '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '_')
+    .slice(0, 64);
+  return user ? `\\\\.\\pipe\\worldview-api-${user}` : undefined;
+}
+
+/** Whether `p` is a Windows named pipe path rather than a socket file. */
+export function isNamedPipe(p: string): boolean {
+  return p.startsWith('\\\\.\\pipe\\') || p.startsWith('\\\\?\\pipe\\');
 }
 
 /** Whether something answers on a Unix socket (a live server, not a file left behind). */
@@ -426,6 +450,16 @@ export interface LocalApiStats {
   refused: number;
   /** When the last request of either kind came, ms since the epoch. */
   lastRequestMs?: number;
+}
+
+function listened(server: http.Server): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.once('listening', () => {
+      server.off('error', reject);
+      resolve();
+    });
+  });
 }
 
 export class LocalApiServer {
@@ -463,6 +497,7 @@ export class LocalApiServer {
   async start(): Promise<void> {
     if (this.server) return;
     const { socketPath, log } = this.opts;
+    if (isNamedPipe(socketPath)) return this.startPipe(socketPath);
     const dir = path.dirname(socketPath);
     const uid = typeof process.getuid === 'function' ? process.getuid() : undefined;
     // The folder holding ours must be this user's and closed to others (the session's runtime
@@ -486,23 +521,8 @@ export class LocalApiServer {
       if (await answers(socketPath)) throw new Error(`another WORLDVIEW is serving ${socketPath}`);
       await fs.unlink(socketPath); // left by a run that did not close cleanly
     }
-    const server = http.createServer(
-      // Timeouts are checked every second, not Node's default thirty.
-      { maxHeaderSize: 8192, connectionsCheckingInterval: 1000 },
-      (req, res) => void this.serve(req, res),
-    );
-    server.requestTimeout = LOCAL_API_LIMITS.requestTimeoutMs;
-    server.headersTimeout = LOCAL_API_LIMITS.requestTimeoutMs;
-    server.keepAliveTimeout = 1000;
-    server.maxConnections = LOCAL_API_LIMITS.maxConnections;
-    server.maxHeadersCount = 32;
-    const listening = new Promise<void>((resolve, reject) => {
-      server.once('error', reject);
-      server.once('listening', () => {
-        server.off('error', reject);
-        resolve();
-      });
-    });
+    const server = this.createServer();
+    const listening = listened(server);
     // The socket file is made inside listen(), synchronously, with the umask: tightened for
     // exactly that call and restored straight after, so no other file the process makes
     // meanwhile is affected.
@@ -526,6 +546,37 @@ export class LocalApiServer {
     log.info('local API listening', { socket: socketPath });
   }
 
+  private createServer(): http.Server {
+    const server = http.createServer(
+      // Timeouts are checked every second, not Node's default thirty.
+      { maxHeaderSize: 8192, connectionsCheckingInterval: 1000 },
+      (req, res) => void this.serve(req, res),
+    );
+    server.requestTimeout = LOCAL_API_LIMITS.requestTimeoutMs;
+    server.headersTimeout = LOCAL_API_LIMITS.requestTimeoutMs;
+    server.keepAliveTimeout = 1000;
+    server.maxConnections = LOCAL_API_LIMITS.maxConnections;
+    server.maxHeadersCount = 32;
+    return server;
+  }
+
+  /** Windows: the named pipe (windowsPipePath). Another WORLDVIEW answering on it is left be. */
+  private async startPipe(pipe: string): Promise<void> {
+    if (await answers(pipe)) throw new Error(`another WORLDVIEW is serving ${pipe}`);
+    const server = this.createServer();
+    const listening = listened(server);
+    // Neither readable nor writable by all: Windows' default pipe security (see windowsPipePath).
+    server.listen({ path: pipe, readableAll: false, writableAll: false });
+    try {
+      await listening;
+    } catch (err) {
+      server.close();
+      throw err;
+    }
+    this.server = server;
+    this.opts.log.info('local API listening', { pipe });
+  }
+
   async stop(): Promise<void> {
     const server = this.server;
     if (!server) return;
@@ -547,6 +598,7 @@ export class LocalApiServer {
     this.server = undefined;
     server.close();
     server.closeAllConnections?.();
+    if (isNamedPipe(this.opts.socketPath)) return; // a pipe goes with its server
     try {
       if (lstatSync(this.opts.socketPath).ino === this.inode) unlinkSync(this.opts.socketPath);
     } catch {
@@ -556,6 +608,7 @@ export class LocalApiServer {
 
   /** Remove the socket only if it is still the one this server made (not a later instance's). */
   private async removeSocket(): Promise<void> {
+    if (isNamedPipe(this.opts.socketPath)) return;
     const st = await fs.lstat(this.opts.socketPath).catch(() => undefined);
     if (st && st.ino === this.inode) await fs.unlink(this.opts.socketPath).catch(() => undefined);
     this.inode = undefined;

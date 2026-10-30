@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import {
   app,
   BrowserWindow,
+  clipboard,
   dialog,
   ipcMain,
   Menu,
@@ -27,7 +28,14 @@ import {
   policyInputFromSettings,
   type AutoUpdaterLike,
 } from '@worldview/updater';
-import { wireChannel, type DefinitionsListing, type DiagnosticsSnapshot } from '@worldview/ipc-contract';
+import {
+  VIEW_LINK_SCHEME,
+  linkInArgs,
+  readViewLink,
+  wireChannel,
+  type DefinitionsListing,
+  type DiagnosticsSnapshot,
+} from '@worldview/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
 import type { ProviderManifest } from '@worldview/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
@@ -44,6 +52,7 @@ import { createMainWindow, hardenWebContents } from './window.js';
 import { TileCache } from './tile-cache.js';
 import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
+import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch } from './network-gate.js';
 
 /**
@@ -56,6 +65,10 @@ import { blockInternetRequests, gatedFetch } from './network-gate.js';
  */
 const DEV = !app.isPackaged && process.env.WORLDVIEW_DEV === '1';
 const NETWORK_POLL_MS = 15_000;
+/** The first update check after start, and the gap between the next ones. */
+const UPDATE_FIRST_CHECK_MS = 20_000;
+const UPDATE_FIRST_RETRY_MS = 60_000;
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60_000;
 
 // Before whenReady on purpose: Chromium reads the scheme registry as the network service
 // starts, and a scheme registered afterwards gets no origin — which is the one thing it is
@@ -293,7 +306,13 @@ async function bootstrap(): Promise<void> {
   const updater = new UpdaterController({
     updater: autoUpdater,
     currentVersion: app.getVersion(),
-    policy: () => policyInputFromSettings(settings.get().updater, { signed: build.signed, packaged: app.isPackaged }),
+    // The installed Windows build updates itself (NSIS); the .deb is the package manager's.
+    policy: () =>
+      policyInputFromSettings(settings.get().updater, {
+        signed: build.signed,
+        packaged: app.isPackaged,
+        canInstall: process.platform === 'win32',
+      }),
     logger: hub.logger('updater'),
   });
   settings.onChange(() => updater.applyPolicy());
@@ -319,6 +338,15 @@ async function bootstrap(): Promise<void> {
     isOnline: online,
     enabled: () => settings.get().search?.online !== false,
     first: () => settings.get().search?.service ?? 'nominatim',
+  });
+
+  // Street-level pictures (street-level.ts): Panoramax, one request a second, on the operator's
+  // ask from What's here only, under the same online-lookup switch as place search.
+  const streetLevel = new StreetLevel({
+    fetchImpl: netFetch,
+    userAgent: appUserAgent(app.getVersion()),
+    isOnline: online,
+    enabled: () => settings.get().search?.online !== false,
   });
 
   const allowlist = lazyExternalAllowlist(runtime, log);
@@ -357,6 +385,7 @@ async function bootstrap(): Promise<void> {
       await withCredentialErrors(() => credentials.delete(key));
     },
     'search.places': async (req, ctx) => places.search(req, ctx.signal),
+    'imagery.streetLevel': async (req, ctx) => streetLevel.near(req, ctx.signal),
     'tiles.status': async () => tiles.status(),
     'tiles.clear': async () => tiles.clear(),
     'tiles.prefetch': async ({ sourceId, bounds, zoom }) => {
@@ -440,6 +469,26 @@ async function bootstrap(): Promise<void> {
   });
   const networkTimer = setInterval(pollNetwork, NETWORK_POLL_MS);
 
+  // Automatic updates (ADR-012 amendment 2026-10-20): asked shortly after start, so an old
+  // build says so in its first minute, then every few hours while it runs; never while working
+  // offline. With automatic updates on the new version downloads in the background and the
+  // window offers to restart into it (components/update-notice.tsx).
+  let updateChecked = false;
+  const checkForUpdate = (why: string) => {
+    if (!online()) return;
+    updateChecked = true;
+    log.info('update check', { why });
+    void updater.check();
+  };
+  // The first check: 20 s after start, and again every minute until one has run (the OS may
+  // still say offline while the network comes up); then every four hours.
+  const updateFirst = setTimeout(() => checkForUpdate('start'), UPDATE_FIRST_CHECK_MS);
+  const updateRetry = setInterval(() => {
+    if (updateChecked) clearInterval(updateRetry);
+    else checkForUpdate('retry');
+  }, UPDATE_FIRST_RETRY_MS);
+  const updateTimer = setInterval(() => checkForUpdate('interval'), UPDATE_CHECK_INTERVAL_MS);
+
   // Power and sleep (docs/cyberdeck M5): the OS's own events, nothing polled. On waking the
   // network is asked at once (not in up to 15 s) and the vaults re-checked; a USB device that
   // went away while asleep is reported by its source and reconnects on its own.
@@ -481,10 +530,34 @@ async function bootstrap(): Promise<void> {
   };
   let main = open();
 
-  app.on('second-instance', () => {
+  // Links to a view (ADR-004 amendment 2026-10-20, packages/ipc-contract view-link.ts): the
+  // scheme is registered by the installer (electron-builder.yml `protocols`); a portable copy
+  // registers itself for the signed-in user. A link opens the view and nothing else.
+  const openLink = (text: string | undefined, how: string) => {
+    if (!text) return;
+    const read = readViewLink(text);
+    if (!read.ok) {
+      log.warn('view link refused', { how, reason: read.reason });
+      return;
+    }
+    log.info('view link', { how, ignored: read.ignored.join(',') });
+    runtime.core.openLink(read.link);
+  };
+  if (app.isPackaged && !app.isDefaultProtocolClient(VIEW_LINK_SCHEME)) {
+    const registered = app.setAsDefaultProtocolClient(VIEW_LINK_SCHEME);
+    log.info('view link scheme', { registered });
+  }
+  openLink(linkInArgs(process.argv), 'start');
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    openLink(url, 'open-url');
+  });
+
+  app.on('second-instance', (_event, argv) => {
     if (main.isDestroyed()) main = open();
     if (main.isMinimized()) main.restore();
     main.focus();
+    openLink(linkInArgs(argv), 'second-instance');
   });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) main = open();
@@ -494,6 +567,9 @@ async function bootstrap(): Promise<void> {
   });
   app.on('before-quit', () => {
     clearInterval(networkTimer);
+    clearTimeout(updateFirst);
+    clearInterval(updateRetry);
+    clearInterval(updateTimer);
     // The local API's socket goes now: the asynchronous stop below may not finish before exit.
     runtime.localApi?.closeNow();
     router.dispose();
@@ -557,6 +633,10 @@ function electronHostBridge(): HostBridge {
       return true;
     },
     appPaths: () => ({ downloads: app.getPath('downloads') }),
+    copyText: (text) => {
+      clipboard.writeText(text.slice(0, 4096));
+      return true;
+    },
   };
 }
 

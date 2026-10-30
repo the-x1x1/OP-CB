@@ -1,0 +1,38 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/home-assistant/states.json",
+  "empty": "fixtures/connectors/home-assistant/states-empty.json",
+  "malformed": [
+    {
+      "inline": "<!DOCTYPE html><html><body>Home Assistant</body></html>"
+    },
+    {
+      "inline": "{\"message\":\"Entity not found.\"}"
+    }
+  ],
+  "expectObservations": 2,
+  "expectIds": ["person.alex", "device_tracker.alex_phone"],
+  "expect": [
+    {
+      "externalId": "person.alex",
+      "position": {
+        "latitude": 21.30695,
+        "longitude": -157.85828
+      },
+      "payload": {
+        "name": "Alex",
+        "state": "home",
+        "accuracyM": 12,
+        "kind": "home-assistant-person"
+      }
+    },
+    {
+      "externalId": "device_tracker.alex_phone",
+      "payload": {
+        "name": "Alex's phone",
+        "battery": 64,
+        "sourceType": "gps"
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react';
 import { Icon, IconButton } from '@worldview/ui';
-import { useActions, useAppState } from '../store/store.js';
+import { useActions, useAppSlice } from '../store/store.js';
 import { OVERVIEW_LAYERS, OVERVIEW_LENS_ID } from '../overview-layers.js';
 import { LayerPanel } from './layer-panel.js';
 
@@ -13,7 +13,10 @@ import { LayerPanel } from './layer-panel.js';
  * one at a time. Arrow keys move between rows; Space or Enter acts on the focused one.
  */
 export function LensRail() {
-  const { lenses, ui, session } = useAppState();
+  // Slices: redrawn when lenses, the rail's state or the settings change, not for every world delta.
+  const lenses = useAppSlice((s) => s.lenses);
+  const ui = useAppSlice((s) => s.ui);
+  const session = useAppSlice((s) => s.session);
   const actions = useActions();
   const collapsed = ui.railCollapsed;
   const hidden = session.settings?.hiddenLayers ?? [];

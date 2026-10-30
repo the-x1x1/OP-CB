@@ -341,6 +341,17 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
     { strict: true },
   ) as Schema<RequestOf<'search.query'>>,
   // One explicit request per search (Enter), never per keystroke: a short text, a bias, a small limit.
+  'imagery.streetLevel': s.object(
+    {
+      position: s.object(
+        { latitude: s.number({ min: -90, max: 90 }), longitude: s.number({ min: -180, max: 180 }) },
+        { strict: true },
+      ),
+      radiusM: s.optional(s.number({ min: 10, max: 2000 })),
+      limit: s.optional(s.number({ min: 1, max: 12 })),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'imagery.streetLevel'>>,
   'search.places': s.object(
     {
       text: s.string({ max: 200 }),
@@ -454,6 +465,26 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
   'diagnostics.get': voidSchema,
   'diagnostics.export': voidSchema,
   'notifications.test': voidSchema,
+  'link.take': voidSchema,
+  'link.copy': s.object(
+    {
+      link: s.object(
+        {
+          latitude: s.number({ min: -90, max: 90 }),
+          longitude: s.number({ min: -180, max: 180 }),
+          zoom: s.optional(s.number({ min: 0, max: 22 })),
+          altitudeM: s.optional(s.number({ min: 1, max: 50_000_000 })),
+          mode: s.optional(s.enum(['2D', '3D'] as const)),
+          lensId: s.optional(shortId),
+          show: s.optional(s.array(shortId, { max: 32 })),
+          hide: s.optional(s.array(shortId, { max: 32 })),
+          select: s.optional(s.string({ min: 1, max: 128 })),
+        },
+        { strict: true },
+      ),
+    },
+    { strict: true },
+  ) as Schema<RequestOf<'link.copy'>>,
 
   'updater.state': voidSchema,
   'updater.check': voidSchema,

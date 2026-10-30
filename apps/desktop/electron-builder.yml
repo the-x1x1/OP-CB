@@ -50,6 +50,16 @@ asarUnpack:
   - '**/*.node'
   # The dropped-file reader's worker thread loads its script from a real path.
   - 'dist/main/geodata-worker.cjs'
+  # The MCP server for AI clients is run by them as a script of the executable (src/mcp).
+  - 'dist/mcp/worldview-mcp.cjs'
+
+# worldview://view?lat=…&lon=… links open the app at a place (ADR-004 amendment 2026-10-20;
+# packages/ipc-contract/src/view-link.ts). The NSIS installer registers the scheme for the user
+# (HKCU\Software\Classes\worldview); the .deb's menu entry declares
+# x-scheme-handler/worldview with %U on its Exec line.
+protocols:
+  - name: WorldView link
+    schemes: [worldview]
 
 extraResources:
   # Read-only bundled data granted to filesystem providers at runtime. `pnpm stage:resources`
@@ -117,8 +127,9 @@ linux:
       GenericName: World map
       Categories: Science;Geography;Education;
       Keywords: map;globe;aircraft;ships;satellites;offline;
-  # No mimeTypes / fileAssociations: nothing is opened by double-click yet. .worldpack import
-  # goes through Settings → Offline packs, which checks the publisher before anything is read.
+  # No fileAssociations: nothing is opened by double-click yet. .worldpack import goes through
+  # Settings → Offline packs, which checks the publisher before anything is read. The one
+  # MimeType is the link scheme, from `protocols` above.
 
 deb:
   artifactName: worldview_${version}_amd64.${ext}

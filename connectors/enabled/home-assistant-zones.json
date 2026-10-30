@@ -60,7 +60,20 @@
     "text": "Home Assistant (your own instance)",
     "url": "https://developers.home-assistant.io/docs/api/rest/"
   },
-  "review": "user-configured",
+  "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
+  "dataPolicy": {
+    "cacheAllowed": true,
+    "rawPayloadRetentionAllowed": false,
+    "normalizedRetentionAllowed": true,
+    "redistributionAllowed": false,
+    "offlinePackAllowed": false,
+    "exportAllowed": true,
+    "commercialUseAllowed": true,
+    "attributionRequired": false,
+    "attributionText": "Home Assistant (your own instance)",
+    "termsUrl": "https://developers.home-assistant.io/docs/api/rest/"
+  },
+  "review": "commercially-reviewed",
   "enabled": false,
   "sourceQuality": "unknown"
 }

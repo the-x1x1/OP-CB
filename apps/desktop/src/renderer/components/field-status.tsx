@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Toggle } from '@worldview/ui';
-import { useActions, useAppState } from '../store/store.js';
+import { useActions, useAppSlice } from '../store/store.js';
 import { displaySettings } from '../store/display.js';
 import { useNow } from '../hooks/use-now.js';
 import { fieldStatusItems } from './field-status-model.js';
@@ -15,7 +15,9 @@ const FIELD_REFRESH_MS = 60_000;
  * Field profile); it asks for nothing while hidden. Ages tick every five seconds.
  */
 export function FieldStatus() {
-  const { session, sources, offline } = useAppState();
+  const session = useAppSlice((s) => s.session);
+  const sources = useAppSlice((s) => s.sources);
+  const offline = useAppSlice((s) => s.offline);
   const actions = useActions();
   const on = displaySettings(session.settings).fieldStatus === true;
   const nowMs = useNow(5000);

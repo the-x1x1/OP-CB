@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { Icon, IconButton, StatusBadge } from '@worldview/ui';
-import { useActions, useAppState } from '../store/store.js';
+import { useActions, useAppSlice } from '../store/store.js';
 
 /** "RECORDED DATA" banner (directive §92) — shown whenever app.info.demoMode is true. */
 export function DemoBanner() {
-  const { session } = useAppState();
-  if (!session.appInfo?.demoMode) return null;
+  const demoMode = useAppSlice((s) => s.session.appInfo?.demoMode === true);
+  if (!demoMode) return null;
   return (
     <div className="wv-demo-banner" role="status" aria-live="polite">
       <StatusBadge kind="recorded" />
@@ -16,7 +16,9 @@ export function DemoBanner() {
 
 /** Offline notice when the connection state is OFFLINE (per-source detail lives in the Sources tab). */
 export function OfflineNotice() {
-  const { sources, offline, session } = useAppState();
+  const sources = useAppSlice((s) => s.sources);
+  const offline = useAppSlice((s) => s.offline);
+  const session = useAppSlice((s) => s.session);
   const actions = useActions();
   const byChoice = session.settings?.network?.workOffline === true;
   if (sources.connection?.state !== 'OFFLINE' && !byChoice) return null;
@@ -44,7 +46,7 @@ export function OfflineNotice() {
 
 /** Notification toasts from the runtime `notification` channel and shell actions; auto-dismiss after 8 s. */
 export function Notifications() {
-  const { ui } = useAppState();
+  const ui = useAppSlice((s) => s.ui);
   const actions = useActions();
   const first = ui.notifications[0];
   useEffect(() => {

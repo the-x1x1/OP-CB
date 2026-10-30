@@ -29,9 +29,9 @@ import {
   type ConnectorValidationResult,
 } from '@worldview/connector-sdk';
 import {
-  REFUSED_DOMAINS,
+  PEOPLE_DOMAINS,
   enrich,
-  isRefused,
+  isPersonEntity,
   matchesAny,
   parsePositions,
   parseSelectors,
@@ -63,7 +63,9 @@ import { RECONNECT_MIN_MS, nextRetryMs } from '../../shared/limits.js';
  * on `port` (8123), plain or TLS by the `tls` setting. A definition never holds an address or
  * a token: `credentials` declares the token by reference and nothing else.
  *
- * `person` and `device_tracker` entities are never read (`REFUSED_DOMAINS`, PRODUCT-BOUNDARIES).
+ * `person` and `device_tracker` entities are read only by a definition whose filter names those
+ * domains (`PEOPLE_DOMAINS`; the example `home-assistant-people`); every other definition drops
+ * them as they arrive.
  */
 export const HOME_ASSISTANT_CONNECTOR_ID = 'home-assistant';
 const CONNECTOR_NAME = 'Home Assistant';
@@ -226,8 +228,24 @@ export function haTokenKey(d: ConnectorProviderDefinition): string | undefined {
 export function homeAssistantManifest(d: ConnectorProviderDefinition): ProviderManifest {
   const base = definitionToManifest(d, CONNECTOR_NAME);
   const intervalSeconds = DEFAULT_INTERVAL_SECONDS;
+  // A definition that reads the household's people (PEOPLE_DOMAINS) gets a closed policy
+  // whatever its JSON says: where they were is never written to history, exported, put in a
+  // pack, or given to other programs (PRODUCT-BOUNDARIES, "The operator's own household").
+  // Enforced here, in code, so a definition the operator edits cannot open it.
+  const readsPeople = filteredDomains(d).some((x) => PEOPLE_DOMAINS.has(x));
+  const dataPolicy = readsPeople
+    ? {
+        ...base.dataPolicy,
+        rawPayloadRetentionAllowed: false,
+        normalizedRetentionAllowed: false,
+        redistributionAllowed: false,
+        offlinePackAllowed: false,
+        exportAllowed: false,
+      }
+    : base.dataPolicy;
   return {
     ...base,
+    dataPolicy,
     transport: 'local-process',
     capabilities: { live: true, historical: false, offline: true, boundsQuery: false },
     credentials: base.credentials.map((c) => ({ ...c, required: true })),
@@ -338,6 +356,9 @@ export class HomeAssistantProvider implements WorldProvider {
     reconnects: 0,
   };
 
+  /** Whether this definition reads `person` and `device_tracker` entities (its filter names them). */
+  private readonly readsPeople: boolean;
+
   constructor(
     readonly definition: ConnectorProviderDefinition,
     options: HomeAssistantOptions = {},
@@ -345,8 +366,14 @@ export class HomeAssistantProvider implements WorldProvider {
     this.manifest = homeAssistantManifest(definition);
     this.mapping = compileMapping(definition.mapping);
     this.tokenKey = haTokenKey(definition);
+    this.readsPeople = filteredDomains(definition).some((x) => PEOPLE_DOMAINS.has(x));
     this.flushIntervalMs = options.flushIntervalMs ?? 500;
     this.timers = options.timers ?? realTimers;
+  }
+
+  /** An entity this definition does not read: a person's or a phone's, unless it asks for them. */
+  private refuses(entityId: string): boolean {
+    return !this.readsPeople && isPersonEntity(entityId);
   }
 
   async initialize(context: ProviderContext): Promise<void> {
@@ -503,7 +530,7 @@ export class HomeAssistantProvider implements WorldProvider {
     let refused = 0;
     for (const raw of body) {
       const rawId = (raw as { entity_id?: unknown } | null)?.entity_id;
-      if (typeof rawId === 'string' && isRefused(rawId)) {
+      if (typeof rawId === 'string' && this.refuses(rawId)) {
         refused++;
         continue;
       }
@@ -517,7 +544,7 @@ export class HomeAssistantProvider implements WorldProvider {
         firstProblem ??= s;
         continue;
       }
-      if (isRefused(s.entity_id)) {
+      if (this.refuses(s.entity_id)) {
         this.stats.refused++;
         continue;
       }
@@ -706,8 +733,8 @@ export class HomeAssistantProvider implements WorldProvider {
           : new ProviderError('NETWORK', err instanceof Error ? err.message : String(err));
       if (pe.code === 'AUTH') this.authFailed(pe);
       else if (pe.code === 'HOST_NOT_ALLOWED') {
-        // The host does not open this socket (on this build: ws:// to a local host). The REST
-        // path carries the source; the socket is asked for again much later.
+        // The host does not open this socket (ws:// to a host that is neither loopback nor the one
+        // named in Host). The REST path carries the source; the socket is asked for again later.
         this.socketState = 'refused';
         this.socketNote = `the WebSocket API is not available here (${pe.message}); reading /api/states once a minute instead`;
         this.scheduleReconnect(session, HA_REFUSED_RETRY_MS);
@@ -812,7 +839,7 @@ export class HomeAssistantProvider implements WorldProvider {
       return;
     }
     const d = data as { entity_id?: unknown; new_state?: unknown };
-    if (typeof d.entity_id === 'string' && isRefused(d.entity_id)) {
+    if (typeof d.entity_id === 'string' && this.refuses(d.entity_id)) {
       this.stats.refused++;
       return;
     }
@@ -829,7 +856,7 @@ export class HomeAssistantProvider implements WorldProvider {
       this.stats.malformed++;
       return;
     }
-    if (isRefused(s.entity_id)) {
+    if (this.refuses(s.entity_id)) {
       this.stats.refused++;
       return;
     }
@@ -1039,10 +1066,10 @@ export function validateHomeAssistant(d: ConnectorProviderDefinition): Connector
   const zonesOnly = filteredDomains(d).length > 0 && filteredDomains(d).every((x) => x === 'zone');
   if (!d.mapping.observedAt && !zonesOnly)
     warnings.push('mapping.observedAt is unset: every observation carries the fetch time');
-  const refused = filteredDomains(d).filter((x) => REFUSED_DOMAINS.has(x));
-  if (refused.length)
+  const people = filteredDomains(d).filter((x) => PEOPLE_DOMAINS.has(x));
+  if (people.length)
     warnings.push(
-      `${refused.join(', ')} entities are never read (docs/PRODUCT-BOUNDARIES.md); the filter selects nothing there`,
+      `reads ${people.join(', ')} entities: where the people of this Home Assistant and their phones are (keep it off unless they agree)`,
     );
   for (const s of d.settings ?? [])
     if (HA_SETTING_KEYS.has(s.key))

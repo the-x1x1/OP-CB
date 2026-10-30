@@ -38,7 +38,7 @@ import type {
   DiagnosticsSnapshot,
   OfflineStatus,
 } from '@worldview/ipc-contract';
-import { EVENT_TYPE_LABELS, IPC_CONTRACT_VERSION } from '@worldview/ipc-contract';
+import { EVENT_TYPE_LABELS, IPC_CONTRACT_VERSION, formatViewLink } from '@worldview/ipc-contract';
 import type { LensDefinition } from '@worldview/render-core';
 import { BUILT_IN_LENSES, resolveMapProviders } from '@worldview/render-core';
 import type { SourceHealthEntry } from '@worldview/source-health';
@@ -439,6 +439,13 @@ export class DemoClient implements WorldClient {
           attribution: '',
           message: 'The demo build searches its recorded data and the built-in gazetteer only.',
         } satisfies PlaceSearchAnswer;
+      case 'imagery.streetLevel':
+        return {
+          status: 'unavailable',
+          pictures: [],
+          attribution: '',
+          message: 'The demo build sends nothing anywhere: no street-level pictures.',
+        };
       case 'search.nearest': {
         // The recorded place index stands in for the gazetteer: cities, nearest first.
         const { position, limit = 1, maxDistanceM = Infinity } = request as RequestOf<'search.nearest'>;
@@ -737,6 +744,11 @@ export class DemoClient implements WorldClient {
 
       case 'diagnostics.get':
         return this.diagnostics(nowMs);
+      case 'link.take':
+        return null;
+      case 'link.copy':
+        // The browser demo has no clipboard of its own to write to: the link is shown instead.
+        return { url: formatViewLink((request as RequestOf<'link.copy'>).link), copied: false };
       case 'notifications.test':
         this.emit('notification', {
           id: `notification:test:${nowMs}`,

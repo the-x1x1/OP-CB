@@ -80,6 +80,7 @@ export class UpdaterController {
       status: this.decision.enabled ? 'idle' : 'disabled',
       currentVersion: opts.currentVersion,
       signed: input.signed,
+      canInstall: this.decision.canInstall,
       message: this.decision.reason,
     };
     this.applyPolicy();
@@ -109,6 +110,7 @@ export class UpdaterController {
       channel: input.channel,
       automatic: this.decision.autoDownload,
       signed: input.signed,
+      canInstall: this.decision.canInstall,
     };
     if (!this.decision.enabled) {
       patch.status = 'disabled';
@@ -144,12 +146,21 @@ export class UpdaterController {
   /** Explicit user action. Downloads (if needed) and installs. Unsigned builds are allowed here because the user asked. */
   async install(): Promise<UpdaterState> {
     if (!this.decision.enabled) return this.state();
+    // The .deb: nothing is downloaded or run here, whatever the state says is available.
+    if (!this.decision.canInstall) {
+      this.update({
+        message: 'this installation is updated by its package manager: download the new package from the release',
+      });
+      return this.state();
+    }
     if (this.current.status === 'downloaded') {
       this.logger.info('installing downloaded update', {
         version: this.current.availableVersion ?? 'unknown',
         signed: this.current.signed,
       });
-      this.opts.updater.quitAndInstall(false, true);
+      // Silent: the installer runs without its wizard, and the app starts again on the new
+      // version (operator decision 2026-10-20: "restart to update").
+      this.opts.updater.quitAndInstall(true, true);
       return this.state();
     }
     if (this.current.status !== 'available') {
@@ -166,7 +177,7 @@ export class UpdaterController {
       await this.opts.updater.downloadUpdate();
       if (this.statusNow() === 'downloading')
         this.update({ status: 'downloaded', message: 'update downloaded; installing' });
-      this.opts.updater.quitAndInstall(false, true);
+      this.opts.updater.quitAndInstall(true, true);
     } catch (err) {
       this.onError(err);
     }
@@ -192,7 +203,7 @@ export class UpdaterController {
         status: 'downloaded',
         availableVersion: info.version,
         message: this.decision.autoInstallOnAppQuit
-          ? 'update downloaded; it installs when you quit, or now on request'
+          ? `${info.version} is ready: restart to update (it also installs when you quit)`
           : 'update downloaded; install when ready',
       }),
     );

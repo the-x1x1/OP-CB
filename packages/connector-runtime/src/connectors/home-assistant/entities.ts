@@ -26,13 +26,12 @@ import { resolveTransform } from '@worldview/connector-sdk';
 export const ENTITY_ID = /^[a-z0-9_]{1,64}\.[a-z0-9_]{1,192}$/;
 
 /**
- * Domains never read, whatever a definition or a setting selects: they are phones, personal
- * trackers and named people (docs/PRODUCT-BOUNDARIES.md — no private-device tracking, no
- * following a named person). Their states are dropped as they arrive: never kept, mapped or
- * emitted.
+ * The people and their phones (`person`, `device_tracker`): read only by a definition whose
+ * filter names one of these domains — the operator's own choice for their own household
+ * (operator decision 2026-10-20, docs/PRODUCT-BOUNDARIES.md). Any other definition drops their
+ * states as they arrive, whatever its entity selection says, and never names them in a message.
  */
-export const REFUSED_DOMAINS: ReadonlySet<string> = new Set(['person', 'device_tracker']);
-
+export const PEOPLE_DOMAINS: ReadonlySet<string> = new Set(['person', 'device_tracker']);
 export const MAX_SELECTORS = 64;
 export const MAX_POSITIONS = 64;
 /** A setting longer than this is not parsed at all. */
@@ -50,8 +49,9 @@ export function domainOf(entityId: string): string {
   return entityId.slice(0, entityId.indexOf('.'));
 }
 
-export function isRefused(entityId: string): boolean {
-  return REFUSED_DOMAINS.has(domainOf(entityId));
+/** A person's or a phone's entity (PEOPLE_DOMAINS). */
+export function isPersonEntity(entityId: string): boolean {
+  return PEOPLE_DOMAINS.has(domainOf(entityId));
 }
 
 /**
@@ -65,8 +65,8 @@ export function readState(raw: unknown): HaState | string {
   const r = raw as Record<string, unknown>;
   const id = r['entity_id'];
   if (typeof id !== 'string' || !ENTITY_ID.test(id)) return 'entity_id missing or not an entity id';
-  // A refused entity's id is not repeated in a message that may reach Source Health.
-  const named = isRefused(id) ? 'a refused entity' : id;
+  // A person's entity id is not repeated in a message that may reach Source Health.
+  const named = isPersonEntity(id) ? 'a person or tracker entity' : id;
   const state = r['state'];
   if (typeof state !== 'string') return `${named}: state is not a string`;
   const attributes = r['attributes'];
