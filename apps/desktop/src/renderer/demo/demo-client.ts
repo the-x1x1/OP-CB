@@ -655,6 +655,13 @@ export class DemoClient implements WorldClient {
         const r = request as RequestOf<'library.search'>;
         return { ok: false, book: r.book, pattern: r.pattern, hits: [], message: 'the browser demo has no library' };
       }
+      case 'mesh.sendTest':
+        return {
+          outcome: 'not-connected',
+          evidence: { connected: false, accepted: false, relayed: false, acknowledged: false },
+          message: 'the browser demo has no radio',
+          at: new Date(nowMs).toISOString(),
+        };
       case 'ai.test':
         return {
           ok: false,

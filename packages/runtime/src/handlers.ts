@@ -840,6 +840,26 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         throw new InvalidRequestError('pattern must be 1–200 characters');
       return core.localServices.librarySearch(book, pattern.trim(), ctx.signal);
     },
+    'mesh.sendTest': async (req, ctx) => {
+      if (typeof req?.to !== 'string' || !/^![0-9a-f]{8}$/.test(req.to))
+        throw new InvalidRequestError('to must be a node id such as !a1b2c3d4');
+      if (typeof req.text !== 'string' || !req.text.trim() || req.text.length > 200)
+        throw new InvalidRequestError('text must be 1–200 characters');
+      const answer = await core.providerHost.sendTestMessage(
+        'meshtastic-local',
+        { to: req.to, text: req.text },
+        { signal: ctx.signal },
+      );
+      if (!answer)
+        return {
+          outcome: 'not-connected',
+          evidence: { connected: false, accepted: false, relayed: false, acknowledged: false },
+          message: 'the Meshtastic source is not running',
+          at: new Date(core.clock.now()).toISOString(),
+        };
+      core.log.info('mesh test message', { outcome: answer.outcome });
+      return answer;
+    },
     'ai.test': async (req, ctx) => {
       if (typeof req?.model !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,199}$/.test(req.model))
         throw new InvalidRequestError('model must be an installed model name');

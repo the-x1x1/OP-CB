@@ -167,7 +167,52 @@ export const fromRadio = {
   config: (): Uint8Array =>
     frame(Uint8Array.from(pb.msg(pb.varint(1, 5), pb.bytes(5, pb.msg(pb.fixed64(1), pb.varint(2, 3)))))),
   rebooted: (): Uint8Array => frame(Uint8Array.from(pb.varint(8, true))),
+  /** Config { lora: LoRaConfig { use_preset 1, modem_preset 2, region 7, hop_limit 8, tx_enabled 9 } }. */
+  lora: (l: { region: number; preset?: number; hopLimit?: number; txEnabled?: boolean }): Uint8Array =>
+    frame(
+      Uint8Array.from(
+        pb.msg(
+          pb.varint(1, 6),
+          pb.bytes(
+            5,
+            pb.bytes(
+              6,
+              pb.msg(
+                pb.varint(1, true),
+                l.preset ? pb.varint(2, l.preset) : [],
+                l.region ? pb.varint(7, l.region) : [],
+                pb.varint(8, l.hopLimit ?? 3),
+                l.txEnabled === false ? [] : pb.varint(9, true),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  /** DeviceMetadata { firmware_version 1 }. */
+  metadata: (firmware: string): Uint8Array =>
+    frame(Uint8Array.from(pb.msg(pb.varint(1, 7), pb.bytes(13, pb.string(1, firmware))))),
+  /** QueueStatus { res 1, free 2, maxlen 3, mesh_packet_id 4 }. */
+  queueStatus: (id: number, res = 0): Uint8Array =>
+    frame(
+      Uint8Array.from(
+        pb.msg(
+          pb.varint(1, 8),
+          pb.bytes(11, pb.msg(pb.varint(1, res), pb.varint(2, 15), pb.varint(3, 16), pb.varint(4, id))),
+        ),
+      ),
+    ),
 };
+
+/** A routing report on packet `requestId` (Data.request_id 6; Routing.error_reason 3), from `from`. */
+export function routingReport(from: number, to: number, requestId: number, error = 0): Part {
+  return pb.msg(
+    pb.fixed32(1, from),
+    pb.fixed32(2, to),
+    pb.bytes(4, pb.msg(pb.varint(1, 5), pb.bytes(2, error ? pb.varint(3, error) : []), pb.fixed32(6, requestId))),
+    pb.fixed32(6, 0x0badf00d),
+  );
+}
 
 export function telemetry(t: { time?: number; device?: Part; environment?: Part }): Part {
   return pb.msg(

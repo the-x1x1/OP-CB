@@ -135,6 +135,7 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'mode.choose': { mode: 'offline' },
     'services.open': { id: 'kiwix' },
     'library.search': { book: 'wikipedia_en_all', pattern: 'water' },
+    'mesh.sendTest': { to: '!a1b2c3d4', text: 'test' },
     'ai.test': { model: 'llama3.2', prompt: 'Say hello.' },
     'guides.save': {
       id: 'offline-maps',

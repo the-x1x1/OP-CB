@@ -218,7 +218,8 @@ export class NodeStore {
 
   /** The connected node, for health: its name, board and battery. */
   ownNode():
-    { id: string; name?: string; hardware?: string; batteryPct?: number; externalPower?: boolean } | undefined {
+    | { id: string; name?: string; hardware?: string; batteryPct?: number; externalPower?: boolean }
+    | undefined {
     if (this.myNodeNum === undefined) return undefined;
     const s = this.nodes.get(this.myNodeNum);
     const name = s?.user?.longName?.trim() || s?.user?.shortName?.trim();

@@ -144,8 +144,11 @@ things it has on the map:
 - **Boat**: NMEA 2000 through your gateway.
 - **Weather station and air**: a Davis WeatherLink Live and a PurpleAir sensor.
 
-Only the address you give is contacted; nothing on your network is searched for, and every
-radio is receive-only. Each is also a source in the Sources tab, with its full detail.
+Only the address you give is contacted; nothing on your network is searched for. The
+receivers (RTL-SDR, AIS) only receive. A Meshtastic radio transmits one thing for WorldView: a
+test message to one node, when you press Send in the Command Center's Meshtastic walkthrough
+(refused while the radio has no region set). Each is also a source in the Sources tab, with its
+full detail.
 
 ## Local ADS-B (readsb / dump1090)
 

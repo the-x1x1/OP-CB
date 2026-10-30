@@ -440,6 +440,10 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
     },
     { strict: true },
   ),
+  'mesh.sendTest': s.object(
+    { to: s.string({ min: 9, max: 9, pattern: /^![0-9a-f]{8}$/ }), text: s.string({ min: 1, max: 200 }) },
+    { strict: true },
+  ),
   'ai.test': s.object(
     {
       model: s.string({ min: 1, max: 200, pattern: /^[a-zA-Z0-9][a-zA-Z0-9._:/-]*$/ }),

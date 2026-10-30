@@ -28,6 +28,9 @@ import {
   type ObjectTrackRequest,
   MAX_OBJECT_TRACK_POINTS,
   isObjectTrackSource,
+  isTestMessageSource,
+  type TestMessageAnswer,
+  type TestMessageRequest,
   type ObjectDetailsAnswer,
   type ObjectDetailsRequest,
   MAX_OBJECT_DETAILS_BYTES,
@@ -620,6 +623,28 @@ export class ProviderHost {
       return undefined;
     } finally {
       if (timer) clearTimeout(timer);
+      options.signal?.removeEventListener('abort', onOuter);
+    }
+  }
+
+  /**
+   * A test message through a running provider that can send one (provider-sdk
+   * test-message.ts): undefined when that provider cannot. The host adds nothing and keeps
+   * nothing of the text; the provider answers with the evidence it has.
+   */
+  async sendTestMessage(
+    providerId: string,
+    request: Omit<TestMessageRequest, 'signal'>,
+    options: { signal?: AbortSignal } = {},
+  ): Promise<TestMessageAnswer | undefined> {
+    const h = this.hosted.get(providerId);
+    if (!h || !h.running || h.removed || !isTestMessageSource(h.provider)) return undefined;
+    const abort = new AbortController();
+    const onOuter = () => abort.abort();
+    options.signal?.addEventListener('abort', onOuter, { once: true });
+    try {
+      return await h.provider.sendTestMessage({ ...request, signal: abort.signal });
+    } finally {
       options.signal?.removeEventListener('abort', onOuter);
     }
   }

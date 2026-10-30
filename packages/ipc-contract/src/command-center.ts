@@ -370,3 +370,29 @@ export function readPrepRecord(value: unknown): PrepRecord | undefined {
   if (notes !== undefined) out.notes = notes;
   return out;
 }
+
+// ---------------------------------------------------------------------------------------------
+// A Meshtastic test message
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * One short test message from the operator's own Meshtastic radio to one node, on their press
+ * (the operator's decision of 2026-10-30: mesh may send; a receiver such as an RTL-SDR never
+ * does). The answer keeps apart: connected to the radio; accepted into its queue; relayed
+ * (another radio repeated it, so it went out over the air); acknowledged by the node it was for.
+ */
+export interface MeshTestRequest {
+  /** `!a1b2c3d4`. */
+  to: string;
+  /** At most 200 bytes of UTF-8. */
+  text: string;
+}
+
+export interface MeshTestAnswer {
+  outcome: 'acknowledged' | 'relayed' | 'accepted' | 'not-acknowledged' | 'refused' | 'not-connected';
+  evidence: { connected: boolean; accepted: boolean; relayed: boolean; acknowledged: boolean };
+  message: string;
+  packetId?: number;
+  routingError?: string;
+  at: string;
+}

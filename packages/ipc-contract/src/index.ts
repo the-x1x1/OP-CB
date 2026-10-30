@@ -24,6 +24,8 @@ import type {
   LibrarySearchAnswer,
   LocalServiceId,
   LocalServiceStatus,
+  MeshTestAnswer,
+  MeshTestRequest,
   ModeState,
   OperatingMode,
   PrepRecord,
@@ -1198,6 +1200,8 @@ export interface WorldRequests {
   'services.open': { request: { id: LocalServiceId; path?: string }; response: { opened: boolean } };
   /** (additive, 2026-10-30) Full-text search of one book in the operator's offline library. */
   'library.search': { request: { book: string; pattern: string }; response: LibrarySearchAnswer };
+  /** (additive, 2026-10-30) One test message from the operator's Meshtastic radio, on their press. */
+  'mesh.sendTest': { request: MeshTestRequest; response: MeshTestAnswer };
   /** (additive, 2026-10-30) The offline inference test: one prompt to one local model. */
   'ai.test': { request: AiTestRequest; response: AiTestAnswer };
   /** (additive, 2026-10-30) Guided setup progress (guides.json). */
@@ -1441,6 +1445,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'services.status',
   'services.open',
   'library.search',
+  'mesh.sendTest',
   'ai.test',
   'guides.list',
   'guides.save',
