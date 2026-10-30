@@ -56,7 +56,7 @@ import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch, launchModeFromArgs } from './network-gate.js';
-import { moveDataTo, resolveDataLocation, useUsualData } from './data-location.js';
+import { moveDataTo, resolveDataLocation, backToUsualData } from './data-location.js';
 import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './library-reader.js';
 
 /**
@@ -497,7 +497,7 @@ async function bootstrap(): Promise<void> {
     'data.useUsual': async () => {
       if (dataLocation.kind === 'portable')
         return { ok: false, message: 'a portable copy always uses the folder beside it', restartNeeded: false };
-      await useUsualData(dataLocation.usualRoot);
+      await backToUsualData(dataLocation.usualRoot);
       return {
         ok: true,
         message: `From the next start OP-CB uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,

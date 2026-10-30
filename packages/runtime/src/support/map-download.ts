@@ -18,7 +18,6 @@ import {
   writeExtract,
   type ExtractPlan,
   type ExtractSelection,
-  type RangeSource,
   type VaultInstallTarget,
   type WorldPackManifest,
   type WorldPackRegistry,

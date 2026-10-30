@@ -149,6 +149,6 @@ export async function moveDataTo(
 }
 
 /** Back to the usual folder from the next start; the moved folder is left as it is. */
-export async function useUsualData(usualRoot: string): Promise<void> {
+export async function backToUsualData(usualRoot: string): Promise<void> {
   await fs.promises.rm(path.join(usualRoot, POINTER_FILE), { force: true });
 }
