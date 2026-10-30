@@ -5,7 +5,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [0.6.0] — 2026-10-30
+## [0.6.1] — 2026-10-30
+
+0.6.0 was tagged but its build failed and it was never published: one test read a Linux
+socket path with Windows separators, and the Linux network-trace control could not reach out
+because nobody chose a mode on the new start screen. 0.6.1 is 0.6.0 with those two fixed, and a
+new launch option: `--mode=online` or `--mode=offline` is the start screen's choice for that
+launch (for a kiosk or cyberdeck that starts WorldView itself). What 0.6.0 brought:
 
 The Command Center: WorldView starts by asking Online or Offline and opens on what will still
 work without the internet, with guided walkthroughs whose checks pass only on real evidence.
