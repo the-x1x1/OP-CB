@@ -40,7 +40,8 @@ hardware checks are still open. 0.6.1 (2026-10-30; 0.6.0's build failed, unpubli
 start, readiness, walkthroughs), the world map and a built-in ZIM library downloaded in the app,
 public-domain emergency references, and data on an external drive (CHANGELOG); released for
 the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames WorldView to OP-CB — Operation
-Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG).
+Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG). 0.7.1 (2026-10-30) is security and
+maintenance: Electron 44.10 and patched dependencies, CI green again.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:

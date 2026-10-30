@@ -1,4 +1,4 @@
-# Known limitations — 0.7.0
+# Known limitations — 0.7.1
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -354,6 +354,11 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## 0.7.1
+
+- Electron and the dependency updates were checked by CI (all 15 checks) and the release build,
+  not yet in the installed app on a screen.
 
 ## 0.7.0
 
