@@ -39,7 +39,8 @@ source stops listing them, and a sharper globe on Auto (CHANGELOG); the 0.3.0 ch
 hardware checks are still open. 0.6.1 (2026-10-30; 0.6.0's build failed, unpublished) adds the Command Center (Online/Offline at
 start, readiness, walkthroughs), the world map and a built-in ZIM library downloaded in the app,
 public-domain emergency references, and data on an external drive (CHANGELOG); released for
-the operator to test, not yet checked on the laptop.
+the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames WorldView to OP-CB — Operation
+Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG).
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:

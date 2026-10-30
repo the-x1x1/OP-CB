@@ -1,4 +1,4 @@
-# Known limitations — 0.6.1
+# Known limitations — 0.7.0
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -354,6 +354,15 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## 0.7.0
+
+- The rename to OP-CB is in everything shown, not in file names: the installer, the portable
+  zip and the program are still `WorldView-Setup-<version>.exe`, `WorldView-Portable-<version>.zip`
+  and `WorldView.exe`, Task Manager still says WorldView, and the data folder, `worldview://`
+  links and the update channel keep their names so installed copies upgrade and keep their data.
+- The new look was checked in the browser demo only; the 3D globe and 2D map keep their own
+  colours.
 
 ## 0.6.1
 
