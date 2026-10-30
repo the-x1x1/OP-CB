@@ -404,8 +404,9 @@ export function defaultSocketPath(
   platform: NodeJS.Platform = process.platform,
 ): string | undefined {
   if (platform === 'win32') return windowsPipePath(env);
+  // A Unix socket path whatever the host: path.posix, so it reads the same when checked on Windows.
   const dir = env['XDG_RUNTIME_DIR'];
-  return dir && path.isAbsolute(dir) ? path.join(dir, 'worldview', 'api.sock') : undefined;
+  return dir && path.posix.isAbsolute(dir) ? path.posix.join(dir, 'worldview', 'api.sock') : undefined;
 }
 
 /**
