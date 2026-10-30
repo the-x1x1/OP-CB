@@ -922,6 +922,16 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     'maps.download.status': async () => core.mapDownloads.current(),
     'maps.download.cancel': async () => core.mapDownloads.cancel(),
 
+    // Moving the data folder is the desktop's (main.ts overrides these); a runtime alone reports.
+    'data.location': async () => ({ root: core.dirs.root, kind: 'usual' as const, usualRoot: core.dirs.root }),
+    'data.moveTo': async () => ({ ok: false, message: 'only the desktop app can move its data', restartNeeded: false }),
+    'data.useUsual': async () => ({
+      ok: false,
+      message: 'only the desktop app can move its data',
+      restartNeeded: false,
+    }),
+    'data.restart': async () => ({ restarting: false }),
+
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),
     'offline.installPack': async () => {

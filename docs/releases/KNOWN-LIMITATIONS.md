@@ -357,6 +357,11 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## After 0.5.0 (unreleased)
 
+- Keeping the data on an external drive (moved or portable) is tested in the container with
+  temporary folders only, not yet in the packaged app on a real SSD. Stored keys do not travel
+  between computers; history and installed packs are not copied when the data is moved. The
+  Linux `.deb` itself cannot run from the drive (its sandbox helper must be installed in `/opt`).
+
 - The Command Center's local services (Ollama, kiwix-serve, Kolibri) were built from each
   project's documented answers and tested against them, not against running copies; the
   Meshtastic test message was tested against encoded frames, not a radio. Each walkthrough's

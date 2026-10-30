@@ -704,6 +704,13 @@ export class DemoClient implements WorldClient {
           request: request as RequestOf<'maps.download.plan'>,
           message: 'the browser demo downloads no maps',
         };
+      case 'data.location':
+        return { root: '(browser demo: nothing is kept)', kind: 'usual', usualRoot: '(browser demo)' };
+      case 'data.moveTo':
+      case 'data.useUsual':
+        return { ok: false, message: 'the browser demo keeps no data', restartNeeded: false };
+      case 'data.restart':
+        return { restarting: false };
       case 'maps.download.start':
       case 'maps.download.status':
       case 'maps.download.cancel':

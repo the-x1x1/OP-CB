@@ -21,6 +21,11 @@ Versioning: [semantic versioning](https://semver.org/).
   file is checked after, then installed as a world pack. Map data from Protomaps' daily
   OpenStreetMap build, © OpenStreetMap contributors (ODbL). `pnpm basemap:extract` does the same
   from the command line.
+- **All of WorldView on an external drive.** Resources → Where WorldView keeps its data: move
+  everything (settings, history, maps, inventory, keys, logs) to a folder on an external SSD from
+  the next start, or run the portable copy from the drive with a `WorldView-data` folder beside
+  it. An unplugged drive is never written to: WorldView asks before falling back to this
+  computer's own data.
 - **Guided setup walkthroughs** for offline maps, an offline library (Kiwix), courses
   (Kolibri), a local AI model (Ollama), a Meshtastic radio, an RTL-SDR receiver and a
   preparedness inventory: what it does, what you need, the steps with real controls, checks

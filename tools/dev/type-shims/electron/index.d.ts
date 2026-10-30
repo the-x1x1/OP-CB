@@ -51,6 +51,7 @@ export interface App {
   whenReady(): Promise<void>;
   quit(): void;
   exit(exitCode?: number): void;
+  relaunch(options?: { args?: string[]; execPath?: string }): void;
   getPath(name: PathName): string;
   setPath(name: PathName, path: string): void;
   getVersion(): string;
@@ -404,6 +405,7 @@ export interface MessageBoxOptions {
   type?: 'none' | 'info' | 'error' | 'question' | 'warning';
   buttons?: string[];
   defaultId?: number;
+  cancelId?: number;
   title?: string;
   message: string;
   detail?: string;
@@ -421,6 +423,7 @@ export interface Dialog {
   showSaveDialog(options: SaveDialogOptions): Promise<SaveDialogReturnValue>;
   showMessageBox(window: BrowserWindow, options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
   showMessageBox(options: MessageBoxOptions): Promise<MessageBoxReturnValue>;
+  showMessageBoxSync(options: MessageBoxOptions): number;
   showErrorBox(title: string, content: string): void;
 }
 export declare const dialog: Dialog;

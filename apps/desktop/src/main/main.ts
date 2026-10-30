@@ -56,6 +56,7 @@ import { MemoryMonitor } from './memory-monitor.js';
 import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch } from './network-gate.js';
+import { moveDataTo, resolveDataLocation, useUsualData } from './data-location.js';
 
 /**
  * Main process bootstrap (ADR-004). Order matters:
@@ -91,6 +92,15 @@ if (process.platform === 'linux') {
   if (store) app.commandLine.appendSwitch('password-store', store);
 }
 
+// Where all data lives (data-location.ts): a portable `WorldView-data` folder beside the app, a
+// folder the operator moved it to, or the usual one. Before the lock, which lives there too.
+const dataLocation = resolveDataLocation({
+  usualRoot: app.getPath('userData'),
+  exeDir: path.dirname(process.execPath),
+  dev: DEV,
+});
+if (dataLocation.root !== dataLocation.usualRoot) app.setPath('userData', dataLocation.root);
+
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
@@ -109,6 +119,23 @@ if (!app.requestSingleInstanceLock()) {
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
+  // The moved data folder is not usable (the drive is out): say so before anything is written.
+  if (dataLocation.missing) {
+    const choice = dialog.showMessageBoxSync({
+      type: 'warning',
+      title: 'WorldView data not found',
+      message: `WorldView keeps its data in ${dataLocation.missing.path}, but ${dataLocation.missing.reason}.`,
+      detail:
+        "Connect the drive and start WorldView again, or start now with this computer's own data (the drive's data is left as it is).",
+      buttons: ['Quit', "Use this computer's data"],
+      defaultId: 0,
+      cancelId: 0,
+    });
+    if (choice === 0) {
+      app.exit(0);
+      return;
+    }
+  }
   const build = buildInfo();
   const dirs = dataDirs(app.getPath('userData'));
 
@@ -321,12 +348,14 @@ async function bootstrap(): Promise<void> {
   const updater = new UpdaterController({
     updater: autoUpdater,
     currentVersion: app.getVersion(),
-    // The installed Windows build updates itself (NSIS); the .deb is the package manager's.
+    // The installed Windows build updates itself (NSIS); the .deb is the package manager's. A
+    // portable copy (WorldView-data beside it) is told, not updated: the installer would put a
+    // second copy on this computer instead of updating the one on the drive.
     policy: () =>
       policyInputFromSettings(settings.get().updater, {
         signed: build.signed,
         packaged: app.isPackaged,
-        canInstall: process.platform === 'win32',
+        canInstall: process.platform === 'win32' && dataLocation.kind !== 'portable',
       }),
     logger: hub.logger('updater'),
   });
@@ -398,6 +427,68 @@ async function bootstrap(): Promise<void> {
     },
     'credentials.delete': async ({ key }) => {
       await withCredentialErrors(() => credentials.delete(key));
+    },
+    // Where the data lives (data-location.ts): read, moved from the next start, restarted into.
+    'data.location': async () => {
+      let freeBytes: number | undefined;
+      let totalBytes: number | undefined;
+      try {
+        const st = await fs.statfs(dirs.root);
+        freeBytes = Number(st.bavail) * Number(st.bsize);
+        totalBytes = Number(st.blocks) * Number(st.bsize);
+      } catch {
+        /* unknown */
+      }
+      return {
+        root: dirs.root,
+        kind: dataLocation.kind,
+        usualRoot: dataLocation.usualRoot,
+        ...(dataLocation.missing ? { missing: dataLocation.missing } : {}),
+        ...(freeBytes !== undefined ? { freeBytes } : {}),
+        ...(totalBytes !== undefined ? { totalBytes } : {}),
+      };
+    },
+    'data.moveTo': async () => {
+      if (dataLocation.kind === 'portable')
+        return {
+          ok: false,
+          message: `this is a portable copy: its data is in ${dirs.root}, beside the app`,
+          restartNeeded: false,
+        };
+      const win = BrowserWindow.getAllWindows()[0];
+      const opts = {
+        title: 'Choose a folder for all WorldView data (an empty folder, or one WorldView already uses)',
+        properties: ['openDirectory', 'createDirectory'] as Array<'openDirectory' | 'createDirectory'>,
+      };
+      const chosen = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts);
+      if (chosen.canceled || !chosen.filePaths[0]) return { ok: false, message: 'cancelled', restartNeeded: false };
+      const r = await moveDataTo(chosen.filePaths[0], dirs.root, dataLocation.usualRoot);
+      if (!r.ok) return { ok: false, message: r.reason, restartNeeded: false };
+      log.info('data folder moved', { kind: r.adopted ? 'adopted' : 'new', carried: r.carried.length });
+      return {
+        ok: true,
+        message: r.adopted
+          ? `WorldView will use the data already in ${chosen.filePaths[0]} from the next start`
+          : `From the next start WorldView keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory and keys were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
+        restartNeeded: true,
+      };
+    },
+    'data.useUsual': async () => {
+      if (dataLocation.kind === 'portable')
+        return { ok: false, message: 'a portable copy always uses the folder beside it', restartNeeded: false };
+      await useUsualData(dataLocation.usualRoot);
+      return {
+        ok: true,
+        message: `From the next start WorldView uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,
+        restartNeeded: dataLocation.kind === 'moved',
+      };
+    },
+    'data.restart': async () => {
+      setTimeout(() => {
+        app.relaunch();
+        app.exit(0);
+      }, 200);
+      return { restarting: true };
     },
     // The operating mode (the Command Center): the start screen's choice opens the doors.
     'mode.state': async () => ({ ...modeState(runtime.core, modeChosen), osOnline: net.isOnline() }),

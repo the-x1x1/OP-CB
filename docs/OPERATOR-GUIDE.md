@@ -112,6 +112,27 @@ check after each step that passes only on what is really there, troubleshooting,
 test. Progress is kept; Restart starts one again. Esc or **Show the map** closes the Command
 Center; the top bar's button or Ctrl+Shift+O opens it.
 
+## Keeping WorldView on an external drive
+
+Command Center → Resources → **Where WorldView keeps its data** shows the folder that holds
+everything WorldView writes — settings, history, saved places, downloaded maps, the inventory,
+stored keys and logs — and the room left there. Two ways to put it all on an external SSD:
+
+- **Move it** (Windows or Linux, app installed as usual): **Keep all WorldView data on a
+  drive…**, choose an empty folder on the drive (or one WorldView already uses) and restart.
+  Settings, places, zones, walkthroughs, the inventory and keys are copied; history and
+  installed packs stay in the old folder — download maps again with **Save to** that drive.
+  If the drive is not plugged in at the next start, WorldView says so and offers this
+  computer's own data instead; it never writes into an empty mount point.
+- **Portable** (Windows): unzip `WorldView-Portable-<version>.zip` onto the drive and make an
+  empty folder named `WorldView-data` beside `WorldView.exe`. That copy keeps everything in that
+  folder and runs from the drive on any Windows computer. It is told about updates rather than
+  updating itself (download the new portable zip). On Linux the `.deb` installs into `/opt`;
+  move the data instead.
+
+Stored keys are encrypted by the operating system for one user on one computer: on another
+computer they are asked for again.
+
 ## Working offline
 
 Settings → Network → **Work offline** makes WorldView ask nothing of the internet, whether

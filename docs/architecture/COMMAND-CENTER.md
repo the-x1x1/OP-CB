@@ -154,3 +154,13 @@ repository, the specification's Protomaps sample archive (Florence, 92 tiles, zo
 extracted whole and in part and every tile read back byte-identical. **Not yet done:** a
 download from the real build server (the container's network refuses it), and a world map
 shipped inside the installer (its size has to be measured first, then the operator decides).
+
+## 9. All data on an external drive (2026-10-30)
+
+Resources → **Where WorldView keeps its data** (`renderer/command-center/data-location-card.tsx`,
+`main/data-location.ts`, ADR-004 amendment): the data folder, its kind and free space; **Keep
+all WorldView data on a drive…** (from the next start; the small user documents are copied,
+history and packs stay; a folder WorldView already uses is adopted unchanged); back to the
+usual folder; restart. A portable copy keeps everything in `WorldView-data` beside the app. A
+moved folder without WorldView's marker (the drive not mounted) is never used: the start asks.
+Tested with temporary folders in the container; not yet in the packaged app on a real SSD.

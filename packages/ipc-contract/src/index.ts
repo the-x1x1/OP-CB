@@ -20,6 +20,8 @@ import type { ViewLink } from './view-link.js';
 import type {
   AiTestAnswer,
   AiTestRequest,
+  DataLocationInfo,
+  DataMoveAnswer,
   GuideProgress,
   LibrarySearchAnswer,
   LocalServiceId,
@@ -1230,6 +1232,16 @@ export interface WorldRequests {
   'maps.download.status': { request: void; response: MapDownloadStatus };
   'maps.download.cancel': { request: void; response: MapDownloadStatus };
 
+  /**
+   * (additive, 2026-10-30) Where all of WorldView's data lives (main data-location.ts): read it,
+   * move it to a folder the operator picks (from the next start), go back to the usual folder,
+   * restart to apply. Only the desktop app moves anything.
+   */
+  'data.location': { request: void; response: DataLocationInfo };
+  'data.moveTo': { request: void; response: DataMoveAnswer };
+  'data.useUsual': { request: void; response: DataMoveAnswer };
+  'data.restart': { request: void; response: { restarting: boolean } };
+
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
   'field.status': { request: void; response: FieldHostStatus };
@@ -1470,6 +1482,10 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'maps.download.start',
   'maps.download.status',
   'maps.download.cancel',
+  'data.location',
+  'data.moveTo',
+  'data.useUsual',
+  'data.restart',
   'offline.status',
   'field.status',
   'offline.installPack',

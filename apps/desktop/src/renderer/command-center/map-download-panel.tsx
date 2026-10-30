@@ -6,6 +6,8 @@ import { useCC } from './use-cc.js';
 
 /** What each level of detail shows, in the words of what can be seen on it. */
 const WORLD_ZOOMS: ReadonlyArray<[number, string]> = [
+  [3, 'Continents, countries, capitals (smallest)'],
+  [4, 'Countries and the largest cities'],
   [5, 'Countries, big cities, motorways'],
   [6, 'Cities and main roads'],
   [7, 'Towns and major roads'],

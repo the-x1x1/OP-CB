@@ -441,3 +441,29 @@ export interface MapDownloadStatus {
   installed?: { id: string; name: string };
   message?: string;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Where WorldView keeps its data
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * The data folder: `usual` (the system's application-data folder), `portable` (a
+ * `WorldView-data` folder next to the app, which travels with the drive) or `moved` (a folder
+ * the operator chose, on an external drive say). `missing` when the moved folder could not be
+ * used at start and this computer's own data was used instead.
+ */
+export interface DataLocationInfo {
+  root: string;
+  kind: 'usual' | 'portable' | 'moved';
+  usualRoot: string;
+  missing?: { path: string; reason: string };
+  freeBytes?: number;
+  totalBytes?: number;
+}
+
+export interface DataMoveAnswer {
+  ok: boolean;
+  message: string;
+  /** The change takes effect at the next start. */
+  restartNeeded: boolean;
+}

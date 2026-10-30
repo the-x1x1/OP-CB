@@ -30,6 +30,7 @@ import {
   useAddStarter,
 } from './widgets.js';
 import { MapDownloadPanel } from './map-download-panel.js';
+import { DataLocationCard } from './data-location-card.js';
 import './command-center.css';
 
 /** One empty list for selectors: a new [] each read would never settle. */
@@ -824,6 +825,7 @@ function Resources() {
   return (
     <div className="wv-cc-section">
       <SectionHead id="resources" />
+      <DataLocationCard />
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">World packs</h3>
         <PackList />
