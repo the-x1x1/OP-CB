@@ -1,4 +1,4 @@
-# Known limitations — 0.7.1
+# Known limitations — 0.7.2
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -354,6 +354,24 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## 0.7.2
+
+- An installation from before 0.7.2 does not update into it (new application id): install
+  OP-CB once by hand. Uninstall the earlier program first: both put an `OP-CB` shortcut in the
+  Start menu, and uninstalling the earlier one afterwards removes the new one's shortcut
+  (reinstalling OP-CB brings it back). Its uninstaller leaves the data alone.
+- An earlier copy that updates itself may install OP-CB beside itself; the earlier program then
+  stays installed until it is uninstalled.
+- On Linux, API keys saved before 0.7.2 are asked for again: the keyring files the encryption key
+  under the program's name, which changed. On Windows they carry over.
+- Old `worldview://` links are not opened by OP-CB; MCP clients and scripts that used the local
+  API need its new names (`opcb_*`, `opcb-mcp.cjs`, `OPCB_API`).
+- Identifiers inside data already on disk keep their old spelling and are never shown: pack
+  signature and format tags, the seed and reference sources' ids, and the source id of derived
+  events in history.
+- The data move was checked in the build container with real folders, not yet on Windows with
+  the earlier program installed.
 
 ## 0.7.1
 

@@ -1,7 +1,7 @@
 {
   "name": "@opcb/desktop",
   "productName": "OP-CB",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "description": "OP-CB desktop application: Electron main + preload + Vite/React renderer shell.",
   "license": "MIT",

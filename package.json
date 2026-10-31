@@ -1,6 +1,6 @@
 {
   "name": "opcb",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "description": "OP-CB — a local-first browser for the physical world (live, historical, offline).",
   "license": "MIT",
