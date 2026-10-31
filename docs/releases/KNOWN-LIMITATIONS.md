@@ -189,7 +189,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   show on the satellite layers regardless.
 - Warnings (tornado, severe thunderstorm, flash flood, hurricane) come from the NWS alerts
   source, on by default. Without a contact of your own the User-Agent api.weather.gov asks
-  for names WorldView's project page; if the service ever refuses it, set a contact in
+  for names OP-CB's project page; if the service ever refuses it, set a contact in
   Sources.
 - Storm reports (tornado, hail, thunderstorm wind) come from the NWS local storm reports
   map service, not from SPC's own daily list, and show only what that service holds. On
@@ -221,20 +221,20 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   clip, not as live.
 - Camera catalogues added on 2026-09-27 (Illinois, Spain, Washington State, Lithuania, and
   the 511 sites of New York State, Utah, Arizona, Georgia and Idaho) were built from their
-  published shapes and checked by reading one answer each, not by running WORLDVIEW against
+  published shapes and checked by reading one answer each, not by running OP-CB against
   them; the 511 catalogues need a key and were not fetched at all. Illinois' list is read
   and drawn on the reference laptop (about 2,100 cameras on 2026-09-29); its ~900 Lake County
   PASSAGE views are left out, since that agency's own image host publishes no reuse terms. A
   changed shape shows as `camera pack failed` or `rejected camera rows` in app.log, and the
   other packs carry on.
-- HLS plays with Chromium's own HLS player, which WORLDVIEW switches on at startup
+- HLS plays with Chromium's own HLS player, which OP-CB switches on at startup
   (`BuiltInHlsPlayer`); whether this build's Chromium honoured that is logged as
   `renderer media` in app.log. Where it cannot, the panel says so and the stills remain. No
   third-party player is bundled. WebRTC streams do not play in the window.
 - Worldpacks are integrity-checked and can be signed (Ed25519), but no publisher ships with
   the app: you decide whose packs to trust (docs/OFFLINE-PACKS.md §4a).
 - Aircraft come from adsb.lol, which answers only "within 250 nm of a point" or "every
-  aircraft of one type", and at a rate it does not publish. WorldView finds that rate as it
+  aircraft of one type", and at a rate it does not publish. OP-CB finds that rate as it
   goes (four to six requests a minute; less after a 429), so a region is filled in circle by
   circle: over the contiguous United States or Europe the busiest airspace is on the map
   within two or three minutes, the whole view within about ten, and an aircraft's position
@@ -253,12 +253,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   minute, 7600 and 7500 every fourth), so an emergency is noticed within about two minutes of
   the aircraft squawking it, and a 7600 or 7500 within about four.
 - adsb.lol has no API key, token or feeder tier today (its documentation says one will be
-  required "in the future"), so there is nothing to enter to raise the rate; WorldView
+  required "in the future"), so there is nothing to enter to raise the rate; OP-CB
   identifies itself with its own User-Agent. If adsb.lol starts requiring a key, aircraft
   positions stop until support for it is added.
 - A selected aircraft's earlier track is filled in from the trace file adsb.lol's own map
   uses (`adsb.lol/data/traces/…`), which is not part of its documented API: if adsb.lol
-  moves or blocks it, the track is WORLDVIEW's own recording only, with nothing said beyond
+  moves or blocks it, the track is OP-CB's own recording only, with nothing said beyond
   the missing "Filled in" line. Only ICAO addresses are looked up (not TIS-B `~` addresses).
 - A selected flight's route is the planned route adsb.lol's route database holds for its
   callsign — a schedule, not today's flight plan. A charter, a diversion, a positioning
@@ -293,7 +293,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   formats and have not yet been run against real hardware.
 - deck.gl is not used: the native adapters meet the performance targets, and a second
   renderer would add risk without evidence (ADR-008).
-- Pass alerts come only while WorldView is running, need a home view, and are as good as the
+- Pass alerts come only while OP-CB is running, need a home view, and are as good as the
   element set the passes are worked out from (minutes off for one several days old); a pass
   is looked for up to three hours ahead, every twenty minutes.
 - The Sky tab is the sky now, from the satellites the CelesTrak groups loaded in Sources (not
@@ -327,7 +327,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   prerelease suffix, so an ordinary semver range such as `>=1.2.0` matches nothing at
   all and fails the install. Moving to the `1.5.x` line means changing the pin, not the
   range.
-- Connector definitions (sources as data) load from `%APPDATA%\@worldview\desktop\connectors\`.
+- Connector definitions (sources as data) load from `%APPDATA%\OP-CB\connectors\`.
   Sources shows them in its Definitions section (reload, switch, reasons a file was
   refused) and Add source drafts one from an https address; editing a definition's JSON is
   still done in your own editor.
@@ -362,10 +362,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## 0.7.0
 
-- The rename to OP-CB is in everything shown, not in file names: the installer, the portable
-  zip and the program are still `WorldView-Setup-<version>.exe`, `WorldView-Portable-<version>.zip`
-  and `WorldView.exe`, Task Manager still says WorldView, and the data folder, `worldview://`
-  links and the update channel keep their names so installed copies upgrade and keep their data.
+- The rename to OP-CB was in everything shown, not yet in file names, the program, the data
+  folder or the links (all renamed in 0.7.2).
 - The new look was checked in the browser demo only; the 3D globe and 2D map keep their own
   colours.
 
@@ -395,13 +393,13 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   project's documented answers and tested against them, not against running copies; the
   Meshtastic test message was tested against encoded frames, not a radio. Each walkthrough's
   final test is the proof on real equipment. `HARDWARE_REQUIRED`
-- Offline mode stops WorldView's own requests only; services you run beside it (Ollama, a
+- Offline mode stops OP-CB's own requests only; services you run beside it (Ollama, a
   library server) are not stopped from reaching the internet by it.
 - Map downloads were tested against a fake build server and the PMTiles sample archive, not
   yet against Protomaps' real builds. Only one map pack is drawn at a time (the newest); an
   area download includes the world at lower detail for that reason. No world map is shipped
   inside the installer yet.
-- The Command Center is dark only, like the rest of WorldView.
+- The Command Center is dark only, like the rest of OP-CB.
 - Library pages open in your browser, one book is searched at a time, and "Ask with your
   library" gives the model search excerpts rather than whole articles.
 - Until a mode is chosen on the start screen nothing is asked of the internet: sources show
@@ -427,7 +425,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - An alert from a source read by area (wildfire perimeters, which follow the view) is not ended
   when the view moves away from it: only a complete read of a source ends what it leaves out.
   Such an alert ends when its reading goes stale.
-- A river gauge in flood is dated from when WORLDVIEW first saw it in flood (NWPS gives no
+- A river gauge in flood is dated from when OP-CB first saw it in flood (NWPS gives no
   onset); after a restart, from the first reading then.
 - River gauges whose flood stage is under 0.15 ft are left out as placeholders; a real gauge with
   a flood stage that low would be left out too.

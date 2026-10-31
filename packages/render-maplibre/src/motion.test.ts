@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ManualScheduler, type RenderFeature } from '@worldview/render-core';
+import { ManualScheduler, type RenderFeature } from '@opcb/render-core';
 import { MotionModel2D, motionStepMs2d } from './motion.js';
 import { MapLibreWorldRenderer, movingLayerId } from './renderer.js';
 import { createFakeMapLibre, fakeImageCanvasFactory } from './testing/fake-maplibre.js';

@@ -1,6 +1,6 @@
 ### Added
 
-- **Readings: a sensor's values over time** (`@worldview/telemetry`, the context panel's
+- **Readings: a sensor's values over time** (`@opcb/telemetry`, the context panel's
   Readings section; guide in `docs/connectors/telemetry.md`; shown in the app once the
   section's import lands, the phase's amendment request R1). Selecting a weather station
   or a sensor plots its readings — temperature, humidity, pressure and wind for a

@@ -1,4 +1,4 @@
-# @worldview/camera-gateway
+# @opcb/camera-gateway
 
 Implements ADR-009. Everything camera-related that the main process does: registering
 user cameras, fetching frames, relaying streams to the renderer, and resolving the
@@ -18,7 +18,7 @@ frame URLs of public cameras. No discovery scanning, no recognition, no retentio
 
 ## Public camera frames: the flow
 
-Providers only import `@worldview/world-model` and `@worldview/provider-sdk`, so the
+Providers only import `@opcb/world-model` and `@opcb/provider-sdk`, so the
 `public-cameras` provider cannot register frame URLs with this package directly.
 Instead:
 
@@ -31,7 +31,7 @@ Instead:
    no credentials, exact host) — defence in depth; a test asserts the gateway list equals
    the provider's pack definitions.
 4. `camera.snapshot { cameraId: 'public:fintraffic:C0150201' }` → `CameraHub.snapshot()`
-   → fetch with WORLDVIEW's own User-Agent → magic-byte check → bytes to the renderer.
+   → fetch with OP-CB's own User-Agent → magic-byte check → bytes to the renderer.
    If the host refuses (401/403) or answers with a non-image placeholder, the frame is
    reported unavailable (`UPSTREAM_REFUSED` / `NOT_AN_IMAGE`). The gateway never
    impersonates a browser.

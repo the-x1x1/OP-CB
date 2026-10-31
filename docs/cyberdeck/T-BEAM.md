@@ -1,8 +1,8 @@
 # Your own Meshtastic node over USB: LilyGO T-Beam
 
-Plug a Meshtastic node into the cyberdeck by USB and WORLDVIEW reads it directly: the mesh's
+Plug a Meshtastic node into the cyberdeck by USB and OP-CB reads it directly: the mesh's
 nodes on the map, and **this computer's own position from the node's GPS**, with no phone, no
-`meshtasticd` and no network. Receive and read only: WORLDVIEW sends the node two requests (its
+`meshtasticd` and no network. Receive and read only: OP-CB sends the node two requests (its
 node list, and a heartbeat every five minutes) and nothing else. It never transmits on the mesh,
 never sends or reads text messages, and never scans for devices.
 
@@ -13,14 +13,14 @@ the board, with the real `stty` line set-up. **A real T-Beam on the P16s is not 
 
 ## 1. The port
 
-Plug the T-Beam in (a data cable, not a charge-only one). WORLDVIEW → Settings → **Diagnostics**
+Plug the T-Beam in (a data cable, not a charge-only one). OP-CB → Settings → **Diagnostics**
 lists each USB serial port by its bridge chip:
 
 | Diagnostics says                                      | Fix                                                                        |
 | ----------------------------------------------------- | -------------------------------------------------------------------------- |
 | nothing about a serial port                           | `ls -l /dev/serial/by-id` — empty means no port: try another cable or port |
 | "… this user cannot open it. Add yourself to dialout" | `sudo usermod -aG dialout $USER`, then log out and back in                 |
-| "Silicon Labs CP210x USB-serial at /dev/ttyUSB0 …"    | Ready. The line ends with the path to paste into WORLDVIEW                 |
+| "Silicon Labs CP210x USB-serial at /dev/ttyUSB0 …"    | Ready. The line ends with the path to paste into OP-CB                     |
 
 T-Beams carry a CP210x (older boards) or a CH9102 bridge; the T-Beam S3 uses the ESP32-S3's own
 USB. Diagnostics names the bridge, never the board: a CP210x could be anything.
@@ -31,24 +31,24 @@ things in a different order; the by-id name does not.
 Only one program can use the port. Close the Meshtastic web client, `meshtastic` CLI, or
 `meshtasticd` pointed at it first.
 
-## 2. WORLDVIEW
+## 2. OP-CB
 
 Settings → Sources → **Meshtastic mesh (your node over USB or TCP)** → _Node plugged in by USB_:
 `/dev/serial/by-id/usb-…` (as Diagnostics printed it). Turn the source on.
 
-WORLDVIEW opens exactly that path, and only if it is a USB serial device (`/dev/ttyUSB<n>` or
+OP-CB opens exactly that path, and only if it is a USB serial device (`/dev/ttyUSB<n>` or
 `/dev/ttyACM<n>`, directly or through a by-id link). It sets the line to 115200 baud, raw, with
 `-hupcl` so closing the port does not toggle the line that resets an ESP32 board.
 
-| Sources says                                  | Meaning                                                          |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| LIVE, "waiting for the node list"             | Connected; the node is sending its list                          |
-| LIVE, "N nodes on the mesh …; this node: …"   | Working. The end of the line is this computer's GPS state        |
-| OFFLINE, "nothing is plugged in at …"         | The path does not exist: plugged in? right name?                 |
-| OFFLINE, "this user cannot open …"            | The dialout group (step 1)                                       |
-| OFFLINE, "… is in use by another program"     | Close the other client                                           |
-| OFFLINE, "the Meshtastic node on … went away" | Unplugged or reset; WORLDVIEW reconnects by itself (5 s → 1 min) |
-| ERROR, "… is not a USB serial device"         | The path is not a USB serial port; WORLDVIEW will not open it    |
+| Sources says                                  | Meaning                                                      |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| LIVE, "waiting for the node list"             | Connected; the node is sending its list                      |
+| LIVE, "N nodes on the mesh …; this node: …"   | Working. The end of the line is this computer's GPS state    |
+| OFFLINE, "nothing is plugged in at …"         | The path does not exist: plugged in? right name?             |
+| OFFLINE, "this user cannot open …"            | The dialout group (step 1)                                   |
+| OFFLINE, "… is in use by another program"     | Close the other client                                       |
+| OFFLINE, "the Meshtastic node on … went away" | Unplugged or reset; OP-CB reconnects by itself (5 s → 1 min) |
+| ERROR, "… is not a USB serial device"         | The path is not a USB serial port; OP-CB will not open it    |
 
 Serial ports are read on Linux. On Windows, use the node's network API (the _Node on your
 network_ setting) as before.
@@ -61,7 +61,7 @@ The node plugged in is **this node**. Its own GPS is this computer's position; n
   reads e.g. "this node: Deck (LilyGO T-Beam), battery 76%, GPS fix (3D, 8 satellites), 10 s
   old, ±3.6 m". The node is drawn there, dated by the fix, and its details panel shows _Your
   position_. Accuracy is shown only when the receiver reports enough to work it out (its
-  accuracy figure × HDOP); WORLDVIEW never makes one up from a DOP alone.
+  accuracy figure × HDOP); OP-CB never makes one up from a DOP alone.
 - **STALE**: the last fix is more than five minutes old. Still drawn where it was, labelled with
   its age; the details panel works the age out live, so an open panel goes STALE by itself.
 - **Fix of unknown age**: the fix is dated ahead of this computer's clock (a deck that has been
@@ -84,7 +84,7 @@ or after the board has been off for days). Indoors, often never.
 
 ## 4. Privacy
 
-The mesh carries other people's precise positions. WORLDVIEW shows them on the map while you are
+The mesh carries other people's precise positions. OP-CB shows them on the map while you are
 connected and **does not record them in movement history**; recording mesh tracks would be a
 separate, opt-in feature. Text messages are never read, kept, or shown.
 
@@ -99,10 +99,10 @@ this change; they age out under the history size cap, or go when history is clea
    phone's. Screenshot of the map and the details panel.
 4. Indoors (or antenna covered) until the node reports no fix: "NO FIX", the node not on the
    map. Record how long the node took to report it.
-5. Unplug: OFFLINE "went away"; replug: LIVE again without restarting WORLDVIEW.
-6. `~/.config/@worldview/desktop/logs/app.log`: `Meshtastic node connected {"via":"usb", …}`.
+5. Unplug: OFFLINE "went away"; replug: LIVE again without restarting OP-CB.
+6. `~/.config/OP-CB/logs/app.log`: `Meshtastic node connected {"via":"usb", …}`.
 
 Things only hardware can answer, recorded at H10: whether the node streams its own position to a
-USB client as often as its GPS updates (WORLDVIEW counts a fix older than five minutes as STALE),
+USB client as often as its GPS updates (OP-CB counts a fix older than five minutes as STALE),
 how the firmware version on the board reports a lost fix, and whether opening the port resets
 the board.

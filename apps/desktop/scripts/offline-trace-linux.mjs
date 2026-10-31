@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Does WorldView, told to work offline, try to reach anything but this computer? Linux only.
+ * Does OP-CB, told to work offline, try to reach anything but this computer? Linux only.
  *
  *   node apps/desktop/scripts/offline-trace-linux.mjs <executable> [--seconds 60] [--out file.json] [--control]
  *
@@ -21,7 +21,7 @@
  * for a name on the network. The result lists both, with the process and address.
  *
  * This measures the app, not the machine's network: it holds whether or not a network is up,
- * and it is the evidence for "WORLDVIEW attempts no WAN connections" (docs/cyberdeck, demo B).
+ * and it is the evidence for "OP-CB attempts no WAN connections" (docs/cyberdeck, demo B).
  * Run it as an ordinary user with a display (xvfb-run -a in a terminal or CI).
  */
 import { spawn, spawnSync } from 'node:child_process';
@@ -48,8 +48,8 @@ if (spawnSync('strace', ['-V']).status !== 0) {
   process.exit(2);
 }
 const seconds = Number(opt('--seconds') ?? 60);
-const profile = mkdtempSync(path.join(tmpdir(), 'worldview-offline-trace-'));
-const appData = path.join(profile, '@worldview', 'desktop');
+const profile = mkdtempSync(path.join(tmpdir(), 'opcb-offline-trace-'));
+const appData = path.join(profile, 'OP-CB');
 const logFile = path.join(appData, 'logs', 'app.log');
 const settingsFile = path.join(appData, 'settings.json');
 const traceFile = path.join(profile, 'connect.trace');

@@ -1,10 +1,10 @@
-import type { ResolvedMapProvider } from '@worldview/render-core';
-import { readMartinBasemap, type MartinBasemap, type MartinResult, type MartinSourceConfig } from '@worldview/offline';
+import type { ResolvedMapProvider } from '@opcb/render-core';
+import { readMartinBasemap, type MartinBasemap, type MartinResult, type MartinSourceConfig } from '@opcb/offline';
 
 /**
  * A Martin tile server as 2D basemaps (offline-basemaps B4): the operator names one of its
  * sources in Settings → Rendering; `map.providers.list` reads its TileJSON
- * (`readMartinBasemap`, packages/offline) and offers it in WORLDVIEW's dark and light styles.
+ * (`readMartinBasemap`, packages/offline) and offers it in OP-CB's dark and light styles.
  *
  * What the map may load is where the renderer's Content Security Policy allows it: this
  * computer (loopback, plain http or https) or any https host. A server elsewhere on the
@@ -57,7 +57,7 @@ export function martinProviderEntries(result: MartinResult<MartinBasemap>): Reso
       minZoom: b.minZoom,
       maxZoom: b.maxZoom,
       bounds: b.bounds,
-      styleId: variant === 'light' ? ('worldview-light' as const) : ('worldview-dark' as const),
+      styleId: variant === 'light' ? ('opcb-light' as const) : ('opcb-dark' as const),
       attribution: b.attribution,
     },
     notes: `${b.tileJsonUrl} · credit from ${b.attributionFrom === 'tilejson' ? 'the TileJSON' : 'Settings'}`,

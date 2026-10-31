@@ -1,6 +1,6 @@
 import type { GraphicsProfile } from './graphics.js';
 import type { VisualStyleId } from './visual-styles.js';
-import type { GeoBounds, GeoPosition, WorldGeometry, FreshnessClass, RasterOverlay } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition, WorldGeometry, FreshnessClass, RasterOverlay } from '@opcb/world-model';
 import type { ReferenceData, ReferenceOptions } from './reference.js';
 import type { ImagerySplit } from './imagery-split.js';
 import type { ModelKind } from './model-credits.js';
@@ -339,10 +339,10 @@ export interface WorldRenderer {
 export type BasemapDescriptor =
   | { kind: 'raster-xyz'; id: string; url: string; attribution: string; maxZoom: number; tileSize?: number }
   | { kind: 'vector-style'; id: string; styleUrl: string; attribution: string }
-  | { kind: 'pmtiles'; id: string; url: string; styleId: 'worldview-dark' | 'worldview-light'; attribution: string }
+  | { kind: 'pmtiles'; id: string; url: string; styleId: 'opcb-dark' | 'opcb-light'; attribution: string }
   /**
    * Vector tiles in the Protomaps basemap schema from a tile server (a local Martin,
-   * offline-basemaps B4), drawn with WORLDVIEW's own styles. 2D only.
+   * offline-basemaps B4), drawn with OP-CB's own styles. 2D only.
    */
   | {
       kind: 'vector-tiles';
@@ -351,7 +351,7 @@ export type BasemapDescriptor =
       minZoom: number;
       maxZoom: number;
       bounds?: { west: number; south: number; east: number; north: number };
-      styleId: 'worldview-dark' | 'worldview-light';
+      styleId: 'opcb-dark' | 'opcb-light';
       attribution: string;
     }
   | { kind: 'cesium-natural-earth'; id: string; attribution: string }

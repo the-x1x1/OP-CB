@@ -1,4 +1,4 @@
-import type { EventChannel, WorldEvents } from '@worldview/ipc-contract';
+import type { EventChannel, WorldEvents } from '@opcb/ipc-contract';
 import type { RequestHandlers, WorldRuntime } from './contract.js';
 import { RuntimeCore } from './core.js';
 import { createHandlers } from './handlers.js';

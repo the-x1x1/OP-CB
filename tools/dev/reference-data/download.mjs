@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Download the source files behind WORLDVIEW's reference layer (borders and place names)
+ * Download the source files behind OP-CB's reference layer (borders and place names)
  * and the 2D label glyphs, and record exactly what was fetched.
  *
  *   node tools/dev/reference-data/download.mjs <out-dir>

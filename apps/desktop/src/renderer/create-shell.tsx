@@ -1,10 +1,10 @@
 import { StrictMode, type ReactNode } from 'react';
-import type { WorldClient } from '@worldview/ipc-contract';
+import type { WorldClient } from '@opcb/ipc-contract';
 import { StoreProvider } from './store/store.js';
 import { Shell } from './shell.js';
 import type { RendererHostLike } from './renderer-host-like.js';
 import type { RootState } from './store/types.js';
-import '@worldview/ui/base.css';
+import '@opcb/ui/base.css';
 import './brand/brand.css';
 
 export interface CreateShellOptions {

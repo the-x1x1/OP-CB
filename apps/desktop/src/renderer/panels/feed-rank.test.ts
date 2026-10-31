@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { FeedItem } from '@worldview/ipc-contract';
+import type { FeedItem } from '@opcb/ipc-contract';
 import { isTornadoWarning, rankFeed, relevance } from './feed-rank.js';
 
 const NOW = Date.parse('2026-09-23T12:00:00.000Z');

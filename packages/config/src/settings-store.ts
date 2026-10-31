@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { AppSettings } from '@worldview/ipc-contract';
-import { formatIssues, s, type SchemaIssue } from '@worldview/world-model';
-import { TypedEmitter, silentLogger, type Logger } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
+import type { AppSettings } from '@opcb/ipc-contract';
+import { formatIssues, s, type SchemaIssue } from '@opcb/world-model';
+import { TypedEmitter, silentLogger, type Logger } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
 import {
   DEFAULT_SETTINGS,
   appSettingsSchema,

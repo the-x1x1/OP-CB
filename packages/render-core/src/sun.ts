@@ -13,7 +13,7 @@
  * finer is worth its cost.
  */
 
-import { subsolarPoint, wrap180Deg as wrap180, type SubsolarPoint } from '@worldview/world-model';
+import { subsolarPoint, wrap180Deg as wrap180, type SubsolarPoint } from '@opcb/world-model';
 
 export { subsolarPoint, type SubsolarPoint };
 

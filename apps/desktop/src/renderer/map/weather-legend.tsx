@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import type { RasterOverlay, WorldObject } from '@worldview/world-model';
+import type { RasterOverlay, WorldObject } from '@opcb/world-model';
 import {
   CYCLONE_CATEGORIES,
   CYCLONE_CATEGORY_SHORT,
@@ -7,7 +7,7 @@ import {
   cycloneOf,
   hazardStyle,
   themeEntry,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import { useAppState } from '../store/store.js';
 
 /**

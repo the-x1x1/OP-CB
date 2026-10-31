@@ -1,11 +1,6 @@
-import { systemClock, type Clock } from '@worldview/world-model';
-import { silentLogger, type Logger } from '@worldview/core';
-import type {
-  CameraRegistration,
-  CameraSnapshot,
-  CameraSourceInput,
-  CameraStreamDescriptor,
-} from '@worldview/ipc-contract';
+import { systemClock, type Clock } from '@opcb/world-model';
+import { silentLogger, type Logger } from '@opcb/core';
+import type { CameraRegistration, CameraSnapshot, CameraSourceInput, CameraStreamDescriptor } from '@opcb/ipc-contract';
 import { CameraError, errorForStatus, toCameraError } from './errors.js';
 import { assertImage, firstJpegFrame } from './image.js';
 import { CameraHealthTracker } from './health.js';
@@ -52,7 +47,7 @@ export interface CameraHubStatus {
  *    not configured), http(s) → direct;
  *  - `snapshot()` / `stream()` by id shape: a 12-hex camera id → the gateway that
  *    registered it; a `public:<pack>:<cameraId>` media ref → the public-frame allowlist.
- * Public frames are fetched with WORLDVIEW's own User-Agent. If a host refuses that
+ * Public frames are fetched with OP-CB's own User-Agent. If a host refuses that
  * (or answers with a non-image placeholder) the frame is reported unavailable — the
  * gateway never impersonates a browser.
  */

@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * A minimal consumer of WORLDVIEW's local read-only API (docs/adr/ADR-014-local-api.md): the
+ * A minimal consumer of OP-CB's local read-only API (docs/adr/ADR-014-local-api.md): the
  * example a separate program — Formicaria, later — can start from. Node's own http client over
  * the Unix socket; no dependencies.
  *
  *   node consumer.mjs                                   # GET /v1
  *   node consumer.mjs /v1/objects?lat=21.3&lon=-157.9&radiusKm=50&type=aircraft
- *   node consumer.mjs /v1/own-position --socket /run/user/1000/worldview/api.sock
+ *   node consumer.mjs /v1/own-position --socket /run/user/1000/opcb/api.sock
  *
  * Or from code: `import { getJson } from './consumer.mjs'`.
  *
- * The socket is `$XDG_RUNTIME_DIR/worldview/api.sock`, there only while WORLDVIEW runs with
+ * The socket is `$XDG_RUNTIME_DIR/opcb/api.sock`, there only while OP-CB runs with
  * Settings → Local API turned on, and only this user can open it. Every answer is JSON; an
  * error is `{ "error": { "code", "message" } }` with a 4xx/5xx status.
  */
@@ -20,10 +20,10 @@ import { pathToFileURL } from 'node:url';
 
 export function defaultSocket(env = process.env) {
   if (!env.XDG_RUNTIME_DIR) throw new Error('XDG_RUNTIME_DIR is not set: no session to find the socket in');
-  return path.join(env.XDG_RUNTIME_DIR, 'worldview', 'api.sock');
+  return path.join(env.XDG_RUNTIME_DIR, 'opcb', 'api.sock');
 }
 
-/** GET a path; resolves `{ status, body }` (body parsed as JSON). Rejects if WORLDVIEW is not there. */
+/** GET a path; resolves `{ status, body }` (body parsed as JSON). Rejects if OP-CB is not there. */
 export function getJson(apiPath, { socketPath = defaultSocket(), timeoutMs = 5000 } = {}) {
   return new Promise((resolve, reject) => {
     const req = http.request({ socketPath, path: apiPath, method: 'GET', timeout: timeoutMs }, (res) => {
@@ -47,7 +47,7 @@ export function getJson(apiPath, { socketPath = defaultSocket(), timeoutMs = 500
     req.on('error', (err) =>
       reject(
         err.code === 'ENOENT' || err.code === 'ECONNREFUSED'
-          ? new Error('WORLDVIEW is not running, or its local API is off (Settings → Local API)')
+          ? new Error('OP-CB is not running, or its local API is off (Settings → Local API)')
           : err.code === 'EACCES'
             ? new Error('this user may not open the socket (it belongs to another user)')
             : err,

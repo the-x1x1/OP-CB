@@ -1,4 +1,4 @@
-import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@worldview/connector-sdk';
+import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import { RestJsonProvider, validateRestJson } from './rest-json.js';
 
 /**

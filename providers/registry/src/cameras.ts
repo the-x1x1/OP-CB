@@ -1,10 +1,10 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import { createProvider as createCamerasLocal } from '@worldview/provider-cameras-local';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import { createProvider as createCamerasLocal } from '@opcb/provider-cameras-local';
 import {
   createProvider as createPublicCameras,
   createUnverifiedProvider as createUnverifiedCameras,
   createSingaporeProvider as createSingaporeCameras,
-} from '@worldview/provider-cctv-public';
+} from '@opcb/provider-cctv-public';
 
 /**
  * Camera workstream factories (partial registry map). The registry index merges the

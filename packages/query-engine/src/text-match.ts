@@ -1,4 +1,4 @@
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
 
 /**
  * Free-text matching for WorldQuery.text: every token must be a case-insensitive

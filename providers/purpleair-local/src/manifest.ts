@@ -1,10 +1,10 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * A PurpleAir air-quality sensor on the user's own network, read from the JSON the sensor
  * itself serves (`GET http://<address>/json` — two-minute averages; field reference:
  * https://community.purpleair.com/t/sensor-json-documentation/6917). The readings are the
- * user's own device's: WORLDVIEW does not use PurpleAir's cloud API, its map or its data
+ * user's own device's: OP-CB does not use PurpleAir's cloud API, its map or its data
  * licence, needs no key, and uploads nothing.
  *
  * Off by default and inert until the user names the sensor's address — the one LAN host this

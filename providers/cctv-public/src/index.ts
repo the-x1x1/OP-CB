@@ -1,4 +1,4 @@
-import type { JsonValue, Observation } from '@worldview/world-model';
+import type { JsonValue, Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -8,7 +8,7 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { PUBLIC_CAMERAS_MANIFEST } from './manifest.js';
 import { fintrafficPack } from './packs/fintraffic.js';
 import { nswPack } from './packs/nsw.js';

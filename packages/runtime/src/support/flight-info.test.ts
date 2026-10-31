@@ -4,7 +4,7 @@ import { mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { FlightRouteAnswer } from '@worldview/provider-sdk';
+import type { FlightRouteAnswer } from '@opcb/provider-sdk';
 import {
   AVIATION_REFERENCE_FILE,
   EMPTY_REFERENCE,

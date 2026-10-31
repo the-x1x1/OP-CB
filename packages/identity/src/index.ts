@@ -1,7 +1,7 @@
-import { Ids, isAuthoritativeId, makeObjectId, type Observation } from '@worldview/world-model';
+import { Ids, isAuthoritativeId, makeObjectId, type Observation } from '@opcb/world-model';
 
 /**
- * @worldview/identity — deterministic cross-source identity resolution (ADR-011).
+ * @opcb/identity — deterministic cross-source identity resolution (ADR-011).
  *
  * An observation maps to exactly one WorldObject id through an explicit, tested
  * rule. Allowed joins are authoritative identifiers only:

@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/provider-ais",
+  "name": "@opcb/provider-ais",
   "version": "0.1.0",
   "private": true,
   "description": "Vessels: AISStream.io live AIS websocket (user-supplied API key; manual legal review required) and Fintraffic Digitraffic Marine AIS (no key, CC BY 4.0, id digitraffic-ais).",
@@ -14,8 +14,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*"
   },
   "sideEffects": false
 }

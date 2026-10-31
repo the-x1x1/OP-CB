@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoBounds, IsoTimestamp, JsonValue, TimeRange } from '@worldview/world-model';
-import { regionBounds } from '@worldview/world-model';
-import { writeFileAtomic } from '@worldview/core/node';
-import { silentLogger, type Logger } from '@worldview/core';
+import type { GeoBounds, IsoTimestamp, JsonValue, TimeRange } from '@opcb/world-model';
+import { regionBounds } from '@opcb/world-model';
+import { writeFileAtomic } from '@opcb/core/node';
+import { silentLogger, type Logger } from '@opcb/core';
 import { HISTORY_ROW_COLUMNS, compactRow, rowToLine, type HistoryRow, type HistoryRowColumn } from './row.js';
 import {
   PartitionIndex,

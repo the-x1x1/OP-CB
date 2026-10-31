@@ -5,7 +5,7 @@ import {
   normalizeLongitude,
   type GeoBounds,
   type JsonValue,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { ADSB_LOL_MAX_RADIUS_NM } from './manifest.js';
 
 /** A point query: centre + radius in nautical miles (adsb.lol `/lat/{lat}/lon/{lon}/dist/{nm}`). */

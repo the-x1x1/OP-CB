@@ -178,7 +178,7 @@ export function scaffoldProvider(o: ScaffoldOptions): ScaffoldResult {
 
   files[`${base}/package.json`] = `${JSON.stringify(
     {
-      name: `@worldview/provider-${o.id}`,
+      name: `@opcb/provider-${o.id}`,
       version: '0.1.0',
       private: true,
       description: `${o.name} (scaffolded GeoJSON point feed). Licence as stated by the source: ${o.licence}.`,
@@ -188,7 +188,7 @@ export function scaffoldProvider(o: ScaffoldOptions): ScaffoldResult {
       types: './src/index.ts',
       exports: { '.': './src/index.ts' },
       scripts: { typecheck: 'tsc -p tsconfig.json' },
-      dependencies: { '@worldview/world-model': 'workspace:*', '@worldview/provider-sdk': 'workspace:*' },
+      dependencies: { '@opcb/world-model': 'workspace:*', '@opcb/provider-sdk': 'workspace:*' },
       sideEffects: false,
     },
     null,
@@ -202,7 +202,7 @@ export function scaffoldProvider(o: ScaffoldOptions): ScaffoldResult {
 }
 `;
 
-  files[`${base}/src/manifest.ts`] = `import type { ProviderManifest } from '@worldview/provider-sdk';
+  files[`${base}/src/manifest.ts`] = `import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * ${c(o.name)} — scaffolded by \`pnpm provider:scaffold\` for a GeoJSON feed of points.
@@ -268,8 +268,8 @@ ${fit('    ', 'url:', q(`https://${host}/`))}
   return opts.receivedAt;`;
 
   files[`${base}/src/normalize.ts`] =
-    `import { isValidLatLon, type JsonValue, type Observation } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
+    `import { isValidLatLon, type JsonValue, type Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { ${C}_MANIFEST } from './manifest.js';
 
 /**
@@ -356,14 +356,14 @@ ${timeBlock}
 }
 `;
 
-  files[`${base}/src/index.ts`] = `import type { Observation } from '@worldview/world-model';
+  files[`${base}/src/index.ts`] = `import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
   assertAtomicAdmission,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 ${named('import', [`${C}_MANIFEST`, `${C}_URL`], './manifest.js')}
 import { normalizeFeed } from './normalize.js';
 
@@ -487,7 +487,7 @@ Reference time: 2026-09-21T08:00:00Z.
   files[`${base}/test/contract/plan.ts`] = `import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { definePlan } from '@worldview/tool-provider-validator';
+import { definePlan } from '@opcb/tool-provider-validator';
 import { createProvider } from '../../src/index.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -525,7 +525,7 @@ export const plan = definePlan({
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runProviderChecklist, formatReport } from '@worldview/tool-provider-validator';
+import { runProviderChecklist, formatReport } from '@opcb/tool-provider-validator';
 import { plan } from './plan.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -569,7 +569,7 @@ test(${q(`${o.id} provider passes the full contract checklist`)}, async () => {
       `Read the terms at https://${host}/ and set the policy in config/licenses/providers.json and providers/${o.id}/src/manifest.ts together.`,
       `Replace fixtures/${o.id}/*.geojson with a recorded response (pnpm provider:record) and adjust the plan's expectations.`,
       `Run: pnpm install && node tools/dev/run-tests.mjs --filter ${o.id}`,
-      `Once the licence record is settled, map @worldview/provider-${o.id} in tsconfig.base.json and add it to providers/registry; until then it is never loaded.`,
+      `Once the licence record is settled, map @opcb/provider-${o.id} in tsconfig.base.json and add it to providers/registry; until then it is never loaded.`,
     ],
   };
 }

@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import { inflateSync } from 'node:zlib';
-import type { GeoBounds } from '@worldview/world-model';
+import type { GeoBounds } from '@opcb/world-model';
 
 /**
  * The first block of an `.osm.pbf` file, read far enough to learn the area the extract

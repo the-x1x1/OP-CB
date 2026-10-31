@@ -1,8 +1,8 @@
 {
-  "name": "@worldview/connector-runtime",
+  "name": "@opcb/connector-runtime",
   "version": "0.1.0",
   "private": true,
-  "description": "The connectors that ship with WORLDVIEW (REST JSON, WebSocket JSON, GeoJSON, CSV) and the registry that turns a definition into a provider.",
+  "description": "The connectors that ship with OP-CB (REST JSON, WebSocket JSON, GeoJSON, CSV) and the registry that turns a definition into a provider.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",
@@ -14,9 +14,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/connector-sdk": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*",
-    "@worldview/world-model": "workspace:*"
+    "@opcb/connector-sdk": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*",
+    "@opcb/world-model": "workspace:*"
   },
   "sideEffects": false
 }

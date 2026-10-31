@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { BenchmarkReport } from '@worldview/render-dense';
+import type { BenchmarkReport } from '@opcb/render-dense';
 import {
   evaluatePresentation,
   measureHistorySnapshot,

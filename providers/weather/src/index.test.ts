@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, testing } from '@worldview/provider-sdk';
+import { ProviderError, testing } from '@opcb/provider-sdk';
 import { NwsAlertsProvider, mapUpstreamError, nwsUserAgent, parseSettings } from './index.js';
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'weather');
@@ -29,7 +29,7 @@ test('requests identify the app to api.weather.gov and ask for GeoJSON', async (
   assert.equal(obs.length, 7);
   const req = ctx.http.requests[0]!;
   assert.equal(req.url, 'https://api.weather.gov/alerts/active?status=actual&message_type=alert,update');
-  assert.equal(req.headers?.['User-Agent'], 'WorldView/0.1 (contact: ops@example.invalid)');
+  assert.equal(req.headers?.['User-Agent'], 'OP-CB/0.1 (contact: ops@example.invalid)');
   assert.equal(req.headers?.['Accept'], 'application/geo+json');
   assert.equal(req.cacheKey, undefined, 'default cache key (the URL) keeps ETag revalidation stable');
   const log = ctx.logger.entries.find((e) => e.message === 'NWS alerts skipped');
@@ -38,11 +38,8 @@ test('requests identify the app to api.weather.gov and ask for GeoJSON', async (
 });
 
 test('without a contact the User-Agent says so instead of pretending', () => {
-  assert.equal(nwsUserAgent(undefined), 'WorldView/0.1 (contact: https://github.com/the-x1x1/oneview)');
-  assert.equal(
-    nwsUserAgent('https://example.invalid/worldview'),
-    'WorldView/0.1 (contact: https://example.invalid/worldview)',
-  );
+  assert.equal(nwsUserAgent(undefined), 'OP-CB/0.1 (contact: https://github.com/the-x1x1/OP-CB)');
+  assert.equal(nwsUserAgent('https://example.invalid/opcb'), 'OP-CB/0.1 (contact: https://example.invalid/opcb)');
   assert.deepEqual(
     parseSettings({ contact: '  ops@example.invalid\r\nX-Injected: 1 ', areas: ['tx', 'OK', 'texas', 'TX', 7] }),
     { contact: 'ops@example.invalid X-Injected: 1', areas: ['TX', 'OK'] },
@@ -121,7 +118,7 @@ test('zone-based alerts are fetched and admitted on the same poll, from the allo
   );
   for (const r of zoneRequests) {
     assert.equal(new URL(r.url).host, 'api.weather.gov', 'zone lookups stay on the manifest-allowlisted host');
-    assert.equal(r.headers?.['User-Agent'], 'WorldView/0.1 (contact: ops@example.invalid)');
+    assert.equal(r.headers?.['User-Agent'], 'OP-CB/0.1 (contact: ops@example.invalid)');
   }
 
   const log = ctx.logger.entries.find((e) => e.message === 'NWS alerts skipped');

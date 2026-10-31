@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldBridge } from '@worldview/ipc-contract';
+import type { WorldBridge } from '@opcb/ipc-contract';
 import { responseToWire, toWire } from '../shared/event-wire.js';
 import { wireClient } from './wire-client.js';
 import { clearDeltaMarks, takeDecodeMax } from './map/delta-marks.js';

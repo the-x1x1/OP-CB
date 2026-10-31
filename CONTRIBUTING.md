@@ -32,7 +32,7 @@ a merge through.
   properties conditionally rather than assigning `undefined`. No unexplained `any`.
 - **Respect the boundaries.** Providers never render or import UI/Electron/raw network.
   Renderers never fetch providers. The UI consumes the typed IPC client only. Packages
-  import each other as `@worldview/<name>`, never by relative path.
+  import each other as `@opcb/<name>`, never by relative path.
 - **Frozen contracts need an ADR.** `world-model`, `provider-sdk`,
   `render-core/contract.ts`, `ipc-contract`, `runtime/contract.ts` and `identity` are
   tagged `architecture-contract-v1`. Changing them means a new or amended ADR in

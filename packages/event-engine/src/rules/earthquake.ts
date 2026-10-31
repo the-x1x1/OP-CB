@@ -9,7 +9,7 @@ import {
   type JsonValue,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { magnitudeSeverity } from '../severity.js';
 import {
   derivedProvenance,

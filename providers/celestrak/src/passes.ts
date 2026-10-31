@@ -1,4 +1,4 @@
-import { subsolarPoint } from '@worldview/world-model';
+import { subsolarPoint } from '@opcb/world-model';
 import type { GpElements } from './elements.js';
 import type { Propagator } from './propagator.js';
 

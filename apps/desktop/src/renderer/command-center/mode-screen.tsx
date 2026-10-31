@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type Ref } from 'react';
-import type { OperatingMode } from '@worldview/ipc-contract';
-import { Button, Icon } from '@worldview/ui';
+import type { OperatingMode } from '@opcb/ipc-contract';
+import { Button, Icon } from '@opcb/ui';
 import { useAppSlice } from '../store/store.js';
 import { useCC } from './use-cc.js';
 

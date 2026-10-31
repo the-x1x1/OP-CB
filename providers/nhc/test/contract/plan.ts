@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { definePlan } from '@worldview/tool-provider-validator';
+import { definePlan } from '@opcb/tool-provider-validator';
 import { createProvider } from '../../src/index.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');

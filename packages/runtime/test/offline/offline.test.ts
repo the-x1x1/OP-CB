@@ -3,18 +3,18 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { testing } from '@worldview/provider-sdk';
-import { HistoryStore, NdjsonBackend } from '@worldview/history-store';
-import { WorldPackBuilder, seedPolicies } from '@worldview/offline';
-import { createProvider as createUsgs } from '@worldview/provider-usgs';
-import { createProvider as createSeedAirports, SEED_AIRPORTS_FILE } from '@worldview/provider-infrastructure';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
-import type { ConnectionSnapshot } from '@worldview/source-health';
+import { testing } from '@opcb/provider-sdk';
+import { HistoryStore, NdjsonBackend } from '@opcb/history-store';
+import { WorldPackBuilder, seedPolicies } from '@opcb/offline';
+import { createProvider as createUsgs } from '@opcb/provider-usgs';
+import { createProvider as createSeedAirports, SEED_AIRPORTS_FILE } from '@opcb/provider-infrastructure';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
+import type { ConnectionSnapshot } from '@opcb/source-health';
 import { fakeHost, fixture, offlineFetch, settle, startRuntime } from '../helpers/harness.js';
 
 /**
- * (ii) Offline proof for the composed runtime (ADR-007). With WORLDVIEW_NETWORK=off and
+ * (ii) Offline proof for the composed runtime (ADR-007). With OPCB_NETWORK=off and
  * every fetch failing:
  *
  *   - the connection state goes OFFLINE and remote providers report OFFLINE
@@ -22,7 +22,7 @@ import { fakeHost, fixture, offlineFetch, settle, startRuntime } from '../helper
  *   - `offline.status` reports the installed pack and the real capabilities
  *   - search still answers from the pack's place index
  */
-process.env['WORLDVIEW_NETWORK'] ??= 'off';
+process.env['OPCB_NETWORK'] ??= 'off';
 
 const USGS_POLICY: ProviderDataPolicy = {
   cacheAllowed: true,
@@ -99,8 +99,8 @@ async function buildHawaiiPack(tmp: string, clock: testing.VirtualClock): Promis
 }
 
 test('offline: the composed runtime goes OFFLINE, keeps local providers answering and searches its packs', async () => {
-  assert.equal(process.env['WORLDVIEW_NETWORK'], 'off');
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-runtime-offline-'));
+  assert.equal(process.env['OPCB_NETWORK'], 'off');
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-offline-'));
   const networkCalls = { count: 0 };
   try {
     const clock = new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z'));
@@ -239,7 +239,7 @@ test('offline: the composed runtime goes OFFLINE, keeps local providers answerin
  * offline, pull the drive, leave its empty mount point behind, plug it back in.
  */
 test('offline: a pack on a data vault is searched offline, reported missing when the drive is pulled, and back when it returns', async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-runtime-vault-'));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-vault-'));
   const networkCalls = { count: 0 };
   try {
     const clock = new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z'));
@@ -320,7 +320,7 @@ test('offline: a pack on a data vault is searched offline, reported missing when
         undefined,
       );
       assert.ok((await fs.stat(path.join(drive, 'worldpacks', 'hawaii', 'manifest.json'))).isFile());
-      assert.ok((await fs.stat(path.join(drive, '.worldview-vault.json'))).isFile());
+      assert.ok((await fs.stat(path.join(drive, '.opcb-vault.json'))).isFile());
       assert.equal(networkCalls.count, 0, 'nothing asked of the network');
     } finally {
       await h.dispose();
@@ -330,8 +330,8 @@ test('offline: a pack on a data vault is searched offline, reported missing when
   }
 });
 
-test('offline: WorldView starts and stops normally with its data vault absent, and finds it again', async () => {
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-runtime-vault-start-'));
+test('offline: OP-CB starts and stops normally with its data vault absent, and finds it again', async () => {
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-vault-start-'));
   try {
     const clock = new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z'));
     const packPath = await buildHawaiiPack(tmp, clock);

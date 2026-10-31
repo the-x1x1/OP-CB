@@ -1,4 +1,4 @@
-import type { MapBuildInfo } from '@worldview/ipc-contract';
+import type { MapBuildInfo } from '@opcb/ipc-contract';
 import type { RangeSource } from './pmtiles-extract.js';
 
 /**

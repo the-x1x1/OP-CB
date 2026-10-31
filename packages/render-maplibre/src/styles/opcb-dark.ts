@@ -1,8 +1,8 @@
-import type { BasemapDescriptor } from '@worldview/render-core';
+import type { BasemapDescriptor } from '@opcb/render-core';
 import type { Expr, LayerSpec, MapStyle } from './spec.js';
 
 /**
- * WORLDVIEW basemap styles, written as typed objects for the Protomaps
+ * OP-CB basemap styles, written as typed objects for the Protomaps
  * "basemaps" tile schema (v4: layers earth, landuse, natural, water, buildings,
  * roads, transit, boundaries, places, pois, physical_line, physical_point; each
  * feature carries `kind`). Worldpacks are Protomaps extracts, so one style serves
@@ -77,7 +77,7 @@ export const LIGHT_PALETTE: StylePalette = {
   peakText: '#4b5563',
 };
 
-export interface WorldviewStyleOptions {
+export interface OpcbStyleOptions {
   /** `pmtiles://<url-or-path>` or a tile-json url for the Protomaps basemap tiles. */
   sourceUrl?: string;
   /** Tile templates instead of `sourceUrl` (a Martin source, read from its TileJSON by the runtime). */
@@ -97,10 +97,10 @@ export interface WorldviewStyleOptions {
 export const BASEMAP_SOURCE_ID = 'basemap';
 /**
  * The glyphs the desktop app bundles (apps/desktop/assets/fonts, Noto Sans Regular, OFL),
- * served from the page's own origin. This used to be `worldview://fonts/…`, a host the
+ * served from the page's own origin. This used to be `opcb://fonts/…`, a host the
  * app protocol never answered, so every text layer in 2D had nothing to draw with.
  */
-export const DEFAULT_GLYPHS_URL = 'worldview://app/fonts/{fontstack}/{range}.pbf';
+export const DEFAULT_GLYPHS_URL = 'opcb://app/fonts/{fontstack}/{range}.pbf';
 export const DEFAULT_FONT_STACK = ['Noto Sans Regular'];
 
 const kindIn = (...kinds: string[]): Expr => ['in', ['get', 'kind'], ['literal', kinds]];
@@ -108,7 +108,7 @@ const kindIs = (kind: string): Expr => ['==', ['get', 'kind'], kind];
 const nameExpr = (language: string): Expr => ['coalesce', ['get', `name:${language}`], ['get', 'name']];
 const interpolate = (stops: Array<[number, number]>): Expr => ['interpolate', ['linear'], ['zoom'], ...stops.flat()];
 
-export function buildWorldviewStyle(opts: WorldviewStyleOptions): MapStyle {
+export function buildOpcbStyle(opts: OpcbStyleOptions): MapStyle {
   const p = opts.variant === 'light' ? LIGHT_PALETTE : DARK_PALETTE;
   const font = opts.fontStack ?? DEFAULT_FONT_STACK;
   const lang = opts.language ?? 'en';
@@ -452,8 +452,8 @@ export function buildWorldviewStyle(opts: WorldviewStyleOptions): MapStyle {
   ];
   return {
     version: 8,
-    name: `worldview-${opts.variant}`,
-    metadata: { 'worldview:schema': 'protomaps-basemaps-v4', 'worldview:variant': opts.variant },
+    name: `opcb-${opts.variant}`,
+    metadata: { 'opcb:schema': 'protomaps-basemaps-v4', 'opcb:variant': opts.variant },
     glyphs: opts.glyphs,
     sources: {
       [src]: {
@@ -535,21 +535,21 @@ export function styleForBasemap(basemap: BasemapDescriptor, opts: StyleBuildOpti
   const glyphs = opts.glyphs ?? DEFAULT_GLYPHS_URL;
   switch (basemap.kind) {
     case 'pmtiles':
-      return buildWorldviewStyle({
+      return buildOpcbStyle({
         sourceUrl: basemap.url.startsWith('pmtiles://') ? basemap.url : `pmtiles://${basemap.url}`,
-        variant: basemap.styleId === 'worldview-light' ? 'light' : 'dark',
+        variant: basemap.styleId === 'opcb-light' ? 'light' : 'dark',
         attribution: basemap.attribution,
         glyphs,
         ...(opts.fontStack ? { fontStack: opts.fontStack } : {}),
         ...(opts.language ? { language: opts.language } : {}),
       });
     case 'vector-tiles':
-      return buildWorldviewStyle({
+      return buildOpcbStyle({
         tiles: basemap.tiles,
         minzoom: basemap.minZoom,
         maxzoom: basemap.maxZoom,
         ...(basemap.bounds ? { bounds: basemap.bounds } : {}),
-        variant: basemap.styleId === 'worldview-light' ? 'light' : 'dark',
+        variant: basemap.styleId === 'opcb-light' ? 'light' : 'dark',
         attribution: basemap.attribution,
         glyphs,
         ...(opts.fontStack ? { fontStack: opts.fontStack } : {}),

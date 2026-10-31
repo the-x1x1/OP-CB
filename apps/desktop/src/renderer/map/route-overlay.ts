@@ -1,5 +1,5 @@
-import type { WorldObject } from '@worldview/world-model';
-import { remainingPath, routeProgress, type PresentedRoute } from '@worldview/render-core';
+import type { WorldObject } from '@opcb/world-model';
+import { remainingPath, routeProgress, type PresentedRoute } from '@opcb/render-core';
 import type { FlightState } from '../store/types.js';
 
 /**

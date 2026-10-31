@@ -6,8 +6,8 @@ import {
   type ModelKind,
   type RenderFeature,
   type RenderMotion,
-} from '@worldview/render-core';
-import type { GeoPosition } from '@worldview/world-model';
+} from '@opcb/render-core';
+import type { GeoPosition } from '@opcb/world-model';
 import type {
   CartographicLike,
   Cartesian3Like,
@@ -46,7 +46,7 @@ import type { Movers } from './motion.js';
  */
 
 /** Which model an object is drawn with. */
-export type { ModelCredit, ModelKind } from '@worldview/render-core';
+export type { ModelCredit, ModelKind } from '@opcb/render-core';
 
 export interface ModelAsset {
   /** File name under the models directory (apps/desktop/assets/models). */

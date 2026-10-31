@@ -1,4 +1,4 @@
-import type { GeoBounds, Observation } from '@worldview/world-model';
+import type { GeoBounds, Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -13,7 +13,7 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { ADSB_LOL_API_BASE, ADSB_LOL_MANIFEST, pointQueryUrl } from './manifest.js';
 import {
   CIRCLE_KEEP_MS,

@@ -1,5 +1,5 @@
 /**
- * @worldview/history-store — observation history, retention and timeline (ADR-005).
+ * @opcb/history-store — observation history, retention and timeline (ADR-005).
  *
  *   HistoryRow            flat persisted record (row.ts)
  *   PartitionKey/Index    history/<type>/<YYYY>/<MM>/<DD>/<provider>-<HHMM>.* + index.json (partition.ts)
@@ -7,7 +7,7 @@
  *   HistoryStore          facade: policy-gated async writes, retention sweep, queries, snapshots
  *   TimelineController    LIVE | PAUSED | REPLAY | HISTORICAL cursor over the store
  *
- * Never used for hot-state lookups; the live world lives in @worldview/state-engine.
+ * Never used for hot-state lookups; the live world lives in @opcb/state-engine.
  */
 export * from './row.js';
 export * from './partition.js';

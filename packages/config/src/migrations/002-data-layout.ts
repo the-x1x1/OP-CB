@@ -1,5 +1,5 @@
 import { promises as fs } from 'node:fs';
-import { writeFileAtomic } from '@worldview/core/node';
+import { writeFileAtomic } from '@opcb/core/node';
 import { ensureDataDirs } from '../data-dirs.js';
 import type { Migration } from './runner.js';
 

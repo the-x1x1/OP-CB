@@ -6,7 +6,7 @@ import {
   sunElevationDeg,
   type CameraModeState,
   type RenderFeature,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import { MapLibreWorldRenderer } from './renderer.js';
 import { createFakeMapLibre, fakeImageCanvasFactory } from './testing/fake-maplibre.js';
 import { NIGHT_LAYER_IDS, NIGHT_SOURCE, nightCollection } from './night.js';

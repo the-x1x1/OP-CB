@@ -14,7 +14,7 @@ import {
 
 /**
  * Linux: Electron's safeStorage can be "available" on top of Chromium's basic_text fallback,
- * whose key is a constant in Chromium. WORLDVIEW must treat that as no secure storage at all.
+ * whose key is a constant in Chromium. OP-CB must treat that as no secure storage at all.
  */
 function linuxSafeStorage(backend: string | undefined, available = true): SafeStorageLike {
   const key = 0x33;
@@ -27,7 +27,7 @@ function linuxSafeStorage(backend: string | undefined, available = true): SafeSt
 }
 
 async function tempFile(): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cred-linux-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-linux-'));
   return path.join(dir, 'credentials.json');
 }
 
@@ -117,7 +117,7 @@ test('encryptionUnavailableReason names the fix for each platform', () => {
 });
 
 test("linuxPasswordStore: libsecret everywhere but KDE, and never over the user's own switch", () => {
-  // Chromium would pick basic_text on all of these and WORLDVIEW would refuse every key.
+  // Chromium would pick basic_text on all of these and OP-CB would refuse every key.
   for (const desktop of ['sway', 'i3', 'Hyprland', 'LXQt', '', 'GNOME', 'ubuntu:GNOME', 'XFCE'])
     assert.equal(linuxPasswordStore({ XDG_CURRENT_DESKTOP: desktop }, false), 'gnome-libsecret', desktop);
   assert.equal(linuxPasswordStore({}, false), 'gnome-libsecret', 'no desktop at all (SSH, CI)');

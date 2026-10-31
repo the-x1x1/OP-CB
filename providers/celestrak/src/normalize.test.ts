@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { observationSchema, formatIssues } from '@worldview/world-model';
+import { observationSchema, formatIssues } from '@opcb/world-model';
 import { CircularOrbitPropagator } from './circular-orbit-propagator.js';
 import { normalizeElements, elementsToDraft } from './normalize.js';
 import type { GpElements } from './elements.js';

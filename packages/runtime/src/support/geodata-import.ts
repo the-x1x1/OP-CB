@@ -1,6 +1,6 @@
 import { inflateRawSync } from 'node:zlib';
-import { geometrySchema, type WorldGeometry } from '@worldview/world-model';
-import { readGpx, readKml, readTopologyDocument, type FileFeature } from '@worldview/connector-runtime';
+import { geometrySchema, type WorldGeometry } from '@opcb/world-model';
+import { readGpx, readKml, readTopologyDocument, type FileFeature } from '@opcb/connector-runtime';
 
 /**
  * A file the operator dropped on the map (`geodata.read`): GeoJSON, TopoJSON, KML, KMZ or GPX,

@@ -23,7 +23,7 @@ export const PORT_TELEMETRY = 67;
 /** Delivery reports for a sent packet (`Routing`, with `Data.request_id` naming the packet). */
 export const PORT_ROUTING = 5;
 
-/** The longest text WorldView sends in one test message (bytes of UTF-8). */
+/** The longest text OP-CB sends in one test message (bytes of UTF-8). */
 export const MAX_TEXT_BYTES = 200;
 
 /** `Config.LoRaConfig.RegionCode`, by number: the names the Meshtastic clients show. */

@@ -1,4 +1,4 @@
-import { DEFAULT_FRESHNESS_POLICIES, ObjectTypes, type JsonValue, type Observation } from '@worldview/world-model';
+import { DEFAULT_FRESHNESS_POLICIES, ObjectTypes, type JsonValue, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -10,7 +10,7 @@ import {
   type ProviderManifest,
   type ProviderQuery,
   type ProviderSettingDefinition,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -21,7 +21,7 @@ import {
   type ConnectorValidationResult,
   type Field,
   type MappingSpec,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { isRecord, itemRecord } from './items.js';
 import {
   DAY_MS,

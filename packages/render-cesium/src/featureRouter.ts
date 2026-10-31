@@ -1,4 +1,4 @@
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 
 /**
  * Where a RenderFeature lands in Cesium. One feature can occupy several

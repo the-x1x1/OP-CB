@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import { readPath, type ContourSpec } from '@worldview/connector-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import { readPath, type ContourSpec } from '@opcb/connector-sdk';
 
 /**
  * Records from a gridded field (`response.contour`, ADR-013 amendment 2026-10-16): a source

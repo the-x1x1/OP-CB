@@ -1,4 +1,4 @@
-import type { MemorySnapshot } from '@worldview/ipc-contract';
+import type { MemorySnapshot } from '@opcb/ipc-contract';
 
 /**
  * Process memory, sampled every ten minutes, for Diagnostics and the application log.

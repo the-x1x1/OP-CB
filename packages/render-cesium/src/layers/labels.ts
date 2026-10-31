@@ -1,4 +1,4 @@
-import type { RenderFeature, ResolvedStyle } from '@worldview/render-core';
+import type { RenderFeature, ResolvedStyle } from '@opcb/render-core';
 import type { Cartesian3Like, CesiumLike, LabelCollectionLike, LabelLike } from '../cesium-like.js';
 import type { CesiumTheme } from '../theme.js';
 import { heightReferenceFor, toCartesian } from '../geometry.js';

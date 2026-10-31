@@ -1,8 +1,8 @@
 {
-  "name": "worldview",
+  "name": "opcb",
   "version": "0.7.1",
   "private": true,
-  "description": "WORLDVIEW — a local-first browser for the physical world (live, historical, offline).",
+  "description": "OP-CB — a local-first browser for the physical world (live, historical, offline).",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@10.28.0",
@@ -11,8 +11,8 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter @worldview/desktop dev",
-    "build": "pnpm --filter @worldview/desktop build",
+    "dev": "pnpm --filter @opcb/desktop dev",
+    "build": "pnpm --filter @opcb/desktop build",
     "typecheck": "node tools/dev/typecheck.mjs",
     "lint": "eslint . --ext .ts,.tsx,.mjs --max-warnings 0",
     "format": "prettier --write .",
@@ -38,7 +38,7 @@
     "license-audit": "node --import tsx tools/license-audit/src/cli.ts",
     "sbom": "node --import tsx tools/release/src/sbom-cli.ts",
     "release:verify": "node --import tsx tools/release/src/verify-cli.ts",
-    "release:package": "pnpm --filter @worldview/desktop package",
+    "release:package": "pnpm --filter @opcb/desktop package",
     "release:assert-version": "node --import tsx tools/release/src/assert-version-cli.ts",
     "doctor": "node --import tsx tools/doctor/src/cli.ts",
     "todo-report": "node --import tsx tools/dev/todo-report.mjs",

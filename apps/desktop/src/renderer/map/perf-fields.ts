@@ -1,4 +1,4 @@
-import type { RendererEvents } from '@worldview/render-core';
+import type { RendererEvents } from '@opcb/render-core';
 
 /**
  * A frame sample's 3D model counts as the perf line's `models` field: `on s12 n4 a4 d4 i4`

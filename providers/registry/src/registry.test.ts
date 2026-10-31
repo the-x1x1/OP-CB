@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { manifestSchema } from '@worldview/provider-sdk';
+import { manifestSchema } from '@opcb/provider-sdk';
 import { createAllProviders, createProviderById, providerFactories, providerIds } from './index.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');

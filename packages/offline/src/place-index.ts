@@ -1,12 +1,5 @@
-import {
-  boundsSchema,
-  haversineMeters,
-  s,
-  type GeoBounds,
-  type GeoPosition,
-  type Schema,
-} from '@worldview/world-model';
-import type { SearchResult } from '@worldview/ipc-contract';
+import { boundsSchema, haversineMeters, s, type GeoBounds, type GeoPosition, type Schema } from '@opcb/world-model';
+import type { SearchResult } from '@opcb/ipc-contract';
 
 /**
  * PlaceIndex — local place search with no network (ADR-007, Release 1).

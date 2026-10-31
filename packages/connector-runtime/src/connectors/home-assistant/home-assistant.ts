@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   assertAtomicAdmission,
@@ -18,7 +18,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -27,7 +27,7 @@ import {
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import {
   PEOPLE_DOMAINS,
   enrich,

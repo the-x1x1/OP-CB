@@ -1,4 +1,4 @@
-import { rasterOverlaySchema, type JsonValue, type Observation, type RasterOverlay } from '@worldview/world-model';
+import { rasterOverlaySchema, type JsonValue, type Observation, type RasterOverlay } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,8 +6,8 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+} from '@opcb/provider-sdk';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { XML_ACCEPT, getRequest } from './common.js';
 
 /**

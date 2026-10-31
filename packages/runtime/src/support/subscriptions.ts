@@ -1,6 +1,6 @@
-import { boundsContain, type GeoBounds, type WorldObject } from '@worldview/world-model';
-import type { WorldChangedEvent, WorldSubscription } from '@worldview/ipc-contract';
-import type { StateChange } from '@worldview/state-engine';
+import { boundsContain, type GeoBounds, type WorldObject } from '@opcb/world-model';
+import type { WorldChangedEvent, WorldSubscription } from '@opcb/ipc-contract';
+import type { StateChange } from '@opcb/state-engine';
 
 /**
  * Per-client `world.subscribe` filters. A client only ever receives objects that match

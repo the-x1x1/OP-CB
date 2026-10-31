@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { GeoPosition, WorldObject } from '@worldview/world-model';
-import type { CameraStreamDescriptor } from '@worldview/ipc-contract';
-import type { WorldClient } from '@worldview/ipc-contract';
+import type { GeoPosition, WorldObject } from '@opcb/world-model';
+import type { CameraStreamDescriptor } from '@opcb/ipc-contract';
+import type { WorldClient } from '@opcb/ipc-contract';
 import { useClient } from '../store/store.js';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { displayName } from '../context/props.js';
@@ -43,7 +43,7 @@ export function decodableVideo(o: WorldObject, hlsPlayable: boolean): boolean {
 
 /**
  * Live pictures pinned above the nearest public cameras once the map is close in (OSIRIS's
- * CCTV previews, brought into WorldView's shell): at most six tiles, at most two of them
+ * CCTV previews, brought into OP-CB's shell): at most six tiles, at most two of them
  * decoding video and the rest stills refreshed as often as the camera publishes a new one.
  *
  * Every picture comes through the camera gateway — `camera.snapshot` for stills and

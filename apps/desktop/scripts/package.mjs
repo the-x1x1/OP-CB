@@ -155,17 +155,15 @@ function assertPreviousBuildNotRunning() {
   // Linux does not lock a running executable against deletion: electron-builder removes and
   // recreates release/linux-unpacked under a running copy without error.
   if (TARGET.platform !== 'win32') return;
-  const exe = path.join(appDir, 'release', 'win-unpacked', 'WorldView.exe');
+  const exe = path.join(appDir, 'release', 'win-unpacked', 'OP-CB.exe');
   if (!existsSync(exe)) return;
   try {
     closeSync(openSync(exe, 'r+'));
   } catch (error) {
     const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined;
     if (code !== 'EBUSY' && code !== 'EPERM' && code !== 'ETXTBSY' && code !== 'EACCES') return;
-    console.error(
-      '[package] release/win-unpacked/WorldView.exe is locked, which means the packaged app is still running.',
-    );
-    console.error('[package] Close the WORLDVIEW window and run this again (or: taskkill /F /IM WorldView.exe).');
+    console.error('[package] release/win-unpacked/OP-CB.exe is locked, which means the packaged app is still running.');
+    console.error('[package] Close the OP-CB window and run this again (or: taskkill /F /IM OP-CB.exe).');
     process.exit(1);
   }
 }
@@ -236,18 +234,18 @@ function cleanReleaseOutput() {
 
 /**
  * The channel a packaged build reports (Diagnostics, the runtime's version info). Nothing set
- * WORLDVIEW_CHANNEL, so every published installer called itself "dev". A package is never a
- * dev build: WORLDVIEW_CHANNEL when the operator sets it, otherwise the version decides — a
+ * OPCB_CHANNEL, so every published installer called itself "dev". A package is never a
+ * dev build: OPCB_CHANNEL when the operator sets it, otherwise the version decides — a
  * pre-release version (`0.2.0-rc.1`) is `prerelease`, any other `stable`.
  */
 function packagedChannel() {
-  const set = process.env.WORLDVIEW_CHANNEL;
+  const set = process.env.OPCB_CHANNEL;
   if (set === 'stable' || set === 'prerelease') return set;
   const version = String(require(path.join(appDir, 'package.json')).version ?? '');
   return version.includes('-') ? 'prerelease' : 'stable';
 }
-process.env.WORLDVIEW_CHANNEL = packagedChannel();
-console.log(`[package] channel ${process.env.WORLDVIEW_CHANNEL}`);
+process.env.OPCB_CHANNEL = packagedChannel();
+console.log(`[package] channel ${process.env.OPCB_CHANNEL}`);
 
 assertPreviousBuildNotRunning();
 cleanReleaseOutput();

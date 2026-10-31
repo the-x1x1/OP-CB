@@ -1,4 +1,4 @@
-import type { AppSettings } from '@worldview/ipc-contract';
+import type { AppSettings } from '@opcb/ipc-contract';
 
 /**
  * Update trust policy (ADR-012).

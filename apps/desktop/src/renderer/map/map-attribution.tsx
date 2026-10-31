@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@worldview/ui';
+import { Icon } from '@opcb/ui';
 
 const STORAGE_KEY = 'wv.attribution.collapsed';
 

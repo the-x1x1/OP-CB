@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
-import { silentLogger, type CredentialResolver, type Logger } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
+import { silentLogger, type CredentialResolver, type Logger } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
 
 /**
  * CredentialStore — API keys and camera credentials, encrypted at rest with
@@ -26,17 +26,17 @@ export interface SafeStorageLike {
  * Secret Service (GNOME Keyring, KWallet) answers: the key it encrypts with is a constant
  * compiled into Chromium, so a file "encrypted" with it is plain text to anyone who reads
  * it. Electron reports isEncryptionAvailable() = false in that state today, but that is a
- * default which Electron has changed before; WORLDVIEW checks the backend itself.
+ * default which Electron has changed before; OP-CB checks the backend itself.
  */
 export const INSECURE_LINUX_BACKENDS: ReadonlySet<string> = new Set(['basic_text', 'unknown']);
 
 /**
- * The `--password-store` switch WORLDVIEW gives Chromium on Linux, or undefined to leave it be.
+ * The `--password-store` switch OP-CB gives Chromium on Linux, or undefined to leave it be.
  *
  * Chromium chooses the secret store from XDG_CURRENT_DESKTOP: GNOME, Unity, Cinnamon, Pantheon,
  * Deepin and XFCE get libsecret, KDE gets KWallet, and every other desktop — sway, i3, Hyprland,
  * LXQt, a bare X session — gets `basic_text`, even with GNOME Keyring (or KeePassXC's Secret
- * Service) running. WORLDVIEW refuses basic_text, so on those desktops keys could never be saved
+ * Service) running. OP-CB refuses basic_text, so on those desktops keys could never be saved
  * however the keyring was set up. Asking for libsecret everywhere but KDE uses a Secret Service
  * when one exists; when none does, Chromium still ends up on basic_text and the store refuses it.
  * An explicit `--password-store` from the user always wins.
@@ -174,9 +174,23 @@ export class CredentialStore implements CredentialResolver {
     return Object.keys(this.entries).sort();
   }
 
+  /**
+   * Whether a key is stored *and can be read here*. A key encrypted on another computer, or —
+   * on Linux — under the program's name before the rename to OP-CB (the keyring files the
+   * encryption key under that name), cannot be decrypted: it counts as not there, so the
+   * operator is asked for it again instead of being shown a key no source can use.
+   */
   async has(key: string): Promise<boolean> {
     await this.ensureLoaded();
-    return validKey(key) in this.entries;
+    const entry = this.entries[validKey(key)];
+    if (!entry) return false;
+    if (!this.encryptionAvailable) return true;
+    try {
+      this.opts.safeStorage.decryptString(Buffer.from(entry.cipher, 'base64'));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async set(key: string, value: string): Promise<void> {

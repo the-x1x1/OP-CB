@@ -13,7 +13,7 @@ import {
   worldGeometryParts,
   type RenderFeature,
 } from './index.js';
-import type { WorldEvent, WorldGeometry, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldGeometry, WorldObject } from '@opcb/world-model';
 
 function obj(
   id: string,

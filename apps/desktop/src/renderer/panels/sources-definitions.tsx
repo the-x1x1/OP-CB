@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import { Button, FieldList, Toggle } from '@worldview/ui';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import { Button, FieldList, Toggle } from '@opcb/ui';
 import { ConnectorBadge, definitionFileLabel } from './sources-connector-badge.js';
 import {
   DefinitionsController,

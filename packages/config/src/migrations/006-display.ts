@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 import { DEFAULT_SETTINGS } from '../settings-schema.js';
 import type { Migration } from './runner.js';
 

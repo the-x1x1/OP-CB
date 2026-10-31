@@ -1,5 +1,5 @@
-import { systemClock, type Clock, type IsoTimestamp, type TimeRange, type WorldObject } from '@worldview/world-model';
-import type { TimelineMode, TimelineState } from '@worldview/ipc-contract';
+import { systemClock, type Clock, type IsoTimestamp, type TimeRange, type WorldObject } from '@opcb/world-model';
+import type { TimelineMode, TimelineState } from '@opcb/ipc-contract';
 import type { TypeAvailability } from './backend.js';
 import type { SnapshotOptions } from './store.js';
 

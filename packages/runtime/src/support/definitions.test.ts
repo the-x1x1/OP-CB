@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import os from 'node:os';
 import path from 'node:path';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, unlinkSync } from 'node:fs';
-import { silentLogger } from '@worldview/core';
-import { systemClock } from '@worldview/world-model';
-import type { WorldProvider } from '@worldview/provider-sdk';
+import { silentLogger } from '@opcb/core';
+import { systemClock } from '@opcb/world-model';
+import type { WorldProvider } from '@opcb/provider-sdk';
 import { ConnectorDefinitions, type DefinitionsHost } from './definitions.js';
 
 const EXAMPLE = path.resolve('connectors/examples/citibike-stations-rest.json');

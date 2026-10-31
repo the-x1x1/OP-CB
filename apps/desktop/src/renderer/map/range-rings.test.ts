@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters } from '@worldview/world-model';
-import type { ViewState } from '@worldview/render-core';
+import { haversineMeters } from '@opcb/world-model';
+import type { ViewState } from '@opcb/render-core';
 import { RANGE_RINGS_LAYER, RANGE_RING_COUNT, rangeRingFeatures, ringSpacingM } from './range-rings.js';
 
 const view = (bounds: ViewState['bounds']): ViewState => ({

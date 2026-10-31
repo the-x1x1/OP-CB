@@ -1,4 +1,4 @@
-import { drawnBounds, overlaySeries, type RasterOverlay } from '@worldview/world-model';
+import { drawnBounds, overlaySeries, type RasterOverlay } from '@opcb/world-model';
 import {
   applyBrightnessFade,
   mendAntimeridianColumn,
@@ -8,7 +8,7 @@ import {
   splitSideFor,
   type FadeRamp,
   type ImagerySplit,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import type {
   CesiumLike,
   ImageryLayerLike,

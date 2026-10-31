@@ -10,10 +10,10 @@ import {
   type SeverityClass,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
-import type { WatchZone, WorldEvents } from '@worldview/ipc-contract';
-import { geometryIntersectsRegion } from '@worldview/query-engine';
-import { TypedEmitter } from '@worldview/core';
+} from '@opcb/world-model';
+import type { WatchZone, WorldEvents } from '@opcb/ipc-contract';
+import { geometryIntersectsRegion } from '@opcb/query-engine';
+import { TypedEmitter } from '@opcb/core';
 import { severityAtLeast } from './severity.js';
 import { ENGINE_PROVIDER_ID, ENGINE_SOURCE_NAME } from './rules/types.js';
 

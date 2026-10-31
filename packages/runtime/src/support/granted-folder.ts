@@ -12,7 +12,7 @@ import {
   type Ogr2ogrAccess,
   type Ogr2ogrDetection,
   type Ogr2ogrRequest,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 
 /**
  * The host side of a granted folder (ADR-003, amendments 2026-09-23 for phase `files`).
@@ -26,7 +26,7 @@ import {
  *
  * ogr2ogr: found on PATH (an `.exe` on Windows: Node refuses to run `.bat`/`.cmd` without a
  * shell, and there is never a shell), run with a fixed argument list, a minimal environment
- * (no WORLDVIEW secrets), a timeout and a fresh temporary directory that is always removed.
+ * (no OP-CB secrets), a timeout and a fresh temporary directory that is always removed.
  * GDAL is the user's own install; the app never distributes or installs it (directive §141).
  */
 export const HOST_MAX_FILE_BYTES = 32 * 1024 * 1024;
@@ -148,15 +148,14 @@ export interface Ogr2ogrHostOptions {
 }
 
 const SHAPEFILE_PARTS = ['shp', 'shx', 'dbf', 'prj', 'cpg'];
-/** Variables passed to ogr2ogr: what it needs to run and find its data. Nothing else (no WORLDVIEW secrets). */
+/** Variables passed to ogr2ogr: what it needs to run and find its data. Nothing else (no OP-CB secrets). */
 const ENV_KEEP = /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|TMPDIR|HOME|USERPROFILE|LANG|LC_ALL|LC_CTYPE)$/i;
 const ENV_KEEP_PREFIX = /^(GDAL_|PROJ_|OGR_|CPL_|GEOTIFF_)/i;
 
 export function childEnvironment(parent: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   const out: NodeJS.ProcessEnv = {};
   for (const [k, v] of Object.entries(parent))
-    if (v !== undefined && (ENV_KEEP.test(k) || ENV_KEEP_PREFIX.test(k)) && !/^(ONEVIEW|WORLDVIEW)_/i.test(k))
-      out[k] = v;
+    if (v !== undefined && (ENV_KEEP.test(k) || ENV_KEEP_PREFIX.test(k)) && !/^(ONEVIEW|OP-CB)_/i.test(k)) out[k] = v;
   return out;
 }
 
@@ -314,7 +313,7 @@ export function createOgr2ogrAccess(opts: Ogr2ogrHostOptions): Ogr2ogrAccess {
       if (!p) throw new ProviderError('UNSUPPORTED', 'ogr2ogr is not installed', { retryable: false });
       const limit = Math.min(req.maxOutputBytes ?? HOST_MAX_FILE_BYTES, HOST_MAX_FILE_BYTES);
       if (limit <= 0) throw new ProviderError('TOO_LARGE', 'no room left under the size limit', { retryable: false });
-      const tmp = await fs.mkdtemp(path.join(opts.tmpDir ?? os.tmpdir(), 'worldview-ogr-'));
+      const tmp = await fs.mkdtemp(path.join(opts.tmpDir ?? os.tmpdir(), 'opcb-ogr-'));
       try {
         const out = path.join(tmp, 'out.geojson');
         const args = [

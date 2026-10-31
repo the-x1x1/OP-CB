@@ -1,4 +1,4 @@
-# WORLDVIEW on Linux
+# OP-CB on Linux
 
 Linux x86_64 support: what to install, where things live, and what to do when something
 refuses to start. Status of every claim here is in [VERIFICATION.md](VERIFICATION.md); a
@@ -13,52 +13,52 @@ is the validation candidate; Ubuntu 24.04 LTS is what CI runs.
 **Ubuntu / Debian — the `.deb` (recommended):**
 
 ```bash
-sudo apt install ./worldview_<version>_amd64.deb
+sudo apt install ./opcb_<version>_amd64.deb
 ```
 
-This puts the app in `/opt/WorldView`, links `/usr/bin/worldview`, adds **WorldView** to the
+This puts the app in `/opt/OP-CB`, links `/usr/bin/opcb`, adds **OP-CB** to the
 applications menu, and — on Ubuntu 24.04 and later — installs an AppArmor profile
-(`/etc/apparmor.d/worldview`) so Chromium's sandbox can start. Launch it from the menu or by
-typing `worldview`. Remove it with `sudo apt remove worldview`; your data is left alone.
+(`/etc/apparmor.d/opcb`) so Chromium's sandbox can start. Launch it from the menu or by
+typing `opcb`. Remove it with `sudo apt remove opcb`; your data is left alone.
 
 **No AppImage, on purpose.** electron-builder's AppImage launcher adds `--no-sandbox` by itself
 whenever the system restricts unprivileged user namespaces — Ubuntu 24.04 and later by default —
-and nothing in its configuration turns that off. An AppImage would therefore run WORLDVIEW
-unsandboxed on exactly the systems it targets. WORLDVIEW is never run with `--no-sandbox`, and no
+and nothing in its configuration turns that off. An AppImage would therefore run OP-CB
+unsandboxed on exactly the systems it targets. OP-CB is never run with `--no-sandbox`, and no
 instructions here will tell you to. Other distributions: deferred (ROADMAP.md).
 
 Packages are produced by the `linux` job of `.github/workflows/build-desktop.yml` as workflow
 artifacts, with a `SHA256SUMS.txt`, an SBOM and a verification report. Check the hash before
 installing: `sha256sum -c SHA256SUMS.txt --ignore-missing`.
 
-## Where WORLDVIEW keeps things
+## Where OP-CB keeps things
 
 All per-user, all under the XDG base directories Electron resolves:
 
-| What                                      | Where                                                                         |
-| ----------------------------------------- | ----------------------------------------------------------------------------- |
-| Settings, collections, zones, watch zones | `~/.config/@worldview/desktop/*.json`                                         |
-| Log                                       | `~/.config/@worldview/desktop/logs/app.log` (JSON lines, rotated at 5 MB × 3) |
-| API keys (encrypted)                      | `~/.config/@worldview/desktop/credentials.json` (mode 0600)                   |
-| History                                   | `~/.config/@worldview/desktop/history/`                                       |
-| Installed offline packs                   | `~/.config/@worldview/desktop/worldpacks/`                                    |
-| Map tile cache                            | `~/.config/@worldview/desktop/tiles/`                                         |
-| Chromium caches                           | `~/.config/@worldview/desktop/` (Cache, GPUCache, …)                          |
+| What                                      | Where                                                            |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| Settings, collections, zones, watch zones | `~/.config/OP-CB/*.json`                                         |
+| Log                                       | `~/.config/OP-CB/logs/app.log` (JSON lines, rotated at 5 MB × 3) |
+| API keys (encrypted)                      | `~/.config/OP-CB/credentials.json` (mode 0600)                   |
+| History                                   | `~/.config/OP-CB/history/`                                       |
+| Installed offline packs                   | `~/.config/OP-CB/worldpacks/`                                    |
+| Map tile cache                            | `~/.config/OP-CB/tiles/`                                         |
+| Chromium caches                           | `~/.config/OP-CB/` (Cache, GPUCache, …)                          |
 
-`XDG_CONFIG_HOME` moves all of it. The `@worldview/desktop` name is the same as Windows
-(`%APPDATA%\@worldview\desktop`); renaming it is an open operator decision tracked for both.
+`XDG_CONFIG_HOME` moves all of it. The folder name is the same as on Windows
+(`%APPDATA%\OP-CB`); an earlier version's folder is moved there on the first start of 0.7.2.
 
 **Data vaults (external SSD).** Settings → Offline packs → **Add a data vault…** makes a folder
-you choose — typically on the external SSD, e.g. a `worldview` folder on it — a vault, and packs
-can then be installed onto it (**Install pack onto it**). WorldView writes a marker file
-(`.worldview-vault.json`) and a `worldpacks/` folder there, and recognises the vault only by that
+you choose — typically on the external SSD, e.g. a `opcb` folder on it — a vault, and packs
+can then be installed onto it (**Install pack onto it**). OP-CB writes a marker file
+(`.opcb-vault.json`) and a `worldpacks/` folder there, and recognises the vault only by that
 marker: when the drive is not mounted, its mount point under `/media/<you>/` is an empty folder
-on the internal disk, and WorldView treats it as "Not connected" and writes nothing to it. For the
+on the internal disk, and OP-CB treats it as "Not connected" and writes nothing to it. For the
 same reason a vault must be on a different drive from `~/.config` — choose a folder _on the
 mounted SSD_. Mount the drive at the same place each time (GNOME does, by its label). Packs on a vault that is not
-connected stay listed as such and come back when it is. WorldView never deletes anything on a
+connected stay listed as such and come back when it is. OP-CB never deletes anything on a
 vault; "Stop using" leaves every file there. Settings, keys, history and search indexes stay in
-`~/.config/@worldview/desktop`.
+`~/.config/OP-CB`.
 
 ## API keys and the keyring
 
@@ -68,9 +68,9 @@ Ubuntu Desktop runs GNOME Keyring at login, so this normally just works.
 
 Left to itself, Chromium only uses a Secret Service on desktops it recognises (GNOME, XFCE,
 Cinnamon, KDE …); on sway, i3, Hyprland, LXQt or a bare X session it falls back to a key compiled
-into Chromium (`basic_text`), which is not protection. So WORLDVIEW asks for libsecret on every
+into Chromium (`basic_text`), which is not protection. So OP-CB asks for libsecret on every
 desktop except KDE (`--password-store=gnome-libsecret`; pass your own `--password-store` to
-override). If no Secret Service answers, WORLDVIEW **refuses to save keys** rather than pretend:
+override). If no Secret Service answers, OP-CB **refuses to save keys** rather than pretend:
 saving one in Settings fails with "Secure storage is not available on this system", the startup
 findings name the cause, and the log records `secure storage {"backend":…,"usable":false}`.
 Sources that need no key keep working. To fix it, run a Secret Service in your session:
@@ -84,7 +84,7 @@ eval "$(gnome-keyring-daemon --start --components=secrets)"
 ## Graphics
 
 The 2D map (MapLibre) and the 3D globe (Cesium) both need WebGL2. On the P16s that is the
-Radeon 740M through Mesa's `radeonsi` driver, installed by default on Ubuntu. WORLDVIEW does not
+Radeon 740M through Mesa's `radeonsi` driver, installed by default on Ubuntu. OP-CB does not
 force any GPU flags. If the window gets no WebGL2 (missing driver, a blocklisted GPU, a remote
 or virtual display), the map area says so and everything else — search, sources, the feed,
 history, exports — keeps working. **Settings → Diagnostics** shows the GPU the window saw.
@@ -112,8 +112,8 @@ from Windows). Then `pnpm sbom`, `pnpm release:verify` and
 Smoke-test a package as a user would (needs a display; `xvfb-run -a` in a terminal session):
 
 ```bash
-node apps/desktop/scripts/smoke-linux.mjs /opt/WorldView/worldview \
-  --expect-history duckdb-parquet --out /tmp/worldview-smoke.json
+node apps/desktop/scripts/smoke-linux.mjs /opt/OP-CB/opcb \
+  --expect-history duckdb-parquet --out /tmp/opcb-smoke.json
 ```
 
 It runs the app with an isolated `XDG_CONFIG_HOME`, sandbox on, waits for the runtime and the
@@ -128,5 +128,5 @@ as root, which is the point.
 | Exits at once: "The SUID sandbox helper binary was found, but is not configured correctly" | Ubuntu 24.04+ user-namespace restriction; a dev Electron | Use the `.deb`; in development apply the `chown`/`chmod` above                               |
 | Saving an API key: "Secure storage is not available"; log: `"usable":false`                | No Secret Service in the session, or it is locked        | Start and unlock GNOME Keyring, KWallet or another Secret Service (above)                    |
 | Diagnostics: history running `ndjson`, "DuckDB backend unavailable"                        | The native DuckDB binding did not load                   | Reinstall the package; report the reason line from the log. History still records, in NDJSON |
-| Map area: "gave WORLDVIEW no hardware 3D graphics (WebGL2)"                                | No usable GPU in this window                             | Check Mesa, avoid remote displays; see Diagnostics                                           |
-| Nothing at all                                                                             | —                                                        | `worldview` from a terminal, then `~/.config/@worldview/desktop/logs/app.log`                |
+| Map area: "gave OP-CB no hardware 3D graphics (WebGL2)"                                    | No usable GPU in this window                             | Check Mesa, avoid remote displays; see Diagnostics                                           |
+| Nothing at all                                                                             | —                                                        | `opcb` from a terminal, then `~/.config/OP-CB/logs/app.log`                                  |

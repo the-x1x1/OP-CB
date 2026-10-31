@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import { orbitPath, ORBIT_PATH_STEPS, MAX_PATH_MS } from './orbit-path.js';
 import { CircularOrbitPropagator } from './circular-orbit-propagator.js';
 import { SatelliteJsPropagator, type SatelliteJsModule } from './satellite-js-propagator.js';

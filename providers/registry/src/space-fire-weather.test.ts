@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { manifestSchema } from '@worldview/provider-sdk';
+import { manifestSchema } from '@opcb/provider-sdk';
 import { createSpaceFireWeatherProviders, spaceFireWeatherFactories } from './space-fire-weather.js';
 
 test('space/fire/weather factories produce providers whose manifest ids match their keys', () => {

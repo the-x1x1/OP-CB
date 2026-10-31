@@ -8,7 +8,7 @@ import {
   type ObservationQuality,
   type ProvenanceOrigin,
   type WorldGeometry,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 /**
  * HistoryRow — the flat, backend-neutral record persisted for every observation.

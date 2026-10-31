@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { Observation } from '@worldview/world-model';
-import { USGS_MANIFEST, normalizeUsgsFeed } from '@worldview/provider-usgs';
+import type { Observation } from '@opcb/world-model';
+import { USGS_MANIFEST, normalizeUsgsFeed } from '@opcb/provider-usgs';
 import {
   ProviderError,
   type ProviderContext,
@@ -9,7 +9,7 @@ import {
   type ProviderManifest,
   type ProviderQuery,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 
 /**
  * Demo earthquake provider: the USGS contract fixture, read from disk, normalized by the

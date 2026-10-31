@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { writeFileAtomic } from '@worldview/core/node';
-import { silentLogger, type Logger } from '@worldview/core';
+import { writeFileAtomic } from '@opcb/core/node';
+import { silentLogger, type Logger } from '@opcb/core';
 
 interface Envelope<T> {
   version: 1;

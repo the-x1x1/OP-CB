@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { observationSchema, type JsonValue, type Observation } from '@worldview/world-model';
-import { ProviderError, testing } from '@worldview/provider-sdk';
-import { compileMapping, mapRecord, requestsPerPoll } from '@worldview/connector-sdk';
+import { observationSchema, type JsonValue, type Observation } from '@opcb/world-model';
+import { ProviderError, testing } from '@opcb/provider-sdk';
+import { compileMapping, mapRecord, requestsPerPoll } from '@opcb/connector-sdk';
 import type { SuiteCheck, SuiteFixtures, SuiteResult } from '../../../testing/suite.js';
 import { parseMqttDefinition, type MqttConnectorDefinition } from '../contract.js';
 import { BROKER_HOST_SETTING, LOOPBACK_BROKER, MqttProvider, mqttConnector, topicMapping } from '../mqtt.js';

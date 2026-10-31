@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import { PollingProvider, type FetchResult } from './helpers.js';
 import { ProviderError } from './health.js';
 import type { ProviderManifest } from './manifest.js';

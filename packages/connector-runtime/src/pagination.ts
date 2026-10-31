@@ -1,4 +1,4 @@
-import { readPath, type PaginationSpec } from '@worldview/connector-sdk';
+import { readPath, type PaginationSpec } from '@opcb/connector-sdk';
 
 /**
  * Reusable pagination (directive §11): the connector asks `first()` for the first request's

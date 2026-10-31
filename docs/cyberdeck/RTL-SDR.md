@@ -1,18 +1,18 @@
 # Your own aircraft receiver: RTL-SDR + readsb
 
-WORLDVIEW shows aircraft your own RTL-SDR hears, with the network off. It does not decode radio
+OP-CB shows aircraft your own RTL-SDR hears, with the network off. It does not decode radio
 itself: a separately installed decoder (readsb) turns the stick's 1090 MHz signal into a JSON
-list of aircraft on this computer, and WORLDVIEW's **Local ADS-B receiver** source reads it over
+list of aircraft on this computer, and OP-CB's **Local ADS-B receiver** source reads it over
 loopback. Receive only — nothing here transmits.
 
 What is verified, and how, is in [VERIFICATION.md](VERIFICATION.md) §M3. In short: readsb
-3.16.17, built from its upstream source, decodes textbook Mode S frames, and WORLDVIEW puts the
+3.16.17, built from its upstream source, decodes textbook Mode S frames, and OP-CB puts the
 aircraft on the map with this receiver as the source. **A real stick and antenna on the P16s is
 not verified yet** (hardware check H9).
 
 ## 1. The stick
 
-Plug it in, then WORLDVIEW → Settings → **Diagnostics** shows a line for it:
+Plug it in, then OP-CB → Settings → **Diagnostics** shows a line for it:
 
 | Diagnostics says                     | Meaning                                                          | Fix                                                                                                                           |
 | ------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -30,7 +30,7 @@ you can. A kit's long arms tuned for FM will hear little or nothing at 1090 MHz.
 
 ## 2. The decoder: readsb
 
-readsb (wiedehopf's fork) is maintained, GPL-3.0, and **not** shipped with WORLDVIEW. Build its
+readsb (wiedehopf's fork) is maintained, GPL-3.0, and **not** shipped with OP-CB. Build its
 Debian package from source (the project's own instructions, abridged):
 
 ```bash
@@ -43,7 +43,7 @@ sudo dpkg -i ../readsb_*.deb
 ```
 
 It installs a system service (`readsb.service`, user `readsb`) configured by `/etc/default/readsb`.
-Two changes for WORLDVIEW:
+Two changes for OP-CB:
 
 ```bash
 # /etc/default/readsb
@@ -72,11 +72,11 @@ dump1090-fa or tar1090 setups serve the same JSON through a web server at other 
 (`/skyaware/data/aircraft.json`, `/tar1090/data/aircraft.json`); any of them works if it is on
 loopback.
 
-## 3. WORLDVIEW
+## 3. OP-CB
 
 Settings → Sources → **Local ADS-B receiver** → _Receiver endpoint_:
 `http://127.0.0.1:8042/?all`. (The default, `http://127.0.0.1:8080/data/aircraft.json`, is older
-dump1090's built-in server.) WORLDVIEW probes exactly that URL — nothing else on this computer or
+dump1090's built-in server.) OP-CB probes exactly that URL — nothing else on this computer or
 your network — every second while it answers, and every 30 s while it does not.
 
 | Sources says                        | Meaning                                                                                                                                 |
@@ -88,7 +88,7 @@ your network — every second while it answers, and every 30 s while it does not
 
 Each aircraft's details show where it came from: this receiver, on 1090 MHz, through readsb, with
 the time its position was heard. A position more than 60 s old is flagged stale. Aircraft heard
-without a position (Mode S only) are not drawn: WORLDVIEW does not invent a place for them.
+without a position (Mode S only) are not drawn: OP-CB does not invent a place for them.
 Internet ADS-B is never used in its place when you are offline.
 
 One RTL-SDR tunes one band: while it listens on 1090 MHz it does not hear AIS (162 MHz).
@@ -97,8 +97,8 @@ One RTL-SDR tunes one band: while it listens on 1090 MHz it does not hear AIS (1
 
 1. Network off. Stick plugged in; Diagnostics: "present and openable".
 2. `systemctl status readsb` active; `curl -s 'http://127.0.0.1:8042/?all'` shows `aircraft`.
-3. WORLDVIEW Sources: Local ADS-B receiver LIVE. Aircraft on the map near you, details saying
-   "own receiver, 1090 MHz". Screenshot, and `~/.config/@worldview/desktop/logs/app.log` lines
+3. OP-CB Sources: Local ADS-B receiver LIVE. Aircraft on the map near you, details saying
+   "own receiver, 1090 MHz". Screenshot, and `~/.config/OP-CB/logs/app.log` lines
    with `readsb detected`.
-4. Unplug the stick: readsb loses it (its log), WORLDVIEW keeps showing the last positions going
+4. Unplug the stick: readsb loses it (its log), OP-CB keeps showing the last positions going
    stale, then none; replug and `sudo systemctl restart readsb`: aircraft return.

@@ -1,6 +1,6 @@
 # Upstream: God's Eye View (GEV)
 
-WORLDVIEW's application foundation is derived from the open-source God's Eye View
+OP-CB's application foundation is derived from the open-source God's Eye View
 project. Other upstreams (CesiumJS, MapLibre, PMTiles, DuckDB, deck.gl, readsb, go2rtc)
 are ordinary dependencies or sidecars and are tracked in their package manifests, not
 here.
@@ -43,7 +43,7 @@ fetches. Per GEV's own `LICENSE` and `DATA_SOURCES.md`:
 
 Pre-filled from the migration matrix; update as packages land.
 
-| GEV path                                                                                                                                                                                  | WORLDVIEW destination                                                           | Status                                                                                    |
+| GEV path                                                                                                                                                                                  | OP-CB destination                                                               | Status                                                                                    |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | `src/app/application.js`, `stateChannel.js`                                                                                                                                               | `packages/runtime`                                                              | pending                                                                                   |
 | `src/app/viewer.js`, `src/maps/{controller,registry,defaultSources,imagery,terrain,credits}.js`, `src/data/dataCredits.js` (registration logic only)                                      | `packages/render-cesium/src/{viewer,basemaps,imagery,terrain,attribution}.ts`   | adapted (globe shown by default; Natural Earth II default; terrain separated from stacks) |
@@ -117,8 +117,8 @@ tests, Pinokio/key-setup tests, puppeteer `scripts/qa-*.mjs` harnesses.
 2. **Cherry-pick intentionally.** Watch upstream for fixes in the _retained_ areas
    (provider parsers/normalisers, records/eviction policy, map source controller,
    GTFS/FIRMS/TLE decoding, AIS watchdog, search chain). For each candidate upstream
-   commit: read the diff, locate the WORLDVIEW counterpart via the tables above, port
-   by hand, and reference the upstream commit hash in the WORLDVIEW commit message
+   commit: read the diff, locate the OP-CB counterpart via the tables above, port
+   by hand, and reference the upstream commit hash in the OP-CB commit message
    (`Upstream: gods-eye-view@<sha>`).
 3. **Track the watermark.** Record the last reviewed upstream commit here:
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, testing } from '@worldview/provider-sdk';
+import { ProviderError, testing } from '@opcb/provider-sdk';
 import {
   FirmsProvider,
   parseSettings,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { UpdaterState } from '@worldview/ipc-contract';
+import type { UpdaterState } from '@opcb/ipc-contract';
 import {
   UpdaterController,
   compareVersions,
@@ -54,7 +54,7 @@ class FakeAutoUpdater implements AutoUpdaterLike {
   }
   async downloadUpdate() {
     this.calls.push('download');
-    return ['/tmp/WorldView-Setup.exe'];
+    return ['/tmp/OP-CB-Setup.exe'];
   }
   silent: boolean | undefined;
   quitAndInstall(isSilent?: boolean) {
@@ -298,7 +298,7 @@ test('controller: disabled when unpackaged; errors are sanitized and never conta
 test('controller: a repository with only pre-releases is "no stable release yet", not an error', async () => {
   const fake = new FakeAutoUpdater();
   fake.failCheck = new Error(
-    'Cannot parse releases feed: Error: Unable to find latest version on GitHub (https://github.com/the-x1x1/oneview/releases/latest), please ensure a production release exists: HttpError: 406 "method: GET',
+    'Cannot parse releases feed: Error: Unable to find latest version on GitHub (https://github.com/the-x1x1/OP-CB/releases/latest), please ensure a production release exists: HttpError: 406 "method: GET',
   );
   const controller = (channel: 'stable' | 'prerelease') =>
     new UpdaterController({

@@ -2,17 +2,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * Where WorldView keeps everything it writes — settings, history, packs, keys, logs (2026-10-30,
+ * Where OP-CB keeps everything it writes — settings, history, packs, keys, logs (2026-10-30,
  * the operator's "put it all on the 2 TB SSD"). Decided before the app is ready, because
  * Electron's `userData` must be set before anything uses it. Three ways, first that applies:
  *
- *  1. **Portable**: a folder named `WorldView-data` next to the WorldView executable (the
+ *  1. **Portable**: a folder named `OP-CB-data` next to the OP-CB executable (the
  *     portable copy unzipped onto an external drive). Everything lives there and travels with the
  *     drive. Made by the operator, never created by the app.
  *  2. **Moved**: `data-location.json` in the usual folder names another folder (Command Center
- *     → Resources → "Keep all WorldView data on a drive"). That folder must carry the marker
- *     file WorldView wrote there: an unplugged drive's mount point is an empty folder on the
- *     internal disk, and WorldView must never start writing into it. When the marker is not
+ *     → Resources → "Keep all OP-CB data on a drive"). That folder must carry the marker
+ *     file OP-CB wrote there: an unplugged drive's mount point is an empty folder on the
+ *     internal disk, and OP-CB must never start writing into it. When the marker is not
  *     there the start says so and offers this computer's own data instead (main.ts).
  *  3. **Usual**: the operating system's application-data folder.
  *
@@ -20,9 +20,11 @@ import path from 'node:path';
  * computer: on another computer they cannot be read and are asked for again.
  */
 
-export const PORTABLE_DIR_NAME = 'WorldView-data';
+export const PORTABLE_DIR_NAME = 'OP-CB-data';
 export const POINTER_FILE = 'data-location.json';
-export const MARKER_FILE = 'worldview-data.json';
+export const MARKER_FILE = 'opcb-data.json';
+/** The marker's name before the rename to OP-CB (0.7.2); read, never written. */
+export const LEGACY_MARKER_FILE = 'worldview-data.json';
 
 export type DataLocationKind = 'usual' | 'portable' | 'moved';
 
@@ -57,14 +59,21 @@ export function readPointer(f: Fs, usualRoot: string): string | undefined {
   }
 }
 
-/** Whether a folder carries WorldView's data marker. */
+/**
+ * Whether a folder carries OP-CB's data marker — or the one a folder set up before the rename
+ * (0.7.2) carries, `worldview-data.json`; the first start renames that one (legacy-data.ts), but a
+ * drive that was out then still has it.
+ */
 export function hasMarker(f: Fs, dir: string): boolean {
-  try {
-    const v = JSON.parse(f.readFileSync(path.join(dir, MARKER_FILE), 'utf8')) as { kind?: unknown };
-    return v.kind === 'worldview-data';
-  } catch {
-    return false;
+  for (const file of [MARKER_FILE, LEGACY_MARKER_FILE]) {
+    try {
+      const v = JSON.parse(f.readFileSync(path.join(dir, file), 'utf8')) as { kind?: unknown };
+      if (v.kind === 'opcb-data' || v.kind === 'worldview-data') return true;
+    } catch {
+      /* not this one */
+    }
   }
+  return false;
 }
 
 export function resolveDataLocation(opts: { usualRoot: string; exeDir: string; dev: boolean; f?: Fs }): DataLocation {
@@ -99,8 +108,8 @@ export const CARRIED_FILES: readonly string[] = Object.freeze([
 ]);
 
 /**
- * Make `target` WorldView's data folder from the next start: mark it, carry the small files
- * across when it holds no WorldView data yet (an already-marked folder — the drive set up on
+ * Make `target` OP-CB's data folder from the next start: mark it, carry the small files
+ * across when it holds no OP-CB data yet (an already-marked folder — the drive set up on
  * another computer — is used as it is), then write the pointer. Returns what was done or why not.
  */
 export async function moveDataTo(
@@ -140,7 +149,7 @@ export async function moveDataTo(
     }
     await p.writeFile(
       path.join(resolved, MARKER_FILE),
-      `${JSON.stringify({ kind: 'worldview-data', createdAt: new Date().toISOString() }, null, 2)}\n`,
+      `${JSON.stringify({ kind: 'opcb-data', createdAt: new Date().toISOString() }, null, 2)}\n`,
     );
   }
   await p.mkdir(usualRoot, { recursive: true });

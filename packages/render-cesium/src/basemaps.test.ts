@@ -274,7 +274,7 @@ test('controller: BasemapDescriptor mapping registers XYZ sources on the fly and
         kind: 'pmtiles',
         id: 'pack',
         url: 'x.pmtiles',
-        styleId: 'worldview-dark',
+        styleId: 'opcb-dark',
         attribution: '',
       }),
   );

@@ -1,5 +1,5 @@
 import { BrowserWindow, session, type Session, type WebContents } from 'electron';
-import type { Logger } from '@worldview/core';
+import type { Logger } from '@opcb/core';
 import {
   READER_PARTITION,
   READER_SCHEME,
@@ -10,7 +10,7 @@ import {
 
 /**
  * The library reader (2026-10-30): a window that shows the pages of the operator's ZIM files,
- * read by WorldView itself (runtime support/zim-library.ts).
+ * read by OP-CB itself (runtime support/zim-library.ts).
  *
  * The pages come from outside — Wikipedia, iFixit, anyone who made a ZIM file — so the reader
  * is kept apart from the app:

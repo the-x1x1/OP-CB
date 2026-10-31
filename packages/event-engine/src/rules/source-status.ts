@@ -1,5 +1,5 @@
-import { EventTypes, makeEventId, type IsoTimestamp, type JsonValue, type WorldEvent } from '@worldview/world-model';
-import type { SourceHealthEvents } from '@worldview/source-health';
+import { EventTypes, makeEventId, type IsoTimestamp, type JsonValue, type WorldEvent } from '@opcb/world-model';
+import type { SourceHealthEvents } from '@opcb/source-health';
 import { ENGINE_PROVIDER_ID, ENGINE_SOURCE_NAME } from './types.js';
 
 /**

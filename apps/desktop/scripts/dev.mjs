@@ -11,7 +11,7 @@
  * then run B" — and `--watch` never returns, so Vite never started. And nothing in the
  * repository launched Electron at all, in this script or anywhere else, though
  * docs/DEVELOPMENT.md has always described `pnpm dev` as "Electron + Vite dev server".
- * There was no way to open WORLDVIEW.
+ * There was no way to open OP-CB.
  *
  * Vite is driven through its Node API rather than its CLI: the API reports the address it
  * actually bound, which lets this script *check* that address against the one the main
@@ -121,7 +121,7 @@ console.log(`[dev] renderer on ${bound}`);
 const electron = spawn(electronPath, ['.'], {
   cwd: appDir,
   stdio: 'inherit',
-  env: { ...process.env, WORLDVIEW_DEV: '1' },
+  env: { ...process.env, OPCB_DEV: '1' },
 });
 children.push(electron);
 electron.on('exit', async (code) => {

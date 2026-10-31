@@ -1,6 +1,6 @@
-import { epochToIso, isValidLatLon, stableStringify, type JsonValue } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { epochToIso, isValidLatLon, stableStringify, type JsonValue } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { USGS_MANIFEST } from './manifest.js';
 
 /**

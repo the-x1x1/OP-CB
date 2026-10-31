@@ -1,5 +1,5 @@
-import type { JsonValue, Observation } from '@worldview/world-model';
-import { observationId } from '@worldview/world-model';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import { observationId } from '@opcb/world-model';
 import {
   ProviderError,
   type ProviderContext,
@@ -7,7 +7,7 @@ import {
   type ProviderManifest,
   type ProviderQuery,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 
 /**
  * Demo aircraft provider: a fixed set of tracks that move as a pure function of the
@@ -123,9 +123,9 @@ export const DEMO_AIRCRAFT_MANIFEST: ProviderManifest = {
     exportAllowed: true,
     commercialUseAllowed: true,
     attributionRequired: false,
-    attributionText: 'Synthetic demo tracks (WORLDVIEW project)',
+    attributionText: 'Synthetic demo tracks (OP-CB project)',
   },
-  attribution: { text: 'Synthetic demo tracks (WORLDVIEW project)', licenseId: 'MIT' },
+  attribution: { text: 'Synthetic demo tracks (OP-CB project)', licenseId: 'MIT' },
   commercialReview: 'approved',
   enabledByDefault: true,
   allowedHosts: [],
@@ -205,7 +205,7 @@ export class DemoAircraftProvider implements WorldProvider {
         providerId: this.manifest.id,
         sourceName: this.manifest.name,
         origin: 'recorded',
-        sourceRef: 'worldview:demo/synthetic-aircraft',
+        sourceRef: 'opcb:demo/synthetic-aircraft',
         attribution: this.manifest.attribution.text,
         receivedAt: at,
       },

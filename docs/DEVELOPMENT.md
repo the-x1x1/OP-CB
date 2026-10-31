@@ -8,7 +8,7 @@
 ## Clone / install / dev
 
 ```
-git clone https://github.com/the-x1x1/oneview.git worldview && cd worldview
+git clone https://github.com/the-x1x1/OP-CB.git opcb && cd opcb
 pnpm install
 pnpm dev            # Electron + Vite dev server
 ```
@@ -53,7 +53,7 @@ docs/roadmap/PARALLEL-PHASES.md.
 ## Desktop package
 
 ```
-pnpm build && pnpm release:package   # → apps/desktop/release/WorldView-Setup-x.y.z.exe, WorldView-Portable-x.y.z.zip
+pnpm build && pnpm release:package   # → apps/desktop/release/OP-CB-Setup-x.y.z.exe, OP-CB-Portable-x.y.z.zip
 pnpm sbom && pnpm release:verify     # → artifacts/release/*.sbom.json, SHA256SUMS.txt, verification-report.json
 ```
 
@@ -68,7 +68,7 @@ packed correctly, which makes it look like a packaging bug when it is an account
 Turn on **Settings → System → For developers → Developer Mode**, or run the packaging step
 from an elevated terminal. `pnpm run doctor` checks for this before you spend the build.
 
-`release/win-unpacked/WorldView.exe` runs directly and needs none of the above; only the
+`release/win-unpacked/OP-CB.exe` runs directly and needs none of the above; only the
 installer and the portable zip do.
 
 ## Why `pnpm.onlyBuiltDependencies` is in package.json

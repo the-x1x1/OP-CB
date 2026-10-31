@@ -47,7 +47,7 @@ export type CheckId =
 
 /**
  * A real control a step offers: it does the thing (asks the runtime), it does not pretend to.
- * Anything that changes the operator's computer or radio beyond WorldView's own settings is
+ * Anything that changes the operator's computer or radio beyond OP-CB's own settings is
  * not an action here: the guide says how to do it in the right tool.
  */
 export type ActionId =

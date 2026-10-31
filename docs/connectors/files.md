@@ -130,11 +130,11 @@ expanded.
 ```
 
 GDAL is **never bundled, installed or downloaded**. The host looks for `ogr2ogr` on `PATH`
-(`ogr2ogr.exe` on Windows — OSGeo4W, QGIS and conda all install one; its `bin` folder must be on the `PATH` WORLDVIEW starts with) and logs the version it
+(`ogr2ogr.exe` on Windows — OSGeo4W, QGIS and conda all install one; its `bin` folder must be on the `PATH` OP-CB starts with) and logs the version it
 found. Without it the source is OFFLINE, "ogr2ogr was not found … install GDAL to import …",
 and looks again every five minutes.
 
-The host runs, with no shell, a minimal environment (no WORLDVIEW secrets reach GDAL) and a
+The host runs, with no shell, a minimal environment (no OP-CB secrets reach GDAL) and a
 fresh temporary folder that is always removed:
 
 ```

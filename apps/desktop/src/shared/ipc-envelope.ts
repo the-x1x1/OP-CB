@@ -1,4 +1,4 @@
-import type { IpcError } from '@worldview/ipc-contract';
+import type { IpcError } from '@opcb/ipc-contract';
 
 /**
  * Wire envelope for `ipcRenderer.invoke` results. Electron flattens rejected

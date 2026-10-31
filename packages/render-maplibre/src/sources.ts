@@ -1,4 +1,4 @@
-import type { FeatureUpdate, RenderFeature, RenderingRule, Theme } from '@worldview/render-core';
+import type { FeatureUpdate, RenderFeature, RenderingRule, Theme } from '@opcb/render-core';
 import { toOverlayFeature, type GeoJsonFeature, type GeoJsonFeatureCollection } from './geojson.js';
 
 /**

@@ -1,4 +1,4 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
+import type { WorldProvider } from '@opcb/provider-sdk';
 import { createDemoEarthquakeProvider } from './fixture-earthquakes.js';
 import { createDemoAircraftProvider } from './synthetic-aircraft.js';
 

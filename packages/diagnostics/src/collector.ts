@@ -1,6 +1,6 @@
-import type { DiagnosticsSnapshot, MemorySnapshot, OfflineStatus, UpdaterState } from '@worldview/ipc-contract';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import { silentLogger, type Logger } from '@worldview/core';
+import type { DiagnosticsSnapshot, MemorySnapshot, OfflineStatus, UpdaterState } from '@opcb/ipc-contract';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import { silentLogger, type Logger } from '@opcb/core';
 
 type MaybePromise<T> = T | Promise<T>;
 

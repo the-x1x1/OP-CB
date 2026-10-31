@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldChangedEvent, WorldClient } from '@worldview/ipc-contract';
+import type { WorldChangedEvent, WorldClient } from '@opcb/ipc-contract';
 import { bindClient, DELTA_GATHER_MS } from './sync.js';
 import type { RootAction } from './types.js';
 

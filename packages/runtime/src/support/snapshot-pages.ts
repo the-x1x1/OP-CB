@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 
 interface Session {
   token: string;

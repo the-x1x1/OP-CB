@@ -1,5 +1,5 @@
-import type { GeoBounds, JsonValue } from '@worldview/world-model';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import type { GeoBounds, JsonValue } from '@opcb/world-model';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { isRecord, linkOf, type Bbox2D } from './items.js';
 
 /**

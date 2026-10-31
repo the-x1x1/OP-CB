@@ -15,7 +15,7 @@ import os from 'node:os';
 import { pathToFileURL } from 'node:url';
 
 /**
- * `pnpm doctor` (directive §84): does this machine have what WORLDVIEW needs, and is
+ * `pnpm doctor` (directive §84): does this machine have what OP-CB needs, and is
  * the installed tree consistent with what the app expects at runtime?
  *
  * Every check reports pass / warn / fail / skip with a reason. A check that cannot run
@@ -222,7 +222,7 @@ export async function runDoctor(opts: DoctorOptions): Promise<DoctorReport> {
   if (process.platform !== 'win32') {
     add('Symlink privilege', 'skip', 'only Windows restricts symlink creation (this is ' + process.platform + ')');
   } else {
-    const probe = mkdtempSync(path.join(os.tmpdir(), 'worldview-symlink-'));
+    const probe = mkdtempSync(path.join(os.tmpdir(), 'opcb-symlink-'));
     try {
       symlinkSync(path.join(probe, 'target.txt'), path.join(probe, 'link.txt'));
       add(
@@ -311,7 +311,7 @@ export async function runDoctor(opts: DoctorOptions): Promise<DoctorReport> {
   }
 
   // --- filesystem ----------------------------------------------------------
-  const userData = opts.userDataDir ?? path.join(os.homedir(), '.worldview-doctor');
+  const userData = opts.userDataDir ?? path.join(os.homedir(), '.opcb-doctor');
   try {
     mkdirSync(userData, { recursive: true });
     const probeFile = path.join(userData, `.write-probe-${process.pid}`);
@@ -376,7 +376,7 @@ export function formatDoctor(report: DoctorReport): string {
   const width = Math.max(...report.checks.map((c) => c.name.length)) + 2;
   const icon: Record<CheckStatus, string> = { pass: 'PASS', warn: 'WARN', fail: 'FAIL', skip: 'SKIP' };
   return [
-    `WorldView doctor — ${report.platform} — ${report.ranAt}`,
+    `OP-CB doctor — ${report.platform} — ${report.ranAt}`,
     ...report.checks.map((c) => `  ${c.name.padEnd(width)}${icon[c.status].padEnd(6)}${c.detail}`),
     `  ${'—'.repeat(width + 40)}`,
     `  ${report.checks.filter((c) => c.status === 'pass').length} pass, ${report.checks.filter((c) => c.status === 'warn').length} warn, ${report.checks.filter((c) => c.status === 'fail').length} fail, ${report.checks.filter((c) => c.status === 'skip').length} skip → ${report.passed ? 'OK' : 'PROBLEMS FOUND'}`,

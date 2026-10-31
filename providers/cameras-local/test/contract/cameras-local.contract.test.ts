@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runProviderChecklist, formatReport } from '@worldview/tool-provider-validator';
-import { testing } from '@worldview/provider-sdk';
+import { runProviderChecklist, formatReport } from '@opcb/tool-provider-validator';
+import { testing } from '@opcb/provider-sdk';
 import { plan, SETTINGS } from './plan.js';
 import { createProvider } from '../../src/index.js';
 

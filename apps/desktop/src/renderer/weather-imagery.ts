@@ -1,5 +1,5 @@
-import type { RasterOverlay } from '@worldview/world-model';
-import type { LensDefinition } from '@worldview/render-core';
+import type { RasterOverlay } from '@opcb/world-model';
+import type { LensDefinition } from '@opcb/render-core';
 import { OVERVIEW_LENS_ID } from './overview-layers.js';
 
 /**

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
 import { airQualityRule, aqhiCategoryName, aqhiSeverity, aqiCategoryName, aqiSeverity } from './air-quality.js';
 
 const T0 = Date.parse('2026-09-23T20:00:00Z');

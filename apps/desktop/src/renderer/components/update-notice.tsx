@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import type { UpdaterState } from '@worldview/ipc-contract';
-import { Button, Icon } from '@worldview/ui';
+import type { UpdaterState } from '@opcb/ipc-contract';
+import { Button, Icon } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 
 /**
  * "Update available — restart to update?" (operator decision 2026-10-20, ADR-012 amendment):
- * a card over the map when a newer WorldView exists, so nobody works on an old build without
+ * a card over the map when a newer OP-CB exists, so nobody works on an old build without
  * knowing. With automatic updates the new version downloads in the background and the card
  * says so, then offers the restart; Later hides it for this version until the next start.
  */
 /** Where the releases are published (electron-builder.yml `publish`). */
-export const RELEASES_URL = 'https://github.com/the-x1x1/oneview/releases';
+export const RELEASES_URL = 'https://github.com/the-x1x1/OP-CB/releases';
 
 export interface UpdateNoticeModel {
   title: string;

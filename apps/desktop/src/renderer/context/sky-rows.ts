@@ -7,7 +7,7 @@ import {
   type GeoPosition,
   type SkyEvent,
   type SkyPosition,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { compassPoint } from './object-knowledge.js';
 
 /**

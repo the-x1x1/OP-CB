@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { constants as fsConstants, promises as fsp, close as fsClose, open as fsOpen, write as fsWrite } from 'node:fs';
 import tty from 'node:tty';
-import { ProviderError, type ByteStreamEvents, type ByteStreamHandle } from '@worldview/provider-sdk';
+import { ProviderError, type ByteStreamEvents, type ByteStreamHandle } from '@opcb/provider-sdk';
 
 /**
  * A USB serial port to a device on this computer (ADR-003 amendment 2026-10-08,

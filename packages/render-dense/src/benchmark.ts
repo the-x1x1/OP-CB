@@ -1,11 +1,11 @@
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import {
   diffFeatures,
   presentObjects,
   type PresentationResult,
   type RenderFeature,
   type ViewState,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 
 /**
  * Presentation benchmark harness (pure, runnable in Node): measures the cost of

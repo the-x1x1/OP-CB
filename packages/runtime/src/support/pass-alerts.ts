@@ -1,5 +1,5 @@
-import type { PassAlertSettings } from '@worldview/ipc-contract';
-import type { JsonValue } from '@worldview/world-model';
+import type { PassAlertSettings } from '@opcb/ipc-contract';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * Satellite pass alerts (Settings → `passAlerts`): a notice a few minutes before a listed

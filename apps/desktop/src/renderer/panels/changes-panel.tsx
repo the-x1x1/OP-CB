@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { GeoBounds, WorldEvent, WorldObject } from '@worldview/world-model';
-import type { WhatChangedResult } from '@worldview/ipc-contract';
+import type { GeoBounds, WorldEvent, WorldObject } from '@opcb/world-model';
+import type { WhatChangedResult } from '@opcb/ipc-contract';
 import {
   Button,
   EmptyState,
@@ -10,7 +10,7 @@ import {
   formatAgo,
   formatObjectType,
   formatUtcDateTime,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 

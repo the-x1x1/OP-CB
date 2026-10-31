@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * NOAA / National Weather Service — active alerts from api.weather.gov (GeoJSON).
@@ -71,7 +71,7 @@ export const NWS_MANIFEST: ProviderManifest = {
       label: 'Contact for the User-Agent',
       kind: 'string',
       placeholder: 'you@example.org or a URL',
-      defaultLabel: 'The WorldView project page',
+      defaultLabel: 'The OP-CB project page',
       description:
         'api.weather.gov asks clients to identify themselves and may answer 403 without this. It is sent to weather.gov only.',
       helpUrl: 'https://www.weather.gov/documentation/services-web-api',
@@ -143,10 +143,10 @@ export const NWS_MANIFEST: ProviderManifest = {
 export const NWS_ALERTS_URL = 'https://api.weather.gov/alerts/active?status=actual&message_type=alert,update';
 
 /** Product identity sent to api.weather.gov; the contact is operator-configured (settings.contact). */
-export const NWS_USER_AGENT_PRODUCT = 'WorldView/0.1';
+export const NWS_USER_AGENT_PRODUCT = 'OP-CB/0.1';
 
 /** The identification sent when the operator has not given a contact of their own. */
-export const NWS_DEFAULT_CONTACT = 'https://github.com/the-x1x1/oneview';
+export const NWS_DEFAULT_CONTACT = 'https://github.com/the-x1x1/OP-CB';
 
 export function nwsUserAgent(contact: string | undefined): string {
   return `${NWS_USER_AGENT_PRODUCT} (contact: ${contact || NWS_DEFAULT_CONTACT})`;

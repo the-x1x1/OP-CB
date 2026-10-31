@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { DiagnosticsSnapshot } from '@worldview/ipc-contract';
+import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
 import {
   DiagnosticsCollector,
   exportBundle,
@@ -25,8 +25,8 @@ function sources(overrides: Partial<DiagnosticsSources> = {}): DiagnosticsSource
     renderer: () => ({ active: '3D', webgl2: true, gpu: 'Test GPU' }),
     sidecars: () => [{ id: 'go2rtc', status: 'not-configured' }],
     updater: () => base.updater,
-    disk: () => ({ dataDir: '/home/alice/.config/WorldView', usedBytes: 4096, freeBytes: 1 }),
-    logs: () => ({ path: '/home/alice/.config/WorldView/logs/app.log', sizeBytes: 12 }),
+    disk: () => ({ dataDir: '/home/alice/.config/OP-CB', usedBytes: 4096, freeBytes: 1 }),
+    logs: () => ({ path: '/home/alice/.config/OP-CB/logs/app.log', sizeBytes: 12 }),
     ...overrides,
   };
 }
@@ -52,7 +52,7 @@ test('collector: assembles a snapshot from injected sources and degrades failing
 });
 
 test('bundle export: redacts secrets and user paths in snapshot, findings and log tail', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-diag-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-diag-'));
   const logFile = path.join(dir, 'app.log');
   const lines = [
     JSON.stringify({
@@ -60,7 +60,7 @@ test('bundle export: redacts secrets and user paths in snapshot, findings and lo
       level: 'info',
       category: 'app',
       message: 'started',
-      fields: { dataDir: '/home/alice/.config/WorldView' },
+      fields: { dataDir: '/home/alice/.config/OP-CB' },
     }),
     JSON.stringify({
       ts: '2026-09-21T09:00:01Z',
@@ -81,23 +81,23 @@ test('bundle export: redacts secrets and user paths in snapshot, findings and lo
     findings: [
       {
         area: 'settings',
-        message: 'reset from C:\\Users\\alice\\AppData\\Roaming\\WorldView\\settings.json',
+        message: 'reset from C:\\Users\\alice\\AppData\\Roaming\\OP-CB\\settings.json',
         token: 'abc',
       },
     ],
   });
-  assert.equal(path.basename(file), 'worldview-diagnostics-2026-09-21T10-00-00-000Z.json');
+  assert.equal(path.basename(file), 'opcb-diagnostics-2026-09-21T10-00-00-000Z.json');
   const text = await fs.readFile(file, 'utf8');
   assert.ok(!text.includes('alice'), 'account name never appears in the bundle');
   assert.ok(!text.includes('SHOULDNOTLEAK'));
   assert.ok(!text.includes('user:pw@'));
-  assert.equal(bundle.snapshot.disk.dataDir, '~/.config/WorldView');
+  assert.equal(bundle.snapshot.disk.dataDir, '~/.config/OP-CB');
   assert.equal(bundle.logTail.length, 2, 'torn line skipped');
   assert.equal(bundle.logTailTruncated, false);
   assert.equal((bundle.findings[0] as { token: string }).token, '<redacted>');
   assert.equal(
     (bundle.findings[0] as { message: string }).message,
-    'reset from ~\\AppData\\Roaming\\WorldView\\settings.json',
+    'reset from ~\\AppData\\Roaming\\OP-CB\\settings.json',
   );
   assert.equal(bundle.redaction.homeDir, '~');
 });
@@ -110,7 +110,7 @@ test('path redaction handles Windows, macOS and Linux user roots', () => {
 });
 
 test('todo report: finds markers in comments only, skips tests/fixtures/docs', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-todo-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-todo-'));
   await fs.mkdir(path.join(dir, 'packages', 'x', 'src', 'test'), { recursive: true });
   await fs.mkdir(path.join(dir, 'fixtures'), { recursive: true });
   await fs.writeFile(

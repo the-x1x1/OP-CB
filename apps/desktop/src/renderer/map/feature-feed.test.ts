@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 import { FeatureFeed } from './feature-feed.js';
 
 const pt = (id: string, lat: number): RenderFeature => ({

@@ -103,7 +103,7 @@ export function mergeSecurityHeaders(
 export const IDENTIFIED_TILE_URLS = ['https://tile.openstreetmap.org/*'];
 
 export function appUserAgent(version: string): string {
-  return `WorldView/${version} (+https://github.com/the-x1x1/oneview)`;
+  return `OP-CB/${version} (+https://github.com/the-x1x1/OP-CB)`;
 }
 
 /** Request headers for a tile request to one of IDENTIFIED_TILE_URLS: the app's own User-Agent. */

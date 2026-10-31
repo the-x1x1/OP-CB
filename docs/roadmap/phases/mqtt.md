@@ -359,7 +359,7 @@ rtl-433-weather-stations (mqtt)
 (each of the other four prints the same 15 checks, all PASS)
 
 **The provider through the runtime's real client, over loopback TCP.** This was a scratch
-script, not committed, because `connector-runtime` may not import `@worldview/runtime`. It
+script, not committed, because `connector-runtime` may not import `@opcb/runtime`. It
 ran `MqttProvider` on `createMqtt` from `packages/runtime/src/support/mqtt-client.ts` against a
 broker that speaks the MQTT 3.1.1 wire protocol. The broker was written for the run. It is
 not Mosquitto. It sends SUBACK and a retained PUBLISH in one TCP write, then a QoS 1 PUBLISH
@@ -367,11 +367,11 @@ and a message on a topic that was not subscribed, drops the first connection, an
 the password only if it is right:
 
 ```
-conn1 CONNECT level=4 client=worldview-… user=worldview password=(6 chars)
+conn1 CONNECT level=4 client=opcb-… user=opcb password=(6 chars)
 conn1 SUBSCRIBE trackers/+/position@qos1
 conn1 broker drops the connection
 after drop: health OFFLINE (the broker connection closed)
-conn2 CONNECT level=4 client=worldview-… user=worldview password=(6 chars)
+conn2 CONNECT level=4 client=opcb-… user=opcb password=(6 chars)
 conn2 SUBSCRIBE trackers/+/position@qos1
 after reconnect: health LIVE; connections 2
 conn2 DISCONNECT
@@ -396,6 +396,6 @@ live, non-retained message.)
 
 For the operator, once M1 and M2 have landed: run Mosquitto on this machine and
 `rtl_433 -F mqtt://127.0.0.1:1883 -M time:unix`. Copy `rtl_433-weather-stations.json` into
-`%APPDATA%\@worldview\desktop\connectors\`, enable it, and name a `position.fixed`. Source Health
+`%APPDATA%\OP-CB\connectors\`, enable it, and name a `position.fixed`. Source Health
 should say LIVE and the stations should appear. `connector:test --live` fetches over HTTP and
 does not speak MQTT, so it is not the way to check this source.

@@ -1,11 +1,11 @@
-import type { MapProviderList } from '@worldview/ipc-contract';
-import { isBasemapOverlay, type RasterOverlay } from '@worldview/world-model';
+import type { MapProviderList } from '@opcb/ipc-contract';
+import { isBasemapOverlay, type RasterOverlay } from '@opcb/world-model';
 import {
   DEFAULT_TERRAIN_ID,
   PREFERRED_BASEMAP_ID,
   defaultBasemapFor,
   type ResolvedMapProvider,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 
 /**
  * A map a running source publishes (a raster overlay with `role: 'basemap'`: USGSTopo,

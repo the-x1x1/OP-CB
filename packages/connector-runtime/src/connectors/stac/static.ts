@@ -1,4 +1,4 @@
-import { ProviderError } from '@worldview/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import { isRecord, linkOf } from './items.js';
 
 /**

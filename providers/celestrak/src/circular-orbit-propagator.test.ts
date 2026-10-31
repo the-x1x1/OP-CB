@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import { CircularOrbitPropagator, gmstRadians } from './circular-orbit-propagator.js';
 import type { GpElements } from './elements.js';
 

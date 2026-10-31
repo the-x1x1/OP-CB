@@ -1,4 +1,4 @@
-import type { WorldEvent } from '@worldview/world-model';
+import type { WorldEvent } from '@opcb/world-model';
 
 /**
  * The events an event names in its properties, as the selection panel lists them: the later

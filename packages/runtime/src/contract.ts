@@ -1,4 +1,4 @@
-import type { WorldClient, WorldRequests, WorldEvents, RequestChannel, EventChannel } from '@worldview/ipc-contract';
+import type { WorldClient, WorldRequests, WorldEvents, RequestChannel, EventChannel } from '@opcb/ipc-contract';
 
 /**
  * WorldRuntime — the in-process composition of providers, world state, history,

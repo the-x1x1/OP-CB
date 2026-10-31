@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { DataLocationInfo } from '@worldview/ipc-contract';
-import { Button } from '@worldview/ui';
+import type { DataLocationInfo } from '@opcb/ipc-contract';
+import { Button } from '@opcb/ui';
 import { useClient } from '../store/store.js';
 import { bytesText } from './map-download-panel.js';
 
 const KIND_TEXT: Record<DataLocationInfo['kind'], string> = {
   usual: "this computer's usual application-data folder",
-  portable: 'a portable WorldView-data folder beside the app, which travels with its drive',
+  portable: 'a portable OP-CB-data folder beside the app, which travels with its drive',
   moved: 'a folder you chose',
 };
 
 /**
- * Where all of WorldView's data lives — settings, history, maps, keys, logs — and moving it to
+ * Where all of OP-CB's data lives — settings, history, maps, keys, logs — and moving it to
  * a drive (an external SSD) from the next start. Data vaults are for packs only; this moves
  * everything.
  */
@@ -51,9 +51,8 @@ export function DataLocationCard() {
       <p className="wv-cc-muted">
         Everything OP-CB writes lives here: settings, history, saved places, downloaded maps, the inventory, stored keys
         and logs. To keep all of it on an external SSD, move it there; to carry OP-CB between computers, unzip the
-        portable copy onto the drive and make a folder named <code>WorldView-data</code> beside{' '}
-        <code>WorldView.exe</code>. Stored keys are locked to one computer by the operating system and are asked for
-        again on another.
+        portable copy onto the drive and make a folder named <code>OP-CB-data</code> beside <code>OP-CB.exe</code>.
+        Stored keys are locked to one computer by the operating system and are asked for again on another.
       </p>
       {info.kind !== 'portable' ? (
         <div className="wv-cc-actions">

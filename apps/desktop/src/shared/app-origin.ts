@@ -9,12 +9,12 @@
  * so Chromium blocked the app's own bundle and the packaged window came up empty.
  */
 export const DEV_SERVER_ORIGIN = 'http://127.0.0.1:5173';
-export const APP_ORIGIN = 'worldview://app';
+export const APP_ORIGIN = 'opcb://app';
 
 export function isTrustedRendererUrl(url: string, opts: { dev: boolean; appDir?: string }): boolean {
   if (opts.dev) return url === DEV_SERVER_ORIGIN || url.startsWith(`${DEV_SERVER_ORIGIN}/`);
   // The protocol handler already refuses anything outside the renderer directory, so the
   // origin is the whole check here. The trailing slash matters: it keeps
-  // `worldview://app.example.com/` from passing as a prefix of the real origin.
+  // `opcb://app.example.com/` from passing as a prefix of the real origin.
   return url === APP_ORIGIN || url.startsWith(`${APP_ORIGIN}/`);
 }

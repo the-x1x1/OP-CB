@@ -1,12 +1,4 @@
-import type {
-  GeoBounds,
-  GeoRegion,
-  JsonValue,
-  Observation,
-  RasterOverlay,
-  TimeRange,
-  Clock,
-} from '@worldview/world-model';
+import type { GeoBounds, GeoRegion, JsonValue, Observation, RasterOverlay, TimeRange, Clock } from '@opcb/world-model';
 import type { ProviderManifest } from './manifest.js';
 import type { ProviderError, ProviderHealth } from './health.js';
 import type { GrantedFileStat, Ogr2ogrAccess } from './local-files.js';

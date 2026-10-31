@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { geodesicInverse, type GeoPosition } from '@worldview/world-model';
-import type { ViewState, VisualStyleId } from '@worldview/render-core';
+import { geodesicInverse, type GeoPosition } from '@opcb/world-model';
+import type { ViewState, VisualStyleId } from '@opcb/render-core';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { useNow } from '../hooks/use-now.js';
 import { VISUAL_STYLE_NAMES } from '../store/display.js';
@@ -16,7 +16,7 @@ import {
   formatZoom,
 } from './hud-format.js';
 import { formatDistance } from './measure.js';
-import type { NearbyPlaceResult } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult } from '@opcb/ipc-contract';
 import { compassPoint } from '../context/object-knowledge.js';
 import { useActions } from '../store/store.js';
 

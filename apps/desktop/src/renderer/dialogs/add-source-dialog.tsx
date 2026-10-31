@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
-import type { DefinitionsReload } from '@worldview/ipc-contract';
-import { Button, Dialog, FieldList } from '@worldview/ui';
+import type { DefinitionsReload } from '@opcb/ipc-contract';
+import { Button, Dialog, FieldList } from '@opcb/ui';
 import { ConnectorBadge } from '../panels/sources-connector-badge.js';
 import { waitingStyle } from '../panels/sources-definitions.js';
 import { AddSourceFlow, type AddSourceState, type DefinitionsClient } from '../panels/sources-definitions-model.js';

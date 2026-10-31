@@ -1,4 +1,4 @@
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
 
 /** The connector a source runs on when it is a definition (ADR-013), else undefined. */
 export function connectorOf(entry: Pick<SourceHealthEntry, 'meta'>): string | undefined {

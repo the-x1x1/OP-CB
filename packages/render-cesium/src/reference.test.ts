@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ManualScheduler, zoomToAltitudeM, type ReferenceData, type ReferenceLine } from '@worldview/render-core';
+import { ManualScheduler, zoomToAltitudeM, type ReferenceData, type ReferenceLine } from '@opcb/render-core';
 import { ALWAYS_VISIBLE } from './horizon.js';
 import { CesiumWorldRenderer } from './renderer.js';
 import { ReferenceTileSource, tileBounds, zoomForLevel, type TileContext2D } from './reference-tiles.js';

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RasterOverlay } from '@worldview/world-model';
+import type { RasterOverlay } from '@opcb/world-model';
 import {
   clampSplit,
   defaultSplit,

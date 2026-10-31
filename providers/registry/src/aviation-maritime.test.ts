@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { manifestSchema, testing, type ProviderError } from '@worldview/provider-sdk';
+import { manifestSchema, testing, type ProviderError } from '@opcb/provider-sdk';
 import { AVIATION_MARITIME_PROVIDER_IDS, aviationMaritimeProviders } from './aviation-maritime.js';
 
 test('aviation/maritime partial map: keys equal manifest ids, manifests validate, fresh instance per call', () => {

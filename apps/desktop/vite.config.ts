@@ -15,7 +15,7 @@ import { VITE_PUBLIC_DIR } from './scripts/renderer-assets.mjs';
  * directly did not survive the build. They are referenced through CESIUM_BASE_URL.
  *
  * `dev:browser` serves the same renderer without Electron: the shell then uses the
- * in-process DemoClient (packages/ui) because `window.worldview` is absent.
+ * in-process DemoClient (packages/ui) because `window.opcb` is absent.
  */
 const here = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(here, '..', '..');
@@ -23,8 +23,8 @@ const workspaceRoot = path.resolve(here, '..', '..');
 /**
  * Workspace packages resolve through the same tsconfig paths the typecheck uses, but a
  * Vite alias is a prefix replacement while a tsconfig path maps a bare specifier to a
- * single file. Mapping `@worldview/ui` to `packages/ui/src/index.ts` therefore turned
- * `@worldview/ui/base.css` into `packages/ui/src/index.ts/base.css`, and the build
+ * single file. Mapping `@opcb/ui` to `packages/ui/src/index.ts` therefore turned
+ * `@opcb/ui/base.css` into `packages/ui/src/index.ts/base.css`, and the build
  * failed on a stylesheet that exists. Each package needs two rules: an exact match for
  * the bare specifier, and a directory rule for everything underneath it.
  */
@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => ({
   resolve: { alias: workspaceAliases() },
   define: {
     CESIUM_BASE_URL: JSON.stringify('./cesium'),
-    __WORLDVIEW_DEMO__: JSON.stringify(process.env.WORLDVIEW_DEMO === '1' || mode === 'demo'),
+    __OPCB_DEMO__: JSON.stringify(process.env.OPCB_DEMO === '1' || mode === 'demo'),
   },
   server: {
     port: 5173,

@@ -1,13 +1,13 @@
 # ADR-014 — Local read-only API
 
-Status: Accepted · 2026-10-08 · Package: `@worldview/runtime` (`support/local-api.ts`), types in
-`@worldview/ipc-contract` (`local-api.ts`) · docs/cyberdeck M6
+Status: Accepted · 2026-10-08 · Package: `@opcb/runtime` (`support/local-api.ts`), types in
+`@opcb/ipc-contract` (`local-api.ts`) · docs/cyberdeck M6
 
 ## Context
 
 A separate program on the same computer — Formicaria, later — should be able to read what a
-running WORLDVIEW knows: which sources are up, objects near a place, a track, offline status, and
-(with the operator's say-so) this computer's own GPS position. WORLDVIEW must stay a standalone
+running OP-CB knows: which sources are up, objects near a place, a track, offline status, and
+(with the operator's say-so) this computer's own GPS position. OP-CB must stay a standalone
 app: no Formicaria code, model runtime or dependency inside it, and nothing that turns it into a
 service for the network.
 
@@ -23,12 +23,12 @@ would make every future channel a question of whether it leaks.
   `/v1/own-position`. Its own router (`handleLocalApi`) over read-only views of the runtime —
   not the IPC handlers by name. A new endpoint is a code change with tests, never a
   configuration.
-- **A Unix socket that only this user can open.** `$XDG_RUNTIME_DIR/worldview/api.sock`: the
+- **A Unix socket that only this user can open.** `$XDG_RUNTIME_DIR/opcb/api.sock`: the
   per-user runtime folder the login session creates (0700, tmpfs). That folder must be ours and
-  not writable by others; the `worldview` folder in it is created 0700 and must be ours and not a
+  not writable by others; the `opcb` folder in it is created 0700 and must be ours and not a
   link; the socket is made under a 0177 umask (for the one synchronous `listen` call only) and
   set 0600. A path that is not our socket (a file, a link, another user's), or a socket something
-  still answers on (another WORLDVIEW), is refused and left alone; on stop and on quit only the
+  still answers on (another OP-CB), is refused and left alone; on stop and on quit only the
   socket this server made (by inode) is removed. No `XDG_RUNTIME_DIR`, no API. No TCP listener
   of any kind, so nothing on the network — loopback included — can reach it. This is the same
   trust model as `ssh-agent`'s socket: the kernel's file permissions are the credential. No
@@ -62,7 +62,7 @@ would make every future channel a question of whether it leaks.
 
 ## Consequences
 
-- Formicaria can be built against `/v1` and the fixtures without WORLDVIEW knowing about it.
+- Formicaria can be built against `/v1` and the fixtures without OP-CB knowing about it.
 - Live state only: `/v1/objects` answers what the app holds now (`basis: 'live'`), and in demo
   mode says `recorded: true`. Historical object queries beyond one object's track are not in v1.
 - Any user able to run code as the operator can read what the operator has allowed — as with any
@@ -72,4 +72,4 @@ would make every future channel a question of whether it leaks.
 
 ## Amendments
 
-- 2026-10-20 (Windows, and an MCP server; operator decision "MCP — to link to Formicaria", resolved as a local server for AI clients on this computer): **Windows** gets the API on a named pipe, `\\.\pipe\worldview-api-<user>` (`windowsPipePath`), with Windows' default pipe security — the creating user, SYSTEM and administrators may write, everyone else read-only, and a read-only client cannot send a request — which is the ACL the decision called for (Windows' documented default for a pipe made without a security descriptor; `readableAll`/`writableAll` are Unix-only in Node and do nothing here — not yet exercised on a Windows machine, KNOWN-LIMITATIONS); the setting and the data-policy rules are unchanged. **An MCP server** (`apps/desktop/src/mcp/`, built to `dist/mcp/worldview-mcp.cjs` and unpacked from the asar): a stdio JSON-RPC server an MCP client starts as `ELECTRON_RUN_AS_NODE=1 <executable> <script>`, offering one read-only tool per `/v1` endpoint, each of which is one GET of the local API over its socket or pipe — not a second path into the runtime. It therefore inherits every rule above: on only while the operator's Local API setting is on, the same limits, the same refusals, nothing it can change. No dependency: the four MCP methods it needs (`initialize`, `ping`, `tools/list`, `tools/call`) are written in `mcp-server.ts`. Not yet run from a real MCP client (KNOWN-LIMITATIONS).
+- 2026-10-20 (Windows, and an MCP server; operator decision "MCP — to link to Formicaria", resolved as a local server for AI clients on this computer): **Windows** gets the API on a named pipe, `\\.\pipe\opcb-api-<user>` (`windowsPipePath`), with Windows' default pipe security — the creating user, SYSTEM and administrators may write, everyone else read-only, and a read-only client cannot send a request — which is the ACL the decision called for (Windows' documented default for a pipe made without a security descriptor; `readableAll`/`writableAll` are Unix-only in Node and do nothing here — not yet exercised on a Windows machine, KNOWN-LIMITATIONS); the setting and the data-policy rules are unchanged. **An MCP server** (`apps/desktop/src/mcp/`, built to `dist/mcp/opcb-mcp.cjs` and unpacked from the asar): a stdio JSON-RPC server an MCP client starts as `ELECTRON_RUN_AS_NODE=1 <executable> <script>`, offering one read-only tool per `/v1` endpoint, each of which is one GET of the local API over its socket or pipe — not a second path into the runtime. It therefore inherits every rule above: on only while the operator's Local API setting is on, the same limits, the same refusals, nothing it can change. No dependency: the four MCP methods it needs (`initialize`, `ping`, `tools/list`, `tools/call`) are written in `mcp-server.ts`. Not yet run from a real MCP client (KNOWN-LIMITATIONS).

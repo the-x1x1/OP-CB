@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   buildObservation,
@@ -13,7 +13,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { FLUSH_INTERVAL_MS, NMEA2000_LOCAL_MANIFEST, RECONNECT_MAX_MS, RECONNECT_MIN_MS } from './manifest.js';
 import { decodePgn, READ_PGNS } from './pgns.js';
 import { aisDraft, mmsiString, OwnVessel, StaticStore, staticInfo } from './vessels.js';

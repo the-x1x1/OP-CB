@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RasterOverlay, WorldObject } from '@worldview/world-model';
-import { themeEntry } from '@worldview/render-core';
+import type { RasterOverlay, WorldObject } from '@opcb/world-model';
+import { themeEntry } from '@opcb/render-core';
 import { weatherLegend } from './weather-legend.js';
 
 const overlay = (providerId: string) => ({ id: `${providerId}:x`, providerId }) as unknown as RasterOverlay;

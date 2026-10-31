@@ -1,8 +1,8 @@
 import type { Dispatch } from 'react';
-import type { WorldChangedEvent, WorldClient } from '@worldview/ipc-contract';
-import { isIpcError } from '@worldview/ipc-contract';
+import type { WorldChangedEvent, WorldClient } from '@opcb/ipc-contract';
+import { isIpcError } from '@opcb/ipc-contract';
 import type { RootAction, RootState } from './types.js';
-import { lensById } from '@worldview/render-core';
+import { lensById } from '@opcb/render-core';
 import { markDelta, noteWorldDispatch } from '../map/delta-marks.js';
 
 export interface SyncDeps {
@@ -59,7 +59,7 @@ export function bindClient({
           dispatch({ type: 'world/events', events: page.items, replace: true });
       })
       .catch((err: unknown) => {
-        if (!disposed) console.warn('[worldview] events refresh failed:', describeError(err));
+        if (!disposed) console.warn('[opcb] events refresh failed:', describeError(err));
       })
       .finally(() => {
         eventsInFlight = false;
@@ -113,7 +113,7 @@ export function bindClient({
       .request('events.types.list', undefined)
       .then(guard((eventTypes) => dispatch({ type: 'session/eventTypes', eventTypes })))
       .catch((err: unknown) => {
-        if (!disposed) console.warn('[worldview] event types refresh failed:', describeError(err));
+        if (!disposed) console.warn('[opcb] event types refresh failed:', describeError(err));
       });
   offs.push(
     client.on(
@@ -132,7 +132,7 @@ export function bindClient({
   );
   // The basemaps on offer depend on the installed packs (the offline vector basemaps read a
   // pack) and on being online (sources with no cached tiles go unavailable offline). Read once
-  // at start, a pack installed from Settings left WORLDVIEW dark "unavailable" until a restart.
+  // at start, a pack installed from Settings left OP-CB dark "unavailable" until a restart.
   // Asked again when either changes, not on every status update.
   let providersKey: string | undefined;
   const refreshMapProviders = (key: string) => {
@@ -144,7 +144,7 @@ export function bindClient({
       .request('map.providers.list', undefined)
       .then(guard((providers) => dispatch({ type: 'session/mapProviders', providers })))
       .catch((err: unknown) => {
-        if (!disposed) console.warn('[worldview] map providers refresh failed:', describeError(err));
+        if (!disposed) console.warn('[opcb] map providers refresh failed:', describeError(err));
       });
   };
   let lastPacks = '';
@@ -235,7 +235,7 @@ export function bindClient({
       guard((lenses) => dispatch({ type: 'lenses/list', lenses })),
     ),
   );
-  // A worldview:// link opened while the app runs; one that started the app is taken below.
+  // A opcb:// link opened while the app runs; one that started the app is taken below.
   offs.push(
     client.on(
       'link.opened',
@@ -288,7 +288,7 @@ export function bindClient({
     ];
     for (const p of loads)
       p.catch((err: unknown) => {
-        if (!disposed) console.warn('[worldview] initial load failed:', describeError(err));
+        if (!disposed) console.warn('[opcb] initial load failed:', describeError(err));
       });
     await Promise.allSettled(loads);
     // Reflect the settings' lens once lenses are known.

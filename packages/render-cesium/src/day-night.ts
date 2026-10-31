@@ -1,4 +1,4 @@
-import { DAY_NIGHT_REFRESH_MS } from '@worldview/render-core';
+import { DAY_NIGHT_REFRESH_MS } from '@opcb/render-core';
 import type { CesiumLike, JulianDateLike, ViewerLike } from './cesium-like.js';
 
 export interface DayNightTimers {
@@ -10,7 +10,7 @@ export interface DayNightTimers {
  * Day and night on the globe: Cesium's own lighting, from the real Sun.
  *
  * Cesium already knows where the Sun is for any time on the scene clock, and lights the
- * globe from it once `globe.enableLighting` is on. What it does not do in WORLDVIEW is keep
+ * globe from it once `globe.enableLighting` is on. What it does not do in OP-CB is keep
  * that clock current: the widget's clock does not advance (nothing here animates by
  * simulation time), and the scene is drawn in request-render mode with
  * `maximumRenderTimeChange` infinite, so a changing clock would not draw a frame by itself

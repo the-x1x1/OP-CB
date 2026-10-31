@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * STAC items → records the mapping can read. A STAC item is a GeoJSON Feature with an `id`,

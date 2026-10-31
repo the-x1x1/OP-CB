@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildObservation, testing, type WorldProvider } from '@worldview/provider-sdk';
-import { geometryCentroid, type JsonValue, type Observation, type WorldGeometry } from '@worldview/world-model';
+import { buildObservation, testing, type WorldProvider } from '@opcb/provider-sdk';
+import { geometryCentroid, type JsonValue, type Observation, type WorldGeometry } from '@opcb/world-model';
 import {
   compileMapping,
   definitionToManifest,
@@ -14,24 +14,19 @@ import {
   resolveTransform,
   type ConnectorProviderDefinition,
   type MappingSpec,
-} from '@worldview/connector-sdk';
-import {
-  defaultConnectorRegistry,
-  formatSuite,
-  runConnectorSuite,
-  RestJsonProvider,
-} from '@worldview/connector-runtime';
-import { substitutePathCredential } from '@worldview/core';
-import { defaultIdentityResolver } from '@worldview/identity';
-import { loadSidecar, sidecarPathFor } from '@worldview/tool-connector-validator';
-import { findDefinitions } from '@worldview/tool-license-audit';
-import { normalizeUsgsFeed, USGS_MANIFEST } from '@worldview/provider-usgs';
-import { normalizeCurrentStorms } from '@worldview/provider-nhc';
-import { normalizeNwsAlerts } from '@worldview/provider-weather';
-import { AISSTREAM_MANIFEST, normalizeAisEnvelope } from '@worldview/provider-ais';
-import { ADSB_LOL_MANIFEST, normalizeAircraftRows, parseAdsbLolResponse } from '@worldview/provider-adsb-remote';
-import { detectionExternalId, isKeyRejection, parseFirmsCsv } from '@worldview/provider-firms';
-import { normalizeAirportCollection, SEED_AIRPORTS_MANIFEST } from '@worldview/provider-infrastructure';
+} from '@opcb/connector-sdk';
+import { defaultConnectorRegistry, formatSuite, runConnectorSuite, RestJsonProvider } from '@opcb/connector-runtime';
+import { substitutePathCredential } from '@opcb/core';
+import { defaultIdentityResolver } from '@opcb/identity';
+import { loadSidecar, sidecarPathFor } from '@opcb/tool-connector-validator';
+import { findDefinitions } from '@opcb/tool-license-audit';
+import { normalizeUsgsFeed, USGS_MANIFEST } from '@opcb/provider-usgs';
+import { normalizeCurrentStorms } from '@opcb/provider-nhc';
+import { normalizeNwsAlerts } from '@opcb/provider-weather';
+import { AISSTREAM_MANIFEST, normalizeAisEnvelope } from '@opcb/provider-ais';
+import { ADSB_LOL_MANIFEST, normalizeAircraftRows, parseAdsbLolResponse } from '@opcb/provider-adsb-remote';
+import { detectionExternalId, isKeyRejection, parseFirmsCsv } from '@opcb/provider-firms';
+import { normalizeAirportCollection, SEED_AIRPORTS_MANIFEST } from '@opcb/provider-infrastructure';
 
 /**
  * Phase provider-migration: the evidence behind docs/providers/MIGRATION-MATRIX.md.

@@ -1,5 +1,5 @@
-import { FEED_HALF_LIFE_HOURS, FEED_SEVERITY_WEIGHT, haversineMeters, type GeoPosition } from '@worldview/world-model';
-import type { FeedItem } from '@worldview/ipc-contract';
+import { FEED_HALF_LIFE_HOURS, FEED_SEVERITY_WEIGHT, haversineMeters, type GeoPosition } from '@opcb/world-model';
+import type { FeedItem } from '@opcb/ipc-contract';
 
 /**
  * The world feed ranked by relevance rather than recency (roadmap 0.4): how severe, how

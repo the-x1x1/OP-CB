@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import { decodableVideo, previewTitle } from './camera-previews.js';
 
 /** An invented camera: only the fields read here. */

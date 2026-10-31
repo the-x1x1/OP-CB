@@ -99,7 +99,7 @@ export function rawZip(entries: RawEntry[], opts: RawZipOptions = {}): Buffer {
   return Buffer.concat([...parts, cd, eocd, comment]);
 }
 
-export async function tempDir(prefix = 'worldview-offline-'): Promise<string> {
+export async function tempDir(prefix = 'opcb-offline-'): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 

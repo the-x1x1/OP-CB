@@ -445,16 +445,16 @@ ok 47 - third review: a pasted GetCapabilities URL is held to the query rules; o
   branch is pushed (a worktree keeps the integrator's checkout untouched):
 
   ```powershell
-  cd C:\Users\jconn\worldview
+  cd C:\Users\jconn\opcb
   git fetch origin phase/ogc
-  git worktree add ..\worldview-ogc origin/phase/ogc
-  cd ..\worldview-ogc
+  git worktree add ..\opcb-ogc origin/phase/ogc
+  cd ..\opcb-ogc
   pnpm install --frozen-lockfile
   Get-ChildItem connectors\examples\ogc -Filter *.json | Where-Object { $_.Name -notlike '*.test.json' } |
     ForEach-Object { pnpm connector:test $_.FullName --live }
   # what the globe will ask GeoMet for (WMS 1.3.0, CRS:84, which its radar layer does not list)
   (Invoke-WebRequest -UseBasicParsing 'https://geo.weather.gc.ca/geomet?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=RADAR_1KM_RRAI&STYLES=&FORMAT=image/png&TRANSPARENT=TRUE&CRS=CRS:84&BBOX=-100,40,-90,50&WIDTH=256&HEIGHT=256').Headers['Content-Type']
-  cd ..\worldview; git worktree remove ..\worldview-ogc
+  cd ..\opcb; git worktree remove ..\opcb-ogc
   ```
 
   What to expect: `vienna-wlan-wfs` LIVE with about 233 observations and no `crsNote`;

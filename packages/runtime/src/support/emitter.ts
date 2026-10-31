@@ -1,4 +1,4 @@
-import type { EventChannel, WorldEvents } from '@worldview/ipc-contract';
+import type { EventChannel, WorldEvents } from '@opcb/ipc-contract';
 
 type Listener = (payload: unknown, clientId?: string) => void;
 

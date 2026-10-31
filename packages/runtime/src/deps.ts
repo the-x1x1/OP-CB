@@ -1,14 +1,14 @@
 import type { GeodataRead } from './support/geodata-import.js';
-import type { Clock, GeoPosition, SeverityClass } from '@worldview/world-model';
+import type { Clock, GeoPosition, SeverityClass } from '@opcb/world-model';
 import type { LocalHardwareScan } from './support/local-hardware.js';
-import type { Logger, LoggerHub, CredentialResolver } from '@worldview/core';
-import type { DataDirs, SettingsStore } from '@worldview/config';
-import type { WorldProvider } from '@worldview/provider-sdk';
-import type { DiagnosticsSnapshot } from '@worldview/ipc-contract';
-import type { NetworkSignal } from '@worldview/offline';
-import type { SpawnFn } from '@worldview/camera-gateway';
-import type { AutoUpdaterLike } from '@worldview/updater';
-import type { ProviderRegistryOptions } from '@worldview/providers';
+import type { Logger, LoggerHub, CredentialResolver } from '@opcb/core';
+import type { DataDirs, SettingsStore } from '@opcb/config';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
+import type { NetworkSignal } from '@opcb/offline';
+import type { SpawnFn } from '@opcb/camera-gateway';
+import type { AutoUpdaterLike } from '@opcb/updater';
+import type { ProviderRegistryOptions } from '@opcb/providers';
 
 /**
  * Everything the runtime needs from its shell. The desktop main process supplies the
@@ -63,7 +63,7 @@ export const inProcessHostBridge: HostBridge = {
 };
 
 export interface WorldRuntimeDeps {
-  /** userData layout. Defaults to `dataDirs(<os tmp>/worldview-runtime)` only when `dataDir` is also absent. */
+  /** userData layout. Defaults to `dataDirs(<os tmp>/opcb-runtime)` only when `dataDir` is also absent. */
   dirs?: DataDirs;
   /** Convenience alternative to `dirs`. */
   dataDir?: string;
@@ -159,7 +159,7 @@ export interface WorldRuntimeDeps {
    * sysfs scan on Linux and nothing elsewhere; tests pass a fixed scan.
    */
   hardwareScan?: () => Promise<LocalHardwareScan>;
-  /** Where the local API's socket goes (ADR-014); default `$XDG_RUNTIME_DIR/worldview/api.sock`. */
+  /** Where the local API's socket goes (ADR-014); default `$XDG_RUNTIME_DIR/opcb/api.sock`. */
   localApiSocket?: string;
   /** Tests: where `/sys` is for the battery read (support/power.ts); default the real one. */
   powerSysRoot?: string;

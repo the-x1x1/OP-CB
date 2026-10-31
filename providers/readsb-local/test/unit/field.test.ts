@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing, type ProviderError } from '@worldview/provider-sdk';
+import { testing, type ProviderError } from '@opcb/provider-sdk';
 import { DEFAULT_READSB_ENDPOINT, RECEIVER_PROVENANCE, ReadsbLocalProvider } from '../../src/index.js';
 
 /**

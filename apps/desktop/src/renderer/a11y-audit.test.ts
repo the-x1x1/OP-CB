@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ViewState } from '@worldview/render-core';
+import type { ViewState } from '@opcb/render-core';
 import { auditMarkup } from './a11y-audit.js';
 import { rememberSkyAnswer } from './panels/sky-panel.js';
 import { createShell } from './create-shell.js';

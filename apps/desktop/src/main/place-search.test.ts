@@ -78,7 +78,7 @@ function harness(answers: Record<string, () => Response | Promise<Response>>, on
   let enabled = true;
   const search = new PlaceSearch({
     fetchImpl,
-    userAgent: 'WorldView/0.2.0 (desktop; https://github.com/the-x1x1/oneview)',
+    userAgent: 'OP-CB/0.2.0 (desktop; https://github.com/the-x1x1/OP-CB)',
     isOnline: () => online,
     enabled: () => enabled,
     now: () => t,
@@ -124,7 +124,7 @@ test('place search: Nominatim first, with an identifying User-Agent; bad coordin
   assert.equal(h.calls.length, 1);
   assert.ok(h.calls[0]!.url.startsWith('https://nominatim.openstreetmap.org/search?'));
   assert.ok(h.calls[0]!.url.includes('q=Berlin') && h.calls[0]!.url.includes('format=jsonv2'));
-  assert.match(h.calls[0]!.ua ?? '', /^WorldView\/\S+ \(/);
+  assert.match(h.calls[0]!.ua ?? '', /^OP-CB\/\S+ \(/);
 });
 
 test('place search: cached, and the same question in flight shares one request', async () => {
@@ -223,7 +223,7 @@ test('place search: Settings can put Photon first, and the two are cached apart'
   let first: 'nominatim' | 'photon' = 'photon';
   const search = new PlaceSearch({
     fetchImpl,
-    userAgent: 'WorldView/test (+https://github.com/the-x1x1/oneview)',
+    userAgent: 'OP-CB/test (+https://github.com/the-x1x1/OP-CB)',
     isOnline: () => true,
     enabled: () => true,
     first: () => first,

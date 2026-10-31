@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { LibraryFindAnswer, PrepCategory, PrepRecord } from '@worldview/ipc-contract';
-import { Button, Toggle } from '@worldview/ui';
+import type { LibraryFindAnswer, PrepCategory, PrepRecord } from '@opcb/ipc-contract';
+import { Button, Toggle } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, ago, heardHow } from './checks.js';
 import type { ActionId } from './guide-types.js';

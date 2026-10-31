@@ -19,9 +19,9 @@ import type {
   ViewState,
   VisualStyleId,
   WorldRenderer,
-} from '@worldview/render-core';
-import { createFrameScheduler, FrameCoalescer, type FrameScheduler } from '@worldview/render-core';
-import { withAntimeridianSpills, type GeoBounds, type GeoPosition, type RasterOverlay } from '@worldview/world-model';
+} from '@opcb/render-core';
+import { createFrameScheduler, FrameCoalescer, type FrameScheduler } from '@opcb/render-core';
+import { withAntimeridianSpills, type GeoBounds, type GeoPosition, type RasterOverlay } from '@opcb/world-model';
 import type {
   Cartesian3Like,
   CesiumLike,
@@ -29,7 +29,7 @@ import type {
   TerrainProviderLike,
   ViewerLike,
 } from './cesium-like.js';
-import { applyGraphics, createWorldViewer, installTrackpadPinchZoom } from './viewer.js';
+import { applyGraphics, createOpcber, installTrackpadPinchZoom } from './viewer.js';
 import {
   buildCesiumStackRegistry,
   MapStackController,
@@ -211,12 +211,12 @@ export class CesiumWorldRenderer implements WorldRenderer {
     let creditContainer = this.options.creditContainer;
     if (!creditContainer) {
       const el = container.ownerDocument.createElement('div');
-      el.className = 'worldview-credits';
+      el.className = 'opcb-credits';
       container.appendChild(el);
       this.ownedCreditContainer = el;
       creditContainer = el;
     }
-    const viewer = createWorldViewer(this.cesium, {
+    const viewer = createOpcber(this.cesium, {
       container,
       creditContainer,
       ...(this.options.powerPreference ? { powerPreference: this.options.powerPreference } : {}),

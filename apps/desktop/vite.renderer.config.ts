@@ -1,6 +1,6 @@
 /**
  * Vite config for the browser dev/demo build of the renderer shell
- * (`pnpm --filter @worldview/desktop dev:browser`). The Electron build is driven by
+ * (`pnpm --filter @opcb/desktop dev:browser`). The Electron build is driven by
  * electron-vite (main/preload owned by the desktop-platform workstream) and reuses the
  * same renderer root. Workspace packages are consumed as TypeScript source via the
  * tsconfig `paths` aliases below.
@@ -22,14 +22,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@worldview/ui/base.css': path.join(repoRoot, 'packages', 'ui', 'src', 'base.css'),
-      '@worldview/ui': pkg('ui'),
-      '@worldview/ipc-contract': pkg('ipc-contract'),
-      '@worldview/render-core': pkg('render-core'),
-      '@worldview/world-model': pkg('world-model'),
-      '@worldview/source-health': pkg('source-health'),
-      '@worldview/provider-sdk': pkg('provider-sdk'),
-      '@worldview/telemetry': pkg('telemetry'),
+      '@opcb/ui/base.css': path.join(repoRoot, 'packages', 'ui', 'src', 'base.css'),
+      '@opcb/ui': pkg('ui'),
+      '@opcb/ipc-contract': pkg('ipc-contract'),
+      '@opcb/render-core': pkg('render-core'),
+      '@opcb/world-model': pkg('world-model'),
+      '@opcb/source-health': pkg('source-health'),
+      '@opcb/provider-sdk': pkg('provider-sdk'),
+      '@opcb/telemetry': pkg('telemetry'),
     },
   },
   server: { port: 5178, strictPort: true },

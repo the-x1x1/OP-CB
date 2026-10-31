@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BUILT_IN_LENSES, lensById } from '@worldview/render-core';
+import { BUILT_IN_LENSES, lensById } from '@opcb/render-core';
 import { OVERVIEW_LAYERS, layerCounts, layerNotes, lensFilter, withLayer } from './overview-layers.js';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
 
 const overview = lensById('overview')!;
 

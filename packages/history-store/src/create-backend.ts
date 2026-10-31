@@ -1,4 +1,4 @@
-import { silentLogger, type Logger } from '@worldview/core';
+import { silentLogger, type Logger } from '@opcb/core';
 import { errorMessage, isHistoryBackendUnavailable, type HistoryBackend } from './backend.js';
 import { NdjsonBackend, type NdjsonBackendOptions } from './ndjson-backend.js';
 import { DUCKDB_BACKEND_KIND, DuckDbParquetBackend, type DuckDbParquetBackendOptions } from './duckdb-backend.js';

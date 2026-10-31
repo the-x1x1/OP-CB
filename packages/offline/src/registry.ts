@@ -1,11 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { constants as fsConstants, createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { systemClock, type Clock } from '@worldview/world-model';
-import { TypedEmitter, silentLogger, type Logger } from '@worldview/core';
-import { readJsonFile, writeFileAtomic } from '@worldview/core/node';
-import type { ConnectionSnapshot } from '@worldview/source-health';
-import type { OfflineStatus, WorldPackSignatureSummary, WorldPackSummary } from '@worldview/ipc-contract';
+import { systemClock, type Clock } from '@opcb/world-model';
+import { TypedEmitter, silentLogger, type Logger } from '@opcb/core';
+import { readJsonFile, writeFileAtomic } from '@opcb/core/node';
+import type { ConnectionSnapshot } from '@opcb/source-health';
+import type { OfflineStatus, WorldPackSignatureSummary, WorldPackSummary } from '@opcb/ipc-contract';
 import {
   WORLDPACK_MANIFEST_PATH,
   WORLDPACK_SEARCH_INDEX_PATH,
@@ -785,7 +785,7 @@ export class WorldPackRegistry {
   /**
    * A folder to write a pack straight into — the map download, whose one file can be far too big
    * to pass through a `.worldpack` archive: `.downloads/<id>` under where the pack will live
-   * (WorldView's own packs folder, or a vault proven writable now), so making it live is a rename
+   * (OP-CB's own packs folder, or a vault proven writable now), so making it live is a rename
    * on the same drive. Whatever an earlier, interrupted download left there is cleared — except,
    * with `keepPartial`, this pack's own folder, so a download can carry on where it stopped.
    */

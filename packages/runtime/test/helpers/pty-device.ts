@@ -3,7 +3,7 @@ import { createInterface } from 'node:readline';
 
 /**
  * A pseudo-terminal standing in for a USB serial device (Linux, python3). The test side opens the
- * slave (`path`) the way WORLDVIEW opens /dev/ttyUSB0; this helper holds the master: `send`
+ * slave (`path`) the way OP-CB opens /dev/ttyUSB0; this helper holds the master: `send`
  * writes bytes as the device would, `received` collects what was written to the device, and
  * `unplug` closes the master — the slave's reads then fail as they do when a cable is pulled.
  */

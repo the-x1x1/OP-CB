@@ -1,5 +1,5 @@
-import { computeConfidence, type JsonValue, type WorldObject } from '@worldview/world-model';
-import type { IdentityResolver } from '@worldview/identity';
+import { computeConfidence, type JsonValue, type WorldObject } from '@opcb/world-model';
+import type { IdentityResolver } from '@opcb/identity';
 import { rowToObservation, type HistoryRow, type RowToObservationOptions } from './row.js';
 
 /**

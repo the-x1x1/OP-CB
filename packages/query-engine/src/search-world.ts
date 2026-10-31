@@ -4,9 +4,9 @@ import {
   type GeoPosition,
   type JsonValue,
   type WorldObject,
-} from '@worldview/world-model';
-import type { WorldState } from '@worldview/state-engine';
-import type { SearchResult } from '@worldview/ipc-contract';
+} from '@opcb/world-model';
+import type { WorldState } from '@opcb/state-engine';
+import type { SearchResult } from '@opcb/ipc-contract';
 import { executeQuery, type EventSource } from './execute.js';
 import type { Gazetteer, GazetteerHit } from './gazetteer.js';
 import { stableHash } from './hash.js';

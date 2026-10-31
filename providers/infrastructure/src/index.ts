@@ -1,11 +1,11 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
   assertAtomicAdmission,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { SEED_AIRPORTS_MANIFEST, SEED_AIRPORTS_FILE } from './manifest.js';
 import { normalizeAirportCollection } from './normalize.js';
 

@@ -2,10 +2,10 @@ import { createReadStream, createWriteStream, promises as fs } from 'node:fs';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
 import path from 'node:path';
-import type { IsoTimestamp, TimeRange } from '@worldview/world-model';
-import { writeFileAtomic } from '@worldview/core/node';
-import type { Logger } from '@worldview/core';
-import { silentLogger } from '@worldview/core';
+import type { IsoTimestamp, TimeRange } from '@opcb/world-model';
+import { writeFileAtomic } from '@opcb/core/node';
+import type { Logger } from '@opcb/core';
+import { silentLogger } from '@opcb/core';
 import { lineToRow, rowToLine, type HistoryRow } from './row.js';
 import {
   PartitionIndex,

@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/render-dense",
+  "name": "@opcb/render-dense",
   "version": "0.1.0",
   "private": true,
   "description": "Dense-layer abstraction (points/lines/heatmap), feature budgets and the presentation benchmark harness. Native adapters first; deck.gl only if benchmarks justify it (ADR-008).",
@@ -14,8 +14,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/render-core": "workspace:*",
-    "@worldview/world-model": "workspace:*"
+    "@opcb/render-core": "workspace:*",
+    "@opcb/world-model": "workspace:*"
   },
   "sideEffects": false
 }

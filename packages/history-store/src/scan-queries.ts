@@ -6,7 +6,7 @@ import {
   type GeoRegion,
   type IsoTimestamp,
   type TimeRange,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import type { HistoryRow } from './row.js';
 import { mergeAvailability, type PartitionFilter, type PartitionKey, type PartitionMeta } from './partition.js';
 import type { ObjectsAtOptions, RangeQuery, ReadResult, TypeAvailability, TypeCounts } from './backend.js';

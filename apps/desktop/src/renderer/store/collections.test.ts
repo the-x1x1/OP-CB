@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { CollectionItem } from '@worldview/ipc-contract';
+import type { CollectionItem } from '@opcb/ipc-contract';
 import { isCollected } from './collections.js';
 
 const at = '2026-09-23T00:00:00.000Z';

@@ -1,4 +1,4 @@
-import { readGridReference } from '@worldview/world-model';
+import { readGridReference } from '@opcb/world-model';
 
 /**
  * Coordinate parsing for the search box. Strict by design: a search that guesses is

@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import type { SeverityClass } from '@worldview/world-model';
-import { SEVERITY_ORDER } from '@worldview/world-model';
-import type { FeedItem } from '@worldview/ipc-contract';
+import type { SeverityClass } from '@opcb/world-model';
+import { SEVERITY_ORDER } from '@opcb/world-model';
+import type { FeedItem } from '@opcb/ipc-contract';
 import {
   EmptyState,
   Panel,
@@ -10,7 +10,7 @@ import {
   formatAgo,
   formatObjectType,
   type VirtualListProps,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { rankFeed } from './feed-rank.js';

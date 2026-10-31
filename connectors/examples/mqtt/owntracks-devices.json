@@ -14,7 +14,7 @@
       }
     ],
     "preset": "owntracks",
-    "username": "worldview",
+    "username": "opcb",
     "credential": {
       "name": "broker"
     }
@@ -22,7 +22,7 @@
   "credentials": {
     "broker": {
       "secretRef": "owntracks-devices.broker",
-      "label": "Broker password for the worldview user",
+      "label": "Broker password for the opcb user",
       "kind": "basic"
     }
   },

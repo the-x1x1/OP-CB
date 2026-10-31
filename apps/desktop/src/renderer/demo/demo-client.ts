@@ -7,7 +7,7 @@ import type {
   WorldQuery,
   WorldQueryResult,
   SeverityClass,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import {
   SEVERITY_ORDER,
   boundsContain,
@@ -15,7 +15,7 @@ import {
   lookAngles,
   regionContains,
   sunPosition,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import type {
   AppSettings,
   CameraListEntry,
@@ -37,7 +37,7 @@ import type {
   WorldSubscription,
   DiagnosticsSnapshot,
   OfflineStatus,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import {
   DEFAULT_SERVICE_PORTS,
   EMERGENCY_REFERENCES,
@@ -48,11 +48,11 @@ import {
   type GuideProgress,
   type ModeState,
   type PrepRecord,
-} from '@worldview/ipc-contract';
-import type { LensDefinition } from '@worldview/render-core';
-import { BUILT_IN_LENSES, resolveMapProviders } from '@worldview/render-core';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import type { ProviderStatus } from '@worldview/provider-sdk';
+} from '@opcb/ipc-contract';
+import type { LensDefinition } from '@opcb/render-core';
+import { BUILT_IN_LENSES, resolveMapProviders } from '@opcb/render-core';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import type { ProviderStatus } from '@opcb/provider-sdk';
 import {
   buildAircraft,
   buildCamera,
@@ -115,7 +115,7 @@ export class DemoClient implements WorldClient {
   private prep: PrepRecord[] = [];
   private modeChosen = false;
   private readonly credentials = new Set<string>();
-  private readonly providerSettings = new Map<string, Record<string, import('@worldview/world-model').JsonValue>>();
+  private readonly providerSettings = new Map<string, Record<string, import('@opcb/world-model').JsonValue>>();
   private feed: FeedItem[] = [];
   private updater: UpdaterState;
   private rendererReport: RequestOf<'diagnostics.renderer'> | undefined;
@@ -568,9 +568,9 @@ export class DemoClient implements WorldClient {
         // The browser demo writes the collection file only (GPX, KML and GeoJSON are the app's).
         if (!c || !this.downloadHook || (format && format !== 'json')) return { cancelled: true };
         const path = this.downloadHook(
-          `${c.name.replace(/[^a-z0-9-]+/gi, '_')}.worldview-collection.json`,
+          `${c.name.replace(/[^a-z0-9-]+/gi, '_')}.opcb-collection.json`,
           'application/json',
-          new TextEncoder().encode(JSON.stringify({ format: 'worldview-collection/1', collection: c }, null, 2)),
+          new TextEncoder().encode(JSON.stringify({ format: 'opcb-collection/1', collection: c }, null, 2)),
         );
         return path ? { path } : { cancelled: true };
       }
@@ -785,7 +785,7 @@ export class DemoClient implements WorldClient {
                 })
               : JSON.stringify({ recorded: true, exportedAt: iso, objects: result.items }, null, 2);
         const path = this.downloadHook(
-          `worldview-export.${format}`,
+          `opcb-export.${format}`,
           format === 'csv' ? 'text/csv' : 'application/json',
           new TextEncoder().encode(body),
         );
@@ -899,7 +899,7 @@ export class DemoClient implements WorldClient {
       case 'diagnostics.export': {
         if (!this.downloadHook) return { cancelled: true };
         const path = this.downloadHook(
-          'worldview-diagnostics.json',
+          'opcb-diagnostics.json',
           'application/json',
           new TextEncoder().encode(JSON.stringify({ redacted: true, ...this.diagnostics(nowMs) }, null, 2)),
         );

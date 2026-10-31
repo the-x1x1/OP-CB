@@ -1,7 +1,7 @@
-import { keepWeightiest, type WorldEvent, type WorldObject } from '@worldview/world-model';
-import type { WorldChangedEvent } from '@worldview/ipc-contract';
-import { BUILT_IN_LENSES } from '@worldview/render-core';
-import { initialTimelineState, timelineReducer } from '@worldview/ui';
+import { keepWeightiest, type WorldEvent, type WorldObject } from '@opcb/world-model';
+import type { WorldChangedEvent } from '@opcb/ipc-contract';
+import { BUILT_IN_LENSES } from '@opcb/render-core';
+import { initialTimelineState, timelineReducer } from '@opcb/ui';
 import type { RootAction, RootState, WorldSlice, UiSlice, ContextTab, Notification } from './types.js';
 import { extendTrack } from '../context/track-profile.js';
 

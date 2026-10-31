@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, type ProviderError } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { testing, type ProviderError } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { AisStreamProvider, type Timers } from '../../src/index.js';
 
 const T0 = Date.parse('2026-09-21T08:00:10.000Z');
@@ -137,7 +137,7 @@ test('subscribe: an initial open failure (offline) rejects so the runtime backs 
     credentials: ['aisstream.apiKey'],
     sockets: {
       open: async () => {
-        throw new (await import('@worldview/provider-sdk')).ProviderError('OFFLINE', 'application offline');
+        throw new (await import('@opcb/provider-sdk')).ProviderError('OFFLINE', 'application offline');
       },
     } as unknown as testing.FixtureSockets,
   });

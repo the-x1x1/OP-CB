@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import type { TelemetryLimits, TelemetrySeries } from '@worldview/provider-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import type { TelemetryLimits, TelemetrySeries } from '@opcb/provider-sdk';
 
 /** One reading: epoch milliseconds and the value, as the payload carried it (SI). */
 export type ReadingPoint = readonly [t: number, v: number];

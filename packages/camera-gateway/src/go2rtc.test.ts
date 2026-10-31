@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
 import {
   Go2rtcSidecar,
   GO2RTC_PINNED_VERSION,
@@ -86,7 +86,7 @@ function sidecarWith(opts: { binaryPath?: string; exists?: boolean; api?: Partia
   const hub = new LoggerHub({ level: 'debug', sinks: [sink] });
   const sidecar = new Go2rtcSidecar({
     ...(opts.binaryPath !== undefined ? { binaryPath: opts.binaryPath } : {}),
-    configDir: '/data/worldview',
+    configDir: '/data/opcb',
     spawn,
     fetch,
     fileExists: () => opts.exists ?? true,
@@ -145,7 +145,7 @@ test('generated config binds only to loopback and disables the WebRTC/SRTP liste
   assert.equal(await sidecar.start(), true);
   assert.equal(spawned.length, 1);
   assert.equal(spawned[0]!.command, '/opt/go2rtc/go2rtc');
-  const expectedConfig = path.join('/data/worldview', 'go2rtc.yaml');
+  const expectedConfig = path.join('/data/opcb', 'go2rtc.yaml');
   assert.deepEqual(spawned[0]!.args, ['-config', expectedConfig], 'the config path is built for this platform');
   assert.equal(written[0]!.file, expectedConfig);
   assert.equal(written[0]!.content, config);

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { StaticGazetteer } from '@worldview/query-engine';
-import { PlaceIndex } from '@worldview/offline';
+import { StaticGazetteer } from '@opcb/query-engine';
+import { PlaceIndex } from '@opcb/offline';
 import { LateGazetteer, PlaceIndexGazetteer } from './gazetteer.js';
 
 test('a late gazetteer finds nothing near a point until its data has loaded, then answers from it', () => {

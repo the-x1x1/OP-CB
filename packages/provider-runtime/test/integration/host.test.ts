@@ -13,11 +13,11 @@ import {
   subscribeFailureStatus,
   viewportPollGapMs,
 } from '../../src/index.js';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
-import { WorldState } from '@worldview/state-engine';
-import { createProvider } from '@worldview/provider-usgs';
-import { createProvider as createReadsb } from '@worldview/provider-readsb-local';
-import { ProviderError, manifestSchema, testing } from '@worldview/provider-sdk';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
+import { WorldState } from '@opcb/state-engine';
+import { createProvider } from '@opcb/provider-usgs';
+import { createProvider as createReadsb } from '@opcb/provider-readsb-local';
+import { ProviderError, manifestSchema, testing } from '@opcb/provider-sdk';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const fixture = (n: string) => readFileSync(path.join(root, 'fixtures', 'usgs', n), 'utf8');
@@ -182,8 +182,8 @@ test('integration: a provider can attach only the credentials its manifest decla
     settingsStore: () => new testing.MemorySettings({}),
   });
   const usgs = createProvider();
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: {
       ...usgs.manifest,
       id: 'key-probe',
@@ -280,7 +280,7 @@ test('raster overlays (ADR-008): published after start, validated, kept to the a
     { ...base, id: 'roads', kind: 'wms', url: `https://${usgs.manifest.allowedHosts[0]}/wms`, layers: 'roads-again' },
     { ...base, id: 'broken', kind: 'wmts' },
   ];
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: { ...usgs.manifest, id: 'overlay-probe', enabledByDefault: true },
     initialize: async () => {},
     start: async () => {},
@@ -326,7 +326,7 @@ test('raster overlays: start does not wait for a slow capabilities read; overlay
   let answer: () => void = () => undefined;
   let asked = 0;
   let list: unknown[] = [];
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: { ...usgs.manifest, id: 'slow-overlays', enabledByDefault: true },
     initialize: async () => {},
     start: async () => {},
@@ -409,8 +409,8 @@ test('a socket credential as a URL query is dialed by the host, never handed to 
   });
   const usgs = createProvider();
   const opens: Array<{ secret?: string }> = [];
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: {
       ...usgs.manifest,
       id: 'socket-probe',
@@ -496,7 +496,7 @@ test('a ws:// socket opens to loopback or the host the user named, and nowhere e
     webSocketImpl: FakeWebSocket as unknown as typeof WebSocket,
   });
   const usgs = createProvider();
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
   host.register({
     manifest: {
       ...usgs.manifest,
@@ -558,8 +558,8 @@ test('the loopback listener is offered to local-process sources only, one at a t
     },
   });
   const usgs = createProvider();
-  const contexts: Record<string, import('@worldview/provider-sdk').ProviderContext> = {};
-  const probe = (id: string, transport: 'local-process' | 'http'): import('@worldview/provider-sdk').WorldProvider => ({
+  const contexts: Record<string, import('@opcb/provider-sdk').ProviderContext> = {};
+  const probe = (id: string, transport: 'local-process' | 'http'): import('@opcb/provider-sdk').WorldProvider => ({
     manifest: {
       ...usgs.manifest,
       id,
@@ -632,8 +632,8 @@ test('a filesystem provider reads the one folder the user named in its grantedFo
     }),
   });
   const usgs = createProvider();
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: {
       ...usgs.manifest,
       id: 'folder-probe',
@@ -706,8 +706,8 @@ test('mqtt (ADR-003): a local provider gets the client scoped to its hosts and k
     }),
   });
   const usgs = createProvider();
-  const contexts: Record<string, import('@worldview/provider-sdk').ProviderContext> = {};
-  const make = (id: string, transport: 'http' | 'local-process'): import('@worldview/provider-sdk').WorldProvider => ({
+  const contexts: Record<string, import('@opcb/provider-sdk').ProviderContext> = {};
+  const make = (id: string, transport: 'http' | 'local-process'): import('@opcb/provider-sdk').WorldProvider => ({
     manifest: {
       ...usgs.manifest,
       id,
@@ -779,7 +779,7 @@ test('unregister stops a running provider, drops its settings watchers and its S
   const local = createReadsb().manifest;
   assert.ok(local.trustedHostSetting, 'the readsb manifest names a trusted-host setting');
   const stops: string[] = [];
-  const probe = (): import('@worldview/provider-sdk').WorldProvider => ({
+  const probe = (): import('@opcb/provider-sdk').WorldProvider => ({
     manifest: { ...local, id: 'defined-source', enabledByDefault: true },
     initialize: async () => {},
     start: async () => {},
@@ -839,8 +839,8 @@ test('a source stopped or taken out while it is still starting never goes on to 
   });
   const usgs = createProvider();
   const calls: string[] = [];
-  let context: import('@worldview/provider-sdk').ProviderContext | undefined;
-  const probe: import('@worldview/provider-sdk').WorldProvider = {
+  let context: import('@opcb/provider-sdk').ProviderContext | undefined;
+  const probe: import('@opcb/provider-sdk').WorldProvider = {
     manifest: {
       ...usgs.manifest,
       id: 'slow-start',
@@ -925,7 +925,7 @@ test('a listener opened while its source is being disabled is closed, and one cl
     },
   });
   const usgs = createProvider();
-  let context: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let context: import('@opcb/provider-sdk').ProviderContext | undefined;
   host.register({
     manifest: {
       ...usgs.manifest,
@@ -1060,7 +1060,7 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
     cacheStore: (_id, allowed) => new testing.MemoryCache(clock as never, allowed),
     settingsStore: () => new testing.MemorySettings({}),
   });
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
   host.register({
     manifest: {
       ...usgs.manifest,
@@ -1534,37 +1534,36 @@ test('overlayValue (ADR-003 amendment 2026-10-15): asked of the provider that pu
   const usgs = createProvider();
   let answer: 'ok' | 'slow' | 'throw' | 'nothing' = 'ok';
   const asked: unknown[] = [];
-  const probe: import('@worldview/provider-sdk').WorldProvider & import('@worldview/provider-sdk').OverlayValueSource =
-    {
-      manifest: { ...usgs.manifest, id: 'overlay-probe', enabledByDefault: true },
-      initialize: async () => {},
-      start: async () => {},
-      stop: async () => {},
-      health: async () => ({
-        providerId: 'overlay-probe',
-        status: 'LIVE',
-        errorRate: 0,
-        rateLimitState: { limited: false },
-        credentialState: 'not-required',
-      }),
-      overlays: async () => [
-        {
-          id: 'overlay-probe:radar',
-          kind: 'wms',
-          name: 'Radar',
-          attribution: 'Example agency',
-          url: `https://${usgs.manifest.allowedHosts[0]}/wms`,
-          layers: 'radar',
-        },
-      ],
-      async overlayValue(request) {
-        asked.push(request.overlayId);
-        if (answer === 'throw') throw new Error('HTTP 400');
-        if (answer === 'slow') return new Promise<undefined>(() => undefined);
-        if (answer === 'nothing') return undefined;
-        return { label: ' Radar ', values: [{ name: 'GRAY_INDEX', value: 35.5 }], attribution: 'Example agency' };
+  const probe: import('@opcb/provider-sdk').WorldProvider & import('@opcb/provider-sdk').OverlayValueSource = {
+    manifest: { ...usgs.manifest, id: 'overlay-probe', enabledByDefault: true },
+    initialize: async () => {},
+    start: async () => {},
+    stop: async () => {},
+    health: async () => ({
+      providerId: 'overlay-probe',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+    overlays: async () => [
+      {
+        id: 'overlay-probe:radar',
+        kind: 'wms',
+        name: 'Radar',
+        attribution: 'Example agency',
+        url: `https://${usgs.manifest.allowedHosts[0]}/wms`,
+        layers: 'radar',
       },
-    };
+    ],
+    async overlayValue(request) {
+      asked.push(request.overlayId);
+      if (answer === 'throw') throw new Error('HTTP 400');
+      if (answer === 'slow') return new Promise<undefined>(() => undefined);
+      if (answer === 'nothing') return undefined;
+      return { label: ' Radar ', values: [{ name: 'GRAY_INDEX', value: 35.5 }], attribution: 'Example agency' };
+    },
+  };
   host.register(probe);
   const here = { latitude: 35.47, longitude: -97.52 };
   assert.equal(await host.overlayValue('overlay-probe:radar', here), undefined, 'not running yet');
@@ -1736,7 +1735,7 @@ test('a poll is complete only when it is all the source lists, under the setting
     settingsStore: () => settings,
   });
   const usgs = createProvider();
-  let ctx: import('@worldview/provider-sdk').ProviderContext | undefined;
+  let ctx: import('@opcb/provider-sdk').ProviderContext | undefined;
   let partial = false;
   let answer: unknown[] = [];
   host.register({

@@ -1,11 +1,6 @@
-import { isValidLatLon, systemClock, type Clock, type GeoPosition } from '@worldview/world-model';
-import { silentLogger, type Logger } from '@worldview/core';
-import type {
-  CameraRegistration,
-  CameraSnapshot,
-  CameraSourceInput,
-  CameraStreamDescriptor,
-} from '@worldview/ipc-contract';
+import { isValidLatLon, systemClock, type Clock, type GeoPosition } from '@opcb/world-model';
+import { silentLogger, type Logger } from '@opcb/core';
+import type { CameraRegistration, CameraSnapshot, CameraSourceInput, CameraStreamDescriptor } from '@opcb/ipc-contract';
 import { CameraError, errorForStatus, toCameraError } from './errors.js';
 import { assertImage, firstJpegFrame } from './image.js';
 import { CameraHealthTracker } from './health.js';

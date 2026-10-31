@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { RenderFeature } from '@worldview/render-core';
-import { moonIllumination, subsolarPoint, sublunarPoint } from '@worldview/world-model';
+import type { RenderFeature } from '@opcb/render-core';
+import { moonIllumination, subsolarPoint, sublunarPoint } from '@opcb/world-model';
 import { useNow } from '../hooks/use-now.js';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { NO_TOOL_LAYER, sendToolLayer, type ToolLayerShown } from './tool-layers.js';

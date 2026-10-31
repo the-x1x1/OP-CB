@@ -146,7 +146,7 @@ The full table, with what each unblocks, is in the matrix
 
 All of it from the container, at `78075ab` — the branch rebased onto `develop @ b13df65`
 after the `imagery-scene` amendment landed mid-phase; every check below was re-run after
-the rebase. Commands as in `worldview-phase-agent.md`; Prettier is the pinned
+the rebase. Commands as in `opcb-phase-agent.md`; Prettier is the pinned
 `prettier-3.9.8.tgz` from the operator's `wv-build` folder, unpacked in a scratch directory.
 
 `node tools/dev/phase-check.mjs provider-migration --base origin/develop`

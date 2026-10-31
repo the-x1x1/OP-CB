@@ -1,9 +1,9 @@
-import type { PaletteCommand } from '@worldview/ui';
+import type { PaletteCommand } from '@opcb/ui';
 import type { ShellActions } from '../store/actions.js';
 import type { RootState } from '../store/types.js';
 import { OVERVIEW_LAYERS, OVERVIEW_LENS_ID } from '../overview-layers.js';
 import { CAMERA_PREVIEWS_LAYER_ID, MILITARY_ONLY_LAYER_ID, OPT_IN_LAYER_IDS, layerOn } from '../layer-tree.js';
-import { nextVisualStyle, VISUAL_STYLE_IDS } from '@worldview/render-core';
+import { nextVisualStyle, VISUAL_STYLE_IDS } from '@opcb/render-core';
 import { displaySettings, VISUAL_STYLE_NAMES } from '../store/display.js';
 
 /**
@@ -145,7 +145,7 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
       title: 'Copy a link to this view',
       group: 'Navigate',
       icon: 'globe',
-      keywords: ['link', 'share', 'url', 'worldview://', 'copy', 'send'],
+      keywords: ['link', 'share', 'url', 'opcb://', 'copy', 'send'],
       run: () => actions.copyViewLink(),
     },
     {

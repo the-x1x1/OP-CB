@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, type WorldProvider } from '@worldview/provider-sdk';
-import { overlayTileTemplate, type Observation, type RasterOverlay, type WorldEvent } from '@worldview/world-model';
-import { parseDefinition, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import { defaultConnectorRegistry, formatSuite, runConnectorSuite } from '@worldview/connector-runtime';
-import { loadConnectorDefinitions, providerIds } from '@worldview/providers';
-import { BUILT_IN_LENSES, DEFAULT_RULES, MAP_PROVIDER_CATALOG } from '@worldview/render-core';
-import { WorldState } from '@worldview/state-engine';
-import { EventEngine, FeedBuilder } from '@worldview/event-engine';
-import { loadSidecar, sidecarPathFor } from '@worldview/tool-connector-validator';
-import { findDefinitions } from '@worldview/tool-license-audit';
+import { testing, type WorldProvider } from '@opcb/provider-sdk';
+import { overlayTileTemplate, type Observation, type RasterOverlay, type WorldEvent } from '@opcb/world-model';
+import { parseDefinition, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import { defaultConnectorRegistry, formatSuite, runConnectorSuite } from '@opcb/connector-runtime';
+import { loadConnectorDefinitions, providerIds } from '@opcb/providers';
+import { BUILT_IN_LENSES, DEFAULT_RULES, MAP_PROVIDER_CATALOG } from '@opcb/render-core';
+import { WorldState } from '@opcb/state-engine';
+import { EventEngine, FeedBuilder } from '@opcb/event-engine';
+import { loadSidecar, sidecarPathFor } from '@opcb/tool-connector-validator';
+import { findDefinitions } from '@opcb/tool-license-audit';
 
 /**
  * The definitions this directory ships (2026-09-27, hazard layers): NOAA nowCOAST radar and

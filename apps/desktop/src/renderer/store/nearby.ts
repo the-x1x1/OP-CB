@@ -1,4 +1,4 @@
-import { haversineMeters, type GeoBounds, type GeoPosition, type WorldObject } from '@worldview/world-model';
+import { haversineMeters, type GeoBounds, type GeoPosition, type WorldObject } from '@opcb/world-model';
 
 /** How many objects the keyboard steps through: the nearest this many to the middle. */
 export const NEARBY_MAX = 300;

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Timeline, formatObjectType } from '@worldview/ui';
+import { Timeline, formatObjectType } from '@opcb/ui';
 import { useActions, useAppSlice, useDispatch } from '../store/store.js';
 import { currentTime } from '../hooks/use-now.js';
 

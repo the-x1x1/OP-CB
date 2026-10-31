@@ -1,4 +1,4 @@
-import type { GeoPosition } from '@worldview/world-model';
+import type { GeoPosition } from '@opcb/world-model';
 
 /** A geodesic circle as a closed ring of `segments` + 1 positions (the first repeated last). */
 export function geodesicCircle(center: GeoPosition, radiusM: number, segments = 64): GeoPosition[] {

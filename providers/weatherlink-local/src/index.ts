@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   LocalDeviceDetector,
   PollingProvider,
@@ -13,7 +13,7 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { PROBE_BACKOFF_MS, WEATHERLINK_LOCAL_MANIFEST } from './manifest.js';
 import { normalizeConditions, parseCurrentConditions } from './normalize.js';
 

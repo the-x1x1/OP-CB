@@ -1,22 +1,26 @@
 # Operator guide
 
 Everything an administrator or power user needs after installing OP-CB (Operation Civilization
-Backup, formerly WorldView). For building from source see [DEVELOPMENT.md](DEVELOPMENT.md).
+Backup). For building from source see [DEVELOPMENT.md](DEVELOPMENT.md).
 
-The rename is in everything you see: the app, its windows, the Start menu entry and the
-installer's name in Apps & features. Some names underneath stay WorldView so nothing you
-already have breaks: the data folder (`@worldview\desktop`, `WorldView-data` for a portable
-copy), `worldview://` links, the update channel, and — for now — the downloaded files
-(`WorldView-Setup-<version>.exe`, `WorldView-Portable-<version>.zip`, `WorldView.exe`).
+**Coming from a version before 0.7.2.** Since 0.7.2 every name is OP-CB — the program, its
+files, its data folder (`%APPDATA%\OP-CB`, `OP-CB-data` for a portable copy), its links
+(`opcb://`) and its application id. An earlier installation therefore does not update into it:
+install OP-CB 0.7.2 once by hand. Its first start moves the earlier data folder into place —
+a rename on the same drive, nothing is copied — together with a portable copy's data folder
+and the marker of data kept on a drive. If the earlier program is still running, OP-CB says so
+and moves nothing; close it and start OP-CB again. Afterwards uninstall the earlier program
+from Apps & features (its uninstaller leaves data alone). API keys saved on Linux are asked
+for again (the system keyring files them under the program's name); on Windows they carry over.
 
 ## Install
 
-Per-user installer (`WorldView-Setup-<version>.exe`, no admin rights) or the portable
-zip (`WorldView-Portable-<version>.zip`, unzip and run `WorldView.exe`). Windows 10/11
+Per-user installer (`OP-CB-Setup-<version>.exe`, no admin rights) or the portable
+zip (`OP-CB-Portable-<version>.zip`, unzip and run `OP-CB.exe`). Windows 10/11
 x64. Verify the download first:
 
 ```powershell
-Get-FileHash .\WorldView-Setup-<version>.exe -Algorithm SHA256
+Get-FileHash .\OP-CB-Setup-<version>.exe -Algorithm SHA256
 # compare against SHA256SUMS.txt from the same release
 ```
 
@@ -25,7 +29,7 @@ Current builds are unsigned, so SmartScreen warns on first run
 
 ### Where data lives
 
-| Path (`%APPDATA%\@worldview\desktop\`)               | Contents                                                                                                                        |
+| Path (`%APPDATA%\OP-CB\`)                            | Contents                                                                                                                        |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `settings.json`                                      | application settings (atomic writes, migrated on upgrade)                                                                       |
 | `credentials.json`                                   | API keys, encrypted with Windows DPAPI                                                                                          |
@@ -38,7 +42,7 @@ Current builds are unsigned, so SmartScreen warns on first run
 | `logs/`                                              | rotating structured logs, redacted; a warning repeated every poll is written once, then as a `repeated: N` summary every 10 min |
 
 The portable build uses the same paths, so an installed and a portable copy share data. On
-Linux the same files are under `~/.config/@worldview/desktop/` (the XDG config folder).
+Linux the same files are under `~/.config/OP-CB/` (the XDG config folder).
 
 ## Providers and credentials
 
@@ -77,7 +81,7 @@ in a commercial setting.
 
 A feed that publishes JSON, GeoJSON or CSV over HTTPS, or JSON over a WebSocket, can be
 added without a release: write a definition file and put it in
-`%APPDATA%\@worldview\desktop\connectors\` (one `.json` per source). It is read at the next start
+`%APPDATA%\OP-CB\connectors\` (one `.json` per source). It is read at the next start
 and appears in Settings → Sources under its own name, off until you switch it on, with the
 attribution and terms you wrote into it and any credential it names in the Credentials
 section. A file that does not validate is skipped and the reason is in the log
@@ -93,7 +97,7 @@ with `pnpm connector:test`.
 
 ## The Command Center
 
-WorldView starts by asking how you will work: **Online** or **Offline**. The last choice is
+OP-CB starts by asking how you will work: **Online** or **Offline**. The last choice is
 offered first, and the computer's own network state is shown for information; nothing is sent
 to the internet until you choose. Then the Command Center opens over the map:
 
@@ -101,7 +105,7 @@ to the internet until you choose. Then the Command Center opens over the map:
   Ready, Verification required, Setup required, Degraded or Unavailable, and why.
 - **World & Maps**: Show the map (everything as before), Sources, Settings, the operating
   profile (Field / Balanced / Docked) and your packs.
-- **Knowledge**: your library — ZIM files WorldView opens itself, books downloaded from the
+- **Knowledge**: your library — ZIM files OP-CB opens itself, books downloaded from the
   Kiwix catalogue, the emergency references — plus an optional Kiwix server and Kolibri.
 - **Local Intelligence**: Ollama, the model to use, a test question, and questions answered
   from your library's excerpts (what was retrieved and what the model wrote are labelled apart;
@@ -113,7 +117,7 @@ to the internet until you choose. Then the Command Center opens over the map:
 - **Resources**: packs, external drives, local service ports, and devices on your own network
   approved for offline use.
 
-To skip the start screen — a kiosk or cyberdeck that starts WorldView by itself — start it with
+To skip the start screen — a kiosk or cyberdeck that starts OP-CB by itself — start it with
 `--mode=offline` or `--mode=online`: that is the choice for that launch.
 
 Every section has **How do I set this up?**: a walkthrough with the steps, real controls, a
@@ -125,14 +129,14 @@ Center; the top bar's button or Ctrl+Shift+O opens it.
 
 Command Center → **Knowledge**.
 
-- **Your library** lists the ZIM files in the library folder (inside WorldView's data folder, so
+- **Your library** lists the ZIM files in the library folder (inside OP-CB's data folder, so
   on your external drive when the data is there). **Open** shows a book's start page in the
   reader window; **Find** looks for pages by the start of their title across every book
   ("Water" finds "Water purification"). The reader runs no page scripts and loads nothing from
   the internet; Alt+Left / Alt+Right (or the mouse's side buttons) go back and forward.
 - **Get books from the Kiwix library** (Online mode): search the catalogue, then **Download**.
   The file goes into the library folder and is checked (size, SHA-256, and the checksum inside
-  the file) before it appears. Stop it, close WorldView, lose the connection — the next
+  the file) before it appears. Stop it, close OP-CB, lose the connection — the next
   Download of the same book carries on. Sizes run from a few MB to about 100 GB (English
   Wikipedia with pictures); "nopic" and "mini" versions are much smaller.
 - **Emergency references**: **Download all** fetches six public-domain guides (FEMA, U.S. Army,
@@ -140,20 +144,20 @@ Command Center → **Knowledge**.
 - Files you already have: **Open the library folder**, copy `.zim` files in, **Look again**.
   Files made before about 2021 (older xz format) are listed but need kiwix-serve.
 
-## Keeping WorldView on an external drive
+## Keeping OP-CB on an external drive
 
-Command Center → Resources → **Where WorldView keeps its data** shows the folder that holds
-everything WorldView writes — settings, history, saved places, downloaded maps, the inventory,
+Command Center → Resources → **Where OP-CB keeps its data** shows the folder that holds
+everything OP-CB writes — settings, history, saved places, downloaded maps, the inventory,
 stored keys and logs — and the room left there. Two ways to put it all on an external SSD:
 
-- **Move it** (Windows or Linux, app installed as usual): **Keep all WorldView data on a
-  drive…**, choose an empty folder on the drive (or one WorldView already uses) and restart.
+- **Move it** (Windows or Linux, app installed as usual): **Keep all OP-CB data on a
+  drive…**, choose an empty folder on the drive (or one OP-CB already uses) and restart.
   Settings, places, zones, walkthroughs, the inventory and keys are copied; history and
   installed packs stay in the old folder — download maps again with **Save to** that drive.
-  If the drive is not plugged in at the next start, WorldView says so and offers this
+  If the drive is not plugged in at the next start, OP-CB says so and offers this
   computer's own data instead; it never writes into an empty mount point.
-- **Portable** (Windows): unzip `WorldView-Portable-<version>.zip` onto the drive and make an
-  empty folder named `WorldView-data` beside `WorldView.exe`. That copy keeps everything in that
+- **Portable** (Windows): unzip `OP-CB-Portable-<version>.zip` onto the drive and make an
+  empty folder named `OP-CB-data` beside `OP-CB.exe`. That copy keeps everything in that
   folder and runs from the drive on any Windows computer. It is told about updates rather than
   updating itself (download the new portable zip). On Linux the `.deb` installs into `/opt`;
   move the data instead.
@@ -163,7 +167,7 @@ computer they are asked for again.
 
 ## Working offline
 
-Settings → Network → **Work offline** makes WorldView ask nothing of the internet, whether
+Settings → Network → **Work offline** makes OP-CB ask nothing of the internet, whether
 or not the computer is connected. Sources on the internet pause (Sources says Offline), the
 top bar reads OFFLINE, and every request that would leave the computer — a map tile, an
 imagery frame, a place lookup, an update check, the reachability probe — is refused before
@@ -178,11 +182,11 @@ it is sent (`apps/desktop/src/main/network-gate.ts`; the log notes each host onc
   cities and towns) plus a pack's places;
 - satellites, moved on from the last element sets by SGP4;
 - sources on this computer or your own network (a local receiver, an MQTT broker, Home
-  Assistant, the camera relay). A source WorldView asks over HTTP on another device — readsb
+  Assistant, the camera relay). A source OP-CB asks over HTTP on another device — readsb
   on a Raspberry Pi, a weather station — needs that device approved under Command Center →
   Resources → Local network: one host at a time, private addresses and local names only.
 
-Offline stops WorldView's own requests; it is not a firewall, and programs you run beside it
+Offline stops OP-CB's own requests; it is not a firewall, and programs you run beside it
 are not affected.
 
 Turn it off to go back online; sources resume on their next poll.
@@ -209,7 +213,7 @@ Presets: `hawaii`, `japan`, `california`, `uk`, `western-europe`, `australia-eas
 you supply (`--pmtiles`), because no basemap is bundled by default — see
 [OFFLINE-PACKS.md](OFFLINE-PACKS.md) for a legal source and the exact commands.
 
-With a pack installed, the 2D map's **WORLDVIEW dark** and **WORLDVIEW light** basemaps draw
+With a pack installed, the 2D map's **OP-CB dark** and **OP-CB light** basemaps draw
 its PMTiles extract, online or off; without one they are listed but cannot be chosen.
 
 Import verifies structure, paths, checksums and source policies before writing
@@ -234,7 +238,7 @@ things it has on the map:
 - **Weather station and air**: a Davis WeatherLink Live and a PurpleAir sensor.
 
 Only the address you give is contacted; nothing on your network is searched for. The
-receivers (RTL-SDR, AIS) only receive. A Meshtastic radio transmits one thing for WorldView: a
+receivers (RTL-SDR, AIS) only receive. A Meshtastic radio transmits one thing for OP-CB: a
 test message to one node, when you press Send in the Command Center's Meshtastic walkthrough
 (refused while the radio has no region set). Each is also a source in the Sources tab, with its
 full detail.
@@ -243,7 +247,7 @@ full detail.
 
 Run readsb or dump1090-fa yourself, with its JSON output enabled. In Settings → Sources
 → Local ADS-B set the endpoint (default `http://127.0.0.1:8080/data/aircraft.json`).
-WORLDVIEW probes that one endpoint — it never scans your network. Aircraft from your own
+OP-CB probes that one endpoint — it never scans your network. Aircraft from your own
 receiver keep updating when the internet is down, and merge with remote sources on
 ICAO24 without duplicating.
 
@@ -255,7 +259,7 @@ HTTP is allowed only to loopback and to a host you name.
 If one of your Meshtastic nodes has Wi-Fi or Ethernet with its network API on (or you run
 `meshtasticd` on this computer), Settings → Sources → Meshtastic mesh reads your mesh through
 it: set the node's name or address (blank = this computer) and the port (4403 unless you
-changed it), then switch the source on. WORLDVIEW connects to that one node — it never
+changed it), then switch the source on. OP-CB connects to that one node — it never
 searches your network — asks it once for its node list, and from then on draws every node
 that shares its position as a sensor, with its name, battery, voltage, signal, hops and any
 environment readings, updated as the node hears them. A position the sender coarsened is drawn
@@ -266,7 +270,7 @@ carry other people's nodes, so this source's data stays on the computer — no e
 redistribution. On Linux a node can also be plugged in by USB (its serial port in the source's
 settings); a node over Bluetooth is not read.
 
-The radio's firmware version, region and preset are shown in the source's status. WorldView
+The radio's firmware version, region and preset are shown in the source's status. OP-CB
 transmits one thing through it: a test message to one radio, from Command Center →
 Communications, only when you press Transmit, and refused while the radio's region is unset or
 its transmit is off. It shows apart whether your radio accepted it, another radio repeated it
@@ -278,7 +282,7 @@ If your boat's NMEA 2000 network has a gateway that serves it as Yacht Devices R
 (a Yacht Devices YDWG-02 or YDEN-02, or another gateway or multiplexer that offers "YD RAW"),
 Settings → Sources → Your boat (NMEA 2000 gateway) reads it: on the gateway's web page set one
 of its servers to TCP and RAW, then give the gateway's address and that server's port here
-(blank = this computer; 1457 by default) and switch the source on. WORLDVIEW connects to that
+(blank = this computer; 1457 by default) and switch the source on. OP-CB connects to that
 one gateway, never searches the network, and only reads: nothing is sent onto the boat's bus.
 
 The boat appears as a vessel at its GNSS position with its course and speed over ground, its
@@ -347,13 +351,13 @@ search off. Ctrl+K opens the command palette; `/` puts the cursor in the search 
 
 ### Links to a view
 
-A `worldview://` link opens WorldView at the place it names, from an email, a chat or a web
+A `opcb://` link opens OP-CB at the place it names, from an email, a chat or a web
 page; the installer registers the scheme (the portable copy registers itself the first time it
 starts). **Copy a link to this view** in the command palette (Ctrl+K) puts the view on the
 clipboard: the place, the zoom (2D) or camera height (3D), the lens and the selection. A link
 pasted into the search box opens the same way.
 
-    worldview://view?lat=19.4069&lon=-155.2834&z=11&mode=3d&show=disasters&select=…
+    opcb://view?lat=19.4069&lon=-155.2834&z=11&mode=3d&show=disasters&select=…
 
 `lat` and `lon` are needed; `z` (zoom 0–22) or `alt` (camera height in metres), `mode` (`2d` or
 `3d`), `lens`, `show` and `hide` (layer ids, comma-separated) and `select` (an object or event id)
@@ -499,7 +503,7 @@ only for passes you can see with the eye (the satellite sunlit, the sky dark), 1
 ahead, in the app; the same switches choose the lead (2–60 minutes), every pass, and a Windows
 notification too. Up to 20 satellites; Settings → Home view lists them and stops any. The
 passes are worked out on this computer from the element sets it keeps, and the alerts come
-only while WorldView is running.
+only while OP-CB is running.
 
 **Aircraft emergencies.** An aircraft that squawks 7700 (general emergency), 7600 (radio
 failure) or 7500 (unlawful interference), or sends the ADS-B emergency status (minimum fuel,
@@ -525,7 +529,7 @@ zone to be told of one inside it.
 hears transmitting as active is an event, SEVERE, under the Overview and Maritime lenses:
 "Man overboard: 972111222". It is drawn on the beacon as it drifts, and ends when the beacon
 stops or has not been heard for ten minutes. Their test transmissions, and reports that do not say
-the beacon is active, raise nothing. WorldView tells no coastguard: on the water, the VHF and
+the beacon is active, raise nothing. OP-CB tells no coastguard: on the water, the VHF and
 the coastguard come first.
 
 ## Diagnostics
@@ -542,9 +546,9 @@ reason rather than a false pass.
 
 ## Updates
 
-WorldView keeps itself current. Shortly after it starts, and every four hours while it runs, it
+OP-CB keeps itself current. Shortly after it starts, and every four hours while it runs, it
 asks the project's GitHub releases whether there is a newer version. On Windows a newer version
-downloads in the background, and a card over the map says **WorldView X is ready — Restart to
+downloads in the background, and a card over the map says **OP-CB X is ready — Restart to
 update**: press it and the app closes, installs the update without the installer's wizard and
 opens again; press **Later** and it installs the next time you quit. Nothing is asked while
 working offline.
@@ -558,7 +562,7 @@ installed by the package manager, so the card only says a new version exists.
 
 ## Backups
 
-Everything worth keeping is JSON or Parquet under `%APPDATA%\@worldview\desktop\`. Copy that
+Everything worth keeping is JSON or Parquet under `%APPDATA%\OP-CB\`. Copy that
 directory while the app is closed. To move to another machine, copy it across —
 `credentials.json` will not decrypt there (it is bound to the Windows account), so
 re-enter keys. Collections and lenses can also be exported individually from the
@@ -583,5 +587,5 @@ Each source's terms decide: objects from a source that does not
 allow export are left out, and the notice names it.
 
 To reset a corrupt installation: close the app, rename `settings.json`, reopen.
-WORLDVIEW preserves a corrupt file as `settings.corrupt-<timestamp>.json`, starts from
+OP-CB preserves a corrupt file as `settings.corrupt-<timestamp>.json`, starts from
 defaults and reports the finding in Diagnostics rather than deleting your data.

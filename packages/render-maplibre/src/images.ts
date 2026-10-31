@@ -1,4 +1,4 @@
-import { drawGlyph, type GlyphContext } from '@worldview/render-core';
+import { drawGlyph, type GlyphContext } from '@opcb/render-core';
 import type { MapLike, StyleImageLike } from './maplibre-like.js';
 import { iconImageId } from './geojson.js';
 

@@ -1,6 +1,6 @@
 # ADR-002 — Canonical world model
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/world-model`
+Status: Accepted · 2026-09-21 · Package: `@opcb/world-model`
 
 ## Decision
 

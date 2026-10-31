@@ -1,5 +1,5 @@
-import { ProviderError } from '@worldview/provider-sdk';
-import { geometrySchema, simplifyRing, type WorldGeometry } from '@worldview/world-model';
+import { ProviderError } from '@opcb/provider-sdk';
+import { geometrySchema, simplifyRing, type WorldGeometry } from '@opcb/world-model';
 
 /**
  * NWS zone geometry (api.weather.gov/zones/…).
@@ -7,7 +7,7 @@ import { geometrySchema, simplifyRing, type WorldGeometry } from '@worldview/wor
  * Roughly half of the active-alert feed carries no polygon of its own: the alert names
  * the forecast, county or fire-weather zones it covers in `affectedZones`, and the
  * geometry lives behind a second request. Those alerts used to be skipped, which meant
- * WORLDVIEW showed a strict subset of what was in force — a quiet, misleading omission.
+ * OP-CB showed a strict subset of what was in force — a quiet, misleading omission.
  *
  * Zone outlines are static in practice (they change with NWS zone updates, a few times a
  * year), so they are cached with a long TTL and the fetch work is bounded per poll: a

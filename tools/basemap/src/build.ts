@@ -1,14 +1,14 @@
 import { randomBytes } from 'node:crypto';
 import { createWriteStream, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { isValidBounds, systemClock, type Clock, type GeoBounds } from '@worldview/world-model';
+import { isValidBounds, systemClock, type Clock, type GeoBounds } from '@opcb/world-model';
 import {
   WorldPackBuildError,
   WorldPackBuilder,
   regionPreset,
   type WorldPackBuildReport,
   type WorldPackBuildRequest,
-} from '@worldview/offline';
+} from '@opcb/offline';
 import {
   PROFILE_SOURCES,
   detectJava,

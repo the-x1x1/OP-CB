@@ -1,6 +1,6 @@
 # Open MCT harvest
 
-What WORLDVIEW takes from NASA's Open MCT (Apache-2.0), as a design, for the telemetry
+What OP-CB takes from NASA's Open MCT (Apache-2.0), as a design, for the telemetry
 phase — and why the code itself is not brought in.
 
 ## The problem Open MCT solved

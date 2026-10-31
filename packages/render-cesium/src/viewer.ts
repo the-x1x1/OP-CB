@@ -1,12 +1,12 @@
 /**
  * Adapted from gods-eye-view src/app/viewer.js (MIT).
  *
- * Differences from GEV: the globe is SHOWN by default (WORLDVIEW's default 3D
+ * Differences from GEV: the globe is SHOWN by default (OP-CB's default 3D
  * stack is Natural Earth II on the ellipsoid; Google 3D is an optional adapter
  * that hides the globe only while it is active), the module surface is injected
  * (`CesiumLike`) and `createWheelEvent` is injectable for tests.
  */
-import type { GraphicsProfile } from '@worldview/render-core';
+import type { GraphicsProfile } from '@opcb/render-core';
 import type { CesiumLike, ViewerLike, ViewerOptionsLike, CameraEventBindingLike } from './cesium-like.js';
 
 export interface CreateViewerOptions {
@@ -25,11 +25,11 @@ export interface CreateViewerOptions {
 }
 
 /**
- * GEV's proven widget-free viewer options: no default base layer (WORLDVIEW chooses the
+ * GEV's proven widget-free viewer options: no default base layer (OP-CB chooses the
  * stack), msaa 4, and a preserved drawing buffer so screenshots capture the globe.
  *
  * GEV switched Cesium's widget chrome off one flag at a time because it built a `Viewer`.
- * WORLDVIEW builds a `CesiumWidget` instead, which has no chrome to switch off, so the
+ * OP-CB builds a `CesiumWidget` instead, which has no chrome to switch off, so the
  * flags are gone rather than set to false.
  */
 export function viewerOptions(opts: CreateViewerOptions): ViewerOptionsLike {
@@ -44,7 +44,7 @@ export function viewerOptions(opts: CreateViewerOptions): ViewerOptionsLike {
   };
 }
 
-export function createWorldViewer(cesium: CesiumLike, opts: CreateViewerOptions): ViewerLike {
+export function createOpcber(cesium: CesiumLike, opts: CreateViewerOptions): ViewerLike {
   const viewer = cesium.createViewer(opts.container, viewerOptions(opts));
   try {
     // No frame-rate cap. GEV set `targetFrameRate = 60`, and on a display faster than 60 Hz
@@ -64,7 +64,7 @@ export function createWorldViewer(cesium: CesiumLike, opts: CreateViewerOptions)
     // Cesium's default (0 s) treats every tick as one and so draws every frame regardless.
     viewer.scene.maximumRenderTimeChange = Number.POSITIVE_INFINITY;
     viewer.scene.globe.show = true;
-    // Lighting off: WORLDVIEW shows the whole world at once, and a day/night terminator
+    // Lighting off: OP-CB shows the whole world at once, and a day/night terminator
     // would hide half the data behind a shadow that means nothing to it.
     viewer.scene.globe.enableLighting = false;
     // Ground atmosphere off, because lighting is off. Cesium's ground scattering is

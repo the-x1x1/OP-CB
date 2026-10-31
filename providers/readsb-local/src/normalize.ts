@@ -5,8 +5,8 @@ import {
   type JsonValue,
   type Observation,
   type ProvenanceOrigin,
-} from '@worldview/world-model';
-import { buildObservation, type ObservationDraft, type ProviderManifest } from '@worldview/provider-sdk';
+} from '@opcb/world-model';
+import { buildObservation, type ObservationDraft, type ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * Normalizer for readsb aircraft.json rows (`hex, flight, r, t, alt_baro ('ground'|ft),

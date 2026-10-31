@@ -1,4 +1,4 @@
-import type { ViewState } from '@worldview/render-core';
+import type { ViewState } from '@opcb/render-core';
 
 /**
  * The globe by keyboard, as the 2D map already is by MapLibre's own keyboard handler: with

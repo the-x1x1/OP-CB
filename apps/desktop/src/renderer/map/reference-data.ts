@@ -3,7 +3,7 @@ import {
   decodeReferenceBorders,
   decodeReferenceLabels,
   type ReferenceData,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 
 /**
  * The bundled reference layer (borders and names), loaded once from next to index.html

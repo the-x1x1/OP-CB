@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { SpawnFn, SpawnedProcess } from '@worldview/camera-gateway';
+import type { SpawnFn, SpawnedProcess } from '@opcb/camera-gateway';
 import { startRuntime } from '../helpers/harness.js';
 
 /**
@@ -76,7 +76,7 @@ test('go2rtc: a configured path that does not exist reports not-configured and n
   const spawn = recordingSpawn();
   const h = await startRuntime({ spawnImpl: spawn.fn });
   try {
-    await h.client.request('settings.set', { cameras: { go2rtcPath: '/opt/worldview/go2rtc-does-not-exist' } });
+    await h.client.request('settings.set', { cameras: { go2rtcPath: '/opt/opcb/go2rtc-does-not-exist' } });
     assert.equal(h.runtime.core.go2rtc.configured(), true, 'the setting is applied without a restart');
     assert.equal(await h.runtime.core.ensureGo2rtc(), false);
     assert.equal(spawn.calls.length, 0, 'a missing binary is detected before spawning');

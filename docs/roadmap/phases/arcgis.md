@@ -357,17 +357,17 @@ unverified.**
 two logs in `Downloads\wv-build` as well as the screen):
 
 ```
-cd C:\Users\jconn\worldview
+cd C:\Users\jconn\opcb
 git push origin phase/arcgis
-git worktree remove --force ..\worldview-arcgis
+git worktree remove --force ..\opcb-arcgis
 git worktree prune
-git worktree add --detach ..\worldview-arcgis-live phase/arcgis
-cd ..\worldview-arcgis-live
+git worktree add --detach ..\opcb-arcgis-live phase/arcgis
+cd ..\opcb-arcgis-live
 pnpm install --frozen-lockfile
 pnpm lint *>&1 | Tee-Object -FilePath $HOME\Downloads\wv-build\arcgis-lint.log
 pnpm connector:test connectors/examples/arcgis/nifc-wildfire-incidents.json connectors/examples/arcgis/nifc-wildfire-perimeters.json connectors/examples/arcgis/nws-watches-warnings-mapserver.json --live *>&1 | Tee-Object -FilePath $HOME\Downloads\wv-build\arcgis-live.log
-cd ..\worldview
-git worktree remove --force ..\worldview-arcgis-live
+cd ..\opcb
+git worktree remove --force ..\opcb-arcgis-live
 ```
 
 The first `worktree remove` clears the worktree of the first run, which git still lists; it

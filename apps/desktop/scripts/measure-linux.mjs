@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Performance and power observations on Linux (docs/cyberdeck M5, hardware check H12): start
- * WorldView, time it, let it sit, and read what it costs — from /proc and /sys only, while it
+ * OP-CB, time it, let it sit, and read what it costs — from /proc and /sys only, while it
  * runs as a user would run it (sandbox on, no extra flags).
  *
  *   node apps/desktop/scripts/measure-linux.mjs <executable> [options]
@@ -10,7 +10,7 @@
  *     --runs <n>                        launches to measure (default 3)
  *     --idle <seconds>                  how long each launch sits untouched (default 300)
  *     --settle <seconds>                wait after the window appears before measuring (default 30)
- *     --baseline                        measure the computer with WorldView NOT running, for the
+ *     --baseline                        measure the computer with OP-CB NOT running, for the
  *                                       same idle time: the system power draw to compare with
  *     --label <text>                    what you want to remember about this run (e.g. "on battery, lid open")
  *     --out <file.json>                 write the result here as well
@@ -22,9 +22,9 @@
  * is the honest "memory the app holds" (RSS totals count shared Chromium pages repeatedly); CPU used over the idle
  * period, in % of one core, per process type; GPU busy % where the driver exposes it (amdgpu:
  * gpu_busy_percent); and the WHOLE COMPUTER's power draw from the battery (power_now, or the
- * energy_now drop) when it runs on battery. That last one is not WorldView's own use: compare a
+ * energy_now drop) when it runs on battery. That last one is not OP-CB's own use: compare a
  * run with `--baseline` under the same conditions (brightness, radios, other programs) to see
- * what WorldView adds. Conditions are recorded with the numbers; nothing is estimated.
+ * what OP-CB adds. Conditions are recorded with the numbers; nothing is estimated.
  *
  * An isolated XDG_CONFIG_HOME is used (a first, unmeasured launch creates it and the profile is
  * set in its settings), so the real profile is neither read nor changed. With no data sources
@@ -203,7 +203,7 @@ function conditions() {
 
 /**
  * The launched app's processes: the one this script started and everything descended from it
- * (Chromium's zygote, renderers, GPU and utility processes) — never another WorldView that
+ * (Chromium's zygote, renderers, GPU and utility processes) — never another OP-CB that
  * happens to be running from the same install.
  */
 function descendants(rootPid) {
@@ -385,12 +385,12 @@ async function launchMeasured(xdg, logFile, measure) {
 
 const result = { tool: 'measure-linux', conditions: conditions(), clkTck };
 if (baseline) {
-  console.log(`[measure] baseline: ${idleS} s with WorldView not running`);
+  console.log(`[measure] baseline: ${idleS} s with OP-CB not running`);
   result.baseline = await idlePeriod(undefined);
 } else {
-  const xdg = mkdtempSync(path.join(tmpdir(), 'worldview-measure-'));
-  const logFile = path.join(xdg, '@worldview', 'desktop', 'logs', 'app.log');
-  const settingsFile = path.join(xdg, '@worldview', 'desktop', 'settings.json');
+  const xdg = mkdtempSync(path.join(tmpdir(), 'opcb-measure-'));
+  const logFile = path.join(xdg, 'OP-CB', 'logs', 'app.log');
+  const settingsFile = path.join(xdg, 'OP-CB', 'settings.json');
   console.log('[measure] first launch (not measured): creates the profile');
   const warm = await launchMeasured(xdg, logFile, false);
   if (!warm.mounted) {

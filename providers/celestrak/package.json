@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/provider-celestrak",
+  "name": "@opcb/provider-celestrak",
   "version": "0.1.0",
   "private": true,
   "description": "CelesTrak GP element sets (TLE/OMM) propagated to satellite positions. Citation requested; catalog fetched at most every 2 h per group.",
@@ -14,8 +14,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*"
   },
   "optionalDependencies": {
     "satellite.js": "^6.0.0"

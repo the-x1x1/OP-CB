@@ -1,5 +1,5 @@
 /**
- * @worldview/telemetry — which readings an object carries and their values over time, for
+ * @opcb/telemetry — which readings an object carries and their values over time, for
  * the context panel's Readings section (phase `telemetry`, the Open MCT harvest in
  * docs/architecture/OPENMCT-HARVEST.md).
  *
@@ -10,7 +10,7 @@
  * provider SDK's index (whose `testing` export imports `node:crypto`) — so the renderer can
  * import it. Validate a descriptor with `telemetryDescriptorSchema` from the provider SDK.
  */
-export type { TelemetryDescriptor, TelemetryFormat, TelemetryLimits, TelemetrySeries } from '@worldview/provider-sdk';
+export type { TelemetryDescriptor, TelemetryFormat, TelemetryLimits, TelemetrySeries } from '@opcb/provider-sdk';
 
 export { DEFAULT_READINGS, DISCOVERED_TYPES, KNOWN_READINGS } from './known.js';
 export {

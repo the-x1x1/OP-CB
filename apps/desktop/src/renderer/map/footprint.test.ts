@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { EARTH_RADIUS_M, haversineMeters } from '@worldview/world-model';
+import { EARTH_RADIUS_M, haversineMeters } from '@opcb/world-model';
 import {
   FOOTPRINT_LAYER,
   footprintAngleDeg,

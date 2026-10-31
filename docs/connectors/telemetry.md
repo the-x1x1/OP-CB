@@ -84,7 +84,7 @@ defaults and discovery never apply to those types.
 The section makes one `history.readings` request per read (amendment request R3): every
 stored observation of the object in the window, the numeric values of the series' keys,
 oldest first, at most 20,000 rows (the newest; the section says when the start of a window
-was cut). `objectReadings(read, objectId, keys, window)` in `@worldview/telemetry` turns the
+was cut). `objectReadings(read, objectId, keys, window)` in `@opcb/telemetry` turns the
 rows into series, so a short spike is drawn however long the window.
 
 The window ends at the timeline's cursor rounded up to a sixtieth of the window, so a moving

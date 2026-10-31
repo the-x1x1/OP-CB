@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/offline",
+  "name": "@opcb/offline",
   "version": "0.1.0",
   "private": true,
   "description": "Offline world packs (.worldpack): manifest schema, safe ZIP container, builder, local place search index, pack registry and connection monitor (ADR-007).",
@@ -14,12 +14,12 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*",
-    "@worldview/core": "workspace:*",
-    "@worldview/source-health": "workspace:*",
-    "@worldview/history-store": "workspace:*",
-    "@worldview/ipc-contract": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*",
+    "@opcb/core": "workspace:*",
+    "@opcb/source-health": "workspace:*",
+    "@opcb/history-store": "workspace:*",
+    "@opcb/ipc-contract": "workspace:*"
   },
   "sideEffects": false
 }

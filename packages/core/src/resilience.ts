@@ -1,4 +1,4 @@
-import type { Clock } from '@worldview/world-model';
+import type { Clock } from '@opcb/world-model';
 
 /**
  * Resilience primitives shared by the network layer and provider runtime:

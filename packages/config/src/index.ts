@@ -1,5 +1,5 @@
 /**
- * @worldview/config — typed settings store with atomic persistence, versioned
+ * @opcb/config — typed settings store with atomic persistence, versioned
  * migrations for settings and the userData layout, and the startup validator.
  * Node-only (main process, tools). The renderer reads settings through IPC.
  */

@@ -7,7 +7,7 @@ import type {
   RequestChannel,
   RequestOf,
   ResponseOf,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import type { DefinitionsClient } from './sources-definitions-model.js';
 
 /**

@@ -20,7 +20,7 @@ import {
   verifyArchive,
   writeExtract,
   type ExtractSelection,
-} from '@worldview/offline';
+} from '@opcb/offline';
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);

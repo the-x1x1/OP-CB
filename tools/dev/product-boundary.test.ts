@@ -4,8 +4,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REQUEST_CHANNELS } from '@worldview/ipc-contract';
-import { authoritativeRules } from '@worldview/identity';
+import { REQUEST_CHANNELS } from '@opcb/ipc-contract';
+import { authoritativeRules } from '@opcb/identity';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // `release` is deliberately absent: it is a directory name that means two different

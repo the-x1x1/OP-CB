@@ -1,11 +1,11 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 import { DEFAULT_YD_RAW_PORT } from './wire.js';
 
 /**
  * The user's own boat's NMEA 2000 network, read through a gateway that serves it in Yacht
  * Devices' RAW text format over TCP (YDWG-02, YDEN-02, and others that offer "YD RAW"): the boat itself — GNSS position, course and speed, heading, depth, wind, water and air
- * temperature, pressure — and the ships its AIS receiver hears. WORLDVIEW connects to the
- * gateway (the gateway is the server; WORLDVIEW never listens) and only reads: nothing is sent
+ * temperature, pressure — and the ships its AIS receiver hears. OP-CB connects to the
+ * gateway (the gateway is the server; OP-CB never listens) and only reads: nothing is sent
  * onto the bus.
  *
  * Off by default; with no host named it connects to loopback only. The boat's own track is

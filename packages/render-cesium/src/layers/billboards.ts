@@ -1,4 +1,4 @@
-import type { RenderFeature, ResolvedStyle } from '@worldview/render-core';
+import type { RenderFeature, ResolvedStyle } from '@opcb/render-core';
 import type { BillboardCollectionLike, BillboardLike, Cartesian3Like, CesiumLike } from '../cesium-like.js';
 import type { CesiumTheme } from '../theme.js';
 import type { SpriteSheet } from '../sprites.js';

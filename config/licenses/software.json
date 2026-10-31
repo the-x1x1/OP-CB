@@ -1,5 +1,5 @@
 {
-  "$schema": "worldview/licenses/software/v1",
+  "$schema": "opcb/licenses/software/v1",
   "generatedAt": "2026-09-21T10:08:25Z",
   "records": [
     {
@@ -33,7 +33,7 @@
       "modifications": true,
       "distribution": "bundled",
       "commercialReview": "approved",
-      "notes": "Copyright (c) 2026 simplifaisoul (LICENSE at that commit). Adapted: the preview-tile placement and overlap rule of src/lib/map-tile-layout.ts, in apps/desktop/src/renderer/map/camera-preview-layout.ts (attribution comment kept there). The layer panel, splash and search are WorldView's own designs after OSIRIS's; no other code copied, and none of OSIRIS's data sources are used."
+      "notes": "Copyright (c) 2026 simplifaisoul (LICENSE at that commit). Adapted: the preview-tile placement and overlap rule of src/lib/map-tile-layout.ts, in apps/desktop/src/renderer/map/camera-preview-layout.ts (attribution comment kept there). The layer panel, splash and search are OP-CB's own designs after OSIRIS's; no other code copied, and none of OSIRIS's data sources are used."
     },
     {
       "name": "electron",
@@ -71,7 +71,7 @@
     {
       "name": "vite",
       "repository": "https://github.com/vitejs/vite",
-      "commitOrVersion": "6.4.3 in GEV package-lock.json; WORLDVIEW pin unpinned — verify",
+      "commitOrVersion": "6.4.3 in GEV package-lock.json; OP-CB pin unpinned — verify",
       "license": "MIT",
       "integration": "dependency",
       "modifications": false,
@@ -126,7 +126,7 @@
     {
       "name": "esbuild",
       "repository": "https://github.com/evanw/esbuild",
-      "commitOrVersion": "0.25.12 in GEV package-lock.json (transitive of vite); WORLDVIEW pin unpinned — verify",
+      "commitOrVersion": "0.25.12 in GEV package-lock.json (transitive of vite); OP-CB pin unpinned — verify",
       "license": "MIT",
       "integration": "dependency",
       "modifications": false,
@@ -137,7 +137,7 @@
     {
       "name": "cesium",
       "repository": "https://github.com/CesiumGS/cesium",
-      "commitOrVersion": "1.138.0 in GEV package-lock.json (@cesium/engine 22.3.0, @cesium/widgets 14.3.0); WORLDVIEW pin unpinned — verify",
+      "commitOrVersion": "1.138.0 in GEV package-lock.json (@cesium/engine 22.3.0, @cesium/widgets 14.3.0); OP-CB pin unpinned — verify",
       "license": "Apache-2.0",
       "integration": "dependency",
       "modifications": false,
@@ -242,18 +242,18 @@
       "modifications": false,
       "distribution": "optional",
       "commercialReview": "conditional",
-      "notes": "Optional camera/stream sidecar (RTSP/WebRTC/HLS re-streaming), NOT bundled by default: downloaded or user-installed, launched as a separate process, talked to over HTTP/WebSocket. Condition for approval: WORLDVIEW must not redistribute FFmpeg with it. go2rtc optionally execs an external ffmpeg binary (FFmpeg is LGPL-2.1+/GPL-2.0+ depending on build flags); shipping an FFmpeg binary inside a proprietary installer needs its own review. Go module dependencies (pion/webrtc MIT etc.) are covered by go2rtc's own release notices — include the go2rtc MIT notice if the binary is ever redistributed."
+      "notes": "Optional camera/stream sidecar (RTSP/WebRTC/HLS re-streaming), NOT bundled by default: downloaded or user-installed, launched as a separate process, talked to over HTTP/WebSocket. Condition for approval: OP-CB must not redistribute FFmpeg with it. go2rtc optionally execs an external ffmpeg binary (FFmpeg is LGPL-2.1+/GPL-2.0+ depending on build flags); shipping an FFmpeg binary inside a proprietary installer needs its own review. Go module dependencies (pion/webrtc MIT etc.) are covered by go2rtc's own release notices — include the go2rtc MIT notice if the binary is ever redistributed."
     },
     {
       "name": "readsb",
       "repository": "https://github.com/wiedehopf/readsb",
-      "commitOrVersion": "user-installed — not pinned by WORLDVIEW",
+      "commitOrVersion": "user-installed — not pinned by OP-CB",
       "license": "GPL-3.0 (repository licence badge, read 2026-09-21)",
       "integration": "external-service",
       "modifications": false,
       "distribution": "not-distributed",
       "commercialReview": "conditional",
-      "notes": "HARD RULE: never bundled, never linked, never vendored, never patched or forked into this repo. WORLDVIEW only reads readsb's network outputs (aircraft.json over HTTP, Beast/SBS TCP) from a process the user installs and runs themselves (providers/readsb-local). GPL-3.0 obligations attach to distribution of readsb itself, which WORLDVIEW does not do; communicating with a separately distributed GPL program over a documented network protocol does not make WORLDVIEW a derivative work. Condition: the installer must not download readsb on the user's behalf without the GPL notice and source offer — simplest is to link to the upstream project and let the user install it. Documentation must not describe readsb as \"part of\" WORLDVIEW."
+      "notes": "HARD RULE: never bundled, never linked, never vendored, never patched or forked into this repo. OP-CB only reads readsb's network outputs (aircraft.json over HTTP, Beast/SBS TCP) from a process the user installs and runs themselves (providers/readsb-local). GPL-3.0 obligations attach to distribution of readsb itself, which OP-CB does not do; communicating with a separately distributed GPL program over a documented network protocol does not make OP-CB a derivative work. Condition: the installer must not download readsb on the user's behalf without the GPL notice and source offer — simplest is to link to the upstream project and let the user install it. Documentation must not describe readsb as \"part of\" OP-CB."
     },
     {
       "name": "mediamtx",
@@ -297,7 +297,7 @@
       "modifications": true,
       "distribution": "bundled",
       "commercialReview": "approved",
-      "notes": "Data, not software — listed here because it ships inside the app bundle. GEV curated ne_10m_geography_regions_polys + ne_10m_geography_marine_polys (simplified 0.01°, 3-decimal rounding; curation script not committed, parameters recorded in each file's meta header). No attribution legally required; WORLDVIEW keeps the courtesy credit \"Made with Natural Earth\". Also recorded in providers.json (natural-earth) and assets.json."
+      "notes": "Data, not software — listed here because it ships inside the app bundle. GEV curated ne_10m_geography_regions_polys + ne_10m_geography_marine_polys (simplified 0.01°, 3-decimal rounding; curation script not committed, parameters recorded in each file's meta header). No attribution legally required; OP-CB keeps the courtesy credit \"Made with Natural Earth\". Also recorded in providers.json (natural-earth) and assets.json."
     },
     {
       "name": "egm96-universal",
@@ -357,7 +357,7 @@
     {
       "name": "protobufjs",
       "repository": "https://github.com/protobufjs/protobuf.js",
-      "commitOrVersion": "8.8.0 in GEV package-lock.json (transitive); WORLDVIEW use depends on gtfs-realtime-bindings adoption",
+      "commitOrVersion": "8.8.0 in GEV package-lock.json (transitive); OP-CB use depends on gtfs-realtime-bindings adoption",
       "license": "BSD-3-Clause",
       "integration": "dependency",
       "modifications": false,
@@ -374,7 +374,7 @@
       "modifications": false,
       "distribution": "not-distributed",
       "commercialReview": "approved",
-      "notes": "GEV dev dependency that copies Cesium static assets (Workers, Assets, Widgets) into the build. WORLDVIEW may replace it with an explicit copy step in apps/desktop; either way the copied Cesium assets are Apache-2.0 (cesium record)."
+      "notes": "GEV dev dependency that copies Cesium static assets (Workers, Assets, Widgets) into the build. OP-CB may replace it with an explicit copy step in apps/desktop; either way the copied Cesium assets are Apache-2.0 (cesium record)."
     },
     {
       "name": "ws",
@@ -390,7 +390,7 @@
     {
       "name": "Material Symbols (icon font, self-hosted)",
       "repository": "https://github.com/google/material-design-icons",
-      "commitOrVersion": "unpinned — GEV loads a subset from fonts.googleapis.com at runtime (index.html line 16); WORLDVIEW must bundle a local subset",
+      "commitOrVersion": "unpinned — GEV loads a subset from fonts.googleapis.com at runtime (index.html line 16); OP-CB must bundle a local subset",
       "license": "Apache-2.0",
       "integration": "dependency",
       "modifications": false,
@@ -407,7 +407,7 @@
       "modifications": false,
       "distribution": "bundled",
       "commercialReview": "approved",
-      "notes": "SIL Open Font License 1.1 permits bundling in commercial software; the OFL text and copyright notice must accompany the font files; the font may not be sold on its own. Only relevant if the WORLDVIEW design system keeps Inter."
+      "notes": "SIL Open Font License 1.1 permits bundling in commercial software; the OFL text and copyright notice must accompany the font files; the font may not be sold on its own. Only relevant if the OP-CB design system keeps Inter."
     },
     {
       "name": "JetBrains Mono (typeface, self-hosted)",
@@ -418,7 +418,7 @@
       "modifications": false,
       "distribution": "bundled",
       "commercialReview": "approved",
-      "notes": "Same OFL-1.1 conditions as Inter. Only relevant if kept by the WORLDVIEW design system."
+      "notes": "Same OFL-1.1 conditions as Inter. Only relevant if kept by the OP-CB design system."
     }
   ]
 }

@@ -49,7 +49,7 @@ function jpegFetch(seen: Array<{ url: string; auth: string | undefined }>): type
 }
 
 test('cameras: a registered camera is restored into its gateway after a restart', async () => {
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cameras-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cameras-'));
   const seen: Array<{ url: string; auth: string | undefined }> = [];
   const credentials = persistentCredentials();
   try {
@@ -109,7 +109,7 @@ test('cameras: a registered camera is restored into its gateway after a restart'
 });
 
 test('cameras: unregistering removes the record and its stored credential', async () => {
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cameras-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cameras-'));
   const seen: Array<{ url: string; auth: string | undefined }> = [];
   try {
     const h = await startRuntime({ dataDir, fetchImpl: jpegFetch(seen) });
@@ -129,7 +129,7 @@ test('cameras: unregistering removes the record and its stored credential', asyn
 });
 
 test('cameras: a hostile camera registry on disk is dropped entry by entry', async () => {
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cameras-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cameras-'));
   try {
     await fs.mkdir(dataDir, { recursive: true });
     await fs.writeFile(

@@ -1,4 +1,4 @@
-import type { GeoBounds, Observation } from '@worldview/world-model';
+import type { GeoBounds, Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -9,7 +9,7 @@ import {
   type ProviderHttpResponse,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -18,7 +18,7 @@ import {
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import {
   arcgisError,
   describeArcGisError,

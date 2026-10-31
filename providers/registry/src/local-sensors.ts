@@ -1,9 +1,9 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import { createProvider as createAisLocal } from '@worldview/provider-ais-local';
-import { createProvider as createMeshtasticLocal } from '@worldview/provider-meshtastic-local';
-import { createProvider as createNmea2000Local } from '@worldview/provider-nmea2000-local';
-import { createProvider as createPurpleAirLocal } from '@worldview/provider-purpleair-local';
-import { createProvider as createWeatherLinkLocal } from '@worldview/provider-weatherlink-local';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import { createProvider as createAisLocal } from '@opcb/provider-ais-local';
+import { createProvider as createMeshtasticLocal } from '@opcb/provider-meshtastic-local';
+import { createProvider as createNmea2000Local } from '@opcb/provider-nmea2000-local';
+import { createProvider as createPurpleAirLocal } from '@opcb/provider-purpleair-local';
+import { createProvider as createWeatherLinkLocal } from '@opcb/provider-weatherlink-local';
 
 /**
  * Partial provider registry: sensors on the user's own network (roadmap 0.5). Each is off by

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import type { Collection, CollectionItem } from '@worldview/ipc-contract';
-import { Button, EmptyState, IconButton, Panel, Section, formatCoordinates, formatUtcDateTime } from '@worldview/ui';
+import type { Collection, CollectionItem } from '@opcb/ipc-contract';
+import { Button, EmptyState, IconButton, Panel, Section, formatCoordinates, formatUtcDateTime } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 
 /** Collections (directive §69): list/create/rename/delete; add selection/location; notes; export/import via IPC. */

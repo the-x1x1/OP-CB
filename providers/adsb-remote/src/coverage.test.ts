@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing } from '@worldview/provider-sdk';
-import { haversineMeters } from '@worldview/world-model';
+import { testing } from '@opcb/provider-sdk';
+import { haversineMeters } from '@opcb/world-model';
 import {
   CIRCLE_KEEP_MS,
   CIRCLE_MIN_REFRESH_MS,

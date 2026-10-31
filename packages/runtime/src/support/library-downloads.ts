@@ -1,7 +1,7 @@
 import { createHash, type Hash } from 'node:crypto';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { Logger } from '@worldview/core';
+import type { Logger } from '@opcb/core';
 import type {
   CatalogAnswer,
   CatalogEntry,
@@ -9,7 +9,7 @@ import type {
   LibraryDownloadRequest,
   LibraryDownloadStatus,
   ReferenceDoc,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import { REFERENCES } from './references.js';
 
 /**

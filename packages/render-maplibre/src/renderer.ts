@@ -18,7 +18,7 @@ import type {
   ViewState,
   VisualStyleId,
   WorldRenderer,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import {
   createFrameScheduler,
   DAY_NIGHT_REFRESH_MS,
@@ -27,14 +27,14 @@ import {
   FrameCoalescer,
   pixelRatioFor,
   type FrameScheduler,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import {
   withAntimeridianSpills,
   type GeoBounds,
   type WmtsOverlay,
   type GeoPosition,
   type RasterOverlay,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import type { GeoJSONSourceLike, MapLibreLike, MapLike, PmtilesLike } from './maplibre-like.js';
 import { EMPTY_COLLECTION, type GeoJsonFeature, type GeoJsonFeatureCollection } from './geojson.js';
 import { MotionModel2D, motionStepMs2d } from './motion.js';
@@ -73,7 +73,7 @@ import {
   DEFAULT_GLYPHS_URL,
   styleForBasemap,
   type StyleBuildOptions,
-} from './styles/worldview-dark.js';
+} from './styles/opcb-dark.js';
 import type { MapStyle } from './styles/spec.js';
 import { parseIconImageId } from './images.js';
 import {

@@ -1,5 +1,5 @@
-import { BUILT_IN_LENSES, type LensDefinition } from '@worldview/render-core';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import { BUILT_IN_LENSES, type LensDefinition } from '@opcb/render-core';
+import type { SourceHealthEntry } from '@opcb/source-health';
 
 /**
  * The Overview's layers: one per built-in category lens (Aviation, Maritime, Space, …),

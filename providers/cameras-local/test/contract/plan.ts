@@ -1,4 +1,4 @@
-import { definePlan } from '@worldview/tool-provider-validator';
+import { definePlan } from '@opcb/tool-provider-validator';
 import { createProvider } from '../../src/index.js';
 
 /**

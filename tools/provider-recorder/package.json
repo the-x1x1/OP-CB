@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/tool-provider-recorder",
+  "name": "@opcb/tool-provider-recorder",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -39,18 +39,18 @@ source stops listing them, and a sharper globe on Auto (CHANGELOG); the 0.3.0 ch
 hardware checks are still open. 0.6.1 (2026-10-30; 0.6.0's build failed, unpublished) adds the Command Center (Online/Offline at
 start, readiness, walkthroughs), the world map and a built-in ZIM library downloaded in the app,
 public-domain emergency references, and data on an external drive (CHANGELOG); released for
-the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames WorldView to OP-CB — Operation
+the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames OP-CB to OP-CB — Operation
 Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG). 0.7.1 (2026-10-30) is security and
 maintenance: Electron 44.10 and patched dependencies, CI green again.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:
 
-- [x] `@worldview/connector-sdk`: definition schema, the no-execution mapping (paths, a
+- [x] `@opcb/connector-sdk`: definition schema, the no-execution mapping (paths, a
       closed transform registry, conditions), fail-closed data policy, endpoint policy
       (https/wss, public hosts, no credentials in URLs), `definitionToManifest`
       ([ADR-013](docs/adr/ADR-013-connector-architecture.md)).
-- [x] `@worldview/connector-runtime`: `rest-json` (GET/POST, credentials by reference,
+- [x] `@opcb/connector-runtime`: `rest-json` (GET/POST, credentials by reference,
       four pagination strategies, viewport placeholders, JSON/CSV/text), `geojson`, `csv`,
       `websocket-json` (subscribe with `{secret}`, heartbeat, filter, batching, reconnect);
       the registry with a slot per phase; the loader for bundled and operator definitions.
@@ -113,7 +113,7 @@ its own test file.
 ### 0.2.0 ships only when the picture is complete
 
 0.2.0 is not cut on a date. It ships when an operator on an ordinary laptop can open
-WorldView and see the whole live world with everything worth knowing about each thing in
+OP-CB and see the whole live world with everything worth knowing about each thing in
 it — until then the work goes out as 0.1.x patch releases. The bar:
 
 - [ ] **Aircraft, everywhere:** every aircraft the open feeds carry, military included,
@@ -142,7 +142,7 @@ Decisions only the operator can make:
       licence-free one (below, "The operator's decisions, 2026-10-20").
 - [ ] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
       Decided 2026-10-20: they may show, with an easy way to add them (below).
-- [x] The user-data folder: `%APPDATA%\@worldview\desktop\` as built (decided 2026-10-20;
+- [x] The user-data folder: `%APPDATA%\OP-CB\` as built (decided 2026-10-20;
       the docs now say so).
 - [ ] Legal sign-off on the conditional and manual-review providers (LR-01…LR-19) and
       AISStream's commercial terms; until then they stay off by default.
@@ -186,7 +186,7 @@ fixed on feature/next and seen or tested, one is the 180° line above. The walk 
 defects on the way; what is left:
 
 - [ ] By the operator, which a remote session cannot do: the installer run (SmartScreen,
-      Start menu, portable zip) on a machine that has never run WorldView; the offline
+      Start menu, portable zip) on a machine that has never run OP-CB; the offline
       section with the network off; a desktop notification seen from a watch zone; Escape;
       a screenshot of each style as evidence files; a ship's bow against its heading; Task
       Manager GPU and CPU after switching 2D/3D; ISS passes against Heavens-Above; a few
@@ -330,7 +330,7 @@ legal; the commercial distribution review closed with no outstanding blockers.
 
 God's Eye View (`bilawalsidhu/gods-eye-view`, UPSTREAM.md) has 778 commits since the import at
 `0dbde1e` (2026-09-20 → `e2274bb`, 2026-10-16); OSIRIS (osirisai.live, "V5.0") publishes a feature
-list but no changelog. What either has that WORLDVIEW does not, taken as a list to work through.
+list but no changelog. What either has that OP-CB does not, taken as a list to work through.
 Nothing is copied without its licence: GEV code is MIT (keep the notice); each data source still
 needs its own record.
 
@@ -339,7 +339,7 @@ Engineering with no licence or key, in the order they are to be built:
 - [x] **GNSS interference from ADS-B integrity** (on feature/roadmap-2, `d23bfaf`: 10 minutes, not 30 — the rule is stateless over the aircraft the state holds) (GEV `eefcb33`; OSIRIS lists GPS jamming):
       aircraft reporting degraded navigation integrity (NIC < 7, NACp < 8, or readsb's GPS-loss
       flag) binned into 0.5° cells over a rolling 30 minutes, coloured in gpsjam.org's bands.
-      Built from the aircraft WORLDVIEW already receives (adsb.lol, the operator's own readsb):
+      Built from the aircraft OP-CB already receives (adsb.lol, the operator's own readsb):
       the providers keep the integrity fields, a derived layer bins them. No new request.
 - [x] **Drop your own GeoJSON, KML, KMZ or GPX onto the map** (on feature/roadmap-2: read by the runtime, `geodata.read`; shapes and names only, so nothing needs sanitizing — nothing else is read) (GEV `57b8d8b`): drawn for the
       session, one colour per file, show/hide, fly to, remove; KML/KMZ sanitized so a file cannot
@@ -373,7 +373,7 @@ Each needs a decision of the operator's first:
 - **Street-level imagery** (GEV: Mapillary, KartaView, Panoramax, Google Street View): Mapillary
   needs a key; KartaView is CC BY-SA; Panoramax instances set their own licences; Google is
   excluded.
-- **Links to a view** (GEV `fe69f22`): a `worldview://` link that opens the app at a place with
+- **Links to a view** (GEV `fe69f22`): a `opcb://` link that opens the app at a place with
   given layers — registering a protocol handler is an installer and OS change.
 - **An MCP server over the local API** (GEV's tool catalog and `/mcp`): AI clients reading what
   the app holds; extends ADR-014 and what leaves the app.
@@ -413,11 +413,11 @@ God's Eye View again, 2026-10-16 (89 commits from `e2274bb` to `1df2a27`):
 
 ## The operator's decisions, 2026-10-20
 
-The goal stays a WorldView that ships with no key and no licence to sign: a fresh download
+The goal stays an OP-CB that ships with no key and no licence to sign: a fresh download
 shows as much as it can without registering anything. Answers to the decisions listed above,
 each to be built on `feature/roadmap-3`:
 
-- [x] **Links to a view:** `worldview://view?lat=…&lon=…` registered by the installer, read
+- [x] **Links to a view:** `opcb://view?lat=…&lon=…` registered by the installer, read
       strictly in the main process, Copy a link to this view in the palette, a link pasted into
       search opens too (ADR-004 amendment 2026-10-20; docs/OPERATOR-GUIDE.md "Links to a view").
 - [ ] **Wind on the globe:** a source that needs no key and no licence condition. NOAA's ERDDAP

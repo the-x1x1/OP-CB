@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { subsolarPoint } from '@worldview/world-model';
+import { subsolarPoint } from '@opcb/world-model';
 import { SKY_POINTS_LAYER, skyPointFeatures } from './sky-points.js';
 
 test('day and night: where the Sun and the Moon stand overhead, named, never pick targets', () => {

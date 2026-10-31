@@ -1,8 +1,8 @@
 /**
- * The stdio entry of WorldView's MCP server (mcp-server.ts). An MCP client starts it with
- * WorldView's own executable run as Node:
+ * The stdio entry of OP-CB's MCP server (mcp-server.ts). An MCP client starts it with
+ * OP-CB's own executable run as Node:
  *
- *   ELECTRON_RUN_AS_NODE=1  "<WorldView.exe>"  "<resources>/app.asar.unpacked/dist/mcp/worldview-mcp.cjs"
+ *   ELECTRON_RUN_AS_NODE=1  "<OP-CB.exe>"  "<resources>/app.asar.unpacked/dist/mcp/opcb-mcp.cjs"
  *
  * It reads one JSON-RPC message per line on stdin, answers on stdout, logs nothing there, and
  * reaches the running app only through the local API's socket (Linux) or named pipe (Windows).
@@ -12,22 +12,22 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { handleMcpMessage, type LocalApiGet } from './mcp-server.js';
 
-declare const __WORLDVIEW_BUILD__: { version?: string } | undefined;
+declare const __OPCB_BUILD__: { version?: string } | undefined;
 
 const MAX_LINE = 1024 * 1024;
 const MAX_ANSWER = 5 * 1024 * 1024;
 
 function endpoint(env: NodeJS.ProcessEnv): string | undefined {
-  if (env['WORLDVIEW_API']) return env['WORLDVIEW_API'];
+  if (env['OPCB_API']) return env['OPCB_API'];
   if (process.platform === 'win32') {
     const user = (env['USERNAME'] ?? '')
       .toLowerCase()
       .replace(/[^a-z0-9._-]/g, '_')
       .slice(0, 64);
-    return user ? `\\\\.\\pipe\\worldview-api-${user}` : undefined;
+    return user ? `\\\\.\\pipe\\opcb-api-${user}` : undefined;
   }
   const dir = env['XDG_RUNTIME_DIR'];
-  return dir && path.isAbsolute(dir) ? path.join(dir, 'worldview', 'api.sock') : undefined;
+  return dir && path.isAbsolute(dir) ? path.join(dir, 'opcb', 'api.sock') : undefined;
 }
 
 export function localApiGet(socketPath: string | undefined, timeoutMs = 8000): LocalApiGet {
@@ -63,7 +63,7 @@ export function localApiGet(socketPath: string | undefined, timeoutMs = 8000): L
 }
 
 function main(): void {
-  const version = (typeof __WORLDVIEW_BUILD__ !== 'undefined' && __WORLDVIEW_BUILD__?.version) || '0.0.0';
+  const version = (typeof __OPCB_BUILD__ !== 'undefined' && __OPCB_BUILD__?.version) || '0.0.0';
   const get = localApiGet(endpoint(process.env));
   const write = (msg: unknown) => process.stdout.write(`${JSON.stringify(msg)}\n`);
   const lines = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });

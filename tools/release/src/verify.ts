@@ -177,7 +177,7 @@ export function buildVerificationReport(opts: VerifyOptions): VerificationReport
     }
   }
 
-  const sbomPath = path.join(root, 'artifacts', 'release', `WorldView-${opts.release}.sbom.json`);
+  const sbomPath = path.join(root, 'artifacts', 'release', `OP-CB-${opts.release}.sbom.json`);
   const sbomPresent = existsSync(sbomPath);
   const sbomDoc = sbomPresent ? readJson<{ components: unknown[] }>(sbomPath) : undefined;
 
@@ -268,7 +268,7 @@ export function sha256SumsText(hashes: ArtifactHash[]): string {
 
 export function formatVerification(r: VerificationReport): string {
   const lines = [
-    `WorldView ${r.release} — verification`,
+    `OP-CB ${r.release} — verification`,
     `commit ${r.commitSha} · node ${r.nodeVersion} · pnpm ${r.pnpmVersion} · ${r.platform} · ${r.buildTime}`,
     '',
     'Tests:',

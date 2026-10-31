@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPosition, RasterOverlay } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition, RasterOverlay } from '@opcb/world-model';
 import type {
   AttributionEntry,
   BasemapDescriptor,
@@ -16,8 +16,8 @@ import type {
   ViewState,
   VisualStyleId,
   WorldRenderer,
-} from '@worldview/render-core';
-import { resolveRenderMode, viewForMode, type HostCapabilities } from '@worldview/render-core';
+} from '@opcb/render-core';
+import { resolveRenderMode, viewForMode, type HostCapabilities } from '@opcb/render-core';
 import type { RendererHostEvents, RendererHostLike } from './renderer-host-like.js';
 
 /**
@@ -25,7 +25,7 @@ import type { RendererHostEvents, RendererHostLike } from './renderer-host-like.
  * time, behind the interface the shell codes against.
  *
  * Until this existed, `resolveHost()` fell back to the demo canvas host in *every* build,
- * so a packaged WORLDVIEW had neither renderer — the adapters were written, tested and
+ * so a packaged OP-CB had neither renderer — the adapters were written, tested and
  * never composed. The two halves were also built to different shapes: `RendererHost` in
  * render-core presents a world snapshot itself, while the shell runs the presentation
  * pipeline and pushes a `FeatureUpdate`. This adapter is the join, and it is deliberately
@@ -128,7 +128,7 @@ export class DesktopRendererHost implements RendererHostLike {
 
   // State that must survive a mode switch: a renderer constructed later has to be
   // brought up to the same picture as the one it replaces.
-  private features = new Map<string, import('@worldview/render-core').RenderFeature>();
+  private features = new Map<string, import('@opcb/render-core').RenderFeature>();
   private view: ViewState;
   private selected: string | null = null;
   private attribution: AttributionEntry[] = [];

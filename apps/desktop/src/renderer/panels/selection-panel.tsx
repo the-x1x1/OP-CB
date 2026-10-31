@@ -8,7 +8,7 @@ import {
   StatusBadge,
   formatObjectType,
   formatUtcDateTime,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { contextRegistry, displayName } from '../context/index.js';
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';

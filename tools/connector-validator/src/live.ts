@@ -1,9 +1,9 @@
-import { ProviderHost, type ObservationBatch } from '@worldview/provider-runtime';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
-import { testing } from '@worldview/provider-sdk';
-import { systemClock, type JsonValue } from '@worldview/world-model';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import { defaultConnectorRegistry, type ConnectorRegistry } from '@worldview/connector-runtime';
+import { ProviderHost, type ObservationBatch } from '@opcb/provider-runtime';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
+import { testing } from '@opcb/provider-sdk';
+import { systemClock, type JsonValue } from '@opcb/world-model';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import { defaultConnectorRegistry, type ConnectorRegistry } from '@opcb/connector-runtime';
 
 /**
  * One live sample through the real provider host: the definition's provider is registered

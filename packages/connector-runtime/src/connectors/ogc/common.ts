@@ -1,6 +1,6 @@
-import { definitionToManifest, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import type { ProviderHttpRequest, ProviderHttpResponse, ProviderManifest } from '@worldview/provider-sdk';
-import type { GeoBounds } from '@worldview/world-model';
+import { definitionToManifest, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import type { ProviderHttpRequest, ProviderHttpResponse, ProviderManifest } from '@opcb/provider-sdk';
+import type { GeoBounds } from '@opcb/world-model';
 import { exceptionMessage, scanXml } from './xml.js';
 import { endpointCredential } from '../../shared/credentials.js';
 import { finiteNumber } from '../../shared/json.js';

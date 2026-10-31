@@ -1,5 +1,5 @@
-import { ObjectTypes } from '@worldview/world-model';
-import { retentionCapSeconds, type ProviderDataPolicy } from '@worldview/provider-sdk';
+import { ObjectTypes } from '@opcb/world-model';
+import { retentionCapSeconds, type ProviderDataPolicy } from '@opcb/provider-sdk';
 import type { HistoryRow } from './row.js';
 
 /**

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { runProviderChecklist, formatReport, type ProviderTestPlan } from '@worldview/tool-provider-validator';
-import { readManifestSource } from '@worldview/tool-license-audit';
+import { runProviderChecklist, formatReport, type ProviderTestPlan } from '@opcb/tool-provider-validator';
+import { readManifestSource } from '@opcb/tool-license-audit';
 import { checkOptions, scaffoldProvider, type ScaffoldOptions } from './scaffold.js';
 import { collision, parseArgs, writeScaffold } from './cli.js';
 
@@ -21,7 +21,7 @@ const BASE: ScaffoldOptions = {
 
 /**
  * A throwaway repository root beside this file — inside tools/, so the test loader's path
- * mapping resolves the generated code's `@worldview/*` imports — with an empty licence
+ * mapping resolves the generated code's `@opcb/*` imports — with an empty licence
  * registry. Removed afterwards whatever happens.
  */
 async function inTempRoot(fn: (root: string) => Promise<void>): Promise<void> {
@@ -29,7 +29,7 @@ async function inTempRoot(fn: (root: string) => Promise<void>): Promise<void> {
   mkdirSync(path.join(root, 'config', 'licenses'), { recursive: true });
   writeFileSync(
     path.join(root, 'config', 'licenses', 'providers.json'),
-    `${JSON.stringify({ $schema: 'worldview/licenses/providers/v1', records: [] }, null, 2)}\n`,
+    `${JSON.stringify({ $schema: 'opcb/licenses/providers/v1', records: [] }, null, 2)}\n`,
   );
   try {
     await fn(root);

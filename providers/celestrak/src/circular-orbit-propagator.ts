@@ -1,4 +1,4 @@
-import { bearingDegrees, normalizeLongitude } from '@worldview/world-model';
+import { bearingDegrees, normalizeLongitude } from '@opcb/world-model';
 import type { GpElements } from './elements.js';
 import { semiMajorAxisKm } from './elements.js';
 import type { Propagator, PropagatedState } from './propagator.js';

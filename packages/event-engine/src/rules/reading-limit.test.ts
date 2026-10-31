@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
 import { pastLimit, readingLimitRule, type LimitedReading } from './reading-limit.js';
 
 const T0 = Date.parse('2026-10-04T20:00:00Z');

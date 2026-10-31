@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { decodeReferenceBorders, decodeReferenceLabels } from '@worldview/render-core';
-import { cityEntries, isReferencePlacesFile } from '@worldview/query-engine';
+import { decodeReferenceBorders, decodeReferenceLabels } from '@opcb/render-core';
+import { cityEntries, isReferencePlacesFile } from '@opcb/query-engine';
 // @ts-expect-error — a plain .mjs tool without declarations
 import { buildBorders, buildLabels, buildPlaces, encodeLine, simplify } from './build.mjs';
 

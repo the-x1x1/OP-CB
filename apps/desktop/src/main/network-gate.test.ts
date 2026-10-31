@@ -17,7 +17,7 @@ test('leavesThisComputer: the internet and the LAN do, this computer and the app
     'http://localhost:8080/',
     'ws://[::1]:9000/',
     'http://camera.localhost/',
-    'worldview://app/__tiles/esri/1/2/3',
+    'opcb://app/__tiles/esri/1/2/3',
     'file:///C:/x',
     'data:image/png;base64,AA',
     'not a url',
@@ -115,10 +115,10 @@ test('blockInternetRequests: an approved host is let through on the session too'
 });
 
 test('launch mode: only --mode=online or --mode=offline exactly; nothing else chooses', () => {
-  assert.equal(launchModeFromArgs(['/opt/WorldView/worldview', '--mode=offline']), 'offline');
-  assert.equal(launchModeFromArgs(['worldview.exe', '--mode=online']), 'online');
-  assert.equal(launchModeFromArgs(['worldview.exe']), undefined);
-  assert.equal(launchModeFromArgs(['worldview.exe', '--mode', 'online']), undefined);
-  assert.equal(launchModeFromArgs(['worldview.exe', '--mode=Online']), undefined);
-  assert.equal(launchModeFromArgs(['worldview.exe', 'worldview://view?mode=online']), undefined);
+  assert.equal(launchModeFromArgs(['/opt/OP-CB/opcb', '--mode=offline']), 'offline');
+  assert.equal(launchModeFromArgs(['op-cb.exe', '--mode=online']), 'online');
+  assert.equal(launchModeFromArgs(['op-cb.exe']), undefined);
+  assert.equal(launchModeFromArgs(['op-cb.exe', '--mode', 'online']), undefined);
+  assert.equal(launchModeFromArgs(['op-cb.exe', '--mode=Online']), undefined);
+  assert.equal(launchModeFromArgs(['op-cb.exe', 'opcb://view?mode=online']), undefined);
 });

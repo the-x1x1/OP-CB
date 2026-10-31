@@ -1,4 +1,4 @@
-import { isValidBounds, type GeoBounds, type JsonValue } from '@worldview/world-model';
+import { isValidBounds, type GeoBounds, type JsonValue } from '@opcb/world-model';
 import {
   featurePosition,
   numberProp,

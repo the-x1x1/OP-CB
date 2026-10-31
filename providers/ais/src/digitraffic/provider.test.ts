@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
+import { testing, type ProviderHttpRequest } from '@opcb/provider-sdk';
 import { DigitrafficAisProvider } from './index.js';
 import { DIGITRAFFIC_USER, METADATA_REFRESH_MS, locationsUrl, vesselsUrl } from './manifest.js';
 

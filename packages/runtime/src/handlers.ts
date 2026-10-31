@@ -12,9 +12,9 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
-} from '@worldview/world-model';
-import type { TrackPoint } from '@worldview/state-engine';
-import { mayExport } from '@worldview/provider-sdk';
+} from '@opcb/world-model';
+import type { TrackPoint } from '@opcb/state-engine';
+import { mayExport } from '@opcb/provider-sdk';
 import {
   applyObjectQuery,
   collapseDuplicatePlaces,
@@ -22,10 +22,10 @@ import {
   executeQuery,
   executeQueryWithHistory,
   searchWorld,
-} from '@worldview/query-engine';
-import { whatChanged } from '@worldview/event-engine';
-import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@worldview/offline';
-import { exportBundle } from '@worldview/diagnostics';
+} from '@opcb/query-engine';
+import { whatChanged } from '@opcb/event-engine';
+import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@opcb/offline';
+import { exportBundle } from '@opcb/diagnostics';
 import {
   EVENT_TYPE_LABELS,
   GEODATA_MAX_FILE_BYTES,
@@ -52,9 +52,9 @@ import {
   type TileCacheStatus,
   type TimelineState,
   type WorldSubscription,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import type { RequestHandlers } from './contract.js';
-import { MAP_PROVIDER_CATALOG, resolveMapProviders } from '@worldview/render-core';
+import { MAP_PROVIDER_CATALOG, resolveMapProviders } from '@opcb/render-core';
 import { RuntimeCore, errorText } from './core.js';
 import { filterObjects } from './support/subscriptions.js';
 import { ownPlaceResults } from './support/own-places-search.js';
@@ -657,7 +657,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const geo = format === 'json' ? undefined : (format as CollectionGeoFormat);
       const choice = await core.hostBridge.pickSaveFile({
         title: 'Export collection',
-        defaultPath: suggestedPath(core, `${slug(collection.name)}.${geo ?? 'worldview-collection.json'}`),
+        defaultPath: suggestedPath(core, `${slug(collection.name)}.${geo ?? 'opcb-collection.json'}`),
         filters: [
           geo === 'gpx'
             ? { name: 'GPX waypoints', extensions: ['gpx'] }
@@ -780,7 +780,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const zones = await core.watchZoneStore.list();
       const choice = await core.hostBridge.pickSaveFile({
         title: 'Export watch zones',
-        defaultPath: suggestedPath(core, `worldview-watch-zones.${format}`),
+        defaultPath: suggestedPath(core, `opcb-watch-zones.${format}`),
         filters: [
           format === 'kml' ? { name: 'KML', extensions: ['kml'] } : { name: 'GeoJSON', extensions: ['geojson'] },
         ],
@@ -907,7 +907,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const body =
         format === 'csv'
           ? prepCsv(records)
-          : `${JSON.stringify({ version: 1, kind: 'worldview-preparedness', records }, null, 2)}\n`;
+          : `${JSON.stringify({ version: 1, kind: 'opcb-preparedness', records }, null, 2)}\n`;
       await fs.writeFile(choice.path, body, 'utf8');
       core.log.info('preparedness exported', { format, records: records.length });
       return { path: choice.path, records: records.length };
@@ -1029,7 +1029,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       return {
         status: core.offlineStatus(),
         added,
-        issues: r.adopted ? [`"${added}" was already a OP-CB vault; its packs are read from it again`] : [],
+        issues: r.adopted ? [`"${added}" was already an OP-CB vault; its packs are read from it again`] : [],
       };
     },
     'offline.removeVault': async ({ id }) => {
@@ -1200,7 +1200,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       const stamp = new Date(core.clock.now()).toISOString().replace(/[:.]/g, '-');
       const choice = await core.hostBridge.pickSaveFile({
         title: 'Export diagnostics bundle',
-        defaultPath: suggestedPath(core, `worldview-diagnostics-${stamp}.json`),
+        defaultPath: suggestedPath(core, `opcb-diagnostics-${stamp}.json`),
         filters: [{ name: 'JSON', extensions: ['json'] }],
       });
       if ('cancelled' in choice) return { cancelled: true };
@@ -1553,7 +1553,7 @@ async function exportObjects(
     title: 'Export objects',
     defaultPath: suggestedPath(
       core,
-      `worldview-export-${new Date(core.clock.now()).toISOString().slice(0, 10)}.${format === 'geojson' ? 'geojson' : format}`,
+      `opcb-export-${new Date(core.clock.now()).toISOString().slice(0, 10)}.${format === 'geojson' ? 'geojson' : format}`,
     ),
     filters: [{ name: format.toUpperCase(), extensions: [format === 'geojson' ? 'geojson' : format] }],
   });
@@ -1614,7 +1614,7 @@ async function exportTrack(
       .slice(0, 60) || 'track';
   const choice = await core.hostBridge.pickSaveFile({
     title: 'Export track',
-    defaultPath: suggestedPath(core, `worldview-track-${safe}-${time.start.slice(0, 10)}.${format}`),
+    defaultPath: suggestedPath(core, `opcb-track-${safe}-${time.start.slice(0, 10)}.${format}`),
     filters: [{ name: { geojson: 'GeoJSON', csv: 'CSV', gpx: 'GPX track', kml: 'KML' }[format], extensions: [format] }],
   });
   if ('cancelled' in choice) return { cancelled: true };
@@ -1698,7 +1698,7 @@ async function exportReadings(
     title: 'Export readings',
     defaultPath: suggestedPath(
       core,
-      `worldview-readings-${
+      `opcb-readings-${
         objectId
           .split(':')
           .pop()

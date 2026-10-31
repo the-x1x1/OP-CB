@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * Field paths into a JSON record — the only way a mapping reaches into a source's data.

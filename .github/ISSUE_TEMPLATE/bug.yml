@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in WORLDVIEW behaves incorrectly.
+description: Something in OP-CB behaves incorrectly.
 labels: [bug]
 body:
   - type: markdown
@@ -11,7 +11,7 @@ body:
   - type: input
     id: version
     attributes:
-      label: WorldView version
+      label: OP-CB version
       description: Help → Diagnostics → app version (e.g. 0.1.0-rc.1)
     validations: { required: true }
   - type: dropdown

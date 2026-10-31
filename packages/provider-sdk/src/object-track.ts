@@ -1,4 +1,4 @@
-import type { JsonValue, TimeRange } from '@worldview/world-model';
+import type { JsonValue, TimeRange } from '@opcb/world-model';
 import type { WorldProvider } from './provider.js';
 
 /**
@@ -10,7 +10,7 @@ import type { WorldProvider } from './provider.js';
  * Two kinds of answer:
  *
  *   history    — where the object was, from the source's own record of it (adsb.lol keeps
- *                about a day of positions per aircraft). Merged into the track WORLDVIEW
+ *                about a day of positions per aircraft). Merged into the track OP-CB
  *                recorded itself, filling the gaps it has — before the aircraft came into
  *                view, or while the view was elsewhere.
  *   prediction — where it will be, computed (one orbital period of a satellite, SGP4 from
@@ -21,7 +21,7 @@ import type { WorldProvider } from './provider.js';
  * the points it shows came from; `attribution` is the licence line the source requires.
  */
 export interface ObjectTrackRequest {
-  /** WORLDVIEW object id (`aircraft:icao24:a1b2c3`). */
+  /** OP-CB object id (`aircraft:icao24:a1b2c3`). */
   objectId: string;
   objectType: string;
   /** The source's own id for the object (the provider's `externalId`), when known. */

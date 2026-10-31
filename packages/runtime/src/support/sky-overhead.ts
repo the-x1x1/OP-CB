@@ -6,8 +6,8 @@ import {
   toEcef,
   type GeoPosition,
   type WorldObject,
-} from '@worldview/world-model';
-import type { SkyOverheadAnswer, SkySatellite } from '@worldview/ipc-contract';
+} from '@opcb/world-model';
+import type { SkyOverheadAnswer, SkySatellite } from '@opcb/ipc-contract';
 
 /**
  * The satellites above a place's horizon now (`sky.overhead`): each one's elevation, bearing

@@ -1,5 +1,5 @@
-import { motionSpeedMps, positionAlong, type RenderFeature, type RenderMotion } from '@worldview/render-core';
-import type { GeoBounds, GeoPosition } from '@worldview/world-model';
+import { motionSpeedMps, positionAlong, type RenderFeature, type RenderMotion } from '@opcb/render-core';
+import type { GeoBounds, GeoPosition } from '@opcb/world-model';
 
 /**
  * Moving markers in 2D (RenderFeature.motion): which of them move, and where they are now.

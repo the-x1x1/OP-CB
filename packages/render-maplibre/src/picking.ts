@@ -1,4 +1,4 @@
-import type { PickResult } from '@worldview/render-core';
+import type { PickResult } from '@opcb/render-core';
 import type { QueriedFeatureLike } from './maplibre-like.js';
 import { OVERLAY_SOURCE_PREFIX } from './layers.js';
 

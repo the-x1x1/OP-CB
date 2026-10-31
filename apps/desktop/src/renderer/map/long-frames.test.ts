@@ -12,14 +12,14 @@ test('long frame: the longest script names its chunk and entry kind; layout is f
       {
         duration: 30,
         invokerType: 'resolve-promise',
-        sourceURL: 'worldview://app/assets/index-B7xQ2k9a.js',
+        sourceURL: 'opcb://app/assets/index-B7xQ2k9a.js',
         sourceCharPosition: 1234,
       },
       {
         duration: 95,
         invokerType: 'user-callback',
         invoker: 'FrameRequestCallback',
-        sourceURL: 'worldview://app/assets/maplibre-Cx81aQzP.js?v=1',
+        sourceURL: 'opcb://app/assets/maplibre-Cx81aQzP.js?v=1',
         sourceCharPosition: 88_000,
         forcedStyleAndLayoutDuration: 4,
       },
@@ -42,5 +42,5 @@ test('long frame: the longest script names its chunk and entry kind; layout is f
   assert.equal(summariseLongFrame({ startTime: 0, duration: 120, blockingDuration: 45 }).blockingMs, 45);
   assert.equal(chunkName(undefined), 'unknown');
   assert.equal(chunkName('https://x/assets/cesium-AbCdEf12.js'), 'cesium');
-  assert.ok(!JSON.stringify(s).includes('worldview://'), 'no URLs leave the module');
+  assert.ok(!JSON.stringify(s).includes('opcb://'), 'no URLs leave the module');
 });

@@ -8,7 +8,7 @@
  * (loopback), on the port the operator gives; nothing on the network is searched for.
  */
 
-/** Online: the internet-backed sources run. Offline: WorldView asks nothing of the internet. */
+/** Online: the internet-backed sources run. Offline: OP-CB asks nothing of the internet. */
 export type OperatingMode = 'online' | 'offline';
 
 /**
@@ -20,9 +20,9 @@ export type OperatingMode = 'online' | 'offline';
  *  - `remembered` is the last choice (null on the very first start): offered first.
  *  - `osOnline` is the operating system's own word on the network: shown as information, it
  *    never chooses for the operator.
- *  - `enforcement` says what kind of guarantee Offline is: `app` means WorldView's own requests
+ *  - `enforcement` says what kind of guarantee Offline is: `app` means OP-CB's own requests
  *    are stopped at its doors (network-gate.ts). It is not a firewall: another program, or a
- *    service the operator runs beside WorldView (a local AI, a library server), is not stopped
+ *    service the operator runs beside OP-CB (a local AI, a library server), is not stopped
  *    by it.
  */
 export interface ModeState {
@@ -95,8 +95,8 @@ export function normaliseLocalHost(raw: string): string {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * The local services WorldView knows how to find on this computer. Each is the operator's own
- * install, run by them: WorldView asks it questions over loopback and never installs, starts or
+ * The local services OP-CB knows how to find on this computer. Each is the operator's own
+ * install, run by them: OP-CB asks it questions over loopback and never installs, starts or
  * stops it.
  *
  *  - `ollama`  a local AI model runner (ollama.com), port 11434 by default
@@ -111,13 +111,13 @@ export const LOCAL_SERVICE_IDS: readonly LocalServiceId[] = Object.freeze(['olla
 export const DEFAULT_SERVICE_PORTS: Readonly<Record<LocalServiceId, number>> = Object.freeze({
   ollama: 11434,
   // kiwix-serve listens on 80 unless told otherwise (kiwix-serve.rst); 80 needs privileges on
-  // Linux, so its own examples use 8080, and so does WorldView's walkthrough.
+  // Linux, so its own examples use 8080, and so does OP-CB's walkthrough.
   kiwix: 8080,
   kolibri: 8080,
 });
 
 /**
- * One service as WorldView found it, just now.
+ * One service as OP-CB found it, just now.
  *
  *  - `running`    it answered as itself
  *  - `not-found`  nothing answered on that port
@@ -160,7 +160,7 @@ export interface LibrarySearchAnswer {
 
 /**
  * The offline inference test: one short prompt to one installed model, with nothing from
- * WorldView's own data in it, and an answer that says it is the model's own words. `grounded`
+ * OP-CB's own data in it, and an answer that says it is the model's own words. `grounded`
  * is always false here: no document was given to the model.
  */
 export interface AiTestRequest {
@@ -437,12 +437,12 @@ export interface MapDownloadStatus {
 }
 
 // ---------------------------------------------------------------------------------------------
-// Where WorldView keeps its data
+// Where OP-CB keeps its data
 // ---------------------------------------------------------------------------------------------
 
 /**
  * The data folder: `usual` (the system's application-data folder), `portable` (a
- * `WorldView-data` folder next to the app, which travels with the drive) or `moved` (a folder
+ * `OP-CB-data` folder next to the app, which travels with the drive) or `moved` (a folder
  * the operator chose, on an external drive say). `missing` when the moved folder could not be
  * used at start and this computer's own data was used instead.
  */
@@ -463,7 +463,7 @@ export interface DataMoveAnswer {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The built-in library: ZIM files read by WorldView itself, Kiwix catalogue downloads, and the
+// The built-in library: ZIM files read by OP-CB itself, Kiwix catalogue downloads, and the
 // emergency references (2026-10-30)
 // ---------------------------------------------------------------------------------------------
 
@@ -484,14 +484,14 @@ export interface LibraryBook {
   flavour?: string;
   sizeBytes: number;
   entryCount: number;
-  /** False when WorldView cannot show it (older xz compression, damaged); `problem` says why. */
+  /** False when OP-CB cannot show it (older xz compression, damaged); `problem` says why. */
   readable: boolean;
   problem?: string;
   /** Whether the file carries a title list (title search). */
   titleSearch: boolean;
 }
 
-/** A public-domain emergency reference WorldView knows how to fetch. */
+/** A public-domain emergency reference OP-CB knows how to fetch. */
 export interface ReferenceDoc {
   id: string;
   title: string;
@@ -507,7 +507,7 @@ export interface ReferenceDoc {
 }
 
 export interface LibraryShelf {
-  /** The library folder (inside WorldView's data folder). */
+  /** The library folder (inside OP-CB's data folder). */
   folder: string;
   books: LibraryBook[];
   references: ReferenceDoc[];
@@ -642,7 +642,7 @@ export function readLibraryDownloadRequest(v: unknown): LibraryDownloadRequest |
 }
 
 /**
- * Public-domain emergency references WorldView fetches in one go and keeps in the library
+ * Public-domain emergency references OP-CB fetches in one go and keeps in the library
  * (operator decision 2026-10-30). Works of the U.S. federal government are not under copyright
  * (17 U.S.C. § 105); the two Army manuals also carry "Approved for public release; distribution
  * is unlimited."

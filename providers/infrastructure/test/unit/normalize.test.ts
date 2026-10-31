@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, type ProviderError } from '@worldview/provider-sdk';
+import { testing, type ProviderError } from '@opcb/provider-sdk';
 import { SEED_AIRPORTS_MANIFEST, SEED_AIRPORTS_FILE } from '../../src/manifest.js';
 import { airportFeatureToDraft, normalizeAirportCollection, normalizeDatasetDate } from '../../src/normalize.js';
 import { SeedAirportsProvider } from '../../src/index.js';

@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
-import type { JsonValue } from '@worldview/world-model';
-import { silentLogger, type Logger } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
+import type { JsonValue } from '@opcb/world-model';
+import { silentLogger, type Logger } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
 import type { DataDirs } from '../data-dirs.js';
 
 /**

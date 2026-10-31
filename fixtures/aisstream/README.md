@@ -2,7 +2,7 @@
 
 Synthetic **websocket frames** in the shape AISStream.io sends after a subscription
 (https://aisstream.io/documentation: `{ MessageType, MetaData, Message: { <MessageType>: … } }`).
-AISStream publishes no licence and forbids redistribution by default in WORLDVIEW's policy,
+AISStream publishes no licence and forbids redistribution by default in OP-CB's policy,
 so nothing here was recorded from the live stream: MMSIs, names, call signs and IMO numbers
 are invented. Traffic sits in Honolulu Harbor / Mamala Bay; the contract plan subscribes with
 bounds west −158.3, south 21.1, east −157.6, north 21.5.

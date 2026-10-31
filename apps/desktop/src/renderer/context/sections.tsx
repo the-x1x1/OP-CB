@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { WorldObject } from '@worldview/world-model';
-import type { CameraPictureHealth, CameraStreamDescriptor } from '@worldview/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
+import type { CameraPictureHealth, CameraStreamDescriptor } from '@opcb/ipc-contract';
 import {
   Button,
   FieldList,
@@ -11,14 +11,14 @@ import {
   formatDuration,
   formatRelativeAge,
   formatUtcDateTime,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import {
   CYCLONE_CATEGORY_NAMES,
   cycloneCategory,
   cycloneOf,
   satelliteCategoryLabel,
   satelliteCategoryPurpose,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import { contextRegistry, type ContextSection } from './registry.js';
 import { bool, num, safeHttpsUrl, str, strList } from './props.js';
 import type { ShellActions } from '../store/actions.js';

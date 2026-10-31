@@ -98,11 +98,11 @@ test('tile cache: a miss fetches and stores; the next ask is served from disk, a
   await c.init();
   const first = await c.respond('/__tiles/esri-world-imagery/4/3/7');
   assert.equal(first.status, 200);
-  assert.equal(first.headers.get('X-Worldview-Tile-Cache'), 'miss');
+  assert.equal(first.headers.get('X-OP-CB-Tile-Cache'), 'miss');
   assert.equal(first.headers.get('Content-Type'), 'image/jpeg');
   assert.deepEqual(up.requested, ['https://tiles.example/tile/4/7/3']);
   const again = await c.respond('/__tiles/esri-world-imagery/4/3/7');
-  assert.equal(again.headers.get('X-Worldview-Tile-Cache'), 'hit');
+  assert.equal(again.headers.get('X-OP-CB-Tile-Cache'), 'hit');
   assert.equal(up.requested.length, 1, 'no second request upstream');
   assert.equal(c.status().tiles, 1);
 
@@ -152,9 +152,9 @@ test('tile cache: over the cap, the least recently used tiles go first', async (
   assert.ok(s.bytes <= 64 * 1024 * 1024, `${s.bytes} within the cap`);
   assert.ok(s.tiles < 70);
   const kept = await c.respond('/__tiles/esri-world-imagery/7/0/0');
-  assert.equal(kept.headers.get('X-Worldview-Tile-Cache'), 'hit', 'the tile used again survived');
+  assert.equal(kept.headers.get('X-OP-CB-Tile-Cache'), 'hit', 'the tile used again survived');
   const gone = await c.respond('/__tiles/esri-world-imagery/7/1/0');
-  assert.equal(gone.headers.get('X-Worldview-Tile-Cache'), 'miss', 'an old one was evicted');
+  assert.equal(gone.headers.get('X-OP-CB-Tile-Cache'), 'miss', 'an old one was evicted');
   // Lowering the cap trims straight away.
   c.configure({ maxMB: 64, preloadWorld: false }, 'esri-world-imagery');
 });

@@ -1,7 +1,7 @@
 import type { BasemapDescriptor, TerrainDescriptor } from './contract.js';
 
 /**
- * Map-provider catalog (ADR-008): the basemaps and terrain sources WORLDVIEW can show,
+ * Map-provider catalog (ADR-008): the basemaps and terrain sources OP-CB can show,
  * independent of which renderer draws them. The runtime serves this over
  * `map.providers.list` with availability resolved against configured credentials, so the
  * interface never has to hardcode a list or guess what a build supports.
@@ -52,7 +52,7 @@ export const DEFAULT_BASEMAP_ID = 'natural-earth';
  * falls back to when it cannot be drawn (offline with nothing cached, say).
  */
 export const PREFERRED_BASEMAP_ID = 'esri-world-imagery';
-export const DEFAULT_2D_BASEMAP_ID = 'worldview-dark';
+export const DEFAULT_2D_BASEMAP_ID = 'opcb-dark';
 export const DEFAULT_TERRAIN_ID = 'ellipsoid';
 
 export const MAP_PROVIDER_CATALOG: readonly MapProviderEntry[] = Object.freeze([
@@ -83,13 +83,13 @@ export const MAP_PROVIDER_CATALOG: readonly MapProviderEntry[] = Object.freeze([
       kind: 'pmtiles',
       id: DEFAULT_2D_BASEMAP_ID,
       url: '',
-      styleId: 'worldview-dark',
+      styleId: 'opcb-dark',
       attribution: '© OpenMapTiles © OpenStreetMap contributors',
     },
     notes: 'Reads the PMTiles basemap of an installed world pack; the runtime fills in the pack path.',
   },
   {
-    id: 'worldview-light',
+    id: 'opcb-light',
     name: 'OP-CB light (offline vector)',
     kind: 'basemap',
     modes: ['2D'],
@@ -98,9 +98,9 @@ export const MAP_PROVIDER_CATALOG: readonly MapProviderEntry[] = Object.freeze([
     review: 'approved',
     descriptor: {
       kind: 'pmtiles',
-      id: 'worldview-light',
+      id: 'opcb-light',
       url: '',
-      styleId: 'worldview-light',
+      styleId: 'opcb-light',
       attribution: '© OpenMapTiles © OpenStreetMap contributors',
     },
   },

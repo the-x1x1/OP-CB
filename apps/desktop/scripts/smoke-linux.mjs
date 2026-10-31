@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Packaged-app smoke test for Linux: launch an installed or unpacked WorldView, read what it
+ * Packaged-app smoke test for Linux: launch an installed or unpacked OP-CB, read what it
  * says about itself in its own log, quit it, launch it again, and check what survived.
  *
  *   node apps/desktop/scripts/smoke-linux.mjs <executable> [options]
@@ -52,9 +52,9 @@ const timeoutMs = Number(opt('--timeout') ?? 90) * 1000;
 const expectHistory = opt('--expect-history');
 const expectKeyring = opt('--expect-keyring');
 
-const profile = mkdtempSync(path.join(tmpdir(), 'worldview-smoke-'));
-const logFile = path.join(profile, '@worldview', 'desktop', 'logs', 'app.log');
-const settingsFile = path.join(profile, '@worldview', 'desktop', 'settings.json');
+const profile = mkdtempSync(path.join(tmpdir(), 'opcb-smoke-'));
+const logFile = path.join(profile, 'OP-CB', 'logs', 'app.log');
+const settingsFile = path.join(profile, 'OP-CB', 'settings.json');
 
 /** The JSON-lines records of app.log (core/node.ts RotatingFileSink). */
 function records() {

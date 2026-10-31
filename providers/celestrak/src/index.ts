@@ -1,4 +1,4 @@
-import type { JsonValue, Observation } from '@worldview/world-model';
+import type { JsonValue, Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -13,7 +13,7 @@ import {
   type ProviderContext,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   CATALOG_MAX_AGE_MS,
   CELESTRAK_MANIFEST,

@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { paletteItems } from '@worldview/ui';
+import { paletteItems } from '@opcb/ui';
 import { buildCommands } from './commands.js';
 import { applyKey, resolveKey } from './keyboard.js';
 import { initialState, rootReducer } from '../store/reducer.js';
 import type { ShellActions } from '../store/actions.js';
 import type { RootState } from '../store/types.js';
-import type { AppSettings } from '@worldview/ipc-contract';
+import type { AppSettings } from '@opcb/ipc-contract';
 
 const NOW = Date.parse('2026-09-21T08:00:00.000Z');
 

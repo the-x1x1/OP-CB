@@ -1,5 +1,5 @@
-import type { JsonValue, Observation } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { NHC_MANIFEST } from './manifest.js';
 
 /**

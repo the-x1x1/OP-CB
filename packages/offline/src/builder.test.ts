@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { testing } from '@worldview/provider-sdk';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import {
   SEED_AIRPORTS_PROVIDER_ID,
   SEED_PLACES_PROVIDER_ID,

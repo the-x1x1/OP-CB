@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPosition } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition } from '@opcb/world-model';
 
 /** Small recorded place index for demo search (coordinates are public knowledge, rounded). */
 export interface DemoPlace {

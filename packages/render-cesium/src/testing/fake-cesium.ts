@@ -949,7 +949,7 @@ export function fakeCanvasFactory() {
     return {
       width,
       height,
-      getContext: () => ctx as unknown as import('@worldview/render-core').GlyphContext,
+      getContext: () => ctx as unknown as import('@opcb/render-core').GlyphContext,
       toDataURL: () => `data:image/png;base64,${width}x${height}`,
     };
   };

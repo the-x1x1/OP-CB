@@ -1,4 +1,4 @@
-import { motionFraction, type CameraModeState, type RenderFeature } from '@worldview/render-core';
+import { motionFraction, type CameraModeState, type RenderFeature } from '@opcb/render-core';
 import type { Cartesian3Like, CesiumLike, HeadingPitchRangeLike, ViewerLike } from './cesium-like.js';
 
 /** One turn in 90 s: slow enough to read labels as they pass, fast enough to see it move. */

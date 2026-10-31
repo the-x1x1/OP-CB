@@ -1,5 +1,5 @@
-import { isValidLatLon, type GeoPosition, type JsonValue, type Observation } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft, type ProviderManifest } from '@worldview/provider-sdk';
+import { isValidLatLon, type GeoPosition, type JsonValue, type Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft, type ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * WeatherLink Live `/v1/current_conditions` → weather-station observations.

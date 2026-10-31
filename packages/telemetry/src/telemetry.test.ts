@@ -8,7 +8,7 @@ import {
   TELEMETRY_FORMATS,
   telemetryDescriptorSchema,
   type TelemetryDescriptor,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   DEFAULT_READINGS,
   FORMAT_RULES,
@@ -48,9 +48,9 @@ test('the package stays importable by the renderer: nothing from the provider SD
     for (const { typeOnly, spec } of imports) {
       seen++;
       assert.ok(!spec.startsWith('node:'), `${file} imports ${spec}`);
-      if (spec === '@worldview/provider-sdk') assert.ok(typeOnly, `${file} imports the provider SDK at run time`);
+      if (spec === '@opcb/provider-sdk') assert.ok(typeOnly, `${file} imports the provider SDK at run time`);
       assert.ok(
-        spec.startsWith('./') || spec === '@worldview/provider-sdk' || spec === '@worldview/world-model',
+        spec.startsWith('./') || spec === '@opcb/provider-sdk' || spec === '@opcb/world-model',
         `${file} imports ${spec}`,
       );
     }

@@ -6,7 +6,7 @@ import {
   type GeoBounds,
   type IsoTimestamp,
   type Schema,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 /**
  * WorldPackManifest — `manifest.json` at the root of a `.worldpack` (ADR-007).

@@ -1,4 +1,4 @@
-import type { ObjectTrackPoint } from '@worldview/provider-sdk';
+import type { ObjectTrackPoint } from '@opcb/provider-sdk';
 import { FOOT_TO_M } from './normalize.js';
 
 /**
@@ -7,7 +7,7 @@ import { FOOT_TO_M } from './normalize.js';
  * — about the last day of positions. The URL is not part of adsb.lol's documented API (it is
  * the map's own data), so it is treated as best effort: asked for only for the aircraft the
  * operator selected, once a minute at most per aircraft, with a short timeout and a size cap,
- * on a host in the provider's allow-list, and any failure leaves the track as WORLDVIEW
+ * on a host in the provider's allow-list, and any failure leaves the track as OP-CB
  * recorded it. The data is adsb.lol's, ODbL 1.0, like the rest of this provider's.
  *
  * The format is readsb's (README-json.md, "trace jsons"): `{ icao, timestamp, trace: [...] }`,
@@ -18,7 +18,7 @@ import { FOOT_TO_M } from './normalize.js';
  *   [4] ground speed kt   [5] track   [6] flags   [7] vertical rate   [8] detail object | null
  *   [9] position type   [10] geometric altitude ft   ... (later fields unused here)
  *
- * The altitude kept is the one WORLDVIEW's live points carry — barometric feet in metres,
+ * The altitude kept is the one OP-CB's live points carry — barometric feet in metres,
  * 0 on the ground — so history and live tail sit on one profile. GEV's tracks.js
  * (normalizeAircraftTrack, MIT) reads the same fields the same way.
  */

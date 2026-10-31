@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import { SnapshotPages } from './snapshot-pages.js';
 
 const objs = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `o${i}` }) as unknown as WorldObject);

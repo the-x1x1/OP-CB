@@ -1,4 +1,4 @@
-import { geodesicInverse, haversineMeters, type GeoBounds, type GeoPosition } from '@worldview/world-model';
+import { geodesicInverse, haversineMeters, type GeoBounds, type GeoPosition } from '@opcb/world-model';
 import { cityBeforeItsRegion, collapseDuplicateHits, samePlace } from './place-duplicates.js';
 
 /**

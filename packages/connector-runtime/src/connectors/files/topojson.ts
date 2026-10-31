@@ -1,4 +1,4 @@
-import type { JsonValue, WorldGeometry } from '@worldview/world-model';
+import type { JsonValue, WorldGeometry } from '@opcb/world-model';
 import { MAX_LINE_POINTS, coordinate, type Coordinate, type FeatureReadResult, type FileFeature } from './features.js';
 import { isPlainObject as isObject } from '../../shared/json.js';
 

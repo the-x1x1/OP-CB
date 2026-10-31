@@ -53,7 +53,7 @@ test(
   { skip: !onLinux },
   async () => {
     const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
-    const socket = path.join(runtimeDir, 'worldview', 'api.sock');
+    const socket = path.join(runtimeDir, 'opcb', 'api.sock');
     const h = await startRuntime({ platform: 'linux', localApiSocket: socket });
     try {
       assert.equal(await exists(socket), false, 'off by default: no socket');
@@ -81,7 +81,7 @@ test(
       const index = await client('/v1', socket);
       assert.equal(index.code, 0, index.err);
       const idx = JSON.parse(index.out) as { api: string; version: number; ownPosition: boolean };
-      assert.equal(idx.api, 'worldview-local');
+      assert.equal(idx.api, 'opcb-local');
       assert.equal(idx.version, 1);
       assert.equal(idx.ownPosition, false);
 
@@ -116,7 +116,7 @@ test(
       assert.equal(own.code, 0, own.err);
       assert.equal((JSON.parse(own.out) as { state: string }).state, 'no-source', 'no node plugged in: said so');
 
-      // Turned off: the socket goes, and a client is told WORLDVIEW is not there.
+      // Turned off: the socket goes, and a client is told OP-CB is not there.
       await h.client.request('settings.set', { localApi: { enabled: false } });
       await until(async () => !(await exists(socket)), 'the socket to go');
       const gone = await client('/v1', socket);
@@ -136,7 +136,7 @@ test(
   { skip: !onLinux },
   async () => {
     const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
-    const socket = path.join(runtimeDir, 'worldview', 'api.sock');
+    const socket = path.join(runtimeDir, 'opcb', 'api.sock');
     await fs.mkdir(path.dirname(socket), { mode: 0o700 });
     await fs.writeFile(socket, 'not a socket');
     const h = await startRuntime({ platform: 'linux', localApiSocket: socket });
@@ -146,7 +146,7 @@ test(
       assert.equal(h.runtime.localApi, undefined, 'refused to start');
       assert.equal(await fs.readFile(socket, 'utf8'), 'not a socket', 'and left the file alone');
 
-      // Another WORLDVIEW answering on the path (a second profile): not taken over either.
+      // Another OP-CB answering on the path (a second profile): not taken over either.
       await fs.rm(socket);
       const net = await import('node:net');
       const other = net.createServer((c) => c.end());
@@ -191,7 +191,7 @@ test(
 
 test('local API: not offered off Linux and Windows', async () => {
   const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
-  const socket = path.join(runtimeDir, 'worldview', 'api.sock');
+  const socket = path.join(runtimeDir, 'opcb', 'api.sock');
   const h = await startRuntime({ platform: 'darwin', localApiSocket: socket });
   try {
     await h.client.request('settings.set', { localApi: { enabled: true } });
@@ -210,7 +210,7 @@ test('local API: not offered off Linux and Windows', async () => {
 test('local API: refused when the runtime folder is open to other users', { skip: !onLinux }, async () => {
   const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
   await fs.chmod(runtimeDir, 0o777);
-  const socket = path.join(runtimeDir, 'worldview', 'api.sock');
+  const socket = path.join(runtimeDir, 'opcb', 'api.sock');
   const h = await startRuntime({ platform: 'linux', localApiSocket: socket });
   try {
     await h.client.request('settings.set', { localApi: { enabled: true } });
@@ -228,7 +228,7 @@ test(
   { skip: !onLinux },
   async () => {
     const runtimeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-run-'));
-    const socket = path.join(runtimeDir, 'worldview', 'api.sock');
+    const socket = path.join(runtimeDir, 'opcb', 'api.sock');
     const h = await startRuntime({ platform: 'linux', localApiSocket: socket });
     try {
       await h.client.request('settings.set', { localApi: { enabled: true } });

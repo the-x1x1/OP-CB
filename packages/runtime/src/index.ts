@@ -1,7 +1,7 @@
 /**
- * @worldview/runtime — the one composition of WORLDVIEW.
+ * @opcb/runtime — the one composition of OP-CB.
  *
- *   providers (@worldview/providers) → ProviderHost → WorldState → events / history /
+ *   providers (@opcb/providers) → ProviderHost → WorldState → events / history /
  *   timeline / search / offline / cameras, all behind the IPC request catalogue.
  *
  * `src/contract.ts` is frozen (architecture-contract-v1); everything else here is the

@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { constants as fsConstants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { TypedEmitter, silentLogger, type Logger } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
-import type { VaultHealthSummary, VaultSetting } from '@worldview/ipc-contract';
+import { TypedEmitter, silentLogger, type Logger } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
+import type { VaultHealthSummary, VaultSetting } from '@opcb/ipc-contract';
 
 /**
  * Data vaults — operator-granted folders outside the app's own, usually on an external SSD,
@@ -12,15 +12,17 @@ import type { VaultHealthSummary, VaultSetting } from '@worldview/ipc-contract';
  * The one rule everything here serves: **never write through a missing drive.** When a USB
  * drive is not mounted, its mount point (`/media/<user>/<label>`, `D:\`) is either gone or an
  * empty folder on the internal disk. A path alone cannot tell the two apart, so a vault is
- * recognised by the marker file WorldView writes into it when the operator adds it
- * (`.worldview-vault.json`, a random id). No marker → `absent`, whatever the folder looks like;
+ * recognised by the marker file OP-CB writes into it when the operator adds it
+ * (`.opcb-vault.json`, a random id). No marker → `absent`, whatever the folder looks like;
  * another vault's marker → `foreign`. Nothing in this module creates the vault folder, and
  * nothing writes to a vault that did not just prove it is the right one.
  *
  * Nothing here deletes anything on a vault either.
  */
 
-export const VAULT_MARKER_FILE = '.worldview-vault.json';
+export const VAULT_MARKER_FILE = '.opcb-vault.json';
+/** The marker a vault set up before the rename to OP-CB (0.7.2) carries; still read, never written. */
+export const LEGACY_VAULT_MARKER_FILE = '.worldview-vault.json';
 /** World packs inside a vault: `<vault>/worldpacks/<pack id>/`, the same layout as the app's own. */
 export const VAULT_PACKS_DIR = 'worldpacks';
 /** Below this much free space nothing new is written to a vault (it stays readable). */
@@ -33,7 +35,7 @@ export type VaultState = VaultHealthSummary['state'];
 
 export interface VaultMarker {
   formatVersion: 1;
-  app: 'worldview';
+  app: 'opcb';
   id: string;
   label: string;
   createdAt: string;
@@ -105,19 +107,38 @@ export function parseVaultMarker(bytes: Buffer): { ok: true; marker: VaultMarker
     return { ok: false, reason: 'marker file is not JSON' };
   }
   const m = raw as Partial<VaultMarker>;
-  if (!m || typeof m !== 'object' || m.formatVersion !== 1 || m.app !== 'worldview')
-    return { ok: false, reason: 'marker file is not a OP-CB vault marker' };
+  if (
+    !m ||
+    typeof m !== 'object' ||
+    m.formatVersion !== 1 ||
+    ((m.app as unknown) !== 'opcb' && (m.app as unknown) !== 'worldview')
+  )
+    return { ok: false, reason: 'marker file is not an OP-CB vault marker' };
   if (typeof m.id !== 'string' || !ID_PATTERN.test(m.id)) return { ok: false, reason: 'marker id is malformed' };
   return {
     ok: true,
     marker: {
       formatVersion: 1,
-      app: 'worldview',
+      app: 'opcb',
       id: m.id,
       label: typeof m.label === 'string' ? m.label.slice(0, 80) : '',
       createdAt: typeof m.createdAt === 'string' ? m.createdAt : '',
     },
   };
+}
+
+/** The vault marker's bytes: the current file, or a vault's from before the rename. */
+async function readMarkerBytes(vfs: Pick<VaultFs, 'readFile'>, root: string): Promise<Buffer> {
+  try {
+    return await vfs.readFile(path.join(root, VAULT_MARKER_FILE));
+  } catch (err) {
+    if (code(err) !== 'ENOENT') throw err;
+    try {
+      return await vfs.readFile(path.join(root, LEGACY_VAULT_MARKER_FILE));
+    } catch {
+      throw err;
+    }
+  }
 }
 
 /**
@@ -150,7 +171,7 @@ export async function probeVault(vault: VaultSetting, opts: ProbeOptions = {}): 
 
   let marker: VaultMarker;
   try {
-    const parsed = parseVaultMarker(await vfs.readFile(path.join(vault.path, VAULT_MARKER_FILE)));
+    const parsed = parseVaultMarker(await readMarkerBytes(vfs, vault.path));
     if (!parsed.ok) return result('error', `${vault.path}: ${parsed.reason}`, { device });
     marker = parsed.marker;
   } catch (err) {
@@ -236,7 +257,7 @@ export async function vaultMarkerMatches(
   vfs: Pick<VaultFs, 'readFile'> = nodeVaultFs,
 ): Promise<boolean> {
   try {
-    const parsed = parseVaultMarker(await vfs.readFile(path.join(root, VAULT_MARKER_FILE)));
+    const parsed = parseVaultMarker(await readMarkerBytes(vfs, root));
     return parsed.ok && parsed.marker.id === id;
   } catch {
     return false;
@@ -278,7 +299,7 @@ async function deviceOf(p: string): Promise<number | undefined> {
  * Make `folder` a vault, or adopt the vault already there. The folder must exist (the operator
  * chose it in a dialog); this never creates it.
  *
- * It must also be on another drive than WorldView's own data. That is the point of a vault, and
+ * It must also be on another drive than OP-CB's own data. That is the point of a vault, and
  * it is what catches the dangerous case: a permanent mount point (`/mnt/ssd` in fstab) picked
  * while nothing is mounted is an existing, empty folder on the internal disk — marking it would
  * turn the internal disk into the "vault", and hide its packs once the drive mounted over it.
@@ -312,7 +333,7 @@ export async function initVault(
 
   const markerFile = path.join(real, VAULT_MARKER_FILE);
   try {
-    const parsed = parseVaultMarker(await fs.readFile(markerFile));
+    const parsed = parseVaultMarker(await readMarkerBytes(nodeVaultFs, real));
     if (!parsed.ok) return { ok: false, reason: `${real} has an unusable vault marker: ${parsed.reason}` };
     await fs.mkdir(packs.dir).catch((err: unknown) => {
       if (code(err) !== 'EEXIST') throw err;
@@ -327,7 +348,7 @@ export async function initVault(
   }
   const marker: VaultMarker = {
     formatVersion: 1,
-    app: 'worldview',
+    app: 'opcb',
     id: randomBytes(16).toString('hex'),
     label: cleanLabel(label, real),
     createdAt: new Date((opts.now ?? Date.now)()).toISOString(),

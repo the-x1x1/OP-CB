@@ -4,7 +4,7 @@ import {
   IPC_PREFIX,
   type EventChannel,
   type RequestChannel,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import { IpcRequestError, isEnvelope, type IpcResultEnvelope } from '../shared/ipc-envelope.js';
 
 /**

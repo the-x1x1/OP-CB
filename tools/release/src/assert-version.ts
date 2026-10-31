@@ -50,10 +50,10 @@ export function expectedArtifacts(version: string): {
   sbom: string;
 } {
   return {
-    installer: `WorldView-Setup-${version}.exe`,
-    blockmap: `WorldView-Setup-${version}.exe.blockmap`,
-    portable: `WorldView-Portable-${version}.zip`,
-    sbom: `WorldView-${version}.sbom.json`,
+    installer: `OP-CB-Setup-${version}.exe`,
+    blockmap: `OP-CB-Setup-${version}.exe.blockmap`,
+    portable: `OP-CB-Portable-${version}.zip`,
+    sbom: `OP-CB-${version}.sbom.json`,
   };
 }
 
@@ -63,7 +63,7 @@ export function expectedArtifacts(version: string): {
  * the release folder is foreign like any other unexpected file.
  */
 export function expectedLinuxArtifacts(version: string): { deb: string; sbom: string } {
-  return { deb: `worldview_${version}_amd64.deb`, sbom: `WorldView-${version}.sbom.json` };
+  return { deb: `opcb_${version}_amd64.deb`, sbom: `OP-CB-${version}.sbom.json` };
 }
 
 /** What a release of `version` for `platform` must contain, may contain, and where the updater points. */

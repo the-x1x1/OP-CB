@@ -1,4 +1,4 @@
-import { ObjectTypes, s, type JsonValue, type Schema } from '@worldview/world-model';
+import { ObjectTypes, s, type JsonValue, type Schema } from '@opcb/world-model';
 import {
   OGR_LAYER_NAME,
   checkRelativePath,
@@ -7,7 +7,7 @@ import {
   type ProviderDataPolicy,
   type ProviderManifest,
   type ProviderSettingDefinition,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { compileMapping, MappingError, type MappingSpec } from './mapping.js';
 import { checkMqttDefinition, mqttSpecSchema, type MqttSpec } from './mqtt.js';
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readViewLink } from '@worldview/ipc-contract';
+import { readViewLink } from '@opcb/ipc-contract';
 import { DemoClient } from '../demo/demo-client.js';
 import { loadInitialState } from './bootstrap-state.js';
 import { rootReducer } from './reducer.js';
@@ -82,7 +82,7 @@ test('view link for the view: 2D by zoom, the globe by height, lens and selectio
 
 test('view link: opening one flies there and turns its layers; unknown parts are said once', async () => {
   const h = await harness();
-  const read = readViewLink('worldview://view?lat=19.42&lon=-155.29&z=9&hide=aviation&show=madeup');
+  const read = readViewLink('opcb://view?lat=19.42&lon=-155.29&z=9&hide=aviation&show=madeup');
   assert.ok(read.ok);
   await h.actions.openViewLink(read.link);
   assert.equal(h.flights.length, 1);
@@ -99,12 +99,12 @@ test('view link: opening one flies there and turns its layers; unknown parts are
 
 test('view link: a link pasted into search is one result that opens it', async () => {
   const h = await harness();
-  const [result] = await h.actions.search('worldview://view?lat=1&lon=2&z=5');
+  const [result] = await h.actions.search('opcb://view?lat=1&lon=2&z=5');
   assert.equal(result?.title, 'Open this link');
   await h.actions.goTo(result!);
   assert.deepEqual(h.flights[0]?.position, { latitude: 1, longitude: 2 });
 
-  const [bad] = await h.actions.search('worldview://view?lat=100&lon=2');
+  const [bad] = await h.actions.search('opcb://view?lat=100&lon=2');
   assert.equal(bad?.title, 'This link cannot be opened');
   await h.actions.goTo(bad!);
   assert.equal(h.flights.length, 1, 'a refused link flies nowhere');
@@ -115,12 +115,12 @@ test('view link: Copy a link to this view writes the link for what is on the map
   await h.actions.copyViewLink();
   const last = h.get().ui.notifications.at(-1);
   assert.equal(last?.title, 'Link to this view', 'the demo has no clipboard: the link is shown');
-  assert.match(last?.body ?? '', /worldview:\/\/view\?lat=21\.30694&lon=-157\.85833&z=11\.25&mode=2d/);
+  assert.match(last?.body ?? '', /opcb:\/\/view\?lat=21\.30694&lon=-157\.85833&z=11\.25&mode=2d/);
 });
 
 test('view link: a pending link waits in the store until it is opened', async () => {
   const h = await harness();
-  const read = readViewLink('worldview://view?lat=1&lon=2');
+  const read = readViewLink('opcb://view?lat=1&lon=2');
   assert.ok(read.ok);
   let s = rootReducer(h.get(), { type: 'ui/link', link: read.link });
   assert.deepEqual(s.ui.pendingLink, read.link);

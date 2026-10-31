@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * WORLDVIEW test runner.
+ * OP-CB test runner.
  *
  * Runs Node's built-in test runner (node:test) through the tsx loader so tests are
  * plain TypeScript with zero framework dependencies. Test groups are defined by
@@ -9,7 +9,7 @@
  *   src/**\/*.test.ts                 -> unit
  *   test/contract/**\/*.test.ts       -> contract  (provider contract tests)
  *   test/integration/**\/*.test.ts    -> integration
- *   test/offline/**\/*.test.ts        -> offline   (run with WORLDVIEW_NETWORK=off)
+ *   test/offline/**\/*.test.ts        -> offline   (run with OPCB_NETWORK=off)
  *   test/failure/**\/*.test.ts        -> failure   (failure injection)
  *   test/boundary/**\/*.test.ts       -> boundary  (dependency-direction tests)
  *
@@ -78,7 +78,7 @@ if (files.length === 0) {
 }
 
 const env = { ...process.env };
-if (group === 'offline') env.WORLDVIEW_NETWORK = 'off';
+if (group === 'offline') env.OPCB_NETWORK = 'off';
 // tsx applies compilerOptions (JSX runtime, paths) only to files matched by its tsconfig; the root
 // tsconfig.json excludes the renderer program, so point the loader at a workspace-wide config.
 if (!env.TSX_TSCONFIG_PATH) env.TSX_TSCONFIG_PATH = path.join(root, 'tools', 'dev', 'tsconfig.tsx-loader.json');

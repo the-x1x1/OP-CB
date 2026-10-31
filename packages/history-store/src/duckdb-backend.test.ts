@@ -56,7 +56,7 @@ test('duckdb-parquet: unavailable module surfaces a typed HistoryBackendUnavaila
 });
 
 test('duckdb-parquet: conformance suite over Parquet partitions', { skip: skipReason }, async () => {
-  const dataDir = await tempDir('worldview-duckdb-');
+  const dataDir = await tempDir('opcb-duckdb-');
   const backend = new DuckDbParquetBackend({
     dataDir,
     rollRows: 3,
@@ -92,7 +92,7 @@ test('duckdb-parquet: conformance suite over Parquet partitions', { skip: skipRe
 });
 
 test('duckdb-parquet: staging rows are rolled on close and recovered on reopen', { skip: skipReason }, async () => {
-  const dataDir = await tempDir('worldview-duckdb-');
+  const dataDir = await tempDir('opcb-duckdb-');
   const backend = new DuckDbParquetBackend({
     dataDir,
     rollRows: 1000,
@@ -158,7 +158,7 @@ test(
   'duckdb-parquet: history the NDJSON backend wrote is read beside Parquet, never converted or deleted on open',
   { skip: skipReason },
   async () => {
-    const dataDir = await tempDir('worldview-duckdb-legacy-');
+    const dataDir = await tempDir('opcb-duckdb-legacy-');
     const row = (id: string, at: string): HistoryRow => ({
       observationId: `celestrak:${id}:${at}`,
       objectId: `satellite:norad:${id}`,

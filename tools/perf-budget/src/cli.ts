@@ -20,7 +20,7 @@ const budgetsFile = path.resolve(root, opt('--budgets') ?? path.join('config', '
 const outDir = path.resolve(root, opt('--out') ?? path.join('artifacts', 'verification'));
 
 const budgets = parseBudgets(JSON.parse(await fs.readFile(budgetsFile, 'utf8')));
-const report = await runBudgets(budgets, path.join(os.tmpdir(), 'worldview-perf-budget'));
+const report = await runBudgets(budgets, path.join(os.tmpdir(), 'opcb-perf-budget'));
 await fs.mkdir(outDir, { recursive: true });
 const file = path.join(outDir, 'perf-budget.json');
 await fs.writeFile(file, `${JSON.stringify(report, null, 2)}\n`);

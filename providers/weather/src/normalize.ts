@@ -6,8 +6,8 @@ import {
   type Observation,
   type SeverityClass,
   type WorldGeometry,
-} from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
+} from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { NWS_MANIFEST } from './manifest.js';
 import { combineZoneGeometries, ZONE_SIMPLIFY_DEG, zoneRefsOf } from './zones.js';
 

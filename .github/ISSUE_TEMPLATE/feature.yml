@@ -31,7 +31,7 @@ body:
     attributes:
       label: Product boundary check
       description: |
-        WORLDVIEW does not implement named-person surveillance, facial recognition,
+        OP-CB does not implement named-person surveillance, facial recognition,
         deanonymisation, private-device tracking or plate-history databases
         (docs/PRODUCT-BOUNDARIES.md). Confirm the request stays inside that boundary.
     validations: { required: true }

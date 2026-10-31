@@ -1,15 +1,15 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import { createProvider as createUsgsEarthquakes } from '@worldview/provider-usgs';
-import { createProvider as createCelestrak, type CelestrakProviderOptions } from '@worldview/provider-celestrak';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import { createProvider as createUsgsEarthquakes } from '@opcb/provider-usgs';
+import { createProvider as createCelestrak, type CelestrakProviderOptions } from '@opcb/provider-celestrak';
 import { spaceFireWeatherFactories } from './space-fire-weather.js';
 import { aviationMaritimeProviders, type AviationMaritimeRegistryOptions } from './aviation-maritime.js';
 import { cameraProviderFactories } from './cameras.js';
 import { localSensorFactories } from './local-sensors.js';
 import { connectorProviderFactories } from './connectors.js';
-import type { ConnectorProviderDefinition as Definition } from '@worldview/connector-sdk';
+import type { ConnectorProviderDefinition as Definition } from '@opcb/connector-sdk';
 
 /**
- * @worldview/providers — the one place that knows which providers ship with WORLDVIEW.
+ * @opcb/providers — the one place that knows which providers ship with OP-CB.
  *
  * The runtime composes `createAllProviders(options)` into the ProviderHost; nothing else
  * imports provider packages (boundary-check enforces it for UI and renderers). Factories
@@ -47,9 +47,9 @@ export {
 } from './connectors.js';
 export type { ConnectorDirectories } from './connectors.js';
 /** Replay: satellites propagated to the cursor from their stored element sets. */
-export { createSatelliteReprojector, type SatelliteReprojector } from '@worldview/provider-celestrak';
+export { createSatelliteReprojector, type SatelliteReprojector } from '@opcb/provider-celestrak';
 /** The categories the CelesTrak provider writes (`satelliteCategory`); render-core styles and labels them. */
-export { SATELLITE_CATEGORIES } from '@worldview/provider-celestrak';
+export { SATELLITE_CATEGORIES } from '@opcb/provider-celestrak';
 
 export interface ProviderRegistryOptions extends AviationMaritimeRegistryOptions {
   /** Options for the CelesTrak provider (e.g. an injected SGP4 propagator). */

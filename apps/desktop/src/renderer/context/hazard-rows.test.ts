@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { JsonValue, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
 import { alertWindowRows, cycloneWind, forecastWind, hazardRows, quadrantRadii, saffirSimpson } from './sections.js';
 
 const alert = (properties: Record<string, JsonValue>) => ({ properties, labels: {} }) as unknown as WorldObject;

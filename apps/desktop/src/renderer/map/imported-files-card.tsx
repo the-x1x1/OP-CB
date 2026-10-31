@@ -1,4 +1,4 @@
-import { Button } from '@worldview/ui';
+import { Button } from '@opcb/ui';
 import { useActions } from '../store/store.js';
 import type { ImportedFile } from './imported-files.js';
 

@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * digitraffic-ais — ships in the Baltic from Fintraffic's Digitraffic Marine AIS service,
@@ -82,7 +82,7 @@ export const DIGITRAFFIC_VESSELS_URL = `${DIGITRAFFIC_MARINE_BASE}/vessels`;
  * the public-cameras Fintraffic pack sends (providers/cctv-public/src/packs/fintraffic.ts),
  * so Fintraffic sees one client.
  */
-export const DIGITRAFFIC_USER = 'worldview';
+export const DIGITRAFFIC_USER = 'opcb';
 
 /** Positions of the last quarter of an hour, every poll. */
 export const LOCATION_WINDOW_MS = 15 * 60_000;

@@ -1,4 +1,4 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
+import type { WorldProvider } from '@opcb/provider-sdk';
 import type { ConnectorProviderDefinition } from './definition.js';
 
 /**

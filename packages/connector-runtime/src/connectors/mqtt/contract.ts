@@ -1,8 +1,8 @@
-import { parseDefinition, type ConnectorProviderDefinition, type MqttSpec } from '@worldview/connector-sdk';
+import { parseDefinition, type ConnectorProviderDefinition, type MqttSpec } from '@opcb/connector-sdk';
 
 /**
  * The `mqtt` block now lives in the definition schema (ADR-013 amendment M1,
- * `@worldview/connector-sdk` `mqtt.ts`); this module re-exports it for the connector and
+ * `@opcb/connector-sdk` `mqtt.ts`); this module re-exports it for the connector and
  * its tests.
  */
 export {
@@ -17,7 +17,7 @@ export {
   type MqttPreset,
   type MqttTopicSpec,
   type MqttSpec,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 
 /** A definition that runs on the `mqtt` connector. */
 export type MqttConnectorDefinition = ConnectorProviderDefinition;

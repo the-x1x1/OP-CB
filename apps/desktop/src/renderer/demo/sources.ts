@@ -1,5 +1,5 @@
-import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
-import type { ProviderStatus } from '@worldview/provider-sdk';
+import type { SourceHealthEntry, ConnectionSnapshot } from '@opcb/source-health';
+import type { ProviderStatus } from '@opcb/provider-sdk';
 import { DEMO_PROVIDERS } from './world.js';
 
 /**

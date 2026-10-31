@@ -1,10 +1,10 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 import { DEFAULT_MESHTASTIC_PORT } from './wire.js';
 
 /**
  * The nodes of the user's own Meshtastic mesh (LoRa radios), read from one of the user's own
  * nodes over its client API on TCP — a node with Wi-Fi or Ethernet, or `meshtasticd` on this
- * computer — the connection WORLDVIEW opens to it (the node is the server; WORLDVIEW never
+ * computer — the connection OP-CB opens to it (the node is the server; OP-CB never
  * listens). The node is asked once for its node list, then streams what it hears.
  *
  * Positions, node info and telemetry only: text messages are never read. Off by default; with
@@ -63,7 +63,7 @@ export const MESHTASTIC_LOCAL_MANIFEST: ProviderManifest = {
       placeholder: '/dev/serial/by-id/usb-…',
       defaultLabel: 'None (use the network settings below)',
       description:
-        "Linux: the node's USB serial port, best by its stable name under /dev/serial/by-id (Settings → Diagnostics lists the ports). When set, WORLDVIEW reads the node over USB and the network settings are not used.",
+        "Linux: the node's USB serial port, best by its stable name under /dev/serial/by-id (Settings → Diagnostics lists the ports). When set, OP-CB reads the node over USB and the network settings are not used.",
     },
     {
       key: 'host',

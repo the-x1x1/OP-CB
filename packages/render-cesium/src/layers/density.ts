@@ -1,5 +1,5 @@
-import { densityColor, type RenderFeature, type ResolvedStyle } from '@worldview/render-core';
-import type { GeoBounds } from '@worldview/world-model';
+import { densityColor, type RenderFeature, type ResolvedStyle } from '@opcb/render-core';
+import type { GeoBounds } from '@opcb/world-model';
 import type {
   CesiumLike,
   DataSourceLike,

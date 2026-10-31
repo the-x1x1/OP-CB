@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import type { WorldClient } from '@worldview/ipc-contract';
+import type { WorldClient } from '@opcb/ipc-contract';
 import { createShell } from './create-shell.js';
 import { createCanvasHost } from './demo/canvas-host.js';
 import { createDemoClient } from './demo/demo-client.js';
@@ -7,26 +7,26 @@ import { DesktopRendererHost } from './renderer-host.js';
 import type { RendererHostLike } from './renderer-host-like.js';
 import { MAPLIBRE_WORKER_PATH } from '../shared/renderer-assets.js';
 import { wireClient } from './wire-client.js';
-import { graphicsProfile, resolveGraphicsQuality } from '@worldview/render-core';
+import { graphicsProfile, resolveGraphicsQuality } from '@opcb/render-core';
 import { gpuRenderer, noWebGlMessage } from './map/gpu-info.js';
 
 /**
  * Composition root.
- *  - Electron: the preload exposes `window.worldview` (WorldBridge), and the map is the
+ *  - Electron: the preload exposes `window.opcb` (WorldBridge), and the map is the
  *    real thing — MapLibre in 2D, Cesium in 3D, behind DesktopRendererHost. Both are
  *    imported lazily, so a session that never leaves 2D never constructs a Cesium viewer
  *    or pays for its WebGL context.
- *  - Browser dev/demo (`pnpm --filter @worldview/desktop dev:browser`): an in-process
+ *  - Browser dev/demo (`pnpm --filter @opcb/desktop dev:browser`): an in-process
  *    DemoClient serves recorded fixtures and a plain-canvas host renders them, which is
  *    what lets the shell run with no GPU and no map libraries at all.
  *
- * `window.worldviewHost` remains an override for a host supplied from outside; it is no
+ * `window.opcbHost` remains an override for a host supplied from outside; it is no
  * longer what production depends on. It used to be the only path, and nothing ever set
  * it, so every build fell through to the demo canvas host — including packaged ones.
  */
 declare global {
   interface Window {
-    worldviewHost?: RendererHostLike;
+    opcbHost?: RendererHostLike;
   }
 }
 
@@ -50,7 +50,7 @@ function browserDownload(name: string, mimeType: string, bytes: Uint8Array): str
 }
 
 function resolveClient(): { client: WorldClient; demo: boolean } {
-  if (window.worldview) return { client: wireClient(window.worldview), demo: false };
+  if (window.opcb) return { client: wireClient(window.opcb), demo: false };
   const client = createDemoClient({
     autoTick: true,
     openExternal: (url) => {
@@ -84,11 +84,11 @@ function detectCapabilities(): { webgl2: boolean; lowPower: boolean } {
  * http from Vite, which has no such route, so there the renderers go to the source directly.
  */
 function cachedTileUrl(sourceId: string): string | undefined {
-  return location.protocol === 'worldview:' ? `${location.origin}/__tiles/${sourceId}/{z}/{x}/{y}` : undefined;
+  return location.protocol === 'opcb:' ? `${location.origin}/__tiles/${sourceId}/{z}/{x}/{y}` : undefined;
 }
 
 function resolveHost(electron: boolean): RendererHostLike {
-  if (window.worldviewHost) return window.worldviewHost;
+  if (window.opcbHost) return window.opcbHost;
   if (!electron) return createCanvasHost();
 
   const caps = detectCapabilities();
@@ -99,10 +99,10 @@ function resolveHost(electron: boolean): RendererHostLike {
     graphics: graphicsProfile(resolveGraphicsQuality('auto', gpuRenderer())),
     create2D: async () => {
       // MapLibre needs WebGL2 too; without it, say why in words the operator can act on.
-      if (!caps.webgl2) throw new Error(noWebGlMessage(window.worldview?.platform));
+      if (!caps.webgl2) throw new Error(noWebGlMessage(window.opcb?.platform));
       const [{ MapLibreWorldRenderer }, { loadMapLibre }] = await Promise.all([
-        import('@worldview/render-maplibre'),
-        import('@worldview/render-maplibre'),
+        import('@opcb/render-maplibre'),
+        import('@opcb/render-maplibre'),
       ]);
       // Beside index.html, where build-main.mjs stages it (MAPLIBRE_WORKER_PATH in
       // scripts/renderer-assets.mjs — renderer-assets.test.ts holds the two together).
@@ -118,10 +118,10 @@ function resolveHost(electron: boolean): RendererHostLike {
       });
     },
     create3D: async () => {
-      if (!caps.webgl2) throw new Error(noWebGlMessage(window.worldview?.platform));
+      if (!caps.webgl2) throw new Error(noWebGlMessage(window.opcb?.platform));
       const [{ CesiumWorldRenderer }, { loadCesium }] = await Promise.all([
-        import('@worldview/render-cesium'),
-        import('@worldview/render-cesium'),
+        import('@opcb/render-cesium'),
+        import('@opcb/render-cesium'),
       ]);
       const cesium = await loadCesium();
       const esri = cachedTileUrl('esri-world-imagery');

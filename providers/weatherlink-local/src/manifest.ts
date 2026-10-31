@@ -1,10 +1,10 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * A Davis WeatherLink Live on the user's own network, read through its documented local API
  * (`GET http://<address>/v1/current_conditions`,
  * https://weatherlink.github.io/weatherlink-live-local-api/). The readings are the user's
- * own station's: no third-party terms, never uploaded — WORLDVIEW does not use Davis's cloud
+ * own station's: no third-party terms, never uploaded — OP-CB does not use Davis's cloud
  * API and needs no account or key.
  *
  * Off by default, and inert until the user names two things the device cannot tell us: its

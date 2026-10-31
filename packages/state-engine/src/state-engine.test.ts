@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WorldState } from './index.js';
-import { IdentityResolver, encodeValue } from '@worldview/identity';
-import { GridSpatialIndex } from '@worldview/hot-spatial-index';
-import { testing } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { IdentityResolver, encodeValue } from '@opcb/identity';
+import { GridSpatialIndex } from '@opcb/hot-spatial-index';
+import { testing } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 
 const { VirtualClock } = testing;
 const T0 = Date.parse('2026-09-21T00:00:00.000Z');

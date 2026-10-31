@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
-import { haversineMeters } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import {
   MOTION_MAX_T,
   deadReckonedMotion,

@@ -2,9 +2,9 @@
 
 _Branch `feature/command-center`, from `feature/roadmap-3` `5dca743`, started 2026-10-30._
 
-WorldView gains a start screen (Online or Offline), a Command Center over the map with seven
+OP-CB gains a start screen (Online or Offline), a Command Center over the map with seven
 sections, and a guided setup engine whose walkthroughs end in tests that pass only on
-evidence. Everything WorldView already had stays where it was: the map shell is untouched
+evidence. Everything OP-CB already had stays where it was: the map shell is untouched
 underneath, and World & Maps → **Show the map** (or Esc) is one press away.
 
 ## 1. What already existed and was reused
@@ -29,7 +29,7 @@ the preparedness inventory.
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Operating Mode Controller | `mode.state` / `mode.choose`. Until a mode is chosen in this session the desktop sends **nothing** to the internet (main's `modeChosen` gate), so picking Offline is never preceded by online requests. The choice is remembered (`network.chosenAt`) and changes live. | `ipc-contract/command-center.ts`, `runtime/handlers.ts`, `main.ts` |
 | Approved local hosts      | `network.localHosts`: one host each, only private / link-local addresses or local-only names (`localHostProblem`), never a range, the internet or the metadata address. These pass the offline gate (fetch and session).                                                | `network-gate.ts` `blockedOffline`                                 |
-| Local Service Registry    | Ollama, kiwix-serve, Kolibri, asked on `http://127.0.0.1:<port>` only, when the shell asks. Never installed, started or stopped by WorldView.                                                                                                                           | `runtime/support/local-services.ts`                                |
+| Local Service Registry    | Ollama, kiwix-serve, Kolibri, asked on `http://127.0.0.1:<port>` only, when the shell asks. Never installed, started or stopped by OP-CB.                                                                                                                               | `runtime/support/local-services.ts`                                |
 | Guided Setup Engine       | Declarative `GuideDefinition`s (steps, choices, actions, checks, troubleshooting, needs-internet notes); a pure engine (Next only after a passed check, Skip leaves a guide unverified, versioned progress); progress in `guides.json`.                                 | `renderer/command-center/guide-*.ts`, `guides/`                    |
 | Checks                    | Pure functions of what the runtime said, each passing only on evidence and saying what it saw.                                                                                                                                                                          | `renderer/command-center/checks.ts`                                |
 | Readiness Evaluator       | Ready / Verification required / Setup required / Degraded / Unavailable, each with its reason; Ready only when the walkthrough's final test passed.                                                                                                                     | `renderer/command-center/readiness.ts`                             |
@@ -45,11 +45,11 @@ read strictly (`libraryPath`).
 
 ## 3. What "Offline" guarantees, and what it does not
 
-- **Enforced by WorldView:** its own requests — providers, map tiles, imagery, place search,
+- **Enforced by OP-CB:** its own requests — providers, map tiles, imagery, place search,
   updates, the reachability probe — are refused before they are sent unless they go to this
   computer or an approved host. Reconnecting Wi-Fi changes nothing; only choosing Online does.
 - **Not enforced:** other programs. A local service (Ollama, kiwix-serve, Kolibri) is the
-  operator's own process; WorldView asks it over loopback and cannot stop it reaching the
+  operator's own process; OP-CB asks it over loopback and cannot stop it reaching the
   internet. `ModeState.enforcement` is `'app'` and the start screen and Overview say so.
 - Sources that hold their own connection (MQTT, a Meshtastic node over TCP) are not fetches and
   keep running in either mode, as before.
@@ -76,15 +76,15 @@ definitions, read outside this repository (GPL-3.0; nothing vendored).
 ## 4a. Optional software and its licences
 
 No new npm dependency and nothing bundled. Each service is the operator's own install, reached
-over loopback; WorldView ships none of their code or content.
+over loopback; OP-CB ships none of their code or content.
 
-| Software                            | Licence                               | How WorldView uses it                                                                               |
-| ----------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Ollama                              | MIT                                   | HTTP on loopback (`/api/version`, `/api/tags`, `/api/generate`)                                     |
-| kiwix-serve (kiwix-tools, libkiwix) | GPL-3.0                               | HTTP on loopback (OPDS catalogue, `/search?format=xml`); pages opened in the browser                |
-| Kolibri                             | MIT                                   | HTTP on loopback (`/api/public/info/`); opened in the browser                                       |
-| Meshtastic firmware                 | GPL-3.0                               | runs on the operator's radio; WorldView speaks its client API from field numbers (nothing vendored) |
-| ZIM content                         | each file's own (Wikipedia: CC BY-SA) | served by the operator's kiwix-serve; never shipped                                                 |
+| Software                            | Licence                               | How OP-CB uses it                                                                               |
+| ----------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Ollama                              | MIT                                   | HTTP on loopback (`/api/version`, `/api/tags`, `/api/generate`)                                 |
+| kiwix-serve (kiwix-tools, libkiwix) | GPL-3.0                               | HTTP on loopback (OPDS catalogue, `/search?format=xml`); pages opened in the browser            |
+| Kolibri                             | MIT                                   | HTTP on loopback (`/api/public/info/`); opened in the browser                                   |
+| Meshtastic firmware                 | GPL-3.0                               | runs on the operator's radio; OP-CB speaks its client API from field numbers (nothing vendored) |
+| ZIM content                         | each file's own (Wikipedia: CC BY-SA) | served by the operator's kiwix-serve; never shipped                                             |
 
 ## 5. Evidence (2026-10-30)
 
@@ -100,14 +100,14 @@ over loopback; WorldView ships none of their code or content.
 
 - One map pack is drawn at a time (the newest). An area download therefore carries the world at
   lower detail too, so the map never goes blank outside the area.
-- No light theme: WorldView's design tokens are dark-only, and the Command Center uses them.
+- No light theme: OP-CB's design tokens are dark-only, and the Command Center uses them.
 - The library is searched one book at a time (kiwix-serve's rule for multi-book search is one
-  language); pages open in the browser, not inside WorldView (an embedded view would need the
+  language); pages open in the browser, not inside OP-CB (an embedded view would need the
   CSP widened, which is the operator's decision).
 - "Ask with your library" gives the model search excerpts, not whole articles.
 - The radio's region, channel and key are read, never written: they are set in the Meshtastic
   client.
-- CyberChef and offline note-taking were considered and not added: nothing in WorldView would
+- CyberChef and offline note-taking were considered and not added: nothing in OP-CB would
   use them, and adding a service only to list it would be decoration.
 - Docker, WSL2 and installers for the optional services are not used or required.
 
@@ -141,7 +141,7 @@ World & Maps → **Download a map for offline use**, and the offline-maps walkth
   whole-planet file is streamed with resume and must match the build list's MD5. A cancel or a
   failure removes the folder: nothing half-written is ever live.
 - Online only: in Offline mode the gated fetch refuses and the panel says to switch.
-- PMTiles is read and written by WorldView's own code (`packages/offline/src/pmtiles.ts`,
+- PMTiles is read and written by OP-CB's own code (`packages/offline/src/pmtiles.ts`,
   `pmtiles-extract.ts`) from the published v3 specification; no new dependency.
 - `pnpm basemap:extract --world-zoom N [--plan-only]` does the same from the command line:
   how the size of a world map to ship inside the installer will be measured.
@@ -157,12 +157,12 @@ shipped inside the installer (its size has to be measured first, then the operat
 
 ## 9. All data on an external drive (2026-10-30)
 
-Resources → **Where WorldView keeps its data** (`renderer/command-center/data-location-card.tsx`,
+Resources → **Where OP-CB keeps its data** (`renderer/command-center/data-location-card.tsx`,
 `main/data-location.ts`, ADR-004 amendment): the data folder, its kind and free space; **Keep
-all WorldView data on a drive…** (from the next start; the small user documents are copied,
-history and packs stay; a folder WorldView already uses is adopted unchanged); back to the
-usual folder; restart. A portable copy keeps everything in `WorldView-data` beside the app. A
-moved folder without WorldView's marker (the drive not mounted) is never used: the start asks.
+all OP-CB data on a drive…** (from the next start; the small user documents are copied,
+history and packs stay; a folder OP-CB already uses is adopted unchanged); back to the
+usual folder; restart. A portable copy keeps everything in `OP-CB-data` beside the app. A
+moved folder without OP-CB's marker (the drive not mounted) is never used: the start asks.
 Tested with temporary folders in the container; not yet in the packaged app on a real SSD.
 
 ## 10. The built-in library and the emergency references (2026-10-30)

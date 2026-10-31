@@ -8,7 +8,7 @@ import {
   type ProviderHealth,
   type WorldProvider,
   type ProviderManifest,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   classifyFreshness,
   freshnessPolicyFor,
@@ -16,8 +16,8 @@ import {
   isAuthoritativeId,
   observationSchema,
   type Observation,
-} from '@worldview/world-model';
-import { WorldState } from '@worldview/state-engine';
+} from '@opcb/world-model';
+import { WorldState } from '@opcb/state-engine';
 import type { ProviderTestPlan } from './plan.js';
 
 export type CheckStatus = 'PASS' | 'FAIL' | 'SKIP';

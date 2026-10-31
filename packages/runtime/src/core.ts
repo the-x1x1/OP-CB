@@ -10,8 +10,8 @@ import {
   type JsonValue,
   type TimeRange,
   type WorldObject,
-} from '@worldview/world-model';
-import { HttpClient, LoggerHub, RingBufferSink, type Logger } from '@worldview/core';
+} from '@opcb/world-model';
+import { HttpClient, LoggerHub, RingBufferSink, type Logger } from '@opcb/core';
 import {
   type ObjectDetailsAnswer,
   type OverlayValueAnswer,
@@ -20,15 +20,10 @@ import {
   type ProviderDataPolicy,
   type ProviderManifest,
   type WorldProvider,
-} from '@worldview/provider-sdk';
-import { ProviderHost, type ObservationBatch } from '@worldview/provider-runtime';
-import { WorldState } from '@worldview/state-engine';
-import {
-  HistoryStore,
-  TimelineController,
-  createHistoryBackend,
-  type HistoryBackendKind,
-} from '@worldview/history-store';
+} from '@opcb/provider-sdk';
+import { ProviderHost, type ObservationBatch } from '@opcb/provider-runtime';
+import { WorldState } from '@opcb/state-engine';
+import { HistoryStore, TimelineController, createHistoryBackend, type HistoryBackendKind } from '@opcb/history-store';
 import {
   DEFAULT_RULES,
   EventEngine,
@@ -38,7 +33,7 @@ import {
   readingLimitRule,
   severityAtLeast,
   type LimitedReading,
-} from '@worldview/event-engine';
+} from '@opcb/event-engine';
 import {
   BuiltinGazetteer,
   CompositeGazetteer,
@@ -48,7 +43,7 @@ import {
   type ReferencePlacesFile,
   type Gazetteer,
   type HistoryReader,
-} from '@worldview/query-engine';
+} from '@opcb/query-engine';
 import {
   ConnectionMonitor,
   VaultMonitor,
@@ -59,7 +54,7 @@ import {
   vaultWritable,
   type RegistryVault,
   type VaultInstallTarget,
-} from '@worldview/offline';
+} from '@opcb/offline';
 import {
   CameraHub,
   CameraRelay,
@@ -72,7 +67,7 @@ import {
   type RegisteredCamera,
   type SecretStore,
   type SpawnFn,
-} from '@worldview/camera-gateway';
+} from '@opcb/camera-gateway';
 import {
   CURRENT_SCHEMA_VERSION,
   DEFAULT_SETTINGS,
@@ -80,11 +75,11 @@ import {
   dataDirs,
   ensureDataDirs,
   type DataDirs,
-} from '@worldview/config';
-import { DiagnosticsCollector } from '@worldview/diagnostics';
-import { UpdaterController, createInertAutoUpdater, policyInputFromSettings } from '@worldview/updater';
-import { BUILT_IN_LENSES, type LensDefinition } from '@worldview/render-core';
-import { readGuideProgress, readPrepRecord } from '@worldview/ipc-contract';
+} from '@opcb/config';
+import { DiagnosticsCollector } from '@opcb/diagnostics';
+import { UpdaterController, createInertAutoUpdater, policyInputFromSettings } from '@opcb/updater';
+import { BUILT_IN_LENSES, type LensDefinition } from '@opcb/render-core';
+import { readGuideProgress, readPrepRecord } from '@opcb/ipc-contract';
 import type {
   AppSettings as ContractSettings,
   Collection,
@@ -97,13 +92,13 @@ import type {
   ViewLink,
   WatchZone,
   WorldFlightInfo,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import {
   createAllProviders,
   createSatelliteReprojector,
   providerIds as bundledProviderIds,
   type ConnectorProviderDefinition,
-} from '@worldview/providers';
+} from '@opcb/providers';
 import type { HostBridge, RuntimeCredentialStore, WorldRuntimeDeps } from './deps.js';
 import { inProcessHostBridge } from './deps.js';
 import { RuntimeEmitter } from './support/emitter.js';
@@ -257,7 +252,7 @@ export class RuntimeCore {
     onProblem: (message) =>
       this.loggerHub.logger('provider').warn('K index not read', { message: message.slice(0, 200) }),
   });
-  /** A worldview:// link waiting for the window (ADR-004 amendment 2026-10-20). */
+  /** A opcb:// link waiting for the window (ADR-004 amendment 2026-10-20). */
   private pendingLink: ViewLink | null = null;
 
   /** Whether a window has booted and asked `link.take`: from then on links are events only. */
@@ -404,7 +399,7 @@ export class RuntimeCore {
     this.startedAt = new Date(this.clock.now()).toISOString();
     this.hostBridge = deps.host ?? inProcessHostBridge;
     this.credentials = deps.credentials ?? new MemoryCredentialStore();
-    this.dirs = deps.dirs ?? dataDirs(deps.dataDir ?? path.join(os.tmpdir(), 'worldview-runtime'));
+    this.dirs = deps.dirs ?? dataDirs(deps.dataDir ?? path.join(os.tmpdir(), 'opcb-runtime'));
     if (deps.loggerHub) {
       this.loggerHub = deps.loggerHub;
       this.logSink = undefined;
@@ -452,7 +447,7 @@ export class RuntimeCore {
   }
 
   private buildProviderHost(): void {
-    const userAgent = `WorldView/${this.version}`;
+    const userAgent = `OP-CB/${this.version}`;
     this.providerHost = new ProviderHost({
       clock: this.clock,
       loggerHub: this.loggerHub,
@@ -599,7 +594,7 @@ export class RuntimeCore {
         changed: () => this.emitSourcesNow?.(),
         logger: this.loggerHub.logger('provider'),
         clock: this.clock,
-        userAgent: `WorldView/${this.version}`,
+        userAgent: `OP-CB/${this.version}`,
         ...(this.deps.fetchImpl ? { fetchImpl: this.deps.fetchImpl } : {}),
       });
     }
@@ -749,7 +744,7 @@ export class RuntimeCore {
       relay: this.cameraRelay,
       clock: this.clock,
       logger: log,
-      userAgent: `WorldView/${this.version}`,
+      userAgent: `OP-CB/${this.version}`,
     });
     // go2rtc is optional and operator-supplied: nothing is downloaded and nothing is
     // spawned until `cameras.go2rtcPath` names a binary that exists. Constructing it
@@ -783,7 +778,7 @@ export class RuntimeCore {
       relay: this.cameraRelay,
       clock: this.clock,
       logger: log,
-      userAgent: `WorldView/${this.version}`,
+      userAgent: `OP-CB/${this.version}`,
     });
   }
 
@@ -825,7 +820,7 @@ export class RuntimeCore {
       }
       const places = await this.readReferenceCities();
       // What the built-in gazetteer already has (it carries bounds) is left to it.
-      const known = (name: string, kind: import('@worldview/query-engine').PlaceKind) =>
+      const known = (name: string, kind: import('@opcb/query-engine').PlaceKind) =>
         builtin.lookup(name, { kinds: [kind], limit: 1 }).some((h) => h.score >= 1 && h.name === name);
       const gazetteer = referenceGazetteer(parsed, known, places);
       this.referencePlaces.set(gazetteer);
@@ -1142,7 +1137,7 @@ export class RuntimeCore {
     this.publicFrames.syncFromObjects(this.state.ofType('camera'));
   }
 
-  private async onStateChange(change: import('@worldview/state-engine').StateChange): Promise<void> {
+  private async onStateChange(change: import('@opcb/state-engine').StateChange): Promise<void> {
     for (const id of change.removed) this.watchZones.forgetObject(id);
     // A camera that left the world (its provider switched off, say) stops being fetchable now.
     if (change.removed.some((id) => id.startsWith('camera:'))) this.syncPublicFrames();
@@ -1157,12 +1152,12 @@ export class RuntimeCore {
     if (isLiveMode(this.timeline.currentMode)) this.publishDelta(change, (id) => this.state.get(id));
   }
 
-  private onEvent(event: import('@worldview/world-model').WorldEvent): void {
+  private onEvent(event: import('@opcb/world-model').WorldEvent): void {
     this.feed.push(event);
     for (const hit of this.watchZones.evaluateEvent(event)) this.onWatchZoneHit(hit);
   }
 
-  private onWatchZoneHit(hit: import('@worldview/event-engine').WatchZoneHit): void {
+  private onWatchZoneHit(hit: import('@opcb/event-engine').WatchZoneHit): void {
     // Entry events are real events: they go through the store (and therefore the feed).
     this.events.ingestEvent(hit.event);
     // The zone's own switches, and its quiet hours (local time), decide what interrupts. The
@@ -1187,7 +1182,7 @@ export class RuntimeCore {
   }
 
   private publishDelta(
-    change: import('@worldview/state-engine').StateChange,
+    change: import('@opcb/state-engine').StateChange,
     lookup: (id: string) => WorldObject | undefined,
   ): void {
     for (const subscription of this.subscriptions.all()) {
@@ -1819,7 +1814,7 @@ export class RuntimeCore {
         maxRetries: 0,
         requestsPerMinute: 4,
         cacheEnabled: false,
-        userAgent: `WorldView/${this.version}`,
+        userAgent: `OP-CB/${this.version}`,
         ...(this.deps.fetchImpl ? { fetchImpl: this.deps.fetchImpl } : {}),
       });
     }

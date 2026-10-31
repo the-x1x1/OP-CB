@@ -1,5 +1,5 @@
 import { parentPort } from 'node:worker_threads';
-import { readGeodata } from '@worldview/runtime/geodata';
+import { readGeodata } from '@opcb/runtime/geodata';
 
 /**
  * The dropped-file reader's thread (geodata-reader.ts): one file in, its shapes out, so the

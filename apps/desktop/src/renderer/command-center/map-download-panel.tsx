@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { MapDownloadRequest } from '@worldview/ipc-contract';
-import { Button } from '@worldview/ui';
+import type { MapDownloadRequest } from '@opcb/ipc-contract';
+import { Button } from '@opcb/ui';
 import { useAppSlice } from '../store/store.js';
 import { useCC } from './use-cc.js';
 

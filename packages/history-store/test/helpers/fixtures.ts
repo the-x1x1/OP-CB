@@ -1,10 +1,10 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { JsonValue, Observation } from '@worldview/world-model';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
-import type { ObservationBatch } from '@worldview/provider-runtime';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
+import type { ObservationBatch } from '@opcb/provider-runtime';
 import {
   observationToRow,
   partitionKeyFor,
@@ -12,7 +12,7 @@ import {
   type HistoryRow,
   type PartitionKey,
 } from '../../src/index.js';
-import { defaultIdentityResolver } from '@worldview/identity';
+import { defaultIdentityResolver } from '@opcb/identity';
 
 export const AIRCRAFT_PROVIDER = 'opensky';
 export const QUAKE_PROVIDER = 'usgs-earthquakes';
@@ -41,7 +41,7 @@ export function policies(
   return (id) => map[id];
 }
 
-export async function tempDir(prefix = 'worldview-history-'): Promise<string> {
+export async function tempDir(prefix = 'opcb-history-'): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 

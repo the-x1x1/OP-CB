@@ -1,5 +1,5 @@
 import { parseCsv } from './csv.js';
-import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 
 /**
  * The drafter (moved here from the connector-validator tool by the ADR-013 amendment of

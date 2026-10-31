@@ -1,5 +1,5 @@
-import type { AppSettings } from '@worldview/ipc-contract';
-import type { VisualStyleId } from '@worldview/render-core';
+import type { AppSettings } from '@opcb/ipc-contract';
+import type { VisualStyleId } from '@opcb/render-core';
 
 /**
  * The display settings (schema 6) with their defaults filled in. Settings from before schema

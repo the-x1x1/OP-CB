@@ -11,11 +11,11 @@ import type {
   SeverityClass,
   RasterOverlay,
   WorldGeometry,
-} from '@worldview/world-model';
-import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '@worldview/provider-sdk';
-import type { SourceHealthEntry, ConnectionSnapshot } from '@worldview/source-health';
-import type { StateChange, TrackPoint } from '@worldview/state-engine';
-import type { LensDefinition, ResolvedMapProvider } from '@worldview/render-core';
+} from '@opcb/world-model';
+import type { ObjectDetailsAnswer, OverlayValueAnswer, ProviderManifest } from '@opcb/provider-sdk';
+import type { SourceHealthEntry, ConnectionSnapshot } from '@opcb/source-health';
+import type { StateChange, TrackPoint } from '@opcb/state-engine';
+import type { LensDefinition, ResolvedMapProvider } from '@opcb/render-core';
 import type { ViewLink } from './view-link.js';
 import type {
   AiTestAnswer,
@@ -44,7 +44,7 @@ import type {
 } from './command-center.js';
 
 /**
- * @worldview/ipc-contract — the typed bridge between the WORLDVIEW runtime (Electron
+ * @opcb/ipc-contract — the typed bridge between the OP-CB runtime (Electron
  * main process) and the React shell (renderer). Frozen with architecture-contract-v1.
  *
  * Rules (directive §76): every action is an allowlisted, typed request. There is no
@@ -60,7 +60,7 @@ export const MAX_READING_KEYS = 32;
 // ---- request/response catalogue ---------------------------------------------
 
 /**
- * One point of `world.track`. Without `source` it is WORLDVIEW's own record (history store
+ * One point of `world.track`. Without `source` it is OP-CB's own record (history store
  * or the live tail); with it, the object's source supplied it on request for the selected
  * object, and `source` is the label to show ("adsb.lol history"). `predicted` marks a
  * computed future position (a satellite's orbit), never an observation.
@@ -129,7 +129,7 @@ export interface WorldFlightAirport {
   elevationM?: number;
   /**
    * Where the name and position came from: `route` — the route source's answer;
-   * `reference` — WORLDVIEW's bundled airports; absent — only the code is known.
+   * `reference` — OP-CB's bundled airports; absent — only the code is known.
    */
   describedBy?: 'route' | 'reference';
 }
@@ -491,7 +491,7 @@ export interface WorldPackSummary {
 
 /**
  * (additive, 2026-10-08) An operator-granted data folder outside the app's own — an external
- * SSD, typically (docs/cyberdeck/ARCHITECTURE.md). Identified by the marker file WorldView writes
+ * SSD, typically (docs/cyberdeck/ARCHITECTURE.md). Identified by the marker file OP-CB writes
  * when it is added, never by its path: an unmounted drive's mount point is an empty folder on the
  * internal disk, and nothing is ever written there.
  *
@@ -752,7 +752,7 @@ export interface AppSettings {
    */
   search?: { online: boolean; service?: 'nominatim' | 'photon' };
   /**
-   * (additive, 2026-10-05) Work offline: WorldView asks nothing of the internet — sources on
+   * (additive, 2026-10-05) Work offline: OP-CB asks nothing of the internet — sources on
    * the internet pause, map tiles come only from the tile cache, packs and the bundled world,
    * place search uses the built-in gazetteer, update checks wait. Sources on this computer or
    * the operator's own network keep running. Absent means off.
@@ -793,7 +793,7 @@ export interface AppSettings {
   /**
    * (additive, 2026-09-28) The operator's home view: set from the current view in Settings,
    * flown to with Home or Shift+H, and at start when `flyOnStart` is on (asked on the
-   * welcome screen). Absent until set. WorldView never looks up where the operator is.
+   * welcome screen). Absent until set. OP-CB never looks up where the operator is.
    */
   home?: HomeSettings;
   /**
@@ -914,7 +914,7 @@ export interface CameraSnapshot {
   capturedAt: string;
   /**
    * Where `capturedAt` comes from. `upstream`: the image host's own Last-Modified for this
-   * image. `fetched`: the host published no capture time, so this is when WORLDVIEW
+   * image. `fetched`: the host published no capture time, so this is when OP-CB
    * fetched it, and the image may be older. Absent: a camera that produces the image on
    * request (a user's own camera), where the two are the same moment.
    */
@@ -1015,7 +1015,7 @@ export interface WorldRequests {
    * `selected` (optional, additive, 2026-09-27): the operator has this object selected, so
    * the runtime may add what its source knows of it (provider-sdk object-track.ts) — an
    * aircraft's recent adsb.lol history, a satellite's next orbit — each point labelled.
-   * Without it the answer is WORLDVIEW's own track, as before.
+   * Without it the answer is OP-CB's own track, as before.
    */
   'world.track': { request: { objectId: string; time?: TimeRange; selected?: boolean }; response: WorldTrackPoint[] };
   /**
@@ -1164,7 +1164,7 @@ export interface WorldRequests {
   'collections.delete': { request: { id: string }; response: Collection[] };
   /**
    * A collection to a file. `format` (additive, 2026-10-05): `json` (the default) is the
-   * WorldView collection file, everything in it; `gpx`, `kml` and `geojson` write its places —
+   * OP-CB collection file, everything in it; `gpx`, `kml` and `geojson` write its places —
    * the operator's own always, a collected object only while its sources allow export — and
    * say how many went out and how many were left out.
    */
@@ -1241,7 +1241,7 @@ export interface WorldRequests {
   'maps.download.cancel': { request: void; response: MapDownloadStatus };
 
   /**
-   * (additive, 2026-10-30) Where all of WorldView's data lives (main data-location.ts): read it,
+   * (additive, 2026-10-30) Where all of OP-CB's data lives (main data-location.ts): read it,
    * move it to a folder the operator picks (from the next start), go back to the usual folder,
    * restart to apply. Only the desktop app moves anything.
    */
@@ -1251,7 +1251,7 @@ export interface WorldRequests {
   'data.restart': { request: void; response: { restarting: boolean } };
 
   /**
-   * (additive, 2026-10-30) The built-in library: ZIM files WorldView reads itself (runtime
+   * (additive, 2026-10-30) The built-in library: ZIM files OP-CB reads itself (runtime
    * support/zim-library.ts), the Kiwix catalogue and downloads into the library folder, and the
    * public-domain emergency references. `library.open` is the desktop's (a reader window, or the
    * system's PDF viewer).
@@ -1417,7 +1417,7 @@ export interface WorldEvents {
   'field.changed': FieldHostStatus;
   'settings.changed': AppSettings;
   'lenses.changed': LensDefinition[];
-  /** (additive, 2026-10-20) A worldview:// link was opened from outside the app (view-link.ts). */
+  /** (additive, 2026-10-20) A opcb:// link was opened from outside the app (view-link.ts). */
   'link.opened': ViewLink;
 }
 
@@ -1568,7 +1568,7 @@ export const EVENT_CHANNELS: readonly EventChannel[] = Object.freeze([
 ]);
 
 /** Channel names as they appear on the wire (namespaced to avoid collisions with Electron internals). */
-export const IPC_PREFIX = 'worldview:';
+export const IPC_PREFIX = 'opcb:';
 export function wireChannel(channel: RequestChannel | EventChannel): string {
   return `${IPC_PREFIX}${channel}`;
 }
@@ -1583,14 +1583,14 @@ export interface WorldClient {
   on<E extends EventChannel>(event: E, listener: (payload: WorldEvents[E]) => void): () => void;
 }
 
-/** Bridge shape exposed on `window.worldview` by the preload script. */
+/** Bridge shape exposed on `window.opcb` by the preload script. */
 export interface WorldBridge extends WorldClient {
   readonly platform: string;
 }
 
 declare global {
   interface Window {
-    worldview?: WorldBridge;
+    opcb?: WorldBridge;
   }
 }
 

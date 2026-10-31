@@ -1,5 +1,5 @@
 /**
- * @worldview/connector-runtime — the connectors that ship with WORLDVIEW and the registry
+ * @opcb/connector-runtime — the connectors that ship with OP-CB and the registry
  * that turns a definition into a provider (ADR-013). Depends on the connector SDK, the
  * provider SDK and the world model; nothing here reaches the network except through the
  * `ProviderContext` the provider host supplies.

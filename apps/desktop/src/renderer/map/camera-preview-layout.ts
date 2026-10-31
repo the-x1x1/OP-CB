@@ -1,4 +1,4 @@
-import type { ScreenPoint } from '@worldview/render-core';
+import type { ScreenPoint } from '@opcb/render-core';
 
 /**
  * Where the live camera preview tiles go (map/camera-previews.tsx), as pure arithmetic.
@@ -8,7 +8,7 @@ import type { ScreenPoint } from '@worldview/render-core';
  * THIRD_PARTY_NOTICES.md). The point OSIRIS makes there is kept: the pass that chooses
  * which cameras get a tile (when the camera settles) and the pass that moves the tiles on
  * every frame both call `layoutTile`, so the overlap test is made against the places the
- * tiles are actually drawn at. The choice itself is WorldView's: a hard cap on tiles and a
+ * tiles are actually drawn at. The choice itself is OP-CB's: a hard cap on tiles and a
  * smaller one on tiles that decode video, with every camera past the video cap shown as a
  * still rather than left out.
  */

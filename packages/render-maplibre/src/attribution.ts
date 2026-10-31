@@ -1,4 +1,4 @@
-import type { AttributionEntry } from '@worldview/render-core';
+import type { AttributionEntry } from '@opcb/render-core';
 import type { ControlLike, MapLibreLike, MapLike } from './maplibre-like.js';
 
 /**

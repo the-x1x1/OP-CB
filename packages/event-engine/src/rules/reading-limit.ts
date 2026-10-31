@@ -8,7 +8,7 @@ import {
   type SeverityClass,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import {
   derivedProvenance,
   numberProp,

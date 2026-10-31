@@ -7,8 +7,8 @@ import {
   normaliseLocalHost,
   type LocalServiceId,
   type PrepRecord,
-} from '@worldview/ipc-contract';
-import { Button, Icon, type IconName } from '@worldview/ui';
+} from '@opcb/ipc-contract';
+import { Button, Icon, type IconName } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS } from './checks.js';
 import { completion } from './guide-engine.js';
@@ -65,7 +65,7 @@ const STATUS_TONE: Record<ReadinessStatus, string> = {
 
 /**
  * The Command Center (2026-10-30): the first thing after the start screen, and a key away
- * after that. Seven sections over the map; the map itself — every existing WorldView view, panel
+ * after that. Seven sections over the map; the map itself — every existing OP-CB view, panel
  * and tool — is World & Maps → "Show the map", untouched underneath.
  */
 export function CommandCenter() {

@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   LocalDeviceDetector,
   PollingProvider,
@@ -9,7 +9,7 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { READSB_LOCAL_MANIFEST, PROBE_BACKOFF_MS } from './manifest.js';
 import { normalizeAircraftRows, parseReadsbAircraftJson } from './normalize.js';
 import { parseReadsbSettings, resolveEndpoint, type EndpointResolution } from './endpoint.js';

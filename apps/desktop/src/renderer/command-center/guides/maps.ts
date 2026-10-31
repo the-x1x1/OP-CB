@@ -1,7 +1,7 @@
 import type { GuideDefinition } from '../guide-types.js';
 
 /**
- * Offline maps: on WorldView's own world packs (`.worldpack`), data vaults and place index —
+ * Offline maps: on OP-CB's own world packs (`.worldpack`), data vaults and place index —
  * nothing replaced. A map is downloaded in the app (runtime support/map-download.ts) or a pack
  * installed from a file.
  */

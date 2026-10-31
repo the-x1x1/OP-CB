@@ -1,4 +1,4 @@
-import { ObjectTypes } from '@worldview/world-model';
+import { ObjectTypes } from '@opcb/world-model';
 
 /**
  * Search vocabulary (ADR-010: deterministic grammar, no LLM). Every phrase maps to a

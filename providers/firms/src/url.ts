@@ -1,5 +1,5 @@
-import type { GeoBounds } from '@worldview/world-model';
-import type { ProviderHttpRequest } from '@worldview/provider-sdk';
+import type { GeoBounds } from '@opcb/world-model';
+import type { ProviderHttpRequest } from '@opcb/provider-sdk';
 import type { FirmsSource } from './manifest.js';
 
 /**

@@ -1,5 +1,5 @@
 /**
- * @worldview/event-engine — deterministic, rules-based events (ADR-010: no LLM; rules
+ * @opcb/event-engine — deterministic, rules-based events (ADR-010: no LLM; rules
  * never create observations, decide identity, alter timestamps or invent severity).
  *
  *   EventEngine          WorldState changes / ingestBatch → rules → EventStore

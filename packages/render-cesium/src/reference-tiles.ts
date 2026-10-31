@@ -1,4 +1,4 @@
-import { lineVisibleAt, type ReferenceLine } from '@worldview/render-core';
+import { lineVisibleAt, type ReferenceLine } from '@opcb/render-core';
 
 /**
  * Borders on the 3D globe, drawn as a transparent imagery layer over the basemap.

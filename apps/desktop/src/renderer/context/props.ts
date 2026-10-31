@@ -1,4 +1,4 @@
-import type { JsonValue, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
 
 /** Typed readers over `WorldObject.properties`; undefined when absent or of the wrong type. */
 export function num(o: WorldObject, key: string): number | undefined {

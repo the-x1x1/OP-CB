@@ -10,15 +10,15 @@ import {
 } from 'react';
 import { loadReferenceData } from './reference-data.js';
 import { modelsField } from './perf-fields.js';
-import type { GeoBounds, WorldObject } from '@worldview/world-model';
-import { isIpcError, type WorldSubscription } from '@worldview/ipc-contract';
+import type { GeoBounds, WorldObject } from '@opcb/world-model';
+import { isIpcError, type WorldSubscription } from '@opcb/ipc-contract';
 import type {
   BasemapDescriptor,
   PresentedRoute,
   PresentedZone,
   ReferenceData,
   TerrainDescriptor,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import {
   graphicsProfile,
   modelCreditLines,
@@ -27,7 +27,7 @@ import {
   withModels,
   type ImagerySplit,
   type ModelKind,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import {
   createFeatureCache,
   diffFeatures,
@@ -39,8 +39,8 @@ import {
   type PerformanceBudget,
   type RenderFeature,
   type ViewState,
-} from '@worldview/render-core';
-import { Button, EmptyState, Icon, formatObjectType } from '@worldview/ui';
+} from '@opcb/render-core';
+import { Button, EmptyState, Icon, formatObjectType } from '@opcb/ui';
 import { useActions, useAppState, useClient, useDispatch, useHosts } from '../store/store.js';
 import { drawnWhileComparing, visibleOverlays } from '../weather-imagery.js';
 import { MapAttribution } from './map-attribution.js';
@@ -402,7 +402,7 @@ export function MapHost() {
             longitude: ((((v.center.longitude + 180) % 360) + 360) % 360) - 180,
           },
         })
-        .catch((err: unknown) => console.warn('[worldview] world.viewport failed:', describeError(err)));
+        .catch((err: unknown) => console.warn('[opcb] world.viewport failed:', describeError(err)));
     });
     throttles.current = [viewState, viewportIpc];
     const sendViewport = (view: ViewState) => {

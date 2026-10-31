@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ManualScheduler } from '@worldview/render-core';
-import type { RasterOverlay } from '@worldview/world-model';
+import { ManualScheduler } from '@opcb/render-core';
+import type { RasterOverlay } from '@opcb/world-model';
 import { MapLibreWorldRenderer } from './renderer.js';
 import {
   FRAME_HANDOVER_CHECK_MS,

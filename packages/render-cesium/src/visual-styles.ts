@@ -1,4 +1,4 @@
-import type { VisualStyleId } from '@worldview/render-core';
+import type { VisualStyleId } from '@opcb/render-core';
 import type { CesiumLike, PostProcessStageLike, SceneLike } from './cesium-like.js';
 
 /**
@@ -178,7 +178,7 @@ export class VisualStyle3D {
     if (fragmentShader) {
       this.stage = new this.cesium.PostProcessStage({
         fragmentShader,
-        name: `worldview_style_${id.replace('-', '_')}`,
+        name: `opcb_style_${id.replace('-', '_')}`,
       });
       this.scene.postProcessStages.add(this.stage);
     }

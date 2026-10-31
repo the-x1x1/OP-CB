@@ -1,4 +1,4 @@
-import { s, type Schema } from '@worldview/world-model';
+import { s, type Schema } from '@opcb/world-model';
 import { telemetryDescriptorSchema, type TelemetryDescriptor } from './telemetry.js';
 
 /**

@@ -16,7 +16,7 @@ test('reader addresses: a book id and a key, encoded and read back; anything els
     key: 'etc/passwd',
   });
   for (const bad of [
-    'worldview://app/index.html',
+    'opcb://app/index.html',
     'https://example.org/',
     `wvzim://not-a-book/x`,
     `wvzim://${BOOK.toUpperCase()}x/x`,

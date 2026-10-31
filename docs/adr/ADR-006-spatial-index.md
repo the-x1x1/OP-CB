@@ -1,6 +1,6 @@
 # ADR-006 — Hot spatial index: geographic grid cells + exact filtering
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/hot-spatial-index`
+Status: Accepted · 2026-09-21 · Package: `@opcb/hot-spatial-index`
 
 ## Options considered
 

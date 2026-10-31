@@ -1,17 +1,11 @@
-import {
-  MAX_ALTITUDE_M,
-  isValidLatLon,
-  stableStringify,
-  type JsonValue,
-  type Observation,
-} from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
+import { MAX_ALTITUDE_M, isValidLatLon, stableStringify, type JsonValue, type Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { CELESTRAK_MANIFEST, ELEMENT_VALIDITY_MS } from './manifest.js';
 import { orbitSummary, type GpElements } from './elements.js';
 import type { Propagator } from './propagator.js';
 
 export interface NormalizeOptions {
-  /** ISO timestamp WORLDVIEW received the catalog (or ran the propagation). */
+  /** ISO timestamp OP-CB received the catalog (or ran the propagation). */
   receivedAt: string;
   /** Propagation instant (ms). */
   nowMs: number;

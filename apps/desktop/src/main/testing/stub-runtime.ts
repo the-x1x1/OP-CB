@@ -4,9 +4,9 @@ import {
   type EventChannel,
   type RequestChannel,
   type WorldEvents,
-} from '@worldview/ipc-contract';
-import type { RequestContext, RequestHandlers, WorldRuntime } from '@worldview/runtime';
-import { DEFAULT_SETTINGS, applySettingsPatch, cloneSettings } from '@worldview/config';
+} from '@opcb/ipc-contract';
+import type { RequestContext, RequestHandlers, WorldRuntime } from '@opcb/runtime';
+import { DEFAULT_SETTINGS, applySettingsPatch, cloneSettings } from '@opcb/config';
 
 /**
  * StubRuntime — a WorldRuntime for tests and for the main process until the real

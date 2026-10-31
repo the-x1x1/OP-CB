@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, testing, type ProviderLocalAccess, type WorldProvider } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
-import { loadSidecar } from '@worldview/tool-connector-validator';
+import { ProviderError, testing, type ProviderLocalAccess, type WorldProvider } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
+import { loadSidecar } from '@opcb/tool-connector-validator';
 import { defaultConnectorRegistry } from '../../registry.js';
 import { runConnectorSuite, formatSuite } from '../../testing/suite.js';
 import {

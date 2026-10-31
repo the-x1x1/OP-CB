@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { JsonValue, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
 import { OVERVIEW_LAYERS, lensFilter } from './overview-layers.js';
-import { BUILT_IN_LENSES } from '@worldview/render-core';
+import { BUILT_IN_LENSES } from '@opcb/render-core';
 import { severityRank, stormsTarget, stormsViewHidden } from './storms-view.js';
 
 const obj = (

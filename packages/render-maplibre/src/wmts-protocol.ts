@@ -1,11 +1,11 @@
-import { wmtsTileUrl, type WmtsOverlay } from '@worldview/world-model';
+import { wmtsTileUrl, type WmtsOverlay } from '@opcb/world-model';
 import {
   applyBrightnessFade,
   featherWeights,
   latitudeWeights,
   mendAntimeridianColumn,
   type FadeRamp,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import type { MapLibreLike, ProtocolLoader } from './maplibre-like.js';
 
 /**

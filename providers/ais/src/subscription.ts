@@ -1,4 +1,4 @@
-import { isValidBounds, type GeoBounds } from '@worldview/world-model';
+import { isValidBounds, type GeoBounds } from '@opcb/world-model';
 import { AISSTREAM_MESSAGE_TYPES } from './manifest.js';
 
 /**

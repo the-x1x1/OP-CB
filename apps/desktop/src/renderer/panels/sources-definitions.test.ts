@@ -14,7 +14,7 @@ import {
 } from './sources-definitions-model.js';
 import { DefinitionsTestClient, file, ipcError, listing, reloaded, settle } from './sources-test-client.js';
 
-const FOLDER = 'C:\\Users\\op\\AppData\\Roaming\\WorldView\\connectors';
+const FOLDER = 'C:\\Users\\op\\AppData\\Roaming\\OP-CB\\connectors';
 
 const sample = () =>
   listing(FOLDER, [
@@ -62,7 +62,7 @@ test('definitions: folder, controls, every file with its state, connector and re
   await controller.load();
   const html = render(controller);
   assert.match(html, /Definitions/);
-  assert.ok(html.includes('WorldView\\connectors'), 'the folder path is shown');
+  assert.ok(html.includes('OP-CB\\connectors'), 'the folder path is shown');
   assert.match(html, /3 files · 2 loaded · 1 rejected/);
   for (const label of ['Open folder', 'Reload', 'Add source']) assert.ok(html.includes(label), label);
   // The operator's files before the shipped ones.

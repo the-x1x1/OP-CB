@@ -1,5 +1,5 @@
-import { isValidLatLon, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import { isValidLatLon, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import { directionToHeading } from '../direction.js';
 import {
   CAMERA_ID_PATTERN,
@@ -19,7 +19,7 @@ import {
  * IDOT on its ArcGIS open data hub. The item states: "This work is licensed under a
  * Creative Commons Attribution-ShareAlike 2.0 Generic License"
  * (https://www.arcgis.com/home/item.html?id=8a885da23dfb46caaa1827ad920fb5b1, read 2026-09-27).
- * Share-alike attaches only to adaptations WORLDVIEW would publish (an exported catalogue);
+ * Share-alike attaches only to adaptations OP-CB would publish (an exported catalogue);
  * frames are never redistributed (the global CCTV frame rule).
  *
  * The layer (`TrafficCamerasTM_Public`, 1,749 rows on 2026-09-27) has one row per camera

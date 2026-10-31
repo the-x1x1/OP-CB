@@ -4,6 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
+  LEGACY_VAULT_MARKER_FILE,
   VAULT_MARKER_FILE,
   VAULT_PACKS_DIR,
   VaultMonitor,
@@ -36,6 +37,20 @@ test('initVault: marks an existing folder, creates worldpacks/, and adopts the s
   assert.deepEqual(await listing(drive), [VAULT_MARKER_FILE, VAULT_PACKS_DIR].sort());
   const again = await initVault(drive, 'renamed');
   assert.ok(again.ok && again.adopted && again.vault.id === r.vault.id && again.vault.label === 'Field SSD');
+});
+
+test('a vault set up before the rename to OP-CB is still the same vault', async () => {
+  const drive = await tmp();
+  const id = 'ab'.repeat(16);
+  await fs.writeFile(
+    path.join(drive, LEGACY_VAULT_MARKER_FILE),
+    JSON.stringify({ formatVersion: 1, app: 'worldview', id, label: 'Old SSD', createdAt: '2026-10-01T00:00:00Z' }),
+  );
+  const r = await initVault(drive, 'new label');
+  assert.ok(r.ok && r.adopted && r.vault.id === id && r.vault.label === 'Old SSD');
+  assert.equal((await listing(drive)).includes(VAULT_MARKER_FILE), false, 'no second marker written');
+  const health = await probeVault({ id, label: 'Old SSD', path: drive }, { probeWrite: false });
+  assert.notEqual(health.state, 'absent');
 });
 
 test('initVault never creates the folder: an unmounted mount point that is gone stays gone', async () => {

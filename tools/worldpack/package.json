@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/tool-worldpack",
+  "name": "@opcb/tool-worldpack",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,9 +10,9 @@
     "worldpack": "./src/cli.ts"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*",
-    "@worldview/offline": "workspace:*",
-    "@worldview/history-store": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*",
+    "@opcb/offline": "workspace:*",
+    "@opcb/history-store": "workspace:*"
   }
 }

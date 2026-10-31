@@ -9,7 +9,7 @@ import {
   type Dispatch,
   type ReactNode,
 } from 'react';
-import type { WorldClient } from '@worldview/ipc-contract';
+import type { WorldClient } from '@opcb/ipc-contract';
 import { initialState, rootReducer } from './reducer.js';
 import type { RootAction, RootState } from './types.js';
 import { createActions, type ShellActions } from './actions.js';

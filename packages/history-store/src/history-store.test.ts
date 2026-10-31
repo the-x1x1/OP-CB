@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { testing } from '@worldview/provider-sdk';
-import { defaultIdentityResolver } from '@worldview/identity';
-import { DEFAULT_FRESHNESS_POLICIES } from '@worldview/world-model';
+import { testing } from '@opcb/provider-sdk';
+import { defaultIdentityResolver } from '@opcb/identity';
+import { DEFAULT_FRESHNESS_POLICIES } from '@opcb/world-model';
 import {
   HistoryStore,
   NdjsonBackend,

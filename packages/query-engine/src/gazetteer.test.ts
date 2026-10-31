@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { BUILTIN_GAZETTEER_ENTRIES, BuiltinGazetteer } from './builtin-gazetteer.js';
 import { CompositeGazetteer, StaticGazetteer, normalizePlaceName, type Gazetteer } from './gazetteer.js';
 import { parseCoordinates } from './coordinates.js';
-import { isValidBounds, isValidLatLon } from '@worldview/world-model';
+import { isValidBounds, isValidLatLon } from '@opcb/world-model';
 
 test('builtin gazetteer: entries are valid and lookups score deterministically', () => {
   assert.ok(BUILTIN_GAZETTEER_ENTRIES.length >= 80);

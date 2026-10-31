@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * How a storm reads on the map: tropical cyclones drawn with the cyclone glyph in their

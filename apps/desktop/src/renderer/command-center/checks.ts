@@ -1,4 +1,4 @@
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import type {
   AiTestAnswer,
   LibraryShelf,
@@ -7,8 +7,8 @@ import type {
   ModeState,
   OfflineStatus,
   PrepRecord,
-} from '@worldview/ipc-contract';
-import type { SourceHealthEntry } from '@worldview/source-health';
+} from '@opcb/ipc-contract';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import type { CheckId, CheckResult } from './guide-types.js';
 
 /**
@@ -42,7 +42,7 @@ export interface CheckData {
   receiverObjects?: number;
   lastPlaceSearch?: LastSearch;
   lastLibrarySearch?: LastSearch & { book: string };
-  /** The built-in library (ZIM files WorldView reads itself), when asked for. */
+  /** The built-in library (ZIM files OP-CB reads itself), when asked for. */
   shelf?: LibraryShelf | null;
   lastLibraryFind?: LastSearch;
   lastAiTest?: { offline: boolean; answer: AiTestAnswer };

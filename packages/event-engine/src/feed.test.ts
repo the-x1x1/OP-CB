@@ -130,7 +130,7 @@ test('feed time: an event whose start is still ahead is dated by when it was iss
   });
   assert.equal(toFeedItem(watch).at, iso(-3 * HOUR), 'issued three hours ago: that is when it was news');
   const unissued = eventFrom({ ...watch, id: 'event:weather-alert:nws:x', properties: {} });
-  assert.equal(toFeedItem(unissued).at, now, 'no issue time: when WORLDVIEW raised it');
+  assert.equal(toFeedItem(unissued).at, now, 'no issue time: when OP-CB raised it');
   const started = eventFrom({ ...watch, id: 'event:weather-alert:nws:y', startAt: iso(-HOUR) });
   assert.equal(toFeedItem(started).at, iso(-HOUR), 'already under way: its start');
 });

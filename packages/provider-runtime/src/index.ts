@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import type { Clock, JsonValue, Observation, GeoBounds, RasterOverlay } from '@worldview/world-model';
-import { MAX_OVERLAYS_PER_PROVIDER, overlayHost, rasterOverlaySchema, systemClock } from '@worldview/world-model';
+import type { Clock, JsonValue, Observation, GeoBounds, RasterOverlay } from '@opcb/world-model';
+import { MAX_OVERLAYS_PER_PROVIDER, overlayHost, rasterOverlaySchema, systemClock } from '@opcb/world-model';
 import {
   ProviderError,
   admitObservations,
@@ -44,7 +44,7 @@ import {
   MAX_OVERLAY_VALUES,
   MAX_OVERLAY_VALUE_CHARS,
   isOverlayValueSource,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   HttpClient,
   SharedHostBudget,
@@ -52,11 +52,11 @@ import {
   type Logger,
   type LoggerHub,
   type CredentialResolver,
-} from '@worldview/core';
-import { SourceHealthRegistry } from '@worldview/source-health';
+} from '@opcb/core';
+import { SourceHealthRegistry } from '@opcb/source-health';
 
 /**
- * @worldview/provider-runtime — hosts providers with isolation.
+ * @opcb/provider-runtime — hosts providers with isolation.
  *
  * Every provider gets: cancellation, timeout, bounded retries, exponential backoff,
  * rate limiting, circuit breaker (in HttpClient), structured errors and a health

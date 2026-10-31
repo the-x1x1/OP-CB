@@ -1,5 +1,5 @@
-import { s, type Schema } from '@worldview/world-model';
-import { localHostProblem, MAX_LOCAL_HOSTS, VISUAL_STYLE_IDS, type AppSettings } from '@worldview/ipc-contract';
+import { s, type Schema } from '@opcb/world-model';
+import { localHostProblem, MAX_LOCAL_HOSTS, VISUAL_STYLE_IDS, type AppSettings } from '@opcb/ipc-contract';
 
 /**
  * AppSettings defaults and the runtime schema every settings document must satisfy

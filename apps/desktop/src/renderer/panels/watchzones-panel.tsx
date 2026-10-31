@@ -1,16 +1,7 @@
 import { useState, type FormEvent } from 'react';
-import type { SeverityClass } from '@worldview/world-model';
-import type { EventTypeInfo, WatchZone } from '@worldview/ipc-contract';
-import {
-  Button,
-  EmptyState,
-  IconButton,
-  Panel,
-  Section,
-  Toggle,
-  formatCoordinates,
-  formatDistance,
-} from '@worldview/ui';
+import type { SeverityClass } from '@opcb/world-model';
+import type { EventTypeInfo, WatchZone } from '@opcb/ipc-contract';
+import { Button, EmptyState, IconButton, Panel, Section, Toggle, formatCoordinates, formatDistance } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import { zoneEventTypes } from '../store/watch-zones.js';
 

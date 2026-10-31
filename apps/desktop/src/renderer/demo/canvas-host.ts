@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPosition } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition } from '@opcb/world-model';
 import type {
   AttributionEntry,
   FeatureUpdate,
@@ -7,8 +7,8 @@ import type {
   RenderFeature,
   RenderMode,
   ViewState,
-} from '@worldview/render-core';
-import { altitudeToZoom, zoomToAltitudeM } from '@worldview/render-core';
+} from '@opcb/render-core';
+import { altitudeToZoom, zoomToAltitudeM } from '@opcb/render-core';
 import type { RendererHostEvents, RendererHostLike } from '../renderer-host-like.js';
 
 /**

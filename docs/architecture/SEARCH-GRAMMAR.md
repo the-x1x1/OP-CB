@@ -1,6 +1,6 @@
 # Search grammar
 
-Package: `@worldview/query-engine` (`parseSearch`, `searchWorld`). ADR-010: search is a
+Package: `@opcb/query-engine` (`parseSearch`, `searchWorld`). ADR-010: search is a
 deterministic parser → `WorldQuery`. No LLM. Same text + same clock + same gazetteer →
 same intents, always.
 

@@ -1,5 +1,5 @@
-import type { FieldHostStatus, VaultHealthSummary } from '@worldview/ipc-contract';
-import type { ConnectionSnapshot, SourceHealthEntry } from '@worldview/source-health';
+import type { FieldHostStatus, VaultHealthSummary } from '@opcb/ipc-contract';
+import type { ConnectionSnapshot, SourceHealthEntry } from '@opcb/source-health';
 
 /**
  * The field status strip (docs/cyberdeck M5), as data: one short item each for the network,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
 import { CameraError } from './errors.js';
 import { DirectGateway } from './direct-gateway.js';
 import { MemorySecretStore } from './secret-store.js';
@@ -82,7 +82,7 @@ test('snapshot fetches with injected credential header, validates magic bytes an
   const call = fetchBytes.calls.at(-1)!;
   assert.equal(call.url, 'http://10.0.0.5/auth/snap.jpg');
   assert.equal(call.headers['Authorization'], `Basic ${Buffer.from('admin:hunter2').toString('base64')}`);
-  assert.match(call.headers['User-Agent'] ?? '', /^WorldView\//);
+  assert.match(call.headers['User-Agent'] ?? '', /^OP-CB\//);
   assert.equal((await gateway.list())[0]!.health.status, 'ok');
   const logs = JSON.stringify(sink.records);
   assert.ok(!logs.includes('hunter2') && !logs.includes('Basic '), 'secret leaked into logs');

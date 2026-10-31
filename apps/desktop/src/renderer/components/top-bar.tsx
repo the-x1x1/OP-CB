@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { SearchResult } from '@worldview/ipc-contract';
-import { IconButton, Popover, Search, StatusBadge, formatUtcTime } from '@worldview/ui';
+import type { SearchResult } from '@opcb/ipc-contract';
+import { IconButton, Popover, Search, StatusBadge, formatUtcTime } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { useCCStore } from '../command-center/use-cc.js';

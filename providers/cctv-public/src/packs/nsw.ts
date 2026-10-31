@@ -1,5 +1,5 @@
-import { isValidLatLon, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import { isValidLatLon, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import { directionToHeading } from '../direction.js';
 import {
   CAMERA_ID_PATTERN,
@@ -21,7 +21,7 @@ import {
  * camera is rejected.
  *
  * Frame access: the webcam host has been observed answering non-browser clients
- * with an HTML placeholder. WORLDVIEW sends its own User-Agent and marks the frame
+ * with an HTML placeholder. OP-CB sends its own User-Agent and marks the frame
  * unavailable if the host refuses; it does not impersonate a browser
  * (config/licenses/providers.json, live-traffic-nsw notes).
  */

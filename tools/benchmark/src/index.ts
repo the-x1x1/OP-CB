@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { runPresentationBenchmark, type BenchmarkOptions, type BenchmarkReport } from '@worldview/render-dense';
+import { runPresentationBenchmark, type BenchmarkOptions, type BenchmarkReport } from '@opcb/render-dense';
 
 /**
  * Benchmark tool: runs the render-dense presentation harness and writes the

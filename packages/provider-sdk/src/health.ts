@@ -1,4 +1,4 @@
-import type { IsoTimestamp } from '@worldview/world-model';
+import type { IsoTimestamp } from '@opcb/world-model';
 
 /**
  * `NEEDS_SETUP`: the source cannot run until the operator gives it something only they can —

@@ -1,24 +1,24 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
-import { createProvider as createReadsb } from '@worldview/provider-readsb-local';
-import { systemClock, type WorldObject } from '@worldview/world-model';
+import { createProvider as createReadsb } from '@opcb/provider-readsb-local';
+import { systemClock, type WorldObject } from '@opcb/world-model';
 import { settle, startRuntime } from '../helpers/harness.js';
 
 /**
  * A real decoder, end to end (docs/cyberdeck M3). Skipped unless a readsb is named:
  *
- *   WORLDVIEW_READSB_API=http://127.0.0.1:8042/?all      its HTTP API (--net-api-port 8042)
- *   WORLDVIEW_READSB_RAW=127.0.0.1:30001                 optional: its raw input (--net-ri-port),
+ *   OPCB_READSB_API=http://127.0.0.1:8042/?all      its HTTP API (--net-api-port 8042)
+ *   OPCB_READSB_RAW=127.0.0.1:30001                 optional: its raw input (--net-ri-port),
  *                                                        to feed the textbook frames below
  *
  * The runtime's own HTTP client, host allowlist and detection probe poll the decoder; the test
- * reads the aircraft back through `world.query`. With WORLDVIEW_READSB_RAW the RF side is
+ * reads the aircraft back through `world.query`. With OPCB_READSB_RAW the RF side is
  * simulated (frames from "The 1090 MHz Riddle", fed over TCP) and everything from the decoder
  * on is real. Without it, against a receiver with an antenna, it checks whatever is overhead.
  */
-const API = process.env['WORLDVIEW_READSB_API'];
-const RAW = process.env['WORLDVIEW_READSB_RAW'];
+const API = process.env['OPCB_READSB_API'];
+const RAW = process.env['OPCB_READSB_RAW'];
 
 /** KLM1023 identification; an even/odd airborne position pair for 40621D; a velocity for 485020. */
 const FRAMES = [

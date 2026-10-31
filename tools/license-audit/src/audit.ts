@@ -148,7 +148,7 @@ export function findDefinitions(root: string): string[] {
 /**
  * The fail-closed policy a definition starts from (ADR-013); `definition.dataPolicy`
  * overlays it. Restated here rather than imported so the audit stays a reader of files;
- * `audit.test.ts` pins these values to `@worldview/connector-sdk`'s `defaultDataPolicy`.
+ * `audit.test.ts` pins these values to `@opcb/connector-sdk`'s `defaultDataPolicy`.
  */
 export const DEFINITION_POLICY_DEFAULTS: Readonly<Record<(typeof POLICY_KEYS)[number], unknown>> = Object.freeze({
   cacheAllowed: true,
@@ -390,7 +390,7 @@ export function runLicenseAudit(root: string, now: () => number = Date.now): Aud
   let assetsReview = 0;
   for (const a of assetRecords) {
     // Asset paths are recorded as they appear in the upstream God's Eye View tree
-    // (docs/legal/ASSET-PROVENANCE.md). A cleared asset only becomes a WORLDVIEW
+    // (docs/legal/ASSET-PROVENANCE.md). A cleared asset only becomes an OP-CB
     // obligation once it is actually imported into this repository.
     const present = !a.path.includes('*') && existsSync(path.join(root, a.path));
     if (a.decision === 'bundle') {

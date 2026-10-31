@@ -9,8 +9,8 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
-} from '@worldview/world-model';
-import type { WorldState } from '@worldview/state-engine';
+} from '@opcb/world-model';
+import type { WorldState } from '@opcb/state-engine';
 import { compareValues, resolveEventField, resolveObjectField, type FieldValue } from './fields.js';
 import { matchesAll } from './filters.js';
 import { geometryIntersectsRegion } from './geometry.js';
@@ -38,7 +38,7 @@ export interface HistoryReadOptions {
   lookbackSeconds?: number;
 }
 
-/** Narrow read interface over an event store (implemented by @worldview/event-engine EventStore). */
+/** Narrow read interface over an event store (implemented by @opcb/event-engine EventStore). */
 export interface EventSource {
   all(): Iterable<WorldEvent>;
 }

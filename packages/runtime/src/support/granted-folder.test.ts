@@ -15,7 +15,7 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { ProviderError } from '@worldview/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import { createLocalAccess } from './provider-storage.js';
 import { childEnvironment, createOgr2ogrAccess, isStrictlyInside, type Ogr2ogrHostOptions } from './granted-folder.js';
 
@@ -185,7 +185,7 @@ else if (conf.mode === 'fail') {
 else writeFileSync(args[args.indexOf('RFC7946=YES') + 1], readFileSync(conf.output));
 `;
 
-/** What a child process needs to start on this machine (Windows needs SystemRoot), and nothing of WORLDVIEW's. */
+/** What a child process needs to start on this machine (Windows needs SystemRoot), and nothing of OP-CB's. */
 const SYSTEM_ENV: NodeJS.ProcessEnv = Object.fromEntries(
   Object.entries(process.env).filter(([k]) => /^(PATH|SYSTEMROOT|WINDIR|TEMP|TMP|TMPDIR)$/i.test(k)),
 );
@@ -229,7 +229,7 @@ function shapefileFolder(t: { after(fn: () => void): void }) {
   return { folder, output };
 }
 
-test('ogr2ogr host: fixed arguments, no shell, no WORLDVIEW secrets in its environment, the temporary folder removed', async (t) => {
+test('ogr2ogr host: fixed arguments, no shell, no OP-CB secrets in its environment, the temporary folder removed', async (t) => {
   const { folder, output } = shapefileFolder(t);
   const s = standIn(t, 'ok', output);
   const tmp = tempDir(t, 'wv-ogr-tmp-');
@@ -240,7 +240,7 @@ test('ogr2ogr host: fixed arguments, no shell, no WORLDVIEW secrets in its envir
       ...SYSTEM_ENV,
       GDAL_DATA: '/opt/gdal',
       ONEVIEW_SECRET_FIRMS: 'do-not-leak',
-      WORLDVIEW_TOKEN: 'nor-this',
+      OPCB_TOKEN: 'nor-this',
       AWS_SECRET_ACCESS_KEY: 'x',
     },
     tmpDir: tmp,
@@ -257,7 +257,7 @@ test('ogr2ogr host: fixed arguments, no shell, no WORLDVIEW secrets in its envir
   assert.equal(call.args.length, 9);
   assert.ok(call.env.includes('GDAL_DATA'));
   assert.ok(!call.env.includes('ONEVIEW_SECRET_FIRMS'), 'a secret reached ogr2ogr');
-  assert.ok(!call.env.includes('WORLDVIEW_TOKEN'));
+  assert.ok(!call.env.includes('OPCB_TOKEN'));
   assert.ok(!call.env.includes('AWS_SECRET_ACCESS_KEY'));
   assert.deepEqual(readdirSync(tmp), [], 'the temporary folder was removed');
   assert.deepEqual(childEnvironment({ Path: 'x', ONEVIEW_TOKEN: 'y', PROJ_DATA: 'z' }), { Path: 'x', PROJ_DATA: 'z' });

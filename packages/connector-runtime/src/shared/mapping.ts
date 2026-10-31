@@ -1,5 +1,5 @@
-import type { Observation } from '@worldview/world-model';
-import type { ProviderContext } from '@worldview/provider-sdk';
+import type { Observation } from '@opcb/world-model';
+import type { ProviderContext } from '@opcb/provider-sdk';
 
 /**
  * What every polling connector does with the records a response gave it once the

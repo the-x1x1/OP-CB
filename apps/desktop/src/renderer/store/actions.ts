@@ -7,8 +7,8 @@ import type {
   WorldGeometry,
   WorldObject,
   WorldQuery,
-} from '@worldview/world-model';
-import { geometryCentroid, haversineMeters, regionBounds } from '@worldview/world-model';
+} from '@opcb/world-model';
+import { geometryCentroid, haversineMeters, regionBounds } from '@opcb/world-model';
 import { MEASURE_MAX_POINTS, densifyRing } from '../map/measure.js';
 import { keyboardBounds, nearbyOrder } from './nearby.js';
 import type {
@@ -26,7 +26,7 @@ import type {
   WatchZone,
   WhatChangedResult,
   WorldObjectDetails,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import {
   defaultSplit,
   lensById,
@@ -37,15 +37,15 @@ import {
   type ImagerySplit,
   type RenderMode,
   type VisualStyleId,
-} from '@worldview/render-core';
-import { timelineReducer, type TimelineAction, type TimelineControlState, type TimelineSpeed } from '@worldview/ui';
+} from '@opcb/render-core';
+import { timelineReducer, type TimelineAction, type TimelineControlState, type TimelineSpeed } from '@opcb/ui';
 import type {
   NearbyPlaceResult,
   OverlayValueResult,
   PassAlertSettings,
   SkyOverheadAnswer,
   WorldClient,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import {
   GEODATA_MAX_FILE_BYTES,
   MAX_OVERLAY_VALUE_OVERLAYS,
@@ -53,7 +53,7 @@ import {
   readViewLink,
   type StreetLevelAnswer,
   type ViewLink,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import { linkForView, linkHiddenLayers } from './view-link.js';
 import { HOME_ASSISTANT_TOKEN_KEY } from '../panels/connections-model.js';
 import {
@@ -85,7 +85,7 @@ export const DEFAULT_PASS_ALERTS: PassAlertSettings = Object.freeze({
   desktop: false,
 }) as PassAlertSettings;
 
-/** A search result that is a worldview:// link (its text after the prefix). */
+/** A search result that is an opcb:// link (its text after the prefix). */
 const LINK_RESULT_PREFIX = 'link:';
 
 export interface FlyTarget {
@@ -561,7 +561,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     flyTo,
     goTo,
     async search(text: string, limit = 12): Promise<SearchResult[]> {
-      // A worldview:// link pasted into search opens like one clicked elsewhere.
+      // A opcb:// link pasted into search opens like one clicked elsewhere.
       if (isViewLink(text)) {
         const read = readViewLink(text);
         return [
@@ -634,7 +634,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           const events = await client.request('world.events', { eventTypes: lens.eventTypes, limit: 500 });
           dispatch({ type: 'world/events', events: events.items });
         } catch (err) {
-          console.warn('[worldview] events for lens failed:', describeError(err));
+          console.warn('[opcb] events for lens failed:', describeError(err));
         }
       }
     },
@@ -996,7 +996,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         position: { latitude: at.latitude, longitude: at.longitude },
       });
     },
-    /** To the WorldView collection file, or its places as GPX, KML or GeoJSON. */
+    /** To the OP-CB collection file, or its places as GPX, KML or GeoJSON. */
     async exportCollection(id: string, format: 'json' | 'gpx' | 'kml' | 'geojson' = 'json'): Promise<void> {
       try {
         const r = await client.request('collections.export', { id, ...(format !== 'json' ? { format } : {}) });
@@ -1552,7 +1552,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     },
     /** Home, Shift+H: fly to the home view, or say how to set one. */
     /**
-     * Opens a worldview:// link (store/view-link.ts): 2D or 3D, the lens, the layers it turns,
+     * Opens an opcb:// link (store/view-link.ts): 2D or 3D, the lens, the layers it turns,
      * the place, and the thing to select. Only what the link names changes; whatever else it
      * named that is no switch or lens here is said in one notice.
      */
@@ -1801,7 +1801,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         return { details: await client.request('world.details', { objectId, observer }), observer };
       } catch (err) {
-        console.warn('[worldview] world.details failed:', describeError(err));
+        console.warn('[opcb] world.details failed:', describeError(err));
         return null;
       }
     },

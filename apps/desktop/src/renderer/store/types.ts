@@ -1,12 +1,5 @@
 import type { ImportedFile } from '../map/imported-files.js';
-import type {
-  GeoPosition,
-  JsonValue,
-  RasterOverlay,
-  WorldEvent,
-  WorldObject,
-  WorldQuery,
-} from '@worldview/world-model';
+import type { GeoPosition, JsonValue, RasterOverlay, WorldEvent, WorldObject, WorldQuery } from '@opcb/world-model';
 import type {
   AppSettings,
   CameraListEntry,
@@ -24,11 +17,11 @@ import type {
   WorldFlightInfo,
   WorldSubscription,
   MapProviderList,
-} from '@worldview/ipc-contract';
-import type { ProviderManifest } from '@worldview/provider-sdk';
-import type { ConnectionSnapshot, SourceHealthEntry } from '@worldview/source-health';
-import type { ImagerySplit, LensDefinition, RenderMode, ViewState } from '@worldview/render-core';
-import type { TimelineAction, TimelineControlState } from '@worldview/ui';
+} from '@opcb/ipc-contract';
+import type { ProviderManifest } from '@opcb/provider-sdk';
+import type { ConnectionSnapshot, SourceHealthEntry } from '@opcb/source-health';
+import type { ImagerySplit, LensDefinition, RenderMode, ViewState } from '@opcb/render-core';
+import type { TimelineAction, TimelineControlState } from '@opcb/ui';
 
 export interface FlightState {
   objectId: string;
@@ -273,7 +266,7 @@ export interface UiSlice {
    * a home view the operator asked for at start is flown to.
    */
   firstFrame: boolean;
-  /** A worldview:// link waiting for the first frame (store/view-link.ts), or null. */
+  /** A opcb:// link waiting for the first frame (store/view-link.ts), or null. */
   pendingLink: ViewLink | null;
 }
 

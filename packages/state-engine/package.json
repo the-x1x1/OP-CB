@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/state-engine",
+  "name": "@opcb/state-engine",
   "version": "0.1.0",
   "private": true,
   "description": "Live world state: batched ingest, identity merge, freshness/confidence, expiration, spatial queries, tracks.",
@@ -14,9 +14,9 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/identity": "workspace:*",
-    "@worldview/hot-spatial-index": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/identity": "workspace:*",
+    "@opcb/hot-spatial-index": "workspace:*"
   },
   "sideEffects": false
 }

@@ -1,4 +1,4 @@
-import { s, type Schema } from '@worldview/world-model';
+import { s, type Schema } from '@opcb/world-model';
 import type { Condition } from './mapping.js';
 
 /**
@@ -54,7 +54,7 @@ export interface MqttSpec {
   username?: string;
   /** The credential (a key of `credentials`) whose secret is the MQTT password. */
   credential?: { name: string };
-  /** Default: `worldview-` and random hex, from the runtime. */
+  /** Default: `opcb-` and random hex, from the runtime. */
   clientId?: string;
   /** A named payload reader (`presets.ts`); absent: the payload is JSON records as they are. */
   preset?: MqttPreset;

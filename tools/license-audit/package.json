@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/tool-license-audit",
+  "name": "@opcb/tool-license-audit",
   "version": "0.1.0",
   "private": true,
   "type": "module",

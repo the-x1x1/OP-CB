@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lensById } from '@worldview/render-core';
-import type { WorldObject } from '@worldview/world-model';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import { DEFAULT_SETTINGS } from '@worldview/config';
+import { lensById } from '@opcb/render-core';
+import type { WorldObject } from '@opcb/world-model';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import { DEFAULT_SETTINGS } from '@opcb/config';
 import { OVERVIEW_LAYERS, lensFilter, typeLayerId } from './overview-layers.js';
 import {
   CAMERA_PREVIEWS_LAYER_ID,

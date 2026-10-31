@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createProvider as createUsgs } from '@worldview/provider-usgs';
-import type { TimelineState, WorldChangedEvent } from '@worldview/ipc-contract';
+import { createProvider as createUsgs } from '@opcb/provider-usgs';
+import type { TimelineState, WorldChangedEvent } from '@opcb/ipc-contract';
 import { readFixture, settle, startRuntime, tableFetch } from '../helpers/harness.js';
 
 /**

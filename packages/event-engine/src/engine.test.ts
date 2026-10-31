@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SourceHealthRegistry } from '@worldview/source-health';
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import { SourceHealthRegistry } from '@opcb/source-health';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 import { EventEngine } from './engine.js';
 import { EventStore } from './store.js';
-import { WorldState } from '@worldview/state-engine';
+import { WorldState } from '@opcb/state-engine';
 import {
   DAY,
   FixedClock,

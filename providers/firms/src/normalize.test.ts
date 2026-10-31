@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { observationSchema, formatIssues } from '@worldview/world-model';
+import { observationSchema, formatIssues } from '@opcb/world-model';
 import { parseFirmsCsv } from './csv.js';
 import { detectionExternalId, normalizeConfidence, normalizeFirmsRows, rowToDraft } from './normalize.js';
 

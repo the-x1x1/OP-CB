@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WatchZone } from '@worldview/ipc-contract';
-import { haversineMeters } from '@worldview/world-model';
+import type { WatchZone } from '@opcb/ipc-contract';
+import { haversineMeters } from '@opcb/world-model';
 import { CIRCLE_VERTICES, zoneRing, zonesFromGeodata, zonesToGeodata } from './zone-geodata.js';
 
 const at = '2026-10-05T00:00:00.000Z';

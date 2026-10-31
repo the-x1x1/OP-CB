@@ -3,7 +3,7 @@ import {
   referenceLinesGeoJSON,
   type ReferenceData,
   type ReferenceOptions,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import type { Expr, GeoJsonSource, LayerSpec } from './styles/spec.js';
 import { MAPLIBRE_ZOOM_OFFSET } from './view.js';
 

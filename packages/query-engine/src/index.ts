@@ -1,5 +1,5 @@
 /**
- * @worldview/query-engine — deterministic query execution and search (ADR-010: no LLM).
+ * @opcb/query-engine — deterministic query execution and search (ADR-010: no LLM).
  *
  *   executeQuery / executeQueryWithHistory / executeEventQuery   WorldQuery → WorldQueryResult
  *   parseSearch                                                  text → ParsedSearch (grammar)

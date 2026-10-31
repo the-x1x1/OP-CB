@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { DiagnosticsSnapshot } from '@worldview/ipc-contract';
-import type { JsonValue } from '@worldview/world-model';
-import type { LogRecord } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
+import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
+import type { JsonValue } from '@opcb/world-model';
+import type { LogRecord } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
 import { redactStructure, type PathRedactionOptions } from './redact.js';
 
 /**
@@ -13,7 +13,7 @@ import { redactStructure, type PathRedactionOptions } from './redact.js';
  * redacts, because the snapshot carries paths the logger never saw.
  */
 export interface DiagnosticsBundle {
-  format: 'worldview/diagnostics-bundle/v1';
+  format: 'opcb/diagnostics-bundle/v1';
   exportedAt: string;
   redaction: { secrets: true; userPaths: true; homeDir: '~' };
   snapshot: DiagnosticsSnapshot;
@@ -30,7 +30,7 @@ export interface ExportBundleOptions extends PathRedactionOptions {
   logFile?: string;
   maxLogLines?: number;
   now?: () => number;
-  /** File name without directory; default worldview-diagnostics-<timestamp>.json */
+  /** File name without directory; default opcb-diagnostics-<timestamp>.json */
   fileName?: string;
 }
 
@@ -71,7 +71,7 @@ export function buildBundle(
     ...(opts.extraRoots ? { extraRoots: opts.extraRoots } : {}),
   };
   return {
-    format: 'worldview/diagnostics-bundle/v1',
+    format: 'opcb/diagnostics-bundle/v1',
     exportedAt: new Date(now()).toISOString(),
     redaction: { secrets: true, userPaths: true, homeDir: '~' },
     snapshot: redactStructure(opts.snapshot, redaction),
@@ -91,7 +91,7 @@ export async function exportBundle(
     : { records: [], truncated: false };
   const bundle = buildBundle(opts, tail);
   const stamp = bundle.exportedAt.replace(/[:.]/g, '-');
-  const file = path.join(dir, opts.fileName ?? `worldview-diagnostics-${stamp}.json`);
+  const file = path.join(dir, opts.fileName ?? `opcb-diagnostics-${stamp}.json`);
   await writeFileAtomic(file, JSON.stringify(bundle, null, 2) + '\n');
   return { path: file, bundle };
 }

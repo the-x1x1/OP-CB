@@ -5,7 +5,7 @@ import { loadInitialState } from '../store/bootstrap-state.js';
 import { rootReducer } from '../store/reducer.js';
 import { createActions } from '../store/actions.js';
 import type { RootAction, RootState } from '../store/types.js';
-import type { RequestChannel } from '@worldview/ipc-contract';
+import type { RequestChannel } from '@opcb/ipc-contract';
 
 const T0 = Date.parse('2026-10-20T08:00:00.000Z');
 

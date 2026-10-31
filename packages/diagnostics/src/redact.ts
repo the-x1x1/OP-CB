@@ -1,6 +1,6 @@
 import os from 'node:os';
-import type { JsonValue } from '@worldview/world-model';
-import { redactFields, redactText } from '@worldview/core';
+import type { JsonValue } from '@opcb/world-model';
+import { redactFields, redactText } from '@opcb/core';
 
 /**
  * Bundle redaction = core secret redaction (keys/tokens/URL credentials) plus

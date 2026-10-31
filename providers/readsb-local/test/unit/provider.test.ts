@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, type ProviderError } from '@worldview/provider-sdk';
+import { testing, type ProviderError } from '@opcb/provider-sdk';
 import { ReadsbLocalProvider, DEFAULT_READSB_ENDPOINT, PROBE_BACKOFF_MS } from '../../src/index.js';
 
 const NOW_S = Date.UTC(2026, 8, 21, 8, 0, 0) / 1000;

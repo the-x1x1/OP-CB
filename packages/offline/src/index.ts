@@ -1,5 +1,5 @@
 /**
- * @worldview/offline — offline world packs (ADR-007).
+ * @opcb/offline — offline world packs (ADR-007).
  *
  *   manifest.ts            WorldPackManifest + strict schema, path rules per content kind
  *   zip.ts                 minimal safe ZIP writer/reader (store/deflate, no zip64, validated before extraction)

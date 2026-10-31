@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
+import { ProviderError, testing, type ProviderHttpRequest } from '@opcb/provider-sdk';
 import {
   matrixTemplate,
   overlayHost,
@@ -12,7 +12,7 @@ import {
   type JsonValue,
   type RasterOverlay,
   type Observation,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { defaultConnectorRegistry } from '../../registry.js';
 import { loadDefinitionsFrom } from '../../load.js';
 import { runConnectorSuite, formatSuite, type SuiteFixtures } from '../../testing/suite.js';

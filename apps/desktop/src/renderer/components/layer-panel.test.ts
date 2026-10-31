@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import { GroupRow } from './layer-panel.js';
 import { CAMERA_PREVIEWS_LAYER_ID, LAYER_GROUPS, MILITARY_ONLY_LAYER_ID, type LayerCount } from '../layer-tree.js';
 

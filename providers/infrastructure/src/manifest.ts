@@ -1,13 +1,13 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
- * WORLDVIEW seed airports — a bundled GeoJSON of major world airports authored in this
+ * OP-CB seed airports — a bundled GeoJSON of major world airports authored in this
  * repository (MIT; curated public facts, coordinates to 0.01°). Read through the granted
  * resources directory, so it works offline and never touches the network.
  */
 export const SEED_AIRPORTS_MANIFEST: ProviderManifest = {
   id: 'worldview-seed-airports',
-  name: 'WORLDVIEW seed airports',
+  name: 'OP-CB seed airports',
   version: '0.1.0',
   description:
     'Reference points for major world airports from the bundled seed dataset (ICAO/IATA codes, names, municipality, country).',
@@ -34,10 +34,10 @@ export const SEED_AIRPORTS_MANIFEST: ProviderManifest = {
     exportAllowed: true,
     commercialUseAllowed: true,
     attributionRequired: false,
-    attributionText: 'Airports: WORLDVIEW seed dataset',
+    attributionText: 'Airports: OP-CB seed dataset',
     termsUrl: 'https://opensource.org/license/mit',
   },
-  attribution: { text: 'Airports: WORLDVIEW seed dataset', licenseId: 'MIT' },
+  attribution: { text: 'Airports: OP-CB seed dataset', licenseId: 'MIT' },
   commercialReview: 'approved',
   enabledByDefault: true,
   allowedHosts: [],

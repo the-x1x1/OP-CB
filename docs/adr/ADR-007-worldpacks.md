@@ -1,6 +1,6 @@
 # ADR-007 — Offline world packs (.worldpack)
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/offline`, `tools/worldpack`
+Status: Accepted · 2026-09-21 · Package: `@opcb/offline`, `tools/worldpack`
 
 ## Decision
 
@@ -16,4 +16,4 @@ Status: Accepted · 2026-09-21 · Package: `@worldview/offline`, `tools/worldpac
 
 ## Consequences
 
-Offline claims are proven by `pnpm test:offline` with `WORLDVIEW_NETWORK=off` (remote providers must report OFFLINE, packs load, local search answers "Honolulu").
+Offline claims are proven by `pnpm test:offline` with `OPCB_NETWORK=off` (remote providers must report OFFLINE, packs load, local search answers "Honolulu").

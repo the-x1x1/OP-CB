@@ -1,8 +1,8 @@
 /**
- * @worldview/provider-sdk — the frozen provider contract (architecture-contract-v1).
+ * @opcb/provider-sdk — the frozen provider contract (architecture-contract-v1).
  *
  * A provider = manifest + data policy + normalizer + fixtures + tests.
- * Providers depend on this package and @worldview/world-model only.
+ * Providers depend on this package and @opcb/world-model only.
  */
 export * from './manifest.js';
 export * from './health.js';

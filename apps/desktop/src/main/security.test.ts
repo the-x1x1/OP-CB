@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { promises as fs, readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { USGS_MANIFEST } from '@worldview/provider-usgs';
+import { USGS_MANIFEST } from '@opcb/provider-usgs';
 import {
   CredentialStore,
   CredentialStoreError,
@@ -38,7 +38,7 @@ function fakeSafeStorage(available = true): SafeStorageLike & { encrypted: numbe
 }
 
 test('credential store: round trip with encryption; file never contains plaintext; renderer-visible has() only', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cred-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-'));
   const file = path.join(dir, 'credentials.json');
   const safe = fakeSafeStorage();
   const store = new CredentialStore({ file, safeStorage: safe, now: () => Date.parse('2026-09-21T00:00:00Z') });
@@ -63,7 +63,7 @@ test('credential store: round trip with encryption; file never contains plaintex
 });
 
 test('credential store: refuses to store when OS encryption is unavailable, with a clear message', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cred-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-'));
   const file = path.join(dir, 'credentials.json');
   const store = new CredentialStore({ file, safeStorage: fakeSafeStorage(false) });
   assert.equal(store.encryptionAvailable, false);
@@ -85,7 +85,7 @@ test('credential store: refuses to store when OS encryption is unavailable, with
 });
 
 test('credential store: corrupt file starts empty and is preserved', async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-cred-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-'));
   const file = path.join(dir, 'credentials.json');
   await fs.writeFile(file, '{ nope');
   const store = new CredentialStore({ file, safeStorage: fakeSafeStorage() });
@@ -179,15 +179,15 @@ test('renderer origin lock: only the app scheme or the dev server', () => {
   // stylesheet are CORS fetches, and a file: document has an opaque origin, so Chromium
   // blocked the bundle and the window came up empty. It is not a trusted origin any more.
   assert.equal(
-    isTrustedRendererUrl('file:///C:/Program%20Files/WorldView/resources/app.asar/dist/renderer/index.html', {
+    isTrustedRendererUrl('file:///C:/Program%20Files/OP-CB/resources/app.asar/dist/renderer/index.html', {
       dev: false,
     }),
     false,
   );
   assert.equal(isTrustedRendererUrl('file:///C:/Users/x/evil.html', { dev: false }), false);
   // A host that merely starts with ours must not pass as a prefix.
-  assert.equal(isTrustedRendererUrl('worldview://app.evil.example/', { dev: false }), false);
-  assert.equal(isTrustedRendererUrl('worldview://other/', { dev: false }), false);
+  assert.equal(isTrustedRendererUrl('opcb://app.evil.example/', { dev: false }), false);
+  assert.equal(isTrustedRendererUrl('opcb://other/', { dev: false }), false);
   assert.equal(isTrustedRendererUrl('https://example.com/', { dev: false }), false);
   assert.equal(isTrustedRendererUrl(`${APP_ORIGIN}/`, { dev: true }), false, 'dev trusts only the dev server');
   assert.equal(isTrustedRendererUrl('http://127.0.0.1:5173/', { dev: true }), true);
@@ -228,7 +228,7 @@ test('app protocol: serves the bundle, and nothing outside it', () => {
   }
   assert.equal(resolveRendererAsset(dir, `${APP_ORIGIN}/a%00b`), undefined, 'null byte');
   assert.equal(resolveRendererAsset(dir, 'file:///etc/passwd'), undefined, 'wrong scheme');
-  assert.equal(resolveRendererAsset(dir, 'worldview://other/index.html'), undefined, 'wrong host');
+  assert.equal(resolveRendererAsset(dir, 'opcb://other/index.html'), undefined, 'wrong host');
 });
 
 test('app protocol: a module script must not be served as application/octet-stream', () => {
@@ -295,13 +295,13 @@ test('tiles: OpenStreetMap tile requests name the application, as the OSMF tile 
     { 'user-agent': 'Mozilla/5.0 Chrome/140 Electron/39', Accept: 'image/avif,image/webp' },
     '0.1.8',
   );
-  assert.equal(out['User-Agent'], 'WorldView/0.1.8 (+https://github.com/the-x1x1/oneview)');
+  assert.equal(out['User-Agent'], 'OP-CB/0.1.8 (+https://github.com/the-x1x1/OP-CB)');
   assert.equal(out['user-agent'], undefined, 'the browser string is replaced, not sent twice');
   assert.equal(out.Accept, 'image/avif,image/webp');
 });
 
 test('openExternal allowlist: the 3D models’ credit links in Data & attribution can be opened', async () => {
-  const { MODEL_CREDITS, MODEL_LICENCE_URL } = await import('@worldview/render-core');
+  const { MODEL_CREDITS, MODEL_LICENCE_URL } = await import('@opcb/render-core');
   const allow = buildExternalHostAllowlist([]);
   for (const c of Object.values(MODEL_CREDITS)) {
     assert.equal(checkExternalUrl(c.sourceUrl, allow).allowed, true, c.sourceUrl);

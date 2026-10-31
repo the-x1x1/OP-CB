@@ -1,4 +1,4 @@
-import { renderIconSprites, type CanvasFactory, type IconSprite } from '@worldview/render-core';
+import { renderIconSprites, type CanvasFactory, type IconSprite } from '@opcb/render-core';
 
 /**
  * Billboard sprite sheet: every icon rendered once to a PNG data URL. Cesium

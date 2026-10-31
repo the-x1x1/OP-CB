@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { REQUEST_CHANNELS, EVENT_CHANNELS, wireChannel, type AppSettings } from '@worldview/ipc-contract';
-import { ProviderError } from '@worldview/provider-sdk';
+import { REQUEST_CHANNELS, EVENT_CHANNELS, wireChannel, type AppSettings } from '@opcb/ipc-contract';
+import { ProviderError } from '@opcb/provider-sdk';
 import { IpcRouter, type IpcInvokeEventLike, type IpcMainLike, type WindowSinkLike } from './ipc-router.js';
 import { REQUEST_SCHEMAS } from './ipc-schemas.js';
 import { StubRuntime } from './testing/stub-runtime.js';
@@ -63,16 +63,13 @@ test('router: registers exactly the request catalogue and nothing else; unknown 
   const { ipcMain, router } = setup();
   assert.deepEqual([...ipcMain.handlers.keys()].sort(), REQUEST_CHANNELS.map(wireChannel).sort());
   assert.equal(Object.keys(REQUEST_SCHEMAS).length, REQUEST_CHANNELS.length, 'one schema per channel');
-  await assert.rejects(
-    ipcMain.invoke('worldview:fs.readFile', { path: '/etc/passwd' }, trusted()),
-    /No handler registered/,
-  );
+  await assert.rejects(ipcMain.invoke('opcb:fs.readFile', { path: '/etc/passwd' }, trusted()), /No handler registered/);
   const direct = await router.handle('fs.readFile', {}, trusted());
   assert.deepEqual(direct, {
     ok: false,
     error: { code: 'DENIED', message: 'unknown channel', channel: 'fs.readFile' },
   });
-  const prefixed = await router.handle('worldview:execute', {}, trusted());
+  const prefixed = await router.handle('opcb:execute', {}, trusted());
   assert.equal(prefixed.ok, false);
   // Prototype keys never resolve to handlers.
   const proto = await router.handle('constructor', {}, trusted());
@@ -337,7 +334,7 @@ test('router: credentials.* is rate limited to 10 per minute per window', async 
 test('router: errors are mapped to IpcError without stacks, paths or secrets', async () => {
   const runtime = new StubRuntime({
     failures: {
-      'world.get': new Error('ENOENT /home/alice/.config/WorldView/history/x.duckdb token=SECRET'),
+      'world.get': new Error('ENOENT /home/alice/.config/OP-CB/history/x.duckdb token=SECRET'),
       'sources.refresh': new ProviderError('HOST_NOT_ALLOWED', 'host evil.example not allowed'),
       'sources.list': new ProviderError('TIMEOUT', 'request timed out'),
       'world.event': { code: 'NOT_FOUND', message: 'no such event', channel: 'ignored' },
@@ -428,8 +425,8 @@ test('router: runtime events fan out to attached windows; targeted events reach 
     display: { graphics: 'auto', visualStyle: 'standard', hud: false, dayNight: false },
   };
   runtime.emit('settings.changed', settings);
-  assert.deepEqual(a.sent, [{ channel: 'worldview:settings.changed', payload: settings }]);
-  assert.deepEqual(b.sent, [{ channel: 'worldview:settings.changed', payload: settings }]);
+  assert.deepEqual(a.sent, [{ channel: 'opcb:settings.changed', payload: settings }]);
+  assert.deepEqual(b.sent, [{ channel: 'opcb:settings.changed', payload: settings }]);
   runtime.emit('feed.item', { id: 'f', at: '2026-09-21T00:00:00Z', title: 'x', severity: 'INFO', type: 't' }, 'win:2');
   assert.equal(a.sent.length, 1, 'targeted event skipped window 1');
   assert.equal(b.sent.length, 2);
@@ -454,7 +451,7 @@ test('router: runtime events fan out to attached windows; targeted events reach 
     at: '2026-09-21T00:00:00Z',
   });
   assert.equal(a.sent.length, 2, 'detached window receives nothing');
-  for (const e of EVENT_CHANNELS) assert.ok(wireChannel(e).startsWith('worldview:'));
+  for (const e of EVENT_CHANNELS) assert.ok(wireChannel(e).startsWith('opcb:'));
   router.dispose();
 });
 
@@ -476,7 +473,7 @@ test('router: a world delta goes out as JSON, encoded once for every window', ()
   };
   runtime.emit('world.changed', delta);
   const sent = a.sent[0]!;
-  assert.equal(sent.channel, 'worldview:world.changed');
+  assert.equal(sent.channel, 'opcb:world.changed');
   assert.ok(isJsonWire(sent.payload), 'one string across IPC and the context bridge, not an object graph');
   assert.deepEqual(fromWire(sent.payload), delta);
   assert.equal(b.sent[0]!.payload, sent.payload, 'the same encoding, not one per window');
@@ -500,7 +497,7 @@ test('router: a large world delta goes out in parts that add up to it', () => {
   };
   runtime.emit('world.changed', delta as never);
   const parts = win.sent
-    .filter((m) => m.channel === 'worldview:world.changed')
+    .filter((m) => m.channel === 'opcb:world.changed')
     .map((m) => fromWire<typeof delta>(m.payload));
   assert.equal(parts.length, 3, '2,000 objects a message');
   assert.ok(parts.every((p) => p.objects.length <= 2_000));

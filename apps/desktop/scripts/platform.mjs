@@ -17,15 +17,15 @@ export const PACKAGE_TARGETS = {
     platform: 'win32',
     flag: '--win',
     unpackedDir: 'win-unpacked',
-    executable: 'WorldView.exe',
+    executable: 'OP-CB.exe',
     label: 'Windows x64 (NSIS installer + portable zip)',
   },
   linux: {
     platform: 'linux',
     flag: '--linux',
     unpackedDir: 'linux-unpacked',
-    // linux.executableName in electron-builder.yml; the .deb links /usr/bin/worldview to it.
-    executable: 'worldview',
+    // linux.executableName in electron-builder.yml; the .deb links /usr/bin/opcb to it.
+    executable: 'opcb',
     label: 'Linux x86_64 (.deb)',
   },
 };
@@ -41,13 +41,13 @@ export function packageTargetFor(platform, arch) {
   if (!target) {
     return {
       ok: false,
-      reason: `WorldView is packaged on Windows or Linux; this is ${platform}. Nothing was packaged.`,
+      reason: `OP-CB is packaged on Windows or Linux; this is ${platform}. Nothing was packaged.`,
     };
   }
   if (arch !== 'x64') {
     return {
       ok: false,
-      reason: `WorldView is packaged for x64 only; this machine is ${arch}. Nothing was packaged.`,
+      reason: `OP-CB is packaged for x64 only; this machine is ${arch}. Nothing was packaged.`,
     };
   }
   return { ok: true, target };
@@ -60,7 +60,7 @@ export function packageTargetFor(platform, arch) {
  * setuid `chrome-sandbox` helper. Ubuntu 23.10 and later (24.04, 26.04) block unprivileged
  * user namespaces through AppArmor unless a profile allows them for that binary
  * (kernel.apparmor_restrict_unprivileged_userns = 1). The .deb installs such a profile for
- * /opt/WorldView/worldview; the Electron binary `pnpm dev` runs from node_modules has none,
+ * /opt/OP-CB/opcb; the Electron binary `pnpm dev` runs from node_modules has none,
  * and its chrome-sandbox is not setuid, so Electron aborts with "The SUID sandbox helper
  * binary was found, but is not configured correctly".
  *
@@ -82,7 +82,7 @@ export function linuxSandboxProblem(probe) {
     'Fix it once for this checkout (re-run after Electron is reinstalled):',
     `  sudo chown root:root '${probe.sandboxPath}'`,
     `  sudo chmod 4755 '${probe.sandboxPath}'`,
-    'WorldView never runs with --no-sandbox. The installed .deb does not need this: it ships',
+    'OP-CB never runs with --no-sandbox. The installed .deb does not need this: it ships',
     'an AppArmor profile for its own binary. See docs/cyberdeck/LINUX.md.',
   ].join('\n');
 }

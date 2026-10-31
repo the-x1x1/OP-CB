@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Icon } from '@worldview/ui';
+import { Button, Icon } from '@opcb/ui';
 import { useActions } from '../store/store.js';
 import type { CheckResult, GuideDefinition } from './guide-types.js';
 import {

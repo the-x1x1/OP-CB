@@ -1,5 +1,5 @@
-import { MODEL_CREDITS, MODEL_LICENCE_URL } from '@worldview/render-core';
-import { Button, Dialog, Section, StatusBadge } from '@worldview/ui';
+import { MODEL_CREDITS, MODEL_LICENCE_URL } from '@opcb/render-core';
+import { Button, Dialog, Section, StatusBadge } from '@opcb/ui';
 import { selectBasemap, selectTerrain } from '../map-providers.js';
 import { useActions, useAppState } from '../store/store.js';
 

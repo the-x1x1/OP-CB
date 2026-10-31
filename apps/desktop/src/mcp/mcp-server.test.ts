@@ -37,16 +37,16 @@ test('mcp: initialize answers a version the client knows, and the tools are read
 
 test('mcp: each tool is one read of the local API, with its arguments as query parameters', async () => {
   asked.length = 0;
-  await call(3, 'worldview_status');
-  await call(4, 'worldview_objects', {
+  await call(3, 'opcb_status');
+  await call(4, 'opcb_objects', {
     latitude: 21.3,
     longitude: -157.86,
     radiusKm: 25,
     types: ['aircraft', 'vessel'],
     limit: 10,
   });
-  await call(5, 'worldview_track', { id: 'aircraft:adsb-lol:a1b2c3', from: '2026-10-20T07:00:00Z' });
-  await call(6, 'worldview_own_position');
+  await call(5, 'opcb_track', { id: 'aircraft:adsb-lol:a1b2c3', from: '2026-10-20T07:00:00Z' });
+  await call(6, 'opcb_own_position');
   assert.deepEqual(asked, [
     '/v1/health',
     '/v1/objects?lat=21.3&lon=-157.86&radiusKm=25&type=aircraft%2Cvessel&limit=10',
@@ -56,21 +56,21 @@ test('mcp: each tool is one read of the local API, with its arguments as query p
 });
 
 test('mcp: refusals and failures are tool errors the model can read, not protocol errors', async () => {
-  const forbidden = await call(7, 'worldview_track', { id: 'x' });
+  const forbidden = await call(7, 'opcb_track', { id: 'x' });
   assert.equal((forbidden?.result as { isError?: boolean }).isError, true);
-  const half = await call(8, 'worldview_objects', { latitude: 1 });
+  const half = await call(8, 'opcb_objects', { latitude: 1 });
   assert.match(JSON.stringify(half?.result), /longitude go together/);
-  const noId = await call(9, 'worldview_track', {});
+  const noId = await call(9, 'opcb_track', {});
   assert.match(JSON.stringify(noId?.result), /id is required/);
   const down = await handleMcpMessage(
-    { jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'worldview_status' } },
+    { jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'opcb_status' } },
     async () => {
       throw Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' });
     },
     info,
   );
   assert.match(JSON.stringify(down?.result), /OP-CB is not running, or its local API is off/);
-  const unknown = await call(11, 'worldview_delete_everything');
+  const unknown = await call(11, 'opcb_delete_everything');
   assert.equal((unknown?.error as { code: number }).code, -32602);
   const method = await handleMcpMessage({ jsonrpc: '2.0', id: 12, method: 'resources/list' }, get, info);
   assert.equal((method?.error as { code: number }).code, -32601);

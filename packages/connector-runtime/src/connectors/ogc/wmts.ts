@@ -6,9 +6,9 @@ import {
   type JsonValue,
   type RasterOverlay,
   type WmtsOverlay,
-} from '@worldview/world-model';
-import { ProviderError, type ProviderManifest } from '@worldview/provider-sdk';
-import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@worldview/connector-sdk';
+} from '@opcb/world-model';
+import { ProviderError, type ProviderManifest } from '@opcb/provider-sdk';
+import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import {
   isParsed,
   parseProblem,

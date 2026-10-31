@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { Observation } from '@worldview/world-model';
-import { manifestSchema, telemetryDescriptorSchema } from '@worldview/provider-sdk';
-import { definitionToManifest, parseDefinition, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import { defaultConnectorRegistry, formatSuite, runConnectorSuite } from '@worldview/connector-runtime';
-import { loadSidecar } from '@worldview/tool-connector-validator';
-import { resolveTelemetry } from '@worldview/telemetry';
+import type { Observation } from '@opcb/world-model';
+import { manifestSchema, telemetryDescriptorSchema } from '@opcb/provider-sdk';
+import { definitionToManifest, parseDefinition, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import { defaultConnectorRegistry, formatSuite, runConnectorSuite } from '@opcb/connector-runtime';
+import { loadSidecar } from '@opcb/tool-connector-validator';
+import { resolveTelemetry } from '@opcb/telemetry';
 
 /**
  * Phase telemetry: the example definitions that carry a `telemetry` block. Each runs the

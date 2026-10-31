@@ -1,4 +1,4 @@
-import { formatMgrs, formatUps, toMgrs, toUps, toUtm } from '@worldview/world-model';
+import { formatMgrs, formatUps, toMgrs, toUps, toUtm } from '@opcb/world-model';
 
 /**
  * The HUD's readouts as text (hud.tsx), pure so every format is tested. Each has a fixed

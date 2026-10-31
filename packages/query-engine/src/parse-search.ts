@@ -1,4 +1,4 @@
-import { ObjectTypes, type GeoRegion, type TimeRange, type WorldFilter, type WorldQuery } from '@worldview/world-model';
+import { ObjectTypes, type GeoRegion, type TimeRange, type WorldFilter, type WorldQuery } from '@opcb/world-model';
 import { parseCoordinates } from './coordinates.js';
 import type { Gazetteer, GazetteerHit, PlaceKind } from './gazetteer.js';
 import { DEFAULT_COMMANDS, STOP_WORDS, TYPE_VOCABULARY, typeLabel, type CommandDefinition } from './vocabulary.js';

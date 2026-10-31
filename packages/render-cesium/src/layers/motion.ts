@@ -1,4 +1,4 @@
-import { MOTION_MAX_T, type RenderMotion } from '@worldview/render-core';
+import { MOTION_MAX_T, type RenderMotion } from '@opcb/render-core';
 import type { Cartesian3Like } from '../cesium-like.js';
 
 /**

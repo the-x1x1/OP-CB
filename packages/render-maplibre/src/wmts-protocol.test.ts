@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WmtsOverlay } from '@worldview/world-model';
+import type { WmtsOverlay } from '@opcb/world-model';
 import { ensureWmtsProtocol, setWmtsProtocolOverlays, wmtsProtocolTiles } from './wmts-protocol.js';
 import type { ProtocolLoader } from './maplibre-like.js';
 

@@ -1,4 +1,4 @@
-import type { VisualStyleId } from '@worldview/render-core';
+import type { VisualStyleId } from '@opcb/render-core';
 
 /**
  * The visual styles in 2D (render-core visual-styles.ts). MapLibre has no post-process

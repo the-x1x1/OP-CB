@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { GeoPosition, WorldObject } from '@worldview/world-model';
-import { haversineMeters } from '@worldview/world-model';
+import type { GeoPosition, WorldObject } from '@opcb/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import { COURSE_VECTOR_LAYER, courseVectorFeatures, courseVectorKey, moverOf } from './course-vector.js';
 
 const T0 = '2026-10-05T19:00:00.000Z';

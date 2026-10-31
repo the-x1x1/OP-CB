@@ -9,7 +9,7 @@ import {
   runConnectorSuite,
   formatSuite,
   slugFromUrl,
-} from '@worldview/connector-runtime';
+} from '@opcb/connector-runtime';
 import { loadSidecar, parseSidecar, sidecarPathFor, verifyExpected } from './fixtures.js';
 import { parseSettingArgs, secretEnvName } from './live.js';
 

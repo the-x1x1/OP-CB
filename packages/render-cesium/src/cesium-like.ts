@@ -137,7 +137,7 @@ export interface PrimitiveCollectionLike {
   contains(primitive: unknown): boolean;
   readonly length: number;
 }
-/** A `PrimitiveCollection` of WORLDVIEW's own, added to the scene's: one switch and one teardown for a group. */
+/** A `PrimitiveCollection` of OP-CB's own, added to the scene's: one switch and one teardown for a group. */
 export interface PrimitiveGroupLike extends PrimitiveCollectionLike {
   show: boolean;
   destroy(): void;
@@ -581,7 +581,7 @@ export interface ViewerLike {
 }
 
 /**
- * The CesiumWidget constructor options WORLDVIEW sets.
+ * The CesiumWidget constructor options OP-CB sets.
  *
  * The widget-chrome flags (timeline, animation, baseLayerPicker, geocoder, homeButton,
  * sceneModePicker, navigationHelpButton, fullscreenButton, vrButton, selectionIndicator,
@@ -590,7 +590,7 @@ export interface ViewerLike {
  * those flags would describe options nothing reads.
  */
 export interface ViewerOptionsLike {
-  /** `false` keeps the widget from installing its own default base layer; WORLDVIEW picks the stack. */
+  /** `false` keeps the widget from installing its own default base layer; OP-CB picks the stack. */
   baseLayer?: false;
   creditContainer?: Element;
   msaaSamples?: number;
@@ -644,7 +644,7 @@ export interface CesiumLike {
     fromArray(array: number[], startingIndex?: number, result?: Matrix4Like): Matrix4Like;
   };
   /**
-   * `Model.fromGltfAsync` with WORLDVIEW's axis convention: glTF +Y up, and *no* +Z-forward
+   * `Model.fromGltfAsync` with OP-CB's axis convention: glTF +Y up, and *no* +Z-forward
    * correction, so the file's own axes arrive unturned in the model frame (x, −z, y) and the
    * transform layers/models.ts computes decides the heading. Shadows off.
    */

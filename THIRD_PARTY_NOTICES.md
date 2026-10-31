@@ -1,10 +1,10 @@
-# Third-party notices — WORLDVIEW
+# Third-party notices — OP-CB
 
-This file lists the third-party software bundled in WORLDVIEW and the data providers whose data WORLDVIEW displays, with the licence and copyright notice each requires. It is generated from [`config/licenses/software.json`](config/licenses/software.json), [`config/licenses/providers.json`](config/licenses/providers.json) and [`config/licenses/assets.json`](config/licenses/assets.json) (seed version 2026-09-21; **regenerate from the release lockfile before every build** — see `docs/legal/SOFTWARE-LICENSES.md` §3).
+This file lists the third-party software bundled in OP-CB and the data providers whose data OP-CB displays, with the licence and copyright notice each requires. It is generated from [`config/licenses/software.json`](config/licenses/software.json), [`config/licenses/providers.json`](config/licenses/providers.json) and [`config/licenses/assets.json`](config/licenses/assets.json) (seed version 2026-09-21; **regenerate from the release lockfile before every build** — see `docs/legal/SOFTWARE-LICENSES.md` §3).
 
 Licence identifiers are SPDX. Full licence texts for Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MIT and OFL-1.1 are shipped in the `LICENSES/` directory of the installed application; the MIT and BSD-3-Clause texts are also reproduced below because several notices require them verbatim. Where a copyright holder could not be confirmed from package metadata in this environment it is marked **(verify)** and must be completed before release.
 
-Reading this file does not change any licence: WORLDVIEW's own code is proprietary; each component below remains under its own terms.
+Reading this file does not change any licence: OP-CB's own code is proprietary; each component below remains under its own terms.
 
 ---
 
@@ -14,7 +14,7 @@ Reading this file does not change any licence: WORLDVIEW's own code is proprieta
 
 #### God's Eye View — MIT
 
-WORLDVIEW's application foundation is derived from God's Eye View (https://github.com/bilawalsidhu/gods-eye-view), commit `0dbde1e36c0177b7664b47702d77ba50f11ddadc`. The MIT grant covers the source code only; God's Eye View's bundled datasets and 3D models are third-party works listed in Parts B and C.
+OP-CB's application foundation is derived from God's Eye View (https://github.com/bilawalsidhu/gods-eye-view), commit `0dbde1e36c0177b7664b47702d77ba50f11ddadc`. The MIT grant covers the source code only; God's Eye View's bundled datasets and 3D models are third-party works listed in Parts B and C.
 
 ```
 MIT License
@@ -42,7 +42,7 @@ SOFTWARE.
 
 #### skylight — MIT
 
-Portions of the aircraft classification, icon, motion, route-plausibility and ISS-pass logic in WORLDVIEW were adapted by God's Eye View from skylight (https://github.com/cpaczek/skylight), MIT License. Copyright (c) skylight contributors **(verify exact copyright line from upstream LICENSE)**. The MIT permission notice above applies.
+Portions of the aircraft classification, icon, motion, route-plausibility and ISS-pass logic in OP-CB were adapted by God's Eye View from skylight (https://github.com/cpaczek/skylight), MIT License. Copyright (c) skylight contributors **(verify exact copyright line from upstream LICENSE)**. The MIT permission notice above applies.
 
 #### OSIRIS — MIT
 
@@ -83,7 +83,7 @@ The placement of the live camera preview tiles (`apps/desktop/src/renderer/map/c
 | ws                                                                                   | MIT          | Copyright (c) 2011 Einar Otto Stangvik                                     | if used by the AIS provider |
 | go2rtc (separate binary, downloaded at the user's request; never bundled by default) | MIT          | Copyright (c) 2022 Alexey Khit **(verify)**                                | optional sidecar            |
 
-**Not distributed with WORLDVIEW:** readsb (GPL-3.0, https://github.com/wiedehopf/readsb) is a separate program the user may install; WORLDVIEW only reads its network output and includes no readsb code. Build-time tools (Vite, esbuild, TypeScript, tsx, electron-builder, vite-plugin-cesium) are not part of the installed application.
+**Not distributed with OP-CB:** readsb (GPL-3.0, https://github.com/wiedehopf/readsb) is a separate program the user may install; OP-CB only reads its network output and includes no readsb code. Build-time tools (Vite, esbuild, TypeScript, tsx, electron-builder, vite-plugin-cesium) are not part of the installed application.
 
 ### A.4 Licence texts required verbatim
 
@@ -126,7 +126,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### B.1 3D models — Creative Commons Attribution 4.0 (CC BY 4.0), modified
 
-The following models are shipped with WORLDVIEW under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Each was optimised by God's Eye View (geometry and material simplification, texture resizing, orientation and scale baked into the mesh, origin centred) and is used here in that modified form. These credits do not imply endorsement by the original creators.
+The following models are shipped with OP-CB under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Each was optimised by God's Eye View (geometry and material simplification, texture resizing, orientation and scale baked into the mesh, origin centred) and is used here in that modified form. These credits do not imply endorsement by the original creators.
 
 | File            | Original work                                      | Creator              | Source                                                                                                          |
 | --------------- | -------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -140,7 +140,7 @@ The following models are shipped with WORLDVIEW under CC BY 4.0 (https://creativ
 | `b789.glb`      | "Boeing 787-9"                                     | Nobilis 2            | https://sketchfab.com/3d-models/boeing-787-9-b6711e2e698e4e469675c1154a50b7a3                                   |
 | `atr72.glb`     | "ATR 72 - 600"                                     | Oyan3D               | https://sketchfab.com/3d-models/atr-72-600-1e1a7186f7444d288675262fcee44744                                     |
 
-The per-model modification record is shipped as `THIRD_PARTY_MODELS.md`, God's Eye View's `public/models/README.md` reproduced verbatim, beside the models (`models/` next to the application's `index.html`; source `apps/desktop/assets/models/`). The globe draws them for nearby aircraft and ships when the camera is close in (Settings → Map → "3D models when close"), and while any is drawn its credit — title, creator, CC BY 4.0, modified — is on the map's credit line. Scale changes made by WORLDVIEW at run time (the 747 model drawn at airliner size, the private jet at fighter size, the cargo ship at 120 m) are further modifications of the same kind.
+The per-model modification record is shipped as `THIRD_PARTY_MODELS.md`, God's Eye View's `public/models/README.md` reproduced verbatim, beside the models (`models/` next to the application's `index.html`; source `apps/desktop/assets/models/`). The globe draws them for nearby aircraft and ships when the camera is close in (Settings → Map → "3D models when close"), and while any is drawn its credit — title, creator, CC BY 4.0, modified — is on the map's credit line. Scale changes made by OP-CB at run time (the 747 model drawn at airliner size, the private jet at fighter size, the cargo ship at 120 m) are further modifications of the same kind.
 
 ### B.2 Bundled datasets
 
@@ -158,7 +158,7 @@ The per-model modification record is shipped as `THIRD_PARTY_MODELS.md`, God's E
 
 ## Part C — Data attribution
 
-WORLDVIEW displays data fetched at runtime from the providers below. Each provider's data remains subject to that provider's terms; WORLDVIEW does not license it. The attribution shown in the application's credit line and stamped on exports is listed here. Providers marked _when enabled_ are off by default and appear only once the user configures them.
+OP-CB displays data fetched at runtime from the providers below. Each provider's data remains subject to that provider's terms; OP-CB does not license it. The attribution shown in the application's credit line and stamped on exports is listed here. Providers marked _when enabled_ are off by default and appear only once the user configures them.
 
 ### C.1 Default providers
 
@@ -211,4 +211,4 @@ WORLDVIEW displays data fetched at runtime from the providers below. Each provid
 
 ### C.3 Not included
 
-WORLDVIEW does not include TeleGeography Submarine Cable Map data (CC BY-NC-SA 3.0), the Vantor / GeoPera Bhote Koshi 2026 event pack (CC BY-NC 4.0), OpenSky Network data (non-commercial licence; provider disabled unless the user holds their own agreement), Google News RSS, adsbdb route data, the OpenStreetMap ALPR camera layer, Google-derived precomputed camera heights, or God's Eye View's documentation media, all of which are present in the upstream God's Eye View repository under terms that do not permit inclusion in this product.
+OP-CB does not include TeleGeography Submarine Cable Map data (CC BY-NC-SA 3.0), the Vantor / GeoPera Bhote Koshi 2026 event pack (CC BY-NC 4.0), OpenSky Network data (non-commercial licence; provider disabled unless the user holds their own agreement), Google News RSS, adsbdb route data, the OpenStreetMap ALPR camera layer, Google-derived precomputed camera heights, or God's Eye View's documentation media, all of which are present in the upstream God's Eye View repository under terms that do not permit inclusion in this product.
