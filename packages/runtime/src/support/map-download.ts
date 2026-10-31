@@ -311,7 +311,7 @@ export class MapDownloads {
             .stat(file)
             .then((x) => x.size)
             .catch(() => 0);
-          if (prev?.key === build.key && have > 0 && have < size) resumeAt = have;
+          if (prev?.key === build.key && have > 0 && have <= size) resumeAt = have;
           else await fs.rm(file, { force: true });
           await fs.writeFile(
             path.join(prepared.dir, PARTIAL_FILE),
@@ -365,7 +365,11 @@ export class MapDownloads {
             },
             st.size,
           );
-          if (problem) throw new Error(`the downloaded map does not hold together: ${problem}`);
+          if (problem) {
+            const e = new Error(`the downloaded map does not hold together: ${problem}`);
+            // Bytes the build list vouches for are kept for a check by a later version; others go.
+            throw build.md5 ? e : discard(e);
+          }
         } finally {
           await fh.close();
         }
@@ -388,18 +392,23 @@ export class MapDownloads {
         this.plan = undefined;
         this.set({ ...base, phase: 'done', installed: { id, name }, message: `${name} is installed` });
       } catch (err) {
-        // A whole-planet download is kept to carry on from (Check the size, then Download, again);
-        // a cut-down map is quick to make again and is cleared.
-        // (A complete file that failed its checks is not kept: it would only fail again.)
+        // A whole-planet download is kept to carry on from (Check the size, then Download, again),
+        // and so is a complete one whose bytes match the build list (its MD5) but that failed a
+        // later check — the next Download checks it again without fetching it again. A file whose
+        // bytes do not match the build list is cleared; a cut-down map is quick to make again.
         const onDisk = whole
           ? await fs
               .stat(file)
               .then((x) => x.size)
               .catch(() => 0)
           : 0;
-        const kept = onDisk < size ? onDisk : 0;
+        const kept = onDisk <= size && !isDiscard(err) ? onDisk : 0;
         if (!kept) await fs.rm(prepared.dir, { recursive: true, force: true }).catch(() => undefined);
-        const keptText = kept ? `; ${gb(kept)} kept, and the next download of this build carries on from there` : '';
+        const keptText = !kept
+          ? ''
+          : kept === size
+            ? `; the whole ${gb(kept)} is kept, and the next download of this build checks it again without fetching it`
+            : `; ${gb(kept)} kept, and the next download of this build carries on from there`;
         this.set(
           ac.signal.aborted
             ? { ...base, phase: 'cancelled', message: `stopped; nothing was installed${keptText}` }
@@ -410,7 +419,7 @@ export class MapDownloads {
     return this.current();
   }
 
-  /** The whole planet file, streamed, its MD5 checked against the build list's. */
+  /** The whole planet file, streamed (or carried on, or read back when complete), its MD5 checked against the build list's. */
   private async downloadWhole(
     build: MapBuildInfo,
     handle: FileHandle,
@@ -464,7 +473,7 @@ export class MapDownloads {
     }
     if (at !== build.sizeBytes) throw new Error(`got ${at} bytes, the build is ${build.sizeBytes}`);
     if (build.md5 && md5.digest('base64') !== build.md5)
-      throw new Error('the file does not match the build list (MD5); it was not installed');
+      throw discard(new Error('the file does not match the build list (MD5); it was not installed'));
     return sha.digest('hex');
   }
 
@@ -539,4 +548,13 @@ export async function fileSha256(file: string): Promise<string> {
   const h = createHash('sha256');
   for await (const chunk of createReadStream(file)) h.update(chunk as Buffer);
   return h.digest('hex');
+}
+
+/** An error after which the downloaded file is not worth keeping (its bytes are wrong). */
+function discard(err: Error): Error {
+  return Object.assign(err, { discardDownload: true });
+}
+
+function isDiscard(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { discardDownload?: unknown }).discardDownload === true;
 }
