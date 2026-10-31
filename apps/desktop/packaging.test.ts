@@ -426,6 +426,7 @@ test('electron-builder.yml builds an x64 .deb, and no AppImage, with names relea
     'no file associations until something opens by double-click',
   );
   assert.match(rootBlock(builderYml, 'deb'), /artifactName: opcb_\$\{version\}_amd64\.\$\{ext\}/);
+  assert.match(rootBlock(builderYml, 'deb'), /^\s*packageName: opcb$/m, 'apt knows the package as opcb');
   // The window's app_id / WM_CLASS is package.json desktopName; syncDesktopName names the menu entry after it.
   // fpm refuses to build a .deb without a homepage (electron-builder FpmTarget, "Please specify project homepage").
   const desktop = JSON.parse(read('package.json')) as { desktopName?: string; homepage?: string };

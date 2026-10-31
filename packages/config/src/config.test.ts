@@ -276,7 +276,7 @@ test('migrations: a document from before hiddenLayers/tileCache keeps every choi
   assert.equal(report.ok, true);
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [3, 4, 5, 6, 7, 8],
+    [3, 4, 5, 6, 7, 8, 9],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -305,7 +305,7 @@ test('migrations: an rc.3 document (schema 3) gains the history size cap and kee
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [4, 5, 6, 7, 8],
+    [4, 5, 6, 7, 8, 9],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -352,7 +352,7 @@ test('migrations: 007 turns the opt-in layer switches off once, and leaves them 
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [7, 8],
+    [7, 8, 9],
   );
   const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
   assert.deepEqual(store.get().hiddenLayers, ['space', 'camera.previews', 'aircraft.military-only'], 'no duplicate');
@@ -402,7 +402,7 @@ test('migrations: a schema-4 document gains the borders-and-names switches, both
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [5, 6, 7, 8],
+    [5, 6, 7, 8, 9],
   );
   const { store, report: load } = await SettingsStore.open({
     file: dirs.settingsFile,
@@ -539,7 +539,7 @@ test('migrations: 008 turns automatic updates on once, and leaves the switch to 
   const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
   assert.deepEqual(
     report.applied.map((m) => m.version),
-    [8],
+    [8, 9],
   );
   const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
   assert.deepEqual(store.get().updater, { automatic: true, prerelease: true }, 'the channel is kept');
@@ -548,4 +548,26 @@ test('migrations: 008 turns automatic updates on once, and leaves the switch to 
   const again = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
   assert.equal(again.store.get().updater.automatic, false, 'turned off stays off');
   assert.equal(DEFAULT_SETTINGS.updater.automatic, true, 'a new installation starts with it on');
+});
+
+test('migrations: 009 carries a chosen built-in vector basemap to its OP-CB id and leaves others alone', async () => {
+  for (const [before, after] of [
+    ['worldview-dark', 'opcb-dark'],
+    ['worldview-light', 'opcb-light'],
+    ['esri-world-imagery', 'esri-world-imagery'],
+  ] as const) {
+    const dir = await tmpDir();
+    const dirs = dataDirs(dir);
+    await fs.writeFile(
+      dirs.settingsFile,
+      JSON.stringify({ schemaVersion: 8, settings: { ...DEFAULT_SETTINGS, basemapId: before } }),
+    );
+    const report = await new MigrationRunner({ migrations: MIGRATIONS, dirs }).run();
+    assert.deepEqual(
+      report.applied.map((m) => m.version),
+      [9],
+    );
+    const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
+    assert.equal(store.get().basemapId, after);
+  }
 });

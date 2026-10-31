@@ -174,9 +174,23 @@ export class CredentialStore implements CredentialResolver {
     return Object.keys(this.entries).sort();
   }
 
+  /**
+   * Whether a key is stored *and can be read here*. A key encrypted on another computer, or —
+   * on Linux — under the program's name before the rename to OP-CB (the keyring files the
+   * encryption key under that name), cannot be decrypted: it counts as not there, so the
+   * operator is asked for it again instead of being shown a key no source can use.
+   */
   async has(key: string): Promise<boolean> {
     await this.ensureLoaded();
-    return validKey(key) in this.entries;
+    const entry = this.entries[validKey(key)];
+    if (!entry) return false;
+    if (!this.encryptionAvailable) return true;
+    try {
+      this.opts.safeStorage.decryptString(Buffer.from(entry.cipher, 'base64'));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async set(key: string, value: string): Promise<void> {

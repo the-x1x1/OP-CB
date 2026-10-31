@@ -137,6 +137,9 @@ linux:
 
 deb:
   artifactName: opcb_${version}_amd64.${ext}
+  # The package name apt knows it by (`apt remove opcb`). Without it electron-builder takes the
+  # product name, which becomes `op-cb`.
+  packageName: opcb
   # electron-builder's default Depends (libgtk-3-0, libnss3, libsecret-1-0 …) resolve on Ubuntu
   # 24.04 through the t64 packages' Provides. libsecret talks to whatever Secret Service the
   # desktop runs (GNOME Keyring, KWallet); without one, API keys are refused, never stored in

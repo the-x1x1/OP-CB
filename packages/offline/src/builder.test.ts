@@ -72,7 +72,7 @@ function baseRequest(dir: string, over: Partial<WorldPackBuildRequest> = {}): Wo
     sources: { placesGeoJsonPath: PLACES, airportsGeoJsonPath: AIRPORTS },
     policies: policies(),
     licenses: (id) =>
-      id.startsWith('opcb-seed') ? 'MIT' : id === USGS ? 'U.S. Government work — public domain' : 'ODbL 1.0',
+      id.startsWith('worldview-seed') ? 'MIT' : id === USGS ? 'U.S. Government work — public domain' : 'ODbL 1.0',
     outputPath: path.join(dir, 'hawaii.worldpack'),
     clock: new VirtualClock(Date.parse('2026-09-21T12:00:00Z')),
     ...over,

@@ -1,3 +1,4 @@
+import os from 'node:os';
 import path from 'node:path';
 import { geodataWorkerPath, geodataWorkerReader } from './geodata-reader.js';
 import { promises as fs } from 'node:fs';
@@ -118,6 +119,9 @@ const dataLocation = resolveDataLocation({
   dev: DEV,
 });
 if (dataLocation.root !== dataLocation.usualRoot) app.setPath('userData', dataLocation.root);
+// Waiting for the old program to close: nothing of this start may land in OP-CB's folder, so
+// Chromium gets a throwaway profile for the one dialog it shows.
+if (legacy.busy) app.setPath('userData', path.join(os.tmpdir(), `opcb-waiting-${process.pid}`));
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
