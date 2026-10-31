@@ -39,9 +39,10 @@ source stops listing them, and a sharper globe on Auto (CHANGELOG); the 0.3.0 ch
 hardware checks are still open. 0.6.1 (2026-10-30; 0.6.0's build failed, unpublished) adds the Command Center (Online/Offline at
 start, readiness, walkthroughs), the world map and a built-in ZIM library downloaded in the app,
 public-domain emergency references, and data on an external drive (CHANGELOG); released for
-the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames OP-CB to OP-CB — Operation
+the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames the app to OP-CB — Operation
 Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG). 0.7.1 (2026-10-30) is security and
-maintenance: Electron 44.10 and patched dependencies, CI green again.
+maintenance: Electron 44.10 and patched dependencies, CI green again. 0.7.2 (2026-10-30) renames
+everything to OP-CB, the application id included, and moves the earlier data on first start.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:

@@ -5,6 +5,37 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.2] — 2026-10-30
+
+Every name is OP-CB now, the hidden application id included: the program, its downloads,
+the Start menu, Task Manager, the data folder, links and the update feed. Because the
+application id changed, an earlier installation does not update into this one — install it
+once by hand; its first start moves the earlier data into place. Checked in the build container
+(full test suite, typecheck, licence, boundary and resource checks, an independent review of the
+data move); not yet installed on a screen.
+
+### Changed
+
+- **No more WorldView.** The program is `OP-CB.exe` (Linux `/opt/OP-CB/opcb`, command `opcb`),
+  the downloads `OP-CB-Setup-<version>.exe`, `OP-CB-Portable-<version>.zip` and
+  `opcb_<version>_amd64.deb` (package `opcb`), the application id `com.opcb.desktop`, links
+  `opcb://view?…`, the data folder `%APPDATA%\OP-CB` (`~/.config/OP-CB`), a portable copy's
+  folder `OP-CB-data`, the user agent `OP-CB/<version>`, the local API `\\.\pipe\opcb-api-<user>`
+  (`$XDG_RUNTIME_DIR/opcb/api.sock`, `OPCB_API`) and the MCP tools `opcb_*` (`opcb-mcp.cjs`).
+  Updates come from github.com/the-x1x1/OP-CB.
+- **The first start moves the earlier data** (`%APPDATA%\@worldview\desktop` →
+  `%APPDATA%\OP-CB`, Linux likewise): one rename on the same drive, nothing copied, finished at
+  the next start if it is interrupted. `WorldView-data` beside the program becomes `OP-CB-data`
+  (a portable copy leaves the computer's own data alone), and a drive folder's marker is renamed.
+  While the earlier program is still running OP-CB says so and moves nothing.
+- A chosen built-in vector basemap keeps its choice under its new id (settings migration 009).
+- Data vaults and drive folders set up before the rename are still recognised.
+
+### Fixed
+
+- A stored key that cannot be decrypted on this computer is shown as not stored, so it is asked
+  for again instead of failing quietly in its source.
+
 ## [0.7.1] — 2026-10-30
 
 Security and maintenance on top of 0.7.0; nothing changes in how OP-CB looks or works.
