@@ -1,4 +1,4 @@
-# Known limitations — 0.7.2
+# Known limitations — 0.7.3
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -354,6 +354,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## 0.7.3
+
+- The whole-planet fix was checked against a synthetic archive in Protomaps' layout, not yet
+  against a real planet download. A kept download is checked again only while its build is the
+  newest Protomaps build (they are daily); after that a new download starts.
 
 ## 0.7.2
 
