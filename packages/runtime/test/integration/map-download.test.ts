@@ -20,7 +20,7 @@ import { startRuntime } from '../helpers/harness.js';
  * The build list's shape is the live one read on 2026-10-30 (build-metadata.protomaps.dev,
  * builds.json); the archive is synthetic, built here, every tile invented.
  */
-function synthetic(maxZoom: number): Buffer {
+function synthetic(maxZoom: number, opts: { leavesLast?: boolean } = {}): Buffer {
   const entries: PmEntry[] = [];
   const blobs: Buffer[] = [];
   let off = 0;
@@ -28,12 +28,15 @@ function synthetic(maxZoom: number): Buffer {
   for (let z = 0; z <= maxZoom; z++)
     for (let x = 0; x < 1 << z; x++) for (let y = 0; y < 1 << z; y++) ids.push([zxyToTileId(z, x, y), z, x, y]);
   ids.sort((a, b) => a[0] - b[0]);
-  for (const [id, z, x, y] of ids) {
+  // Tile data in the reverse order of the ids (unclustered): every offset is written out, so a
+  // large directory does not fit the root and needs leaf directories.
+  for (const [id, z, x, y] of opts.leavesLast ? [...ids].reverse() : ids) {
     const data = Buffer.from(`tile ${z}/${x}/${y}`);
     entries.push({ tileId: id, offset: off, length: data.length, runLength: 1 });
     blobs.push(data);
     off += data.length;
   }
+  entries.sort((a, b) => a.tileId - b.tileId);
   const dirs = buildPmDirectories(entries, PmCompression.Gzip);
   const meta = gzipSync(Buffer.from(JSON.stringify({ vector_layers: [{ id: 'earth' }, { id: 'water' }] })));
   const head = encodePmHeader({
@@ -41,14 +44,14 @@ function synthetic(maxZoom: number): Buffer {
     rootDirectoryLength: dirs.root.length,
     metadataOffset: 127 + dirs.root.length,
     metadataLength: meta.length,
-    leafDirectoryOffset: 127 + dirs.root.length + meta.length,
+    leafDirectoryOffset: 127 + dirs.root.length + meta.length + (opts.leavesLast ? off : 0),
     leafDirectoryLength: dirs.leaves.length,
-    tileDataOffset: 127 + dirs.root.length + meta.length + dirs.leaves.length,
+    tileDataOffset: 127 + dirs.root.length + meta.length + (opts.leavesLast ? 0 : dirs.leaves.length),
     tileDataLength: off,
     numAddressedTiles: entries.length,
     numTileEntries: entries.length,
     numTileContents: entries.length,
-    clustered: true,
+    clustered: !opts.leavesLast,
     internalCompression: PmCompression.Gzip,
     tileCompression: PmCompression.None,
     tileType: 1,
@@ -62,7 +65,10 @@ function synthetic(maxZoom: number): Buffer {
     centerLon: 0,
     centerLat: 0,
   });
-  return Buffer.concat([head, dirs.root, meta, dirs.leaves, ...blobs]);
+  // Protomaps' planet builds (Planetiler) put the leaf directories after the tile data.
+  return opts.leavesLast
+    ? Buffer.concat([head, dirs.root, meta, ...blobs, dirs.leaves])
+    : Buffer.concat([head, dirs.root, meta, dirs.leaves, ...blobs]);
 }
 
 function fakeProtomaps(archive: Buffer, opts: { md5?: string } = {}) {
@@ -192,6 +198,53 @@ test('map download: an area adds detail; the whole planet is checked against its
     assert.equal((await h2.client.request('offline.status', undefined)).packs.length, 0, 'nothing installed');
   } finally {
     await h2.dispose();
+  }
+});
+
+test('map download: a planet laid out as Protomaps builds it (leaf directories last) is installed', async () => {
+  const archive = synthetic(8, { leavesLast: true });
+  assert.ok(readPmHeader(archive).leafDirectoryLength > 0, 'the archive has leaf directories');
+  assert.ok(readPmHeader(archive).leafDirectoryOffset > readPmHeader(archive).tileDataOffset);
+  const h = await startRuntime({ fetchImpl: fakeProtomaps(archive).fetchImpl });
+  try {
+    await h.client.request('maps.download.plan', { kind: 'planet', worldMaxZoom: 0, maxZoom: 15 });
+    await until(h.client, ['planned']);
+    await h.client.request('maps.download.start', undefined);
+    const done = await until(h.client, ['done', 'failed']);
+    assert.equal(done.phase, 'done', done.message ?? '');
+    assert.equal(done.installed?.id, 'map-planet');
+  } finally {
+    await h.dispose();
+  }
+});
+
+test('map download: a whole planet that matches its MD5 but fails a check is kept, and checked again without fetching it', async () => {
+  const good = synthetic(5);
+  const archive = Buffer.concat([
+    encodePmHeader({ ...readPmHeader(good), numAddressedTiles: readPmHeader(good).numAddressedTiles + 1 }),
+    good.subarray(127),
+  ]);
+  const fake = fakeProtomaps(archive);
+  const h = await startRuntime({ fetchImpl: fake.fetchImpl });
+  try {
+    await h.client.request('maps.download.plan', { kind: 'planet', worldMaxZoom: 0, maxZoom: 15 });
+    await until(h.client, ['planned']);
+    await h.client.request('maps.download.start', undefined);
+    const failed = await until(h.client, ['done', 'failed']);
+    assert.equal(failed.phase, 'failed');
+    assert.match(failed.message ?? '', /does not hold together.*whole .* is kept/);
+    const fetched = fake.asked.filter((a) => a.startsWith('https://build.protomaps.com/')).length;
+    await h.client.request('maps.download.plan', { kind: 'planet', worldMaxZoom: 0, maxZoom: 15 });
+    await until(h.client, ['planned']);
+    await h.client.request('maps.download.start', undefined);
+    assert.equal((await until(h.client, ['done', 'failed'])).phase, 'failed');
+    assert.equal(
+      fake.asked.filter((a) => a.startsWith('https://build.protomaps.com/')).length,
+      fetched,
+      'the kept file was read back, not fetched again',
+    );
+  } finally {
+    await h.dispose();
   }
 });
 

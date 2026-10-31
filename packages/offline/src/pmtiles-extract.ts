@@ -389,7 +389,22 @@ export async function verifyArchive(src: RangeSource, size: number): Promise<str
   try {
     const head = await src.read(0, Math.min(PM_ROOT_BYTES, size));
     const h = readPmHeader(head);
-    if (h.tileDataOffset + h.tileDataLength !== size) return 'the file size does not match its header';
+    // The specification fixes only the header's place; the other sections may come in any
+    // order. Protomaps' daily planet builds (Planetiler) put the leaf directories after the tile
+    // data. Each section must lie inside the file, and the last of them must end where it does.
+    const sections: Array<[string, number, number]> = [
+      ['root directory', h.rootDirectoryOffset, h.rootDirectoryLength],
+      ['metadata', h.metadataOffset, h.metadataLength],
+      ['leaf directories', h.leafDirectoryOffset, h.leafDirectoryLength],
+      ['tile data', h.tileDataOffset, h.tileDataLength],
+    ];
+    let end = PM_HEADER_BYTES;
+    for (const [name, offset, length] of sections) {
+      if (length === 0) continue;
+      if (offset < PM_HEADER_BYTES || offset + length > size) return `the ${name} lies outside the file`;
+      end = Math.max(end, offset + length);
+    }
+    if (end !== size) return 'the file size does not match its header';
     const ic = h.internalCompression;
     let tiles = 0;
     let entries = 0;
