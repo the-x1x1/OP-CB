@@ -1,5 +1,5 @@
 /**
- * Work offline (Settings → Network; `AppSettings.network.workOffline`): WorldView asks
+ * Work offline (Settings → Network; `AppSettings.network.workOffline`): OP-CB asks
  * nothing of the internet while it is on. One switch, applied at every door out of the app:
  *
  *  - the runtime's fetch (providers, the reachability probe, camera stills) — `gatedFetch`;
@@ -9,7 +9,7 @@
  *    pause as they do when the cable is out and the shell says so.
  *
  * Requests to this computer stay allowed (the camera relay, go2rtc, a local receiver), and so
- * do the app's own schemes (`worldview:`, `file:`, `data:`, `blob:`).
+ * do the app's own schemes (`opcb:`, `file:`, `data:`, `blob:`).
  *
  * The operator's own network (2026-10-30, the Command Center): a request to another device on
  * the LAN is stopped like any other unless the operator approved that one host
@@ -18,7 +18,7 @@
  * hold their own connection (MQTT, a Meshtastic node over TCP) are not fetches and keep running
  * either way, as before.
  *
- * What this is: WorldView's own doors. It is not a firewall, and says nothing about other
+ * What this is: OP-CB's own doors. It is not a firewall, and says nothing about other
  * programs on the computer.
  */
 
@@ -112,7 +112,7 @@ export function blockInternetRequests(
 /**
  * A mode given on the command line (`--mode=online` or `--mode=offline`) is the operator's
  * choice for that launch, made before the window opens: the start screen is not shown. For a
- * kiosk or cyberdeck that starts WorldView itself, and for the release workflow's network trace.
+ * kiosk or cyberdeck that starts OP-CB itself, and for the release workflow's network trace.
  * Anything else on the command line is no choice at all.
  */
 export function launchModeFromArgs(argv: readonly string[]): 'online' | 'offline' | undefined {

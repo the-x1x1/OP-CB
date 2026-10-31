@@ -1,5 +1,5 @@
-import type { PickResult, RenderFeature } from '@worldview/render-core';
-import type { GeoPosition } from '@worldview/world-model';
+import type { PickResult, RenderFeature } from '@opcb/render-core';
+import type { GeoPosition } from '@opcb/world-model';
 
 /**
  * Picking: every primitive/entity this adapter creates carries the feature id

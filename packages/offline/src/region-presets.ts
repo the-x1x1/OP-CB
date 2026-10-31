@@ -1,4 +1,4 @@
-import type { GeoBounds } from '@worldview/world-model';
+import type { GeoBounds } from '@opcb/world-model';
 
 /**
  * Named bounding boxes for `worldpack build --region <preset>`. Bounds only —

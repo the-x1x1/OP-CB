@@ -1,5 +1,5 @@
-import { altitudeToZoom, zoomToAltitudeM, type ViewState } from '@worldview/render-core';
-import { clampBounds, type GeoBounds, type GeoPosition } from '@worldview/world-model';
+import { altitudeToZoom, zoomToAltitudeM, type ViewState } from '@opcb/render-core';
+import { clampBounds, type GeoBounds, type GeoPosition } from '@opcb/world-model';
 
 /**
  * ViewState ↔ Cesium camera, as pure conversions on plain numbers. The renderer

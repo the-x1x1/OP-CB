@@ -1,4 +1,4 @@
-import { labelVisibleAt, type ReferenceData, type ReferenceLabel, type ReferenceOptions } from '@worldview/render-core';
+import { labelVisibleAt, type ReferenceData, type ReferenceLabel, type ReferenceOptions } from '@opcb/render-core';
 import type {
   Cartesian2Like,
   Cartesian3Like,

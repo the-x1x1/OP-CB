@@ -1,5 +1,5 @@
 /**
- * @worldview/ui — WORLDVIEW design system (directive §55).
+ * @opcb/ui — OP-CB design system (directive §55).
  *
  * Tokens live in tokens.css (imported by base.css); every component imports its own
  * stylesheet. Components are React 19 function components with no external UI

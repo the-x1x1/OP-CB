@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
-import type { WorldRuntimeDeps } from '@worldview/runtime';
+import type { WorldRuntimeDeps } from '@opcb/runtime';
 
 type GeodataReader = NonNullable<WorldRuntimeDeps['geodataReader']>;
 type GeodataRead = Awaited<ReturnType<GeodataReader>>;

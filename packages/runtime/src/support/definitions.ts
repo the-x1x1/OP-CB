@@ -1,15 +1,10 @@
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
-import type { Clock, JsonValue } from '@worldview/world-model';
-import { HttpClient, type Logger } from '@worldview/core';
-import { ProviderError, type WorldProvider } from '@worldview/provider-sdk';
+import type { Clock, JsonValue } from '@opcb/world-model';
+import { HttpClient, type Logger } from '@opcb/core';
+import { ProviderError, type WorldProvider } from '@opcb/provider-sdk';
 import { DeniedError, InvalidRequestError, NotFoundError, UnavailableError } from '../validate.js';
-import type {
-  DefinitionDraft,
-  DefinitionFileEntry,
-  DefinitionsListing,
-  DefinitionsReload,
-} from '@worldview/ipc-contract';
+import type { DefinitionDraft, DefinitionFileEntry, DefinitionsListing, DefinitionsReload } from '@opcb/ipc-contract';
 import {
   checkDefinitionUrl,
   connectorProviderFactories,
@@ -18,7 +13,7 @@ import {
   loadConnectorDefinitions,
   type ConnectorProviderDefinition,
   type DefinitionFile,
-} from '@worldview/providers';
+} from '@opcb/providers';
 
 /**
  * The operator's connector definitions while the app runs (ADR-013 amendment 2026-09-23,

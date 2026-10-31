@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_COMMANDS } from '@worldview/query-engine';
-import type { SearchResult } from '@worldview/ipc-contract';
+import { DEFAULT_COMMANDS } from '@opcb/query-engine';
+import type { SearchResult } from '@opcb/ipc-contract';
 import { DemoClient } from '../demo/demo-client.js';
 import { loadInitialState } from './bootstrap-state.js';
 import { rootReducer } from './reducer.js';

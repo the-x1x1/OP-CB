@@ -13,7 +13,7 @@
  * format keeps electron-builder's `main` entry unambiguous. Workspace packages are
  * bundled from TypeScript source through tsconfig.base.json `paths`; Electron and
  * native modules stay external. Build facts (commit, channel, signing) are injected
- * as `__WORLDVIEW_BUILD__` (src/main/build-info.ts).
+ * as `__OPCB_BUILD__` (src/main/build-info.ts).
  *
  * esbuild is resolved from node_modules at run time so this script can be linted
  * and type-checked in environments where it is not installed.
@@ -46,15 +46,11 @@ function gitCommit() {
 }
 
 const build = {
-  commit: process.env.WORLDVIEW_COMMIT || gitCommit(),
+  commit: process.env.OPCB_COMMIT || gitCommit(),
   channel:
-    process.env.WORLDVIEW_CHANNEL === 'stable'
-      ? 'stable'
-      : process.env.WORLDVIEW_CHANNEL === 'prerelease'
-        ? 'prerelease'
-        : 'dev',
+    process.env.OPCB_CHANNEL === 'stable' ? 'stable' : process.env.OPCB_CHANNEL === 'prerelease' ? 'prerelease' : 'dev',
   // Only the packaging job sets this, and only when a certificate was actually used (ADR-012).
-  signed: process.env.WORLDVIEW_SIGNED === '1',
+  signed: process.env.OPCB_SIGNED === '1',
   buildTime: new Date().toISOString(),
   // For the MCP server (src/mcp), which runs without Electron's app.getVersion().
   version: JSON.parse(readFileSync(path.join(appDir, 'package.json'), 'utf8')).version,
@@ -71,7 +67,7 @@ const common = {
   legalComments: 'linked',
   tsconfig: path.join(workspaceRoot, 'tsconfig.base.json'),
   external: ['electron', 'electron-updater', '@duckdb/node-api', '@duckdb/node-bindings'],
-  define: { __WORLDVIEW_BUILD__: JSON.stringify(build) },
+  define: { __OPCB_BUILD__: JSON.stringify(build) },
   logLevel: 'info',
 };
 
@@ -89,11 +85,11 @@ const targets = [
     outfile: path.join(appDir, 'dist', 'main', 'geodata-worker.cjs'),
   },
   {
-    // The MCP server for AI clients (src/mcp/worldview-mcp.ts), run by the client as
-    // `ELECTRON_RUN_AS_NODE=1 <WorldView executable> <this file>`; unpacked like the worker.
+    // The MCP server for AI clients (src/mcp/opcb-mcp.ts), run by the client as
+    // `ELECTRON_RUN_AS_NODE=1 <OP-CB executable> <this file>`; unpacked like the worker.
     ...common,
-    entryPoints: [path.join(appDir, 'src', 'mcp', 'worldview-mcp.ts')],
-    outfile: path.join(appDir, 'dist', 'mcp', 'worldview-mcp.cjs'),
+    entryPoints: [path.join(appDir, 'src', 'mcp', 'opcb-mcp.ts')],
+    outfile: path.join(appDir, 'dist', 'mcp', 'opcb-mcp.cjs'),
   },
   {
     ...common,

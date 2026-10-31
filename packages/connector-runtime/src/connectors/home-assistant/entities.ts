@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import { resolveTransform } from '@worldview/connector-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import { resolveTransform } from '@opcb/connector-sdk';
 
 /**
  * Home Assistant entities as records a definition's mapping can read (phase

@@ -1,9 +1,9 @@
-import { isValidBounds, type GeoBounds } from '@worldview/world-model';
-import { isLoopbackHost, isNameableHost } from '@worldview/provider-sdk';
+import { isValidBounds, type GeoBounds } from '@opcb/world-model';
+import { isLoopbackHost, isNameableHost } from '@opcb/provider-sdk';
 
 /**
  * A Martin tile server (maplibre.org/martin) as a basemap source: the operator names the
- * URL of one of its sources, WORLDVIEW reads that source's TileJSON for the tile template,
+ * URL of one of its sources, OP-CB reads that source's TileJSON for the tile template,
  * zoom range, bounds and attribution, and draws the vector tiles with its own styles.
  *
  * Which URLs may be named follows the local-endpoint policy (ADR-003): a loopback address,
@@ -193,7 +193,7 @@ export function parseMartinTileJson(
     if (tile.protocol !== source.url.protocol || tile.origin !== source.url.origin)
       return {
         ok: false,
-        reason: `tile template "${raw}" is on ${tile.origin}, not on the Martin server ${source.url.origin}; set Martin's base URL to the address WORLDVIEW uses`,
+        reason: `tile template "${raw}" is on ${tile.origin}, not on the Martin server ${source.url.origin}; set Martin's base URL to the address OP-CB uses`,
       };
     if (tile.username || tile.password) return { ok: false, reason: `tile template "${raw}" carries credentials` };
     tiles.push(new URL(raw, source.url).toString().replace(/%7B([zxy])%7D/gi, '{$1}'));

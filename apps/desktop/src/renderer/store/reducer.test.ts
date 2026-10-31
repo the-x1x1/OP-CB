@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
-import type { TimelineState, WorldChangedEvent } from '@worldview/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
+import type { TimelineState, WorldChangedEvent } from '@opcb/ipc-contract';
 import { initialState, rootReducer, MAX_FEED_ITEMS } from './reducer.js';
 import type { RootState } from './types.js';
 

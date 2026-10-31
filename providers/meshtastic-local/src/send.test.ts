@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import { createProvider, TEST_MESSAGE_WAIT_MS, type Timers } from './index.js';
 import { nodeNum, readFromRadio, textPacketFrame } from './wire.js';
 import { concat, fromRadio, nodeInfo, routingReport, user } from '../test/encode.js';

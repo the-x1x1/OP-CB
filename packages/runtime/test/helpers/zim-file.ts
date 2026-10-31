@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import zlib from 'node:zlib';
-import { ZIM_MAGIC } from '@worldview/offline';
+import { ZIM_MAGIC } from '@opcb/offline';
 
 /** A small ZIM file built here for tests, laid out as packages/offline/src/zim.ts describes. */
 export interface ZimItemSpec {

@@ -2,7 +2,7 @@
   "request": "GET /v1",
   "status": 200,
   "body": {
-    "api": "worldview-local",
+    "api": "opcb-local",
     "version": 1,
     "app": {
       "version": "0.2.2",

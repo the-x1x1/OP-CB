@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/tool-benchmark",
+  "name": "@opcb/tool-benchmark",
   "version": "0.1.0",
   "private": true,
   "description": "Presentation/rendering benchmark CLI: writes artifacts/verification/benchmarks/*.json (ADR-008 evidence for the deck.gl decision).",
@@ -11,8 +11,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@worldview/render-dense": "workspace:*",
-    "@worldview/render-core": "workspace:*"
+    "@opcb/render-dense": "workspace:*",
+    "@opcb/render-core": "workspace:*"
   },
   "sideEffects": false
 }

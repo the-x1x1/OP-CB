@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { ConnectorRegistry, defaultConnectorRegistry } from './registry.js';
 
 /**

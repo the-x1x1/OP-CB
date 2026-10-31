@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { JsonValue, Clock } from '@worldview/world-model';
+import type { JsonValue, Clock } from '@opcb/world-model';
 import type {
   ProviderContext,
   ProviderHttp,

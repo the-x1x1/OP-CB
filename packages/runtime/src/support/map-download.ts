@@ -22,9 +22,9 @@ import {
   type WorldPackManifest,
   type WorldPackRegistry,
   type WorldPackSourcePolicy,
-} from '@worldview/offline';
-import type { Logger } from '@worldview/core';
-import type { MapBuildInfo, MapDownloadRequest, MapDownloadStatus } from '@worldview/ipc-contract';
+} from '@opcb/offline';
+import type { Logger } from '@opcb/core';
+import type { MapBuildInfo, MapDownloadRequest, MapDownloadStatus } from '@opcb/ipc-contract';
 
 /**
  * Offline maps downloaded from inside the app (2026-10-30): the whole world down to a chosen

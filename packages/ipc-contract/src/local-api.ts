@@ -1,7 +1,7 @@
 /**
  * The local read-only API, version 1 (docs/adr/ADR-014-local-api.md, docs/cyberdeck M6): what
  * another program of the same user on this computer — Formicaria, later — may read from a running
- * WORLDVIEW. HTTP/1.1 GET over a Unix socket; JSON in every answer. Nothing can be changed
+ * OP-CB. HTTP/1.1 GET over a Unix socket; JSON in every answer. Nothing can be changed
  * through it, nothing it answers is outside the data policies, and it is off unless the operator
  * turns it on.
  *
@@ -28,7 +28,7 @@ export interface LocalApiError {
 }
 
 export interface LocalApiIndex {
-  api: 'worldview-local';
+  api: 'opcb-local';
   version: 1;
   app: { version: string; channel: string; commit: string };
   endpoints: string[];

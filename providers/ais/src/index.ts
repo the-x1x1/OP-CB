@@ -1,4 +1,4 @@
-import { boundsContain, type GeoBounds, type IsoTimestamp, type Observation } from '@worldview/world-model';
+import { boundsContain, type GeoBounds, type IsoTimestamp, type Observation } from '@opcb/world-model';
 import {
   ProviderError,
   buildObservation,
@@ -12,7 +12,7 @@ import {
   type ProviderStatus,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { AISSTREAM_MANIFEST, AISSTREAM_CREDENTIAL_KEY, AISSTREAM_URL } from './manifest.js';
 import { decodeAisFrame, normalizeAisEnvelope } from './normalize.js';
 import { buildSubscriptionFrame } from './subscription.js';

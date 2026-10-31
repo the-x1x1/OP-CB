@@ -6,7 +6,7 @@ import type {
   WorldBridge,
   WorldClient,
   WorldEvents,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import { fromWire, isJsonWire } from '../shared/event-wire.js';
 import { noteDecode } from './map/delta-marks.js';
 

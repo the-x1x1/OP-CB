@@ -1,6 +1,6 @@
-import { readKml } from '@worldview/connector-runtime';
-import type { WatchZone } from '@worldview/ipc-contract';
-import { simplifyRing, type GeoRegion } from '@worldview/world-model';
+import { readKml } from '@opcb/connector-runtime';
+import type { WatchZone } from '@opcb/ipc-contract';
+import { simplifyRing, type GeoRegion } from '@opcb/world-model';
 import { xmlText } from './collection-geodata.js';
 
 /**
@@ -110,8 +110,8 @@ export function zonesToGeodata(
       '<?xml version="1.0" encoding="UTF-8"?>',
       '<kml xmlns="http://www.opengis.net/kml/2.2">',
       '  <Document>',
-      '    <name>WorldView watch zones</name>',
-      `    <description>${xmlText(`Exported from WorldView ${exportedAt}`)}</description>`,
+      '    <name>OP-CB watch zones</name>',
+      `    <description>${xmlText(`Exported from OP-CB ${exportedAt}`)}</description>`,
     ];
     for (const { zone, ring } of shapes) {
       const closed = [...ring, ring[0]!].map(([lon, lat]) => `${num(lon)},${num(lat)}`).join(' ');
@@ -143,7 +143,7 @@ export function zonesToGeodata(
     },
   }));
   return {
-    text: JSON.stringify({ type: 'FeatureCollection', name: 'WorldView watch zones', exportedAt, features }, null, 2),
+    text: JSON.stringify({ type: 'FeatureCollection', name: 'OP-CB watch zones', exportedAt, features }, null, 2),
     written: shapes.length,
     skipped,
   };
@@ -175,7 +175,7 @@ function outline(coords: unknown): Array<[number, number]> | 'antimeridian' | un
 
 /**
  * The shapes of a KML or GeoJSON file as zone drafts: each polygon's outer ring (holes are not
- * kept), each part of a multipolygon its own zone; a GeoJSON feature WorldView wrote with a
+ * kept), each part of a multipolygon its own zone; a GeoJSON feature OP-CB wrote with a
  * `circle` comes back as that circle. Points and lines are not zones; they, shapes across the
  * 180° meridian and bad rings are counted in `issues`.
  */

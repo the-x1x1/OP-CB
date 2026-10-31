@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Observation } from '@worldview/world-model';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import type { Observation } from '@opcb/world-model';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { credentialRef, endpointCredential } from './credentials.js';
 import { finiteNumber, isPlainObject } from './json.js';
 import { RECONNECT_MAX_MS, RECONNECT_MIN_MS, nextRetryMs } from './limits.js';

@@ -48,19 +48,19 @@ gate at `092133a`, 2026-10-05: 16/16 exit=0; tests 2,125 pass / 5 skipped; insta
 
 ### v0.2.2 on Linux, before any change (container, 2026-10-08 16:33 HST)
 
-The released `WorldView-Portable-0.2.2.zip` (SHA-256 `29eaccbd…6d7`, matches the release's
+The released `OP-CB-Portable-0.2.2.zip` (SHA-256 `29eaccbd…6d7`, matches the release's
 `SHA256SUMS.txt`) had its `app.asar` placed into the official Electron 44.5.1 linux-x64 build
 and was launched under Xvfb, as an unprivileged user, sandbox on, D-Bus session, no keyring.
 
-| Check                                                                                                                                       | Result                                                                                                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Boots, single instance, migrations, 44 providers, `runtime started`                                                                         | **PASS**                                                                                                                                                |
-| User data at `~/.config/@worldview/desktop` (XDG via Electron)                                                                              | **PASS**                                                                                                                                                |
-| Renderer mounts through `worldview://app` (watchdog found `#root` children; screenshot shows the welcome dialog, lenses, sources, timeline) | **PASS**                                                                                                                                                |
-| Chromium sandbox on, no `--no-sandbox` (container allows unprivileged user namespaces)                                                      | **PASS** (does not represent Ubuntu 24.04+'s AppArmor restriction)                                                                                      |
-| DuckDB                                                                                                                                      | **expected fallback**: the zip carries only the Windows binding; "DuckDB backend unavailable, falling back to NDJSON", reason logged, history in NDJSON |
-| Keyring                                                                                                                                     | "OS secure storage unavailable" startup finding                                                                                                         |
-| Map                                                                                                                                         | **SIMULATED/no GPU**: "WebGL2 blocklisted"; MapLibre's "WebGL2 is required" error                                                                       |
+| Check                                                                                                                                  | Result                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Boots, single instance, migrations, 44 providers, `runtime started`                                                                    | **PASS**                                                                                                                                                |
+| User data at `~/.config/OP-CB` (XDG via Electron)                                                                                      | **PASS**                                                                                                                                                |
+| Renderer mounts through `opcb://app` (watchdog found `#root` children; screenshot shows the welcome dialog, lenses, sources, timeline) | **PASS**                                                                                                                                                |
+| Chromium sandbox on, no `--no-sandbox` (container allows unprivileged user namespaces)                                                 | **PASS** (does not represent Ubuntu 24.04+'s AppArmor restriction)                                                                                      |
+| DuckDB                                                                                                                                 | **expected fallback**: the zip carries only the Windows binding; "DuckDB backend unavailable, falling back to NDJSON", reason logged, history in NDJSON |
+| Keyring                                                                                                                                | "OS secure storage unavailable" startup finding                                                                                                         |
+| Map                                                                                                                                    | **SIMULATED/no GPU**: "WebGL2 blocklisted"; MapLibre's "WebGL2 is required" error                                                                       |
 
 ## M1 — native Linux app and packaging (branch `feature/linux-cyberdeck-readiness`)
 
@@ -92,7 +92,7 @@ Chromium's `key_storage_util_linux.cc`. Confirmed and fixed in the second commit
    app process's command line from `/proc` (negative control below).
 3. **The GNOME Keyring CI check could not have passed**: Chromium picks `basic_text` on any
    desktop it does not recognise (CI sets none), even with a keyring running — and so would
-   sway/i3/Hyprland/LXQt users. → WORLDVIEW passes `--password-store=gnome-libsecret` except on
+   sway/i3/Hyprland/LXQt users. → OP-CB passes `--password-store=gnome-libsecret` except on
    KDE; still refused when no Secret Service answers (observed below).
 
 Not acted on: the smoke test's mount signal depends on the watchdog's media probe succeeding
@@ -140,7 +140,7 @@ says so rather than guessing.
 | Linux `pnpm install --frozen-lockfile`, lint, real-library typecheck, tests                                                        | CI `linux` job                         | **UNVERIFIED** until the job runs                                                                                         |
 | `.deb` build; `assert-version --platform linux`; SBOM; hashes                                                                      | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
 | `.deb` contents: menu entry validates, Linux DuckDB binding unpacked, AppArmor profile present                                     | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
-| `apt install ./worldview_*.deb` on a clean Ubuntu 24.04 runner; sandbox under AppArmor                                             | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
+| `apt install ./opcb_*.deb` on a clean Ubuntu 24.04 runner; sandbox under AppArmor                                                  | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
 | Installed app smoke: DuckDB loads (`duckdb-parquet`), keys refused without keyring, usable with GNOME Keyring, restart persistence | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
 | `apt remove` leaves user data                                                                                                      | CI `linux` job                         | **UNVERIFIED**                                                                                                            |
 | Windows still packages and passes its gate                                                                                         | CI `windows` job or laptop `check.bat` | **UNVERIFIED on this branch** (Windows code paths unchanged by design; `package.mjs` dispatches to the same `--win` flag) |
@@ -155,8 +155,8 @@ gh workflow run build-desktop.yml --ref feature/linux-cyberdeck-readiness -f ref
 gh run list --workflow build-desktop.yml --branch feature/linux-cyberdeck-readiness --limit 1
 ```
 
-Artifacts `worldview-linux-x64` (the `.deb`, `SHA256SUMS.txt`, SBOM, verification report,
-`linux-smoke-*.json`, `.deb` contents) and `worldview-windows-x64`. Nothing is released.
+Artifacts `opcb-linux-x64` (the `.deb`, `SHA256SUMS.txt`, SBOM, verification report,
+`linux-smoke-*.json`, `.deb` contents) and `opcb-windows-x64`. Nothing is released.
 
 ## M2 — data vaults (container, 2026-10-08)
 
@@ -270,8 +270,8 @@ on loopback only: `--net --net-bind-address 127.0.0.1 --net-ri-port 30001 --net-
 Without `--lat/--lon` readsb held the position back over the same feed: documented in
 RTL-SDR.md.
 
-**WORLDVIEW on that decoder.** `packages/runtime/test/integration/readsb-live.test.ts` (opt-in:
-`WORLDVIEW_READSB_API`, `WORLDVIEW_READSB_RAW`) — the composed runtime with the readsb-local
+**OP-CB on that decoder.** `packages/runtime/test/integration/readsb-live.test.ts` (opt-in:
+`OPCB_READSB_API`, `OPCB_READSB_RAW`) — the composed runtime with the readsb-local
 provider, its real HTTP client, host allowlist and detection probe, endpoint
 `http://127.0.0.1:8042/?all`: 40621D reaches `world.query` at one of the two reference positions,
 38000 ft = 11582.4 m, provenance `readsb-local` / origin `local` / sourceRef the endpoint; the
@@ -429,7 +429,7 @@ router. **State engine**: every provider that fed an object is remembered past t
 **Socket** (`packages/runtime/test/integration/local-api.test.ts`, 5 tests, the composed runtime):
 off by default, no socket; on, folder 0700, socket 0600, the example consumer run as a separate
 process reads `/v1`, `/v1/objects` (bounded); own position refused, then allowed; a different
-user (`nobody`) cannot open it; turned off, the socket goes and the consumer says WORLDVIEW is not
+user (`nobody`) cannot open it; turned off, the socket goes and the consumer says OP-CB is not
 there. A file at the path, or a live socket of another server, is refused and left alone; a
 runtime folder writable by others is refused; 125 requests in a minute → 119 + the POST answered,
 the rest 429; a POST with a body gets 405 without the body being read; a connection that never
@@ -476,9 +476,9 @@ Every gate the spec lists that the container can run, on the branch head:
 Written: [READINESS.md](READINESS.md) (the checklist: owner, environment, evidence, status for
 every gate and for field demonstration steps A–I), [USB-DEVICES.md](USB-DEVICES.md) (permissions,
 udev, stable names, what gets in the way), [EXTERNAL-SSD.md](EXTERNAL-SSD.md) (formatting,
-mounting, what WORLDVIEW does with a vault), the Linux section of
+mounting, what OP-CB does with a vault), the Linux section of
 `docs/releases/RELEASE-PROCESS.md`, and an index ([README.md](README.md)). The guides' device
-behaviour is from documentation and WORLDVIEW's own tested code; their walk-through on the P16s
+behaviour is from documentation and OP-CB's own tested code; their walk-through on the P16s
 is part of H7–H11.
 
 ## CI on the branch (GitHub, 2026-10-08)

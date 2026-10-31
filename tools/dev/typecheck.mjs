@@ -142,7 +142,7 @@ writeFileSync(
 process.exit(failed ? 1 : 0);
 
 function readPaths() {
-  // Merge base paths so generated config keeps @worldview/* mappings.
+  // Merge base paths so generated config keeps @opcb/* mappings.
   try {
     const base = JSON.parse(readFileSync(path.join(root, 'tsconfig.base.json'), 'utf8'));
     return base.compilerOptions?.paths ?? {};

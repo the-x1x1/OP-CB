@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { Icon } from '@worldview/ui';
+import { Icon } from '@opcb/ui';
 import {
   clampSplit,
   reconcileSplit,
@@ -7,8 +7,8 @@ import {
   stepSplit,
   type ImagerySplit,
   type SplitCandidate,
-} from '@worldview/render-core';
-import type { RasterOverlay } from '@worldview/world-model';
+} from '@opcb/render-core';
+import type { RasterOverlay } from '@opcb/world-model';
 
 /**
  * The imagery comparison's divider (render-core imagery-split.ts): a vertical line across the

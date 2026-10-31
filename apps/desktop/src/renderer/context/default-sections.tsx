@@ -8,7 +8,7 @@ import {
   toUps,
   toUtm,
   type GeoPosition,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import {
   Button,
   FieldList,
@@ -23,7 +23,7 @@ import {
   formatSpeed,
   formatUtcDateTime,
   formatVerticalRate,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { contextRegistry, type ContextSection } from './registry.js';
 import { displayName, safeHttpsUrl } from './props.js';
 import { TrackHistory } from './track-history.js';

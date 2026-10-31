@@ -1,4 +1,4 @@
-import type { CollectionItem } from '@worldview/ipc-contract';
+import type { CollectionItem } from '@opcb/ipc-contract';
 
 /** Whether a selection (object or event id) is already an item of a collection. */
 export function isCollected(items: readonly CollectionItem[], selectedId: string | null | undefined): boolean {

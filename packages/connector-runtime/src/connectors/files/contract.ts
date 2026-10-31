@@ -1,11 +1,11 @@
-import type { ProviderLocalAccess, ProviderManifest, Ogr2ogrAccess } from '@worldview/provider-sdk';
-import type { ConnectorProviderDefinition, FileSpec } from '@worldview/connector-sdk';
+import type { ProviderLocalAccess, ProviderManifest, Ogr2ogrAccess } from '@opcb/provider-sdk';
+import type { ConnectorProviderDefinition, FileSpec } from '@opcb/connector-sdk';
 
 /**
  * The contracts the file connectors use, as the SDKs now hold them (ADR-003 and ADR-013
  * amendments of 2026-09-23, landed with phase `files`): the definition's `file` block and
- * its schema live in `@worldview/connector-sdk`; the granted folder, its path rule and
- * `ogr2ogr` in `@worldview/provider-sdk`. What remains here is the connectors' own view of
+ * its schema live in `@opcb/connector-sdk`; the granted folder, its path rule and
+ * `ogr2ogr` in `@opcb/provider-sdk`. What remains here is the connectors' own view of
  * a host: whether this one grants a folder, and whether it converts.
  */
 export {
@@ -18,8 +18,8 @@ export {
   fileSpecSchema,
   type FileFormat,
   type FileSpec,
-} from '@worldview/connector-sdk';
-export type { GrantedFileStat, Ogr2ogrAccess, Ogr2ogrDetection, Ogr2ogrRequest } from '@worldview/provider-sdk';
+} from '@opcb/connector-sdk';
+export type { GrantedFileStat, Ogr2ogrAccess, Ogr2ogrDetection, Ogr2ogrRequest } from '@opcb/provider-sdk';
 
 /** A definition that reads a file: the same type, named for the connectors that need the block. */
 export type FileConnectorDefinition = ConnectorProviderDefinition & { file?: FileSpec };

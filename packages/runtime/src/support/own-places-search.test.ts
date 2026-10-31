@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Collection, WatchZone } from '@worldview/ipc-contract';
+import type { Collection, WatchZone } from '@opcb/ipc-contract';
 import { ownPlaceResults } from './own-places-search.js';
 
 const at = '2026-10-05T00:00:00.000Z';

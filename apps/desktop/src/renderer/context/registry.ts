@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import type { ShellActions } from '../store/actions.js';
 import type { FlightState, TrackPoint } from '../store/types.js';
 

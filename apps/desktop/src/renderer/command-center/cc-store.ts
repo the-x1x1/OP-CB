@@ -18,8 +18,8 @@ import type {
   OperatingMode,
   PrepRecord,
   WorldClient,
-} from '@worldview/ipc-contract';
-import type { WorldObject } from '@worldview/world-model';
+} from '@opcb/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, type LastSearch } from './checks.js';
 import type { SectionId } from './guide-types.js';
 

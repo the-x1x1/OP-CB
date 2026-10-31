@@ -6,7 +6,7 @@ import {
   timeRangeSchema,
   worldQuerySchema,
   type Schema,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import {
   GEODATA_MAX_FILE_BYTES,
   LOCAL_SERVICE_IDS,
@@ -16,7 +16,7 @@ import {
   readLibraryDownloadRequest,
   readLibraryOpenRequest,
   readPrepRecord,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import type {
   RequestChannel,
   RequestOf,
@@ -25,9 +25,9 @@ import type {
   CameraSourceInput,
   WorldSubscribeRequest,
   TimelineState,
-} from '@worldview/ipc-contract';
-import type { LensDefinition, RenderingRule } from '@worldview/render-core';
-import { appSettingsPatchSchema } from '@worldview/config';
+} from '@opcb/ipc-contract';
+import type { LensDefinition, RenderingRule } from '@opcb/render-core';
+import { appSettingsPatchSchema } from '@opcb/config';
 
 /**
  * One request schema per IPC channel. The mapped type makes the catalogue

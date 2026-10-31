@@ -1,7 +1,7 @@
 # UI architecture — design system and React shell
 
-Packages: `@worldview/ui` (packages/ui) and the renderer shell (apps/desktop/src/renderer).
-The shell consumes exactly one runtime API: `WorldClient` from `@worldview/ipc-contract`
+Packages: `@opcb/ui` (packages/ui) and the renderer shell (apps/desktop/src/renderer).
+The shell consumes exactly one runtime API: `WorldClient` from `@opcb/ipc-contract`
 (the preload bridge in Electron, `DemoClient` in the browser/demo build). It never imports
 providers, engines, Electron or `node:*` (tools/dev/boundary-check.mjs enforces this).
 
@@ -28,7 +28,7 @@ The grid lives in `shell.css` (`.wv-shell`); sizes come from tokens (`--wv-topba
 `--wv-context-w`, `--wv-timeline-h`). Text scale (`--wv-text-scale`) and reduced motion
 (`:root[data-reduced-motion]`) are applied at the root from `AppSettings`.
 
-## Design system (`@worldview/ui`, directive §55)
+## Design system (`@opcb/ui`, directive §55)
 
 - `tokens.css`: 4-pt spacing, Inter/system-ui type with tabular numerals for data (`.wv-num`,
   `.wv-mono`), dark technical palette (`#0b0f14` background, surface layers, text hierarchy
@@ -86,7 +86,7 @@ The grid lives in `shell.css` (`.wv-shell`); sizes come from tokens (`--wv-topba
 - Map host (`map/map-host.tsx`): mounts the injected `RendererHostLike`, turns picks into
   selection, throttles `viewChanged` → `world.viewport` (500 ms), re-subscribes when the
   quantised bounds/lens/selection change, and runs `presentObjects` + `diffFeatures` from
-  `@worldview/render-core` on the mirror at animation-frame cadence.
+  `@opcb/render-core` on the mirror at animation-frame cadence.
 - `RendererHostLike` (`renderer-host-like.ts`) is the minimal surface the shell needs
   (`mount/unmount/setMode/activeMode/supportsMode?/getView/flyTo/select/setLens/setFeatures?/
 setAttribution?/on`). The production `RendererHost` from render-core satisfies it
@@ -110,7 +110,7 @@ its track, related items, source entries, the shell actions and `nowMs`; `render
 
 1. Create `apps/desktop/src/renderer/context/sections/<type>.tsx`:
    ```tsx
-   import { FieldList } from '@worldview/ui';
+   import { FieldList } from '@opcb/ui';
    import { contextRegistry } from '../registry.js';
    import { num, str } from '../props.js';
    contextRegistry.register('storm', [
@@ -156,7 +156,7 @@ ISS-like satellite that move as pure functions of elapsed time, a fire detection
 alert polygon and a camera whose snapshot is a synthetic SVG. Sources cover LIVE, STALE,
 AUTH_REQUIRED, OFFLINE, RATE_LIMITED and DISABLED. `app.info.demoMode` is true, every
 object's provenance is `recorded`, every feed item carries `recorded: true`, and the shell
-shows the RECORDED DATA banner. `pnpm --filter @worldview/desktop dev:browser` serves the
+shows the RECORDED DATA banner. `pnpm --filter @opcb/desktop dev:browser` serves the
 shell with this client and the canvas host.
 
 ## Verification

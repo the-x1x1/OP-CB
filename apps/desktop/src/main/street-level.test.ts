@@ -117,7 +117,7 @@ test('street level: one request a second, cached an hour, nothing sent offline o
       sent.push(url);
       return new Response(JSON.stringify(ANSWER), { status: 200 });
     }) as unknown as typeof fetch,
-    userAgent: 'WorldView test',
+    userAgent: 'OP-CB test',
     isOnline: () => online,
     enabled: () => enabled,
     now: () => now,
@@ -158,7 +158,7 @@ test('street level: a service that fails is said, and asked again after two minu
             : 'busy',
         { status: url === INSTANCES_URL ? 200 : status },
       )) as unknown as typeof fetch,
-    userAgent: 'WorldView test',
+    userAgent: 'OP-CB test',
     isOnline: () => true,
     enabled: () => true,
     now: () => now,

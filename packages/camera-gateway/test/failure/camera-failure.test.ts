@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
-import { ProviderHost } from '@worldview/provider-runtime';
-import { WorldState } from '@worldview/state-engine';
-import { testing as sdkTesting } from '@worldview/provider-sdk';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
+import { ProviderHost } from '@opcb/provider-runtime';
+import { WorldState } from '@opcb/state-engine';
+import { testing as sdkTesting } from '@opcb/provider-sdk';
 import {
   createProvider as createPublicCameras,
   FINTRAFFIC_STATIONS_URL,
   PUBLIC_CAMERA_PACKS,
-} from '@worldview/provider-cctv-public';
+} from '@opcb/provider-cctv-public';
 import {
   CameraError,
   CameraHub,

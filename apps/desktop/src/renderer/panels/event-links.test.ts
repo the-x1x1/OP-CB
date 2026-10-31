@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent } from '@worldview/world-model';
+import type { WorldEvent } from '@opcb/world-model';
 import { aftershockSequence, eventHistory, eventLinks, eventSeries, seriesPath } from './event-links.js';
 
 test('an event lists the events it names: its replacement, what it replaces, its mainshock', () => {

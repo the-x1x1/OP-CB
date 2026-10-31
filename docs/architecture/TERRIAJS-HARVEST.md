@@ -1,6 +1,6 @@
 # TerriaJS harvest
 
-What WORLDVIEW takes from TerriaJS (Apache-2.0, CSIRO Data61), what it takes only as a
+What OP-CB takes from TerriaJS (Apache-2.0, CSIRO Data61), what it takes only as a
 design, and what it does not take at all. Nothing is copied into this repository without
 its licence header and a line in `THIRD_PARTY_NOTICES`; the default is to take the
 knowledge, not the code, because Terria's catalog items are written against Cesium's data

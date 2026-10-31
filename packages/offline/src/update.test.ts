@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import { buildUpdatePack } from './delta.js';
 import { WorldPackRegistry } from './registry.js';
 import { generatePackKeyPair } from './signature.js';

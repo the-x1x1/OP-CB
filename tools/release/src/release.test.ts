@@ -43,11 +43,11 @@ function scaffoldRepo(withLock: boolean): string {
   mkdirSync(path.join(dir, 'config', 'licenses'), { recursive: true });
   writeFileSync(
     path.join(dir, 'packages', 'core', 'package.json'),
-    JSON.stringify({ name: '@worldview/core', version: '0.1.0' }),
+    JSON.stringify({ name: '@opcb/core', version: '0.1.0' }),
   );
   writeFileSync(
     path.join(dir, 'apps', 'desktop', 'package.json'),
-    JSON.stringify({ name: '@worldview/desktop', version: '0.1.0-rc.1' }),
+    JSON.stringify({ name: '@opcb/desktop', version: '0.1.0-rc.1' }),
   );
   writeFileSync(
     path.join(dir, 'config', 'licenses', 'software.json'),
@@ -82,17 +82,17 @@ test('sbom: CycloneDX shape, runtime-only by default, sidecars included, determi
     const sbom = buildSbom({ root: dir, version: '0.1.0-rc.1', commit: 'abc123', now: () => 0 });
     assert.equal(sbom.bomFormat, 'CycloneDX');
     assert.equal(sbom.specVersion, '1.5');
-    assert.equal(sbom.metadata.component.name, 'WorldView');
+    assert.equal(sbom.metadata.component.name, 'OP-CB');
     const names = sbom.components.map((c) => c.name);
     assert.ok(names.includes('cesium'));
     assert.ok(!names.includes('typescript'), 'devDependencies are excluded from a release SBOM');
-    assert.ok(names.includes('@worldview/core'), 'workspace packages are listed');
+    assert.ok(names.includes('@opcb/core'), 'workspace packages are listed');
     assert.ok(names.includes('go2rtc'), 'optional sidecars are listed');
     assert.equal(sbom.components.find((c) => c.name === 'readsb')?.scope, 'excluded');
     assert.equal(sbom.components.find((c) => c.name === 'cesium')?.purl, 'pkg:npm/cesium@1.124.0');
     assert.equal(sbom.components.find((c) => c.name === '@duckdb/node-api')?.purl, 'pkg:npm/%40duckdb/node-api@1.1.3');
     assert.ok(sbom.components.find((c) => c.name === 'cesium')?.hashes?.[0]?.alg === 'SHA-512');
-    assert.equal(sbom.metadata.properties.find((p) => p.name === 'worldview:lockfile')?.value, 'pnpm-lock.yaml (v9.0)');
+    assert.equal(sbom.metadata.properties.find((p) => p.name === 'opcb:lockfile')?.value, 'pnpm-lock.yaml (v9.0)');
     const again = buildSbom({ root: dir, version: '0.1.0-rc.1', commit: 'abc123', now: () => 1000 });
     assert.equal(again.serialNumber, sbom.serialNumber, 'serial is deterministic for identical inputs');
     const withDev = buildSbom({ root: dir, version: '0.1.0-rc.1', includeDev: true, now: () => 0 });
@@ -106,10 +106,10 @@ test('sbom: a missing lockfile is stated, not faked', () => {
   const dir = scaffoldRepo(false);
   try {
     const sbom = buildSbom({ root: dir, version: '0.1.0-rc.1', now: () => 0 });
-    assert.equal(sbom.metadata.properties.find((p) => p.name === 'worldview:lockfile')?.value, 'absent');
-    assert.equal(sbom.metadata.properties.find((p) => p.name === 'worldview:lockfileSha256')?.value, 'n/a');
+    assert.equal(sbom.metadata.properties.find((p) => p.name === 'opcb:lockfile')?.value, 'absent');
+    assert.equal(sbom.metadata.properties.find((p) => p.name === 'opcb:lockfileSha256')?.value, 'n/a');
     assert.ok(sbom.components.every((c) => !c.purl || c.purl.startsWith('pkg:npm/')));
-    assert.ok(sbom.components.some((c) => c.name === '@worldview/core'));
+    assert.ok(sbom.components.some((c) => c.name === '@opcb/core'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -156,7 +156,7 @@ test('verification report: collects evidence, hashes artifacts, reports gaps hon
       path.join(dir, 'docs', 'releases', 'KNOWN-LIMITATIONS.md'),
       '# Known limitations\n\n- Offline 3D terrain is ellipsoid only.\n- OpenSky is excluded by licence.\n',
     );
-    writeFileSync(path.join(dir, 'release-out', 'WorldView-Setup-0.1.0-rc.1.exe'), 'fake installer bytes');
+    writeFileSync(path.join(dir, 'release-out', 'OP-CB-Setup-0.1.0-rc.1.exe'), 'fake installer bytes');
 
     const report = buildVerificationReport({
       root: dir,
@@ -174,7 +174,7 @@ test('verification report: collects evidence, hashes artifacts, reports gaps hon
     assert.ok(report.notVerifiedHere.some((n) => n.includes('declaration shims')));
     assert.ok(report.notVerifiedHere.some((n) => n.includes('dependency audit')));
     assert.equal(report.sbom.present, false);
-    assert.match(sha256SumsText(report.artifactHashes), /^[0-9a-f]{64} {2}WorldView-Setup-0\.1\.0-rc\.1\.exe\n$/);
+    assert.match(sha256SumsText(report.artifactHashes), /^[0-9a-f]{64} {2}OP-CB-Setup-0\.1\.0-rc\.1\.exe\n$/);
 
     // A failing test group or provider flips the gate.
     writeFileSync(

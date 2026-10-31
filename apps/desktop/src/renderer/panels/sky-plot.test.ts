@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { SkyOverheadAnswer, SkySatellite } from '@worldview/ipc-contract';
+import type { SkyOverheadAnswer, SkySatellite } from '@opcb/ipc-contract';
 import { PLOT_RADIUS, auroraText, lookText, polarXY, skySummary, visibleToEye } from './sky-plot.js';
 
 const sat = (id: string, elevationDeg: number, over: Partial<SkySatellite> = {}): SkySatellite => ({

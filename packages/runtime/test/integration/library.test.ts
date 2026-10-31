@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import type { LibraryDownloadStatus, WorldClient } from '@worldview/ipc-contract';
+import type { LibraryDownloadStatus, WorldClient } from '@opcb/ipc-contract';
 import { readCatalog, readMetalink } from '../../src/index.js';
 import { startRuntime } from '../helpers/harness.js';
 import { buildZim, type ZimItemSpec } from '../helpers/zim-file.js';
@@ -244,7 +244,7 @@ test('library: a damaged download fails the checksum the ZIM file ends with', as
 test('library: a stopped book download carries on after a restart', async () => {
   const file = buildZim(items, { minor: 2 });
   const stallAt = Math.floor(file.length / 3);
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-library-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-library-'));
   try {
     const k = fakeKiwix(file, { stallAt });
     const h = await startRuntime({ fetchImpl: k.fetchImpl, dataDir });

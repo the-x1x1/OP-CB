@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { formatUtcDateTime, formatUtcTime } from '@worldview/ui';
+import { formatUtcDateTime, formatUtcTime } from '@opcb/ui';
 import {
   downsample,
   formatReading,
@@ -14,7 +14,7 @@ import {
   type ReadingWindow,
   type TelemetryOrigin,
   type TelemetrySeries,
-} from '@worldview/telemetry';
+} from '@opcb/telemetry';
 
 const W = 1000;
 const H = 100;

@@ -12,7 +12,7 @@ import type { WorldProvider } from './provider.js';
  * runtime says so wherever it shows one.
  */
 export interface FlightRouteRequest {
-  /** WORLDVIEW object id of the selected aircraft. */
+  /** OP-CB object id of the selected aircraft. */
   objectId: string;
   /**
    * The callsign as the aircraft broadcasts it, upper-case and trimmed (`BAW123`). The

@@ -1,5 +1,5 @@
-import type { GeoPosition } from '@worldview/world-model';
-import { splitAtAntimeridian, type RenderFeature, type ViewState } from '@worldview/render-core';
+import type { GeoPosition } from '@opcb/world-model';
+import { splitAtAntimeridian, type RenderFeature, type ViewState } from '@opcb/render-core';
 
 /**
  * The latitude and longitude grid (G, Settings → Rendering): lines every so many degrees across what

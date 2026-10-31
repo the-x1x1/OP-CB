@@ -10,9 +10,9 @@ import {
   type Observation,
   type WorldObject,
   type WorldQuery,
-} from '@worldview/world-model';
-import { testing, type ProviderDataPolicy } from '@worldview/provider-sdk';
-import { HistoryStore, NdjsonBackend } from '@worldview/history-store';
+} from '@opcb/world-model';
+import { testing, type ProviderDataPolicy } from '@opcb/provider-sdk';
+import { HistoryStore, NdjsonBackend } from '@opcb/history-store';
 import {
   downsample,
   objectReadings,
@@ -80,7 +80,7 @@ async function storeWithFixture(): Promise<{
   close: () => Promise<void>;
 }> {
   const { observations } = await loadFixture();
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-telemetry-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-telemetry-'));
   const clock = new testing.VirtualClock(Date.parse('2026-09-20T07:00:00.000Z'));
   const store = new HistoryStore({
     dataDir,

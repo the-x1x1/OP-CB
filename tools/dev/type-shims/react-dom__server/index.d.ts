@@ -1,6 +1,6 @@
 /**
  * Declaration SHIM for `react-dom/server` — active only when `@types/react-dom`
- * is not installed. Declares only what WORLDVIEW's DOM-free render tests use.
+ * is not installed. Declares only what OP-CB's DOM-free render tests use.
  */
 import type { ReactNode } from 'react';
 

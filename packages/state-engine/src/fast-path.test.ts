@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import { WorldState } from './index.js';
 
 const obs = (id: string, observedAt: string, lat: number): Observation =>

@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * cameras-local — cameras the user registered through the camera gateway

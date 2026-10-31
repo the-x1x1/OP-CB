@@ -1,5 +1,5 @@
-import type { GeoPosition } from '@worldview/world-model';
-import type { RenderFeature, ViewState } from '@worldview/render-core';
+import type { GeoPosition } from '@opcb/world-model';
+import type { RenderFeature, ViewState } from '@opcb/render-core';
 import { formatDistance } from './measure.js';
 
 /**

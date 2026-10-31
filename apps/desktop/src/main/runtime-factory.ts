@@ -4,12 +4,12 @@ import {
   type HostBridge,
   type RuntimeCredentialStore,
   type WorldRuntimeDeps,
-} from '@worldview/runtime';
-import type { Logger, LoggerHub } from '@worldview/core';
-import type { DataDirs, SettingsStore } from '@worldview/config';
-import type { DiagnosticsSnapshot } from '@worldview/ipc-contract';
-import type { AutoUpdaterLike } from '@worldview/updater';
-import type { NetworkSignal } from '@worldview/offline';
+} from '@opcb/runtime';
+import type { Logger, LoggerHub } from '@opcb/core';
+import type { DataDirs, SettingsStore } from '@opcb/config';
+import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
+import type { AutoUpdaterLike } from '@opcb/updater';
+import type { NetworkSignal } from '@opcb/offline';
 
 /**
  * What main hands to the runtime. `createWorldRuntime` (packages/runtime) composes the

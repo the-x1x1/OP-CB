@@ -1,4 +1,4 @@
-import type { GeoBounds, WorldGeometry } from '@worldview/world-model';
+import type { GeoBounds, WorldGeometry } from '@opcb/world-model';
 
 /** Andrew's monotone chain convex hull on lon/lat pairs (planar; fine for regional clusters). Returns a closed ring. */
 export function convexHull(points: ReadonlyArray<[number, number]>): Array<[number, number]> {

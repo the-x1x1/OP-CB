@@ -8,7 +8,7 @@ import { findManifests, runLicenseAudit, readManifestSource } from './audit.js';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 
-const MANIFEST = `import type { ProviderManifest } from '@worldview/provider-sdk';
+const MANIFEST = `import type { ProviderManifest } from '@opcb/provider-sdk';
 export const M: ProviderManifest = {
   id: 'demo-source',
   name: 'Demo',
@@ -271,7 +271,7 @@ test('a shipped definition that is user-configured, unrecorded, or opens policy 
 });
 
 test('the audit reads the same fail-closed defaults and review mapping the connector SDK applies', async () => {
-  const sdk = await import('@worldview/connector-sdk');
+  const sdk = await import('@opcb/connector-sdk');
   const { DEFINITION_POLICY_DEFAULTS, readDefinitionFacts } = await import('./audit.js');
   for (const [key, value] of Object.entries(DEFINITION_POLICY_DEFAULTS))
     assert.equal((sdk.defaultDataPolicy as unknown as Record<string, unknown>)[key], value, key);

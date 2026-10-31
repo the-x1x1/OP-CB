@@ -1,6 +1,6 @@
-import type { Collection, SearchResult, WatchZone } from '@worldview/ipc-contract';
-import { StaticGazetteer, normalizePlaceName, type GazetteerEntry } from '@worldview/query-engine';
-import { normalizeLongitude, regionBounds } from '@worldview/world-model';
+import type { Collection, SearchResult, WatchZone } from '@opcb/ipc-contract';
+import { StaticGazetteer, normalizePlaceName, type GazetteerEntry } from '@opcb/query-engine';
+import { normalizeLongitude, regionBounds } from '@opcb/world-model';
 
 /**
  * The operator's own places in search: the locations kept in collections (by their titles and

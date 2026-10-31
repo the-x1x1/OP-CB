@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import { isLoopbackHost, resolveLocalEndpoint, stringSetting, type LocalEndpoint } from '@worldview/provider-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import { isLoopbackHost, resolveLocalEndpoint, stringSetting, type LocalEndpoint } from '@opcb/provider-sdk';
 import { DEFAULT_READSB_ENDPOINT } from './manifest.js';
 
 /**

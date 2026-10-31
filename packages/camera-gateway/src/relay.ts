@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { silentLogger, type Logger } from '@worldview/core';
+import { silentLogger, type Logger } from '@opcb/core';
 import { CameraError, errorForStatus, toCameraError } from './errors.js';
 import { assertImage } from './image.js';
 import { hlsBaseFor, looksLikePlaylist, resolveContained, rewritePlaylist, type HlsBase } from './hls.js';

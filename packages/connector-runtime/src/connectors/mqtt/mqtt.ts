@@ -1,4 +1,4 @@
-import type { IsoTimestamp, JsonValue, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, JsonValue, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   stringSetting,
@@ -14,7 +14,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -29,7 +29,7 @@ import {
   type Field,
   type MappingSpec,
   type PositionSpec,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { DEFAULT_MQTT_FLUSH_MS, mqttSpecOf, type MqttSpec } from './contract.js';
 import { createPreset, type PayloadPreset } from './presets.js';
 import { matchesAny, topicLevels } from './topics.js';

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProviderError, testing } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { ProviderError, testing } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { createProvider, parseAisLocalSettings, timeFromSecond, type Timers } from './index.js';
 
 const TYPE1 = '!AIVDM,1,1,,B,177KQJ5000G?tO`K>RA1wUbN0TKH,0*5C';

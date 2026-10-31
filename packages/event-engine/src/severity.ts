@@ -4,7 +4,7 @@ import {
   type ConfidenceClass,
   type SeverityClass,
   type WorldObject,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 export function severityAtLeast(severity: SeverityClass | undefined, minimum: SeverityClass | undefined): boolean {
   if (!minimum) return true;

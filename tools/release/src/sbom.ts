@@ -4,7 +4,7 @@ import path from 'node:path';
 import { parseLockfile, type LockedPackage } from './lockfile.js';
 
 /**
- * CycloneDX 1.5 SBOM for a WORLDVIEW release (directive §80).
+ * CycloneDX 1.5 SBOM for an OP-CB release (directive §80).
  *
  * Components come from three places:
  *   1. the resolved dependency graph (pnpm-lock.yaml) — third-party npm packages;
@@ -135,19 +135,19 @@ export function buildSbom(opts: SbomOptions): Sbom {
           content: p.integrity.replace(/^sha\d+-/, ''),
         },
       ];
-    if (p.dev) component.properties = [{ name: 'worldview:scope', value: 'development' }];
+    if (p.dev) component.properties = [{ name: 'opcb:scope', value: 'development' }];
     components.push(component);
   }
 
   for (const w of workspacePackages(opts.root)) {
     components.push({
       type: 'library',
-      'bom-ref': `worldview:${w.name}@${w.version}`,
+      'bom-ref': `opcb:${w.name}@${w.version}`,
       name: w.name,
       version: w.version,
       scope: 'required',
       licenses: [{ license: { id: 'MIT' } }],
-      properties: [{ name: 'worldview:workspace', value: w.dir }],
+      properties: [{ name: 'opcb:workspace', value: w.dir }],
     });
   }
 
@@ -163,9 +163,9 @@ export function buildSbom(opts: SbomOptions): Sbom {
         version: r.commitOrVersion ?? 'unpinned',
         scope: r.distribution === 'not-distributed' ? 'excluded' : 'optional',
         properties: [
-          { name: 'worldview:integration', value: r.integration },
-          { name: 'worldview:distribution', value: r.distribution ?? 'unknown' },
-          ...(r.repository ? [{ name: 'worldview:repository', value: r.repository }] : []),
+          { name: 'opcb:integration', value: r.integration },
+          { name: 'opcb:distribution', value: r.distribution ?? 'unknown' },
+          ...(r.repository ? [{ name: 'opcb:repository', value: r.repository }] : []),
         ],
       };
       if (r.license) component.licenses = [{ license: { name: r.license } }];
@@ -174,16 +174,16 @@ export function buildSbom(opts: SbomOptions): Sbom {
   }
 
   const properties = [
-    { name: 'worldview:lockfile', value: hasLock ? `pnpm-lock.yaml (v${lock.lockfileVersion})` : 'absent' },
-    { name: 'worldview:lockfileSha256', value: hasLock ? createHash('sha256').update(lockText).digest('hex') : 'n/a' },
+    { name: 'opcb:lockfile', value: hasLock ? `pnpm-lock.yaml (v${lock.lockfileVersion})` : 'absent' },
+    { name: 'opcb:lockfileSha256', value: hasLock ? createHash('sha256').update(lockText).digest('hex') : 'n/a' },
     {
-      name: 'worldview:licenseSource',
+      name: 'opcb:licenseSource',
       value: hasNodeModules
         ? 'installed node_modules metadata'
         : 'not resolved (no installed tree in this build environment)',
     },
-    { name: 'worldview:node', value: process.version },
-    ...(opts.commit ? [{ name: 'worldview:commit', value: opts.commit }] : []),
+    { name: 'opcb:node', value: process.version },
+    ...(opts.commit ? [{ name: 'opcb:commit', value: opts.commit }] : []),
   ];
 
   return {
@@ -195,11 +195,11 @@ export function buildSbom(opts: SbomOptions): Sbom {
       timestamp: now,
       component: {
         type: 'application',
-        'bom-ref': `worldview@${opts.version}`,
-        name: 'WorldView',
+        'bom-ref': `opcb@${opts.version}`,
+        name: 'OP-CB',
         version: opts.version,
       },
-      tools: { components: [{ type: 'application', name: 'worldview-sbom', version: '0.1.0' }] },
+      tools: { components: [{ type: 'application', name: 'opcb-sbom', version: '0.1.0' }] },
       properties,
     },
     components,

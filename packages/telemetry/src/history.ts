@@ -1,4 +1,4 @@
-import type { JsonValue, WorldObject, WorldQuery, WorldQueryResult } from '@worldview/world-model';
+import type { JsonValue, WorldObject, WorldQuery, WorldQueryResult } from '@opcb/world-model';
 import { projectReadings, type ReadingPoint, type ReadingWindow } from './series.js';
 
 /**

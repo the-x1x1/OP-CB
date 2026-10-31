@@ -1,5 +1,5 @@
 /**
- * @worldview/world-model — canonical world model (architecture-contract-v1).
+ * @opcb/world-model — canonical world model (architecture-contract-v1).
  *
  * THE WORLD
  *   ├── Places        (objects of type place/airport/port/infrastructure)

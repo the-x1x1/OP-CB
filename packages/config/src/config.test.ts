@@ -20,7 +20,7 @@ import {
 } from './index.js';
 
 async function tmpDir(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), 'worldview-config-'));
+  return fs.mkdtemp(path.join(os.tmpdir(), 'opcb-config-'));
 }
 
 test('settings store: fresh install uses defaults, patch persists atomically and emits change', async () => {

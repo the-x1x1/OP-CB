@@ -3,13 +3,13 @@
  * Dependency-direction check (directive §19). Fails closed.
  *
  * Rules (importer → forbidden imports):
- *   world-model            → anything @worldview/* (must stay dependency-free)
+ *   world-model            → anything @opcb/* (must stay dependency-free)
  *   provider-sdk           → anything except world-model
- *   providers/*            → react, react-dom, cesium, maplibre-gl, deck.gl, @worldview/render-*, @worldview/ui, electron, node:fs, node:child_process, undici/ws (network only via ProviderContext); test files (test/**, *.test.ts) are exempt so fixtures can be read
- *   render-*               → @worldview/provider-*, providers/*, @worldview/provider-runtime, node:http(s), undici, ws (renderers never fetch providers)
- *   ui                     → @worldview/provider-*, providers/*, @worldview/state-engine, @worldview/history-store, @worldview/provider-runtime, cesium, maplibre-gl, electron, node:*
- *   apps/desktop/renderer  → providers/*, @worldview/provider-runtime, @worldview/history-store, electron (except type imports), node:*
- *   state-engine           → @worldview/provider-runtime, render-*, ui
+ *   providers/*            → react, react-dom, cesium, maplibre-gl, deck.gl, @opcb/render-*, @opcb/ui, electron, node:fs, node:child_process, undici/ws (network only via ProviderContext); test files (test/**, *.test.ts) are exempt so fixtures can be read
+ *   render-*               → @opcb/provider-*, providers/*, @opcb/provider-runtime, node:http(s), undici, ws (renderers never fetch providers)
+ *   ui                     → @opcb/provider-*, providers/*, @opcb/state-engine, @opcb/history-store, @opcb/provider-runtime, cesium, maplibre-gl, electron, node:*
+ *   apps/desktop/renderer  → providers/*, @opcb/provider-runtime, @opcb/history-store, electron (except type imports), node:*
+ *   state-engine           → @opcb/provider-runtime, render-*, ui
  *   identity               → anything except world-model
  *   hot-spatial-index      → anything except world-model
  *   event-engine/query-engine → render-*, ui, provider-runtime
@@ -31,22 +31,22 @@ const RULES = [
   {
     name: 'world-model is dependency-free',
     match: (f) => f.startsWith('packages/world-model/'),
-    forbid: [/^@worldview\//],
+    forbid: [/^@opcb\//],
   },
   {
     name: 'provider-sdk depends only on world-model',
     match: (f) => f.startsWith('packages/provider-sdk/'),
-    forbid: [/^@worldview\/(?!world-model$)/],
+    forbid: [/^@opcb\/(?!world-model$)/],
   },
   {
     name: 'identity depends only on world-model',
     match: (f) => f.startsWith('packages/identity/'),
-    forbid: [/^@worldview\/(?!world-model$)/],
+    forbid: [/^@opcb\/(?!world-model$)/],
   },
   {
     name: 'hot-spatial-index depends only on world-model',
     match: (f) => f.startsWith('packages/hot-spatial-index/'),
-    forbid: [/^@worldview\/(?!world-model$)/],
+    forbid: [/^@opcb\/(?!world-model$)/],
   },
   {
     name: 'providers never render or touch UI/Electron/raw network/fs',
@@ -56,8 +56,8 @@ const RULES = [
       /^cesium/,
       /^maplibre-gl/,
       /^@deck\.gl/,
-      /^@worldview\/render-/,
-      /^@worldview\/ui$/,
+      /^@opcb\/render-/,
+      /^@opcb\/ui$/,
       /^electron/,
       /^node:fs/,
       /^node:child_process/,
@@ -65,31 +65,31 @@ const RULES = [
       /^node:net/,
       /^undici$/,
       /^ws$/,
-      /^@worldview\/state-engine$/,
-      /^@worldview\/history-store$/,
+      /^@opcb\/state-engine$/,
+      /^@opcb\/history-store$/,
     ],
   },
   {
     name: 'renderers never fetch providers',
     match: (f) => /^packages\/render-/.test(f),
     forbid: [
-      /^@worldview\/provider-/,
-      /^@worldview\/providers$/,
+      /^@opcb\/provider-/,
+      /^@opcb\/providers$/,
       /^node:http/,
       /^undici$/,
       /^ws$/,
-      /^@worldview\/state-engine$/,
-      /^@worldview\/history-store$/,
+      /^@opcb\/state-engine$/,
+      /^@opcb\/history-store$/,
     ],
   },
   {
     name: 'ui consumes typed APIs only',
     match: (f) => f.startsWith('packages/ui/'),
     forbid: [
-      /^@worldview\/provider-/,
-      /^@worldview\/providers$/,
-      /^@worldview\/state-engine$/,
-      /^@worldview\/history-store$/,
+      /^@opcb\/provider-/,
+      /^@opcb\/providers$/,
+      /^@opcb\/state-engine$/,
+      /^@opcb\/history-store$/,
       /^cesium/,
       /^maplibre-gl/,
       /^electron/,
@@ -100,11 +100,11 @@ const RULES = [
     name: 'renderer app never imports providers/runtime internals or node',
     match: (f) => f.startsWith('apps/desktop/src/renderer/'),
     forbid: [
-      /^@worldview\/provider-runtime$/,
-      /^@worldview\/providers$/,
-      /^@worldview\/provider-(?!sdk$)/,
-      /^@worldview\/history-store$/,
-      /^@worldview\/runtime$/,
+      /^@opcb\/provider-runtime$/,
+      /^@opcb\/providers$/,
+      /^@opcb\/provider-(?!sdk$)/,
+      /^@opcb\/history-store$/,
+      /^@opcb\/runtime$/,
       /^node:/,
       /^electron$/,
     ],
@@ -112,12 +112,12 @@ const RULES = [
   {
     name: 'state-engine stays below presentation',
     match: (f) => f.startsWith('packages/state-engine/'),
-    forbid: [/^@worldview\/provider-runtime$/, /^@worldview\/render-/, /^@worldview\/ui$/, /^react/],
+    forbid: [/^@opcb\/provider-runtime$/, /^@opcb\/render-/, /^@opcb\/ui$/, /^react/],
   },
   {
     name: 'engines stay below presentation',
     match: (f) => /^packages\/(event-engine|query-engine)\//.test(f),
-    forbid: [/^@worldview\/render-/, /^@worldview\/ui$/, /^@worldview\/provider-runtime$/, /^react/],
+    forbid: [/^@opcb\/render-/, /^@opcb\/ui$/, /^@opcb\/provider-runtime$/, /^react/],
   },
   {
     name: 'no package imports another package by relative path',

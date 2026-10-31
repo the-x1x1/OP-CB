@@ -7,13 +7,13 @@ import {
   type ResponseOf,
   type WorldBridge,
   type WorldEvents,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 import { IpcRequestError } from '../shared/ipc-envelope.js';
 import { isPlainPayload, unwrapEnvelope, wireNameFor } from './allowlist.js';
 
 /**
  * Preload — runs in the renderer's isolated world with `sandbox: true`. It exposes
- * exactly one object, `window.worldview` (WorldBridge), and nothing else: no
+ * exactly one object, `window.opcb` (WorldBridge), and nothing else: no
  * ipcRenderer, no Node globals, no generic `invoke`. Bundled to CommonJS by
  * apps/desktop/scripts/build-main.mjs because sandboxed preloads cannot use ESM.
  */
@@ -61,4 +61,4 @@ const bridge: WorldBridge = {
   },
 };
 
-contextBridge.exposeInMainWorld('worldview', bridge);
+contextBridge.exposeInMainWorld('opcb', bridge);

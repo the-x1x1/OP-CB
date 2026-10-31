@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPosition, RasterOverlay } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition, RasterOverlay } from '@opcb/world-model';
 import type {
   AttributionEntry,
   BasemapDescriptor,
@@ -15,7 +15,7 @@ import type {
   TerrainDescriptor,
   ViewState,
   VisualStyleId,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 
 /**
  * The minimal renderer-host surface the shell codes against. The real

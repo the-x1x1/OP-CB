@@ -1,11 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { CatalogAnswer, CatalogEntry, LibraryFindAnswer } from '@worldview/ipc-contract';
-import { Button } from '@worldview/ui';
+import type { CatalogAnswer, CatalogEntry, LibraryFindAnswer } from '@opcb/ipc-contract';
+import { Button } from '@opcb/ui';
 import { useCC } from './use-cc.js';
 import { bytesText, etaText } from './map-download-panel.js';
 
 /**
- * The built-in library (2026-10-30): ZIM files WorldView opens itself, the public-domain
+ * The built-in library (2026-10-30): ZIM files OP-CB opens itself, the public-domain
  * emergency references, and books from the Kiwix catalogue downloaded into the library folder.
  */
 

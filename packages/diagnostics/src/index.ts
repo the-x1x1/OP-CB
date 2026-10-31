@@ -1,5 +1,5 @@
 /**
- * @worldview/diagnostics — DiagnosticsSnapshot collection from injected sources,
+ * @opcb/diagnostics — DiagnosticsSnapshot collection from injected sources,
  * redacted single-file export bundles, and the production-tree marker report.
  * Node-only (main process, tools).
  */

@@ -9,7 +9,7 @@ import {
   type WorldGeometry,
   type IsoTimestamp,
   type ProvenanceOrigin,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import type { ProviderManifest } from './manifest.js';
 import type { ProviderContext, ProviderQuery, WorldProvider } from './provider.js';
 import { ProviderError, type ProviderHealth, type ProviderStatus, type CredentialState } from './health.js';

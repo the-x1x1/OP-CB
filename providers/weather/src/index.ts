@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,7 +6,7 @@ import {
   type ProviderContext,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { NWS_ALERTS_URL, NWS_MANIFEST, nwsUserAgent } from './manifest.js';
 import { normalizeNwsAlerts, REJECT_NO_GEOMETRY, REJECT_ZONE_ONLY } from './normalize.js';
 import { ZoneGeometryCache, zoneUrl } from './zones.js';

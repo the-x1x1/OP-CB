@@ -1,5 +1,5 @@
-import type { GeoBounds } from '@worldview/world-model';
-import type { PlaceSearchAnswer, RequestOf, SearchResult } from '@worldview/ipc-contract';
+import type { GeoBounds } from '@opcb/world-model';
+import type { PlaceSearchAnswer, RequestOf, SearchResult } from '@opcb/ipc-contract';
 
 /**
  * Online place search (`search.places`), asked from the main process: addresses, streets

@@ -11,10 +11,10 @@ import {
   type ProviderManifest,
   type ProviderQuery,
   type WorldProvider,
-} from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
-import { SATELLITE_CATEGORIES } from '@worldview/providers';
-import { SATELLITE_CATEGORY_LABELS, SATELLITE_CATEGORY_SUFFIXES } from '@worldview/render-core';
+} from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
+import { SATELLITE_CATEGORIES } from '@opcb/providers';
+import { SATELLITE_CATEGORY_LABELS, SATELLITE_CATEGORY_SUFFIXES } from '@opcb/render-core';
 import { settle, startRuntime } from '../helpers/harness.js';
 import { GAP_TOLERANCE_MS, mergeObjectTrack, nearest } from '../../src/support/object-track.js';
 
@@ -115,7 +115,7 @@ test('world.track: a source is asked about the selected object only, and its poi
     assert.equal(provider.asked[0]!.properties['icao24'], 'ae5f01');
     const extra = selected.filter((p) => p.source === 'test history');
     assert.equal(extra.length, 3, 'the hour before first sight is filled in');
-    assert.ok(selected.length > extra.length, "and WORLDVIEW's own points are kept");
+    assert.ok(selected.length > extra.length, "and OP-CB's own points are kept");
     const times = selected.map((p) => Date.parse(p.observedAt));
     assert.deepEqual(
       times,

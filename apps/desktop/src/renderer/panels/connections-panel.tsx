@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import { Button, EmptyState, Panel, StatusBadge, Toggle } from '@worldview/ui';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import { Button, EmptyState, Panel, StatusBadge, Toggle } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import { getByPath } from '../store/actions.js';
 import { CredentialField, ProviderSettingField } from './sources-panel.js';

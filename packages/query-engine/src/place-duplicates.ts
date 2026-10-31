@@ -1,5 +1,5 @@
-import { haversineMeters, type GeoPosition } from '@worldview/world-model';
-import type { SearchResult } from '@worldview/ipc-contract';
+import { haversineMeters, type GeoPosition } from '@opcb/world-model';
+import type { SearchResult } from '@opcb/ipc-contract';
 import { normalizePlaceName, type GazetteerHit, type PlaceKind } from './gazetteer.js';
 
 /**

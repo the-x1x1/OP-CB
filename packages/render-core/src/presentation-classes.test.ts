@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldGeometry, WorldObject } from '@worldview/world-model';
+import type { WorldGeometry, WorldObject } from '@opcb/world-model';
 import {
   DARK_THEME,
   SATELLITE_CATEGORY_SUFFIXES,

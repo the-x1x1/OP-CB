@@ -10,7 +10,7 @@
  *    contract fixtures instead (directive §93);
  *  - it only contacts hosts the manifest already allowlists, through the same
  *    HttpClient the runtime uses (timeouts, size caps, allowlist, redaction);
- *  - credentials are read from the environment (`WORLDVIEW_CRED_<KEY>`), never written
+ *  - credentials are read from the environment (`OPCB_CRED_<KEY>`), never written
  *    into the recording, and any query-string secret is redacted from the saved
  *    metadata;
  *  - the recording carries a metadata sidecar (URL with secrets stripped, timestamp,
@@ -20,9 +20,9 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { HttpClient, LoggerHub, ConsoleSink, redactText } from '@worldview/core';
-import { systemClock } from '@worldview/world-model';
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import { HttpClient, LoggerHub, ConsoleSink, redactText } from '@opcb/core';
+import { systemClock } from '@opcb/world-model';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const args = process.argv.slice(2);
@@ -72,11 +72,11 @@ const client = new HttpClient({
   allowedHosts: manifest.allowedHosts,
   clock: systemClock,
   logger: hub.logger('provider', { providerId: manifest.id }),
-  userAgent: `WorldView/0.1 provider-recorder (+https://github.com/the-x1x1/oneview)`,
+  userAgent: `OP-CB/0.1 provider-recorder (+https://github.com/the-x1x1/OP-CB)`,
   defaultTimeoutMs: Math.max(manifest.refreshPolicy.timeoutMs, 30_000),
   maxRetries: 1,
   credentials: {
-    get: async (key: string) => process.env[`WORLDVIEW_CRED_${key.replace(/[^A-Za-z0-9]/g, '_').toUpperCase()}`],
+    get: async (key: string) => process.env[`OPCB_CRED_${key.replace(/[^A-Za-z0-9]/g, '_').toUpperCase()}`],
   },
 });
 

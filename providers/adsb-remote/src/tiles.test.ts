@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters, type GeoBounds } from '@worldview/world-model';
+import { haversineMeters, type GeoBounds } from '@opcb/world-model';
 import { PRIOR_BASELINE, TRAFFIC_PRIOR, priorAircraft, tileContains, tilesForBounds, type Tile } from './tiles.js';
 
 const EUROPE: GeoBounds = { west: -25, south: 34, east: 45, north: 70 };

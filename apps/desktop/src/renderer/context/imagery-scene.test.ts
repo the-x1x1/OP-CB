@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
-import { formatObjectType } from '@worldview/ui';
+import type { WorldObject } from '@opcb/world-model';
+import { formatObjectType } from '@opcb/ui';
 import { sceneSummary } from './sections.js';
 
 test('an imagery scene says what it is in plain words', () => {

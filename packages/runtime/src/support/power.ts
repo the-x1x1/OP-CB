@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { PowerStatus } from '@worldview/ipc-contract';
+import type { PowerStatus } from '@opcb/ipc-contract';
 
 /**
  * Battery and mains power, read from Linux sysfs only (docs/cyberdeck M5): the files the kernel

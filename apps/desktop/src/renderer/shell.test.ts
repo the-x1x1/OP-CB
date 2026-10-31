@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { BUILT_IN_LENSES, type LensDefinition, type ViewState } from '@worldview/render-core';
+import { BUILT_IN_LENSES, type LensDefinition, type ViewState } from '@opcb/render-core';
 import { createShell } from './create-shell.js';
 import { DemoClient } from './demo/demo-client.js';
 import { loadInitialState, withSelection } from './store/bootstrap-state.js';

@@ -5,7 +5,7 @@
  * topic starting with `$` (`$SYS/…` is the broker's own). The broker does the routing; the
  * connector checks again so a message on a topic it never asked for is counted, not mapped.
  */
-export { MAX_TOPIC_LENGTH, checkTopicFilter } from '@worldview/connector-sdk';
+export { MAX_TOPIC_LENGTH, checkTopicFilter } from '@opcb/connector-sdk';
 
 /** A topic name a broker delivered: no wildcards, not empty. */
 export function isTopicName(topic: string): boolean {

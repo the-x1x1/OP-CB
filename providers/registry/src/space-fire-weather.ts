@@ -1,11 +1,8 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import {
-  createProvider as createCelestrakProvider,
-  type CelestrakProviderOptions,
-} from '@worldview/provider-celestrak';
-import { createProvider as createFirmsProvider } from '@worldview/provider-firms';
-import { createProvider as createNwsAlertsProvider } from '@worldview/provider-weather';
-import { createProvider as createNhcProvider } from '@worldview/provider-nhc';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import { createProvider as createCelestrakProvider, type CelestrakProviderOptions } from '@opcb/provider-celestrak';
+import { createProvider as createFirmsProvider } from '@opcb/provider-firms';
+import { createProvider as createNwsAlertsProvider } from '@opcb/provider-weather';
+import { createProvider as createNhcProvider } from '@opcb/provider-nhc';
 
 /**
  * Partial provider-factory map for the space / fire / weather workstream.

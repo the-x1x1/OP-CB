@@ -7,7 +7,7 @@ import {
   type ProviderMqttEvents,
   type ProviderMqttHandle,
   type ProviderMqttOptions,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   CONNACK_REASONS,
   PacketReader,
@@ -97,7 +97,7 @@ function connectMqtt(
   const maxPerSecond = opts.maxMessagesPerSecond ?? o.defaultMaxMessagesPerSecond ?? DEFAULT_MAX_MESSAGES_PER_SECOND;
   const keepAlive = Math.min(0xffff, Math.max(5, opts.keepAliveSeconds ?? DEFAULT_KEEP_ALIVE_SECONDS));
   const connectTimeoutMs = opts.connectTimeoutMs ?? DEFAULT_CONNECT_TIMEOUT_MS;
-  const clientId = opts.clientId ?? `worldview-${randomBytes(6).toString('hex')}`;
+  const clientId = opts.clientId ?? `opcb-${randomBytes(6).toString('hex')}`;
 
   return new Promise((resolve, reject) => {
     let settled = false;

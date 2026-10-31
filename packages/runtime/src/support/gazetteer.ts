@@ -5,9 +5,9 @@ import type {
   GazetteerNearestOptions,
   NearbyPlace,
   PlaceKind as QueryPlaceKind,
-} from '@worldview/query-engine';
-import type { PlaceSearcher, PlaceKind as PackPlaceKind } from '@worldview/offline';
-import { geodesicInverse, type GeoPosition } from '@worldview/world-model';
+} from '@opcb/query-engine';
+import type { PlaceSearcher, PlaceKind as PackPlaceKind } from '@opcb/offline';
+import { geodesicInverse, type GeoPosition } from '@opcb/world-model';
 
 /**
  * Adapts the offline `PlaceIndex` (worldpack search indexes) to the query engine's

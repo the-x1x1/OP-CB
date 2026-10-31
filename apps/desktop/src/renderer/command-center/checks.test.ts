@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import type { ModeState, OfflineStatus } from '@worldview/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import type { ModeState, OfflineStatus } from '@opcb/ipc-contract';
 import { runCheck, type CheckData } from './checks.js';
 import { dueItems, evaluateReadiness, readinessSummary } from './readiness.js';
 import { GUIDES } from './guides/index.js';
@@ -246,7 +246,7 @@ test('mesh message test: only an acknowledgement from the radio it was for passe
   assert.equal(runCheck('mesh.messageAcked', data()).status, 'fail');
 });
 
-test('built-in library: books WorldView can open, references on disk, a find made offline; readiness follows', () => {
+test('built-in library: books OP-CB can open, references on disk, a find made offline; readiness follows', () => {
   const book = {
     id: '0123456789abcdef0123456789abcdef',
     file: 'wikimed.zim',

@@ -15,12 +15,12 @@ import {
   type WorldObject,
   type WorldMedia,
   systemClock,
-} from '@worldview/world-model';
-import { IdentityResolver, defaultIdentityResolver } from '@worldview/identity';
-import { createSpatialIndex, type SpatialIndex } from '@worldview/hot-spatial-index';
+} from '@opcb/world-model';
+import { IdentityResolver, defaultIdentityResolver } from '@opcb/identity';
+import { createSpatialIndex, type SpatialIndex } from '@opcb/hot-spatial-index';
 
 /**
- * @worldview/state-engine — the live world state.
+ * @opcb/state-engine — the live world state.
  *
  * Maintains objectsById / objectsByType / objectsByProvider, a hot spatial index,
  * an expiration queue, per-object short tracks and a recent-observation ring buffer.

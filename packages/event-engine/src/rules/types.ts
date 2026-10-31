@@ -1,4 +1,4 @@
-import type { IsoTimestamp, ObservationReference, Provenance, WorldEvent, WorldObject } from '@worldview/world-model';
+import type { IsoTimestamp, ObservationReference, Provenance, WorldEvent, WorldObject } from '@opcb/world-model';
 
 /**
  * Object rules derive events from objects. Deterministic: the same objects and the
@@ -39,7 +39,7 @@ export interface ObjectRule {
 }
 
 export const ENGINE_PROVIDER_ID = 'worldview';
-export const ENGINE_SOURCE_NAME = 'WORLDVIEW event engine';
+export const ENGINE_SOURCE_NAME = 'OP-CB event engine';
 
 /** Provenance for a derived event. Recorded (demo) inputs stay labelled recorded — replay never masquerades as live. */
 export function derivedProvenance(

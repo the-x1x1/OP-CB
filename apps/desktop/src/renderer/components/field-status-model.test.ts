@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import { fieldStatusItems, shortAgo, type FieldInput } from './field-status-model.js';
 
 // Every reading here is invented.

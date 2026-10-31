@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -7,7 +7,7 @@ import {
   type ProviderContext,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { USGS_MANIFEST, USGS_FDSN_BASE, feedUrl, type UsgsFeedWindow } from './manifest.js';
 import { normalizeUsgsFeed } from './normalize.js';
 

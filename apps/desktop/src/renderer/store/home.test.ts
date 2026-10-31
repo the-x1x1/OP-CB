@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { ViewState } from '@worldview/render-core';
+import type { ViewState } from '@opcb/render-core';
 import { describeHome, homeFlyOptions, homeFlyTarget, homeFromView, shouldFlyHomeAtStart } from './home.js';
 import { initialState, rootReducer } from './reducer.js';
 

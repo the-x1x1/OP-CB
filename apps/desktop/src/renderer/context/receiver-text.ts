@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * "Received here on 1090 MHz (readsb / dump1090 (aircraft.json))" for an object a local receiver

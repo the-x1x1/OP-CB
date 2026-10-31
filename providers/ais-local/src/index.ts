@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   buildObservation,
@@ -13,7 +13,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { AivdmAssembler } from './aivdm.js';
 import { AIS_LOCAL_MANIFEST, DEFAULT_NMEA_PORT, RECONNECT_MAX_MS, RECONNECT_MIN_MS } from './manifest.js';
 import { StaticStore, messageToDraft } from './normalize.js';

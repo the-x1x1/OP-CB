@@ -1,23 +1,23 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { verifyWorldPack, type TrustedPublisher } from '@worldview/offline';
+import { verifyWorldPack, type TrustedPublisher } from '@opcb/offline';
 
 /**
  * A field bundle: the set of `.worldpack` files for an area (the Oahu exemplar: a basemap pack,
  * a places pack, a history pack …) carried to the external SSD, with a manifest of their sizes
  * and SHA-256 so the copy can be checked on the drive before anything is installed from it.
  *
- *   pnpm worldpack bundle <dir>           verify every pack in <dir>, write worldview-bundle.json
+ *   pnpm worldpack bundle <dir>           verify every pack in <dir>, write opcb-bundle.json
  *                                         and SHA256SUMS.txt beside them
- *   pnpm worldpack bundle <dir> --check   re-hash every file against worldview-bundle.json
+ *   pnpm worldpack bundle <dir> --check   re-hash every file against opcb-bundle.json
  *
  * Several regional packs rather than one large one: each stays inside the .worldpack limits
  * (zip32, 2 GiB per entry, 8 GiB declared — docs/OFFLINE-PACKS.md), and one can be replaced
  * without the others.
  */
 
-export const BUNDLE_MANIFEST = 'worldview-bundle.json';
+export const BUNDLE_MANIFEST = 'opcb-bundle.json';
 export const BUNDLE_SUMS = 'SHA256SUMS.txt';
 
 export interface BundleEntry {

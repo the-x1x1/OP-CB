@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, manifestSchema, testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
-import type { JsonValue, Observation } from '@worldview/world-model';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import { ProviderError, manifestSchema, testing, type ProviderHttpRequest } from '@opcb/provider-sdk';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { defaultConnectorRegistry, formatSuite, runConnectorSuite, type SuiteFixtures } from '../../index.js';
 import {
   HA_ALLOWED_FRAMES,

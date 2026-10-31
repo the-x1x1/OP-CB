@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { manifestSchema } from '@worldview/provider-sdk';
+import { manifestSchema } from '@opcb/provider-sdk';
 import { createAllProviders } from './index.js';
 
 const allManifests = () => createAllProviders().map((p) => p.manifest);

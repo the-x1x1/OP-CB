@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldGeometry } from '@worldview/world-model';
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import type { WorldGeometry } from '@opcb/world-model';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 import { NO_TOOL_LAYER, selectionPosition, sendToolLayer, type ToolLayerShown } from './tool-layers.js';
 
 const f = (id: string): RenderFeature => ({

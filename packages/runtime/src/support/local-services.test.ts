@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SETTINGS } from '@worldview/config';
-import type { AppSettings } from '@worldview/ipc-contract';
+import { DEFAULT_SETTINGS } from '@opcb/config';
+import type { AppSettings } from '@opcb/ipc-contract';
 import { LocalServices, libraryPath, readKiwixCatalog, readKiwixSearch, readOllamaGenerate } from './local-services.js';
 
 /*

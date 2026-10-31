@@ -2,7 +2,7 @@
 
 A local-first browser for the physical world, and what keeps working when the internet does not.
 
-OP-CB (formerly WorldView; renamed 2026-10-30) puts aircraft, vessels, satellites, earthquakes, fires, weather alerts,
+OP-CB (Operation Civilization Backup) puts aircraft, vessels, satellites, earthquakes, fires, weather alerts,
 cameras and infrastructure into one coherent model — live, historical and offline — and
 lets you inspect it on a 3D globe or a 2D map. It runs on your machine. There is no
 account, no cloud backend, and nothing is uploaded.
@@ -38,13 +38,13 @@ account, no cloud backend, and nothing is uploaded.
 
 ## Install
 
-Download `WorldView-Setup-0.1.0-rc.5.exe` (per-user install, no admin) or
-`WorldView-Portable-0.1.0-rc.5.zip` from the releases page, verify it against
+Download `OP-CB-Setup-0.1.0-rc.5.exe` (per-user install, no admin) or
+`OP-CB-Portable-0.1.0-rc.5.zip` from the releases page, verify it against
 `SHA256SUMS.txt`, and run it. Windows 10/11 x64. The app opens straight to Earth: no
 credentials are needed for the default globe, earthquakes, satellites or weather alerts.
 
 ```powershell
-Get-FileHash .\WorldView-Setup-0.1.0-rc.5.exe -Algorithm SHA256
+Get-FileHash .\OP-CB-Setup-0.1.0-rc.5.exe -Algorithm SHA256
 ```
 
 Because the build is not yet code-signed, SmartScreen will warn on first run.
@@ -128,7 +128,7 @@ pnpm connector:add --url https://data.example.org/things.geojson    # draft a de
 pnpm connector:test connectors/examples/usgs-earthquakes-geojson.json # the shared suite
 ```
 
-Your own definitions go in `%APPDATA%\@worldview\desktop\connectors\`. See
+Your own definitions go in `%APPDATA%\OP-CB\connectors\`. See
 [docs/connectors/OVERVIEW.md](docs/connectors/OVERVIEW.md).
 
 ## Offline
@@ -186,7 +186,7 @@ unclear are off by default.
 - [Commercial distribution review](docs/legal/COMMERCIAL-DISTRIBUTION-REVIEW.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-WORLDVIEW is built on [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view)
+OP-CB is built on [God's Eye View](https://github.com/bilawalsidhu/gods-eye-view)
 (MIT) — see [UPSTREAM.md](UPSTREAM.md) for what was adapted and what was deliberately
 left behind.
 

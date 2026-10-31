@@ -237,7 +237,7 @@ export interface LoadMapLibreOptions {
    *
    * Required, not optional, because the default does not work here. maplibre-gl 6 finds its
    * worker from `import.meta.url`, and only when that URL is http(s); under the app's
-   * `worldview://` scheme it gets an empty string, builds `new Worker("")`, and loads the
+   * `opcb://` scheme it gets an empty string, builds `new Worker("")`, and loads the
    * page itself as the worker script — which the app protocol answers with index.html and
    * Chromium rejects as "a non-JavaScript MIME type of text/html". The 2D map then has no
    * worker to parse its sources. A caller that has to pass the URL cannot forget it.

@@ -1,4 +1,4 @@
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import type { TrackPoint } from '../store/types.js';
 
 /**

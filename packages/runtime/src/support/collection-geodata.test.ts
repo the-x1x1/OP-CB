@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { CollectionItem } from '@worldview/ipc-contract';
+import type { CollectionItem } from '@opcb/ipc-contract';
 import {
   collectionFromGeodata,
   collectionGeodata,
@@ -49,14 +49,14 @@ test('only items with a position on the globe become places', () => {
   );
   assert.equal(places[1]!.altitudeM, 3048);
   assert.equal(geoFormatFor('trip.GPX'), 'gpx');
-  assert.equal(geoFormatFor('trip.worldview-collection.json'), undefined);
+  assert.equal(geoFormatFor('trip.opcb-collection.json'), undefined);
 });
 
 test('GPX 1.1: one waypoint each, names escaped, notes and tags as the description, the data credited', () => {
   const gpx = collectionGeodata('gpx', { name: 'Big Island & Oʻahu' }, placesOf(items), opts);
   assert.match(
     gpx,
-    /^<\?xml version="1.0" encoding="UTF-8"\?>\n<gpx version="1.1" creator="WorldView" xmlns="http:\/\/www.topografix.com\/GPX\/1\/1">/,
+    /^<\?xml version="1.0" encoding="UTF-8"\?>\n<gpx version="1.1" creator="OP-CB" xmlns="http:\/\/www.topografix.com\/GPX\/1\/1">/,
   );
   assert.match(gpx, /<name>Big Island &amp; Oʻahu<\/name>/);
   assert.match(gpx, /<desc>Data: adsb.lol \(ODbL\)<\/desc>/);
@@ -80,7 +80,7 @@ test('KML 2.2: placemarks with longitude first, an altitude only where there is 
   assert.match(kml, /<TimeStamp><when>2026-10-05T17:00:00.000Z<\/when><\/TimeStamp>/);
   assert.match(
     kml,
-    /<description>Exported from WorldView 2026-10-05T17:30:00.000Z\nData: adsb.lol \(ODbL\)<\/description>/,
+    /<description>Exported from OP-CB 2026-10-05T17:30:00.000Z\nData: adsb.lol \(ODbL\)<\/description>/,
   );
 });
 
@@ -273,7 +273,7 @@ test('objects as KML: a folder per type, named as the map names them, at their a
   assert.equal((kml.match(/<Placemark>/g) ?? []).length, 2, 'an object without a position is left out');
   assert.match(
     kml,
-    /<description>Exported from WorldView 2026-10-05T18:00:00.000Z\nData: adsb.lol \(ODbL\)<\/description>/,
+    /<description>Exported from OP-CB 2026-10-05T18:00:00.000Z\nData: adsb.lol \(ODbL\)<\/description>/,
   );
 });
 

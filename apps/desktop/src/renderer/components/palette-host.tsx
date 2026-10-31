@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { SearchResult } from '@worldview/ipc-contract';
-import { CommandPalette, type SearchResultItem } from '@worldview/ui';
+import type { SearchResult } from '@opcb/ipc-contract';
+import { CommandPalette, type SearchResultItem } from '@opcb/ui';
 import { buildCommands } from '../commands/commands.js';
 import { applyKey, isEditableTarget, resolveKey } from '../commands/keyboard.js';
 import { useActions, useAppState } from '../store/store.js';

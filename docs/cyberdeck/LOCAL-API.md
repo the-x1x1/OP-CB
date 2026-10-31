@@ -1,6 +1,6 @@
 # The local read-only API, and the MCP server (for Formicaria and AI clients)
 
-Your own programs on this computer can read what a running WORLDVIEW knows, without the network
+Your own programs on this computer can read what a running OP-CB knows, without the network
 and without being able to change anything. The design and its rules are
 [ADR-014](../adr/ADR-014-local-api.md); what was verified is in
 [VERIFICATION.md](VERIFICATION.md) §M6.
@@ -9,9 +9,9 @@ and without being able to change anything. The design and its rules are
 
 Settings → **Local API** (Linux and Windows):
 
-- _Let other programs on this computer read WORLDVIEW_ — on Linux opens the socket
-  `$XDG_RUNTIME_DIR/worldview/api.sock` (usually `/run/user/1000/worldview/api.sock`), which only
-  your user can open; on Windows the named pipe `\\.\pipe\worldview-api-<your user name>`,
+- _Let other programs on this computer read OPCB_ — on Linux opens the socket
+  `$XDG_RUNTIME_DIR/opcb/api.sock` (usually `/run/user/1000/opcb/api.sock`), which only
+  your user can open; on Windows the named pipe `\\.\pipe\opcb-api-<your user name>`,
   which only your user (and administrators) can write to. Either is gone when you turn this off
   or quit.
 - _Include this computer's position_ — a separate permission for `/v1/own-position`.
@@ -22,14 +22,14 @@ Help → **Diagnostics** → Sidecars has a `local-api` line: off, or the socket
 on with how many requests it has answered and refused and when the last came. It never says
 what was asked.
 
-## The MCP server: WorldView as a tool for Formicaria and AI clients
+## The MCP server: OP-CB as a tool for Formicaria and AI clients
 
-WorldView ships a [Model Context Protocol](https://modelcontextprotocol.io) server that any MCP
+OP-CB ships a [Model Context Protocol](https://modelcontextprotocol.io) server that any MCP
 client on this computer can start (operator decision 2026-10-20). It is the local API with a
-tool for each endpoint — `worldview_status`, `worldview_sources`, `worldview_objects`,
-`worldview_track`, `worldview_offline`, `worldview_own_position` — read-only, with the same
+tool for each endpoint — `opcb_status`, `opcb_sources`, `opcb_objects`,
+`opcb_track`, `opcb_offline`, `opcb_own_position` — read-only, with the same
 limits and the same refusals: nothing the local API will not give, the tools cannot give. The
-client runs WorldView's own executable as Node on the server script; WorldView itself has to be
+client runs OP-CB's own executable as Node on the server script; OP-CB itself has to be
 running with Settings → Local API on, or every tool answers that it is not.
 
 An MCP client's configuration names the executable, the script and the variable. For a desktop AI assistant's `mcpServers` entry, on Windows:
@@ -37,10 +37,10 @@ An MCP client's configuration names the executable, the script and the variable.
 ```json
 {
   "mcpServers": {
-    "worldview": {
-      "command": "C:\\Users\\<you>\\AppData\\Local\\Programs\\WorldView\\WorldView.exe",
+    "opcb": {
+      "command": "C:\\Users\\<you>\\AppData\\Local\\Programs\\OP-CB\\OP-CB.exe",
       "args": [
-        "C:\\Users\\<you>\\AppData\\Local\\Programs\\WorldView\\resources\\app.asar.unpacked\\dist\\mcp\\worldview-mcp.cjs"
+        "C:\\Users\\<you>\\AppData\\Local\\Programs\\OP-CB\\resources\\app.asar.unpacked\\dist\\mcp\\opcb-mcp.cjs"
       ],
       "env": { "ELECTRON_RUN_AS_NODE": "1" }
     }
@@ -53,9 +53,9 @@ and on Linux:
 ```json
 {
   "mcpServers": {
-    "worldview": {
-      "command": "/opt/WorldView/worldview",
-      "args": ["/opt/WorldView/resources/app.asar.unpacked/dist/mcp/worldview-mcp.cjs"],
+    "opcb": {
+      "command": "/opt/OP-CB/opcb",
+      "args": ["/opt/OP-CB/resources/app.asar.unpacked/dist/mcp/opcb-mcp.cjs"],
       "env": { "ELECTRON_RUN_AS_NODE": "1" }
     }
   }
@@ -63,7 +63,7 @@ and on Linux:
 ```
 
 `ELECTRON_RUN_AS_NODE=1` makes the executable run the script as plain Node, with no window and
-no second WorldView. `WORLDVIEW_API` names another socket or pipe to read, if yours is elsewhere.
+no second OP-CB. `OPCB_API` names another socket or pipe to read, if yours is elsewhere.
 Messages are JSON-RPC over stdio, one a line, in order; the server speaks MCP 2025-06-18 and the
 two before it. It is tested with a fake local API (`apps/desktop/src/mcp/mcp-server.test.ts`); it
 has not yet been run from a real MCP client.
@@ -73,7 +73,7 @@ has not yet been run from a real MCP client.
 ```bash
 node tools/local-api-client/consumer.mjs /v1
 node tools/local-api-client/consumer.mjs '/v1/objects?lat=21.3&lon=-157.9&radiusKm=50&type=aircraft'
-curl --unix-socket "$XDG_RUNTIME_DIR/worldview/api.sock" http://worldview/v1/health
+curl --unix-socket "$XDG_RUNTIME_DIR/opcb/api.sock" http://opcb/v1/health
 ```
 
 | Path               | Answers                                                                                   |

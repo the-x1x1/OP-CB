@@ -4,8 +4,8 @@ import {
   type WorldEvent,
   type WorldQuery,
   type WorldQueryResult,
-} from '@worldview/world-model';
-import { executeEventQuery, type EventSource } from '@worldview/query-engine';
+} from '@opcb/world-model';
+import { executeEventQuery, type EventSource } from '@opcb/query-engine';
 
 /**
  * EventStore — in-memory, bounded, deterministic. Events are indexed by id and type

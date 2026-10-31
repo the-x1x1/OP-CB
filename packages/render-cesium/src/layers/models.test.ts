@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { graphicsProfile, ManualScheduler, withModels, type RenderFeature } from '@worldview/render-core';
+import { graphicsProfile, ManualScheduler, withModels, type RenderFeature } from '@opcb/render-core';
 import { ALWAYS_VISIBLE } from '../horizon.js';
 import { CesiumWorldRenderer } from '../renderer.js';
 import { createFakeCesium, fakeCanvasFactory, type FakeCesium, type FakeModel } from '../testing/fake-cesium.js';

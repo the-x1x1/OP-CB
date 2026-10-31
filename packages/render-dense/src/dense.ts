@@ -1,4 +1,4 @@
-import type { FeatureUpdate, LodBand, RenderFeature, WorldRenderer } from '@worldview/render-core';
+import type { FeatureUpdate, LodBand, RenderFeature, WorldRenderer } from '@opcb/render-core';
 
 /**
  * Dense-layer abstraction (ADR-008). A DenseLayerRenderer draws one high-count

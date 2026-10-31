@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /** Credential key under which the runtime stores the user's AISStream API key (never the value). */
 export const AISSTREAM_CREDENTIAL_KEY = 'aisstream.apiKey';
@@ -10,7 +10,7 @@ export const AISSTREAM_MESSAGE_TYPES = ['PositionReport', 'ShipStaticData'] as c
 
 /**
  * AISStream.io — live AIS over websocket. No formal licence/ToS is published, so the data
- * policy below is WORLDVIEW's conservative default (no raw retention, 24 h normalized cap,
+ * policy below is OP-CB's conservative default (no raw retention, 24 h normalized cap,
  * no export/redistribution) and the provider is off until a human reviews the terms.
  * The user supplies their own API key; direct browser connections are not permitted by
  * AISStream, so the socket is always opened by the main process through ProviderSockets.

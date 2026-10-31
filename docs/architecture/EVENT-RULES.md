@@ -1,6 +1,6 @@
 # Event rules
 
-Package: `@worldview/event-engine`. ADR-010: events are derived by deterministic rules
+Package: `@opcb/event-engine`. ADR-010: events are derived by deterministic rules
 from objects and source health. Rules never create observations, decide identity, alter
 timestamps, invent severity or merge objects. Same input → same event ids and content.
 
@@ -11,7 +11,7 @@ WorldState.onChange / ingestBatch ─► ObjectRule.evaluate(objects, ctx) ─�
 SourceHealthRegistry 'change' ─► SourceStatusTracker ─► EventStore
 ```
 
-Event provenance: `providerId: 'worldview'`, `origin: 'derived'` — or `'recorded'` when any
+Event provenance: `providerId: 'opcb'`, `origin: 'derived'` — or `'recorded'` when any
 input object is recorded (demo data stays labelled), `'historical'` when all inputs are
 replayed, `'local'` for source status. `confidence` = class of the mean object confidence.
 
@@ -35,7 +35,7 @@ When several qualify: nearest, then larger magnitude, then smaller id. A mainsho
 arrives after its aftershocks re-links the stored ones. `EventStore.related()` follows the
 link both ways.
 
-## wildfire-cluster (`event:wildfire-cluster:worldview:<hash(first detection id)>`)
+## wildfire-cluster (`event:wildfire-cluster:opcb:<hash(first detection id)>`)
 
 Scope: all live fire detections each run (grid-accelerated single linkage).
 
@@ -187,7 +187,7 @@ Scope: the vessels that changed in the batch; one event per episode of one beaco
 | end      | a report no longer active (stopped), or not heard for 10 min (ended when last heard)      |
 | reopens  | heard active again within 30 min of a quiet end: the same event                           |
 
-## gnss-interference (`event:gnss-interference:worldview:<south>_<west>-<start second>`)
+## gnss-interference (`event:gnss-interference:opcb:<south>_<west>-<start second>`)
 
 Where aircraft report degraded satellite navigation — GPS jamming or spoofing, as gpsjam.org
 maps it — from the navigation integrity aircraft broadcast: NIC and NACp

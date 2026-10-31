@@ -3,7 +3,7 @@
  * `@types/react` is not installed (no registry access in some build environments).
  *
  * This is NOT the full React typing. It declares, with honest types, exactly the
- * surface WORLDVIEW's UI package and renderer shell use: function components,
+ * surface OP-CB's UI package and renderer shell use: function components,
  * the hooks below, context, refs, memo/forwardRef, StrictMode/Fragment and a JSX
  * namespace whose intrinsic elements carry reasonable DOM prop types. Replace with
  * `@types/react` as soon as it can be installed; the typecheck script then ignores

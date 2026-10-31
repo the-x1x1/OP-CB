@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { silentLogger, type Logger } from '@worldview/core';
+import { silentLogger, type Logger } from '@opcb/core';
 import { ensureDataDirs, probeWritable, type DataDirs } from './data-dirs.js';
 import { MIGRATIONS, MigrationRunner, type Migration, type MigrationReport } from './migrations/index.js';
 import { SettingsStore, type SettingsLoadReport } from './settings-store.js';

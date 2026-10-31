@@ -151,7 +151,7 @@ because until then a device's category is unknown — a poll whose first device 
 fails with that error, and socket positions of devices nothing has described yet are held
 back until the poll has read the list. After that, a device the list does not name (one
 added since) is shown labelled by its id until the next list names it, and a later list
-that fails leaves the last one in force. WORLDVIEW is not
+that fails leaves the last one in force. OP-CB is not
 a people-tracking system ([PRODUCT-BOUNDARIES.md](../PRODUCT-BOUNDARIES.md)): point this
 connector at equipment you own or operate — vehicles, boats, machinery, assets — not at
 trackers carried by people. The category is the only thing the connector can see; the

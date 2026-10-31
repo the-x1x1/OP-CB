@@ -1,4 +1,4 @@
-import type { IsoTimestamp } from '@worldview/world-model';
+import type { IsoTimestamp } from '@opcb/world-model';
 
 /**
  * Tolerant parser for AISStream `MetaData.time_utc`. Observed shapes (Go `time.Time.String()`

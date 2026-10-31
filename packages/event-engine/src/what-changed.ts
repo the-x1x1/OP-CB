@@ -6,10 +6,10 @@ import {
   type TimeRange,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
-import type { WorldState } from '@worldview/state-engine';
-import type { WhatChangedResult } from '@worldview/ipc-contract';
-import { geometryIntersectsRegion, type EventSource, type HistoryReader } from '@worldview/query-engine';
+} from '@opcb/world-model';
+import type { WorldState } from '@opcb/state-engine';
+import type { WhatChangedResult } from '@opcb/ipc-contract';
+import { geometryIntersectsRegion, type EventSource, type HistoryReader } from '@opcb/query-engine';
 import { compareEvents } from './store.js';
 
 /**

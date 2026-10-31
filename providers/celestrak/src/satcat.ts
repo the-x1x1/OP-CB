@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * CelesTrak SATCAT — the satellite catalogue record for one object: who owns it, when and

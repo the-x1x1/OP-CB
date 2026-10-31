@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from 'react';
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import {
   Button,
   FieldList,
@@ -9,7 +9,7 @@ import {
   formatSpeed,
   formatUtcDateTime,
   formatUtcTime,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import type { ContextSectionProps } from './registry.js';
 import {
   TRACK_WINDOWS,

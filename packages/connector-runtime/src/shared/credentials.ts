@@ -1,5 +1,5 @@
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import type { ProviderHttpRequest } from '@worldview/provider-sdk';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import type { ProviderHttpRequest } from '@opcb/provider-sdk';
 
 /**
  * Credentials by reference. A definition names a credential (`credentials.<name>.secretRef`)

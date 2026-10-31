@@ -8,12 +8,12 @@ import {
   type LocalServiceStatus,
   type LibraryHit,
   type LibrarySearchAnswer,
-} from '@worldview/ipc-contract';
+} from '@opcb/ipc-contract';
 
 /**
  * The operator's local services (the Command Center, 2026-10-30): a local AI runner (Ollama),
  * an offline library (kiwix-serve) and a learning platform (Kolibri), each the operator's own
- * install. WorldView asks each over loopback only — `http://127.0.0.1:<port>` — when the shell
+ * install. OP-CB asks each over loopback only — `http://127.0.0.1:<port>` — when the shell
  * asks, never installs, starts or stops one, and never searches the network for them.
  *
  * The answer shapes come from each project's own documentation and tests, read 2026-10-30, not
@@ -143,7 +143,7 @@ export class LocalServices {
 
   /**
    * The offline inference test: one prompt, one installed model, `stream: false`. Nothing of
-   * WorldView's data goes in; the answer is labelled the model's own (`grounded: false`).
+   * OP-CB's data goes in; the answer is labelled the model's own (`grounded: false`).
    */
   async aiTest(request: AiTestRequest, signal?: AbortSignal): Promise<AiTestAnswer> {
     const started = this.deps.now();
@@ -351,7 +351,7 @@ export function readKiwixSearch(text: string): LibraryHit[] {
 }
 
 /**
- * A path on the library server WorldView may open: `/content/…` only, after any root prefix
+ * A path on the library server OP-CB may open: `/content/…` only, after any root prefix
  * the server was started with, with no `..`, no scheme and no host. Undefined otherwise.
  */
 export function libraryPath(link: string): string | undefined {

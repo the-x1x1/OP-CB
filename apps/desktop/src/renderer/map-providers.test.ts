@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { MapProviderList } from '@worldview/ipc-contract';
-import { resolveMapProviders } from '@worldview/render-core';
+import type { MapProviderList } from '@opcb/ipc-contract';
+import { resolveMapProviders } from '@opcb/render-core';
 import {
   basemapChoices,
   basemapForMode,
@@ -129,7 +129,7 @@ test('basemapForMode: never hands a renderer something it cannot show', () => {
   const withPack = listWhen({ online: true, pack: true });
   assert.equal(basemapForMode(withPack, 'natural-earth', '2D')?.id, 'esri-world-imagery', 'Esri first while online');
   const offlinePack = listWhen({ online: false, pack: true });
-  assert.equal(basemapForMode(offlinePack, 'natural-earth', '2D')?.id, 'worldview-dark', 'the pack offline');
+  assert.equal(basemapForMode(offlinePack, 'natural-earth', '2D')?.id, 'opcb-dark', 'the pack offline');
 
   // An entry that serves both modes is kept in both, which is the point of choosing it.
   assert.equal(basemapForMode(fresh, 'esri-world-imagery', '2D')?.id, 'esri-world-imagery');

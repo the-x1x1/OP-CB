@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters, lookAngles, subsolarPoint, toEcef, type WorldObject } from '@worldview/world-model';
+import { haversineMeters, lookAngles, subsolarPoint, toEcef, type WorldObject } from '@opcb/world-model';
 import { fromEcef, satelliteNow, skyOverhead, sunlit } from './sky-overhead.js';
 
 const T = Date.parse('2026-10-05T12:00:00Z');

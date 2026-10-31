@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import {
   ConnectionMonitor,
   WorldPackBuilder,
@@ -17,12 +17,12 @@ import { USGS, USGS_POLICY, seededHistory } from '../helpers/history.js';
 
 /**
  * Offline proof (ADR-007): build a Hawaii pack from the bundled seed fixtures,
- * install it into a fresh data directory and, with WORLDVIEW_NETWORK=off and every
+ * install it into a fresh data directory and, with OPCB_NETWORK=off and every
  * network primitive disabled, show that the pack loads, local search answers and the
  * attribution travels with the data. Evidence is written to
  * artifacts/verification/offline/worldpack-build-report.json.
  */
-process.env['WORLDVIEW_NETWORK'] ??= 'off';
+process.env['OPCB_NETWORK'] ??= 'off';
 
 const { VirtualClock } = testing;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -30,14 +30,14 @@ const EVIDENCE = path.join(root, 'artifacts', 'verification', 'offline', 'worldp
 
 test('offline: Hawaii world pack builds, installs and serves local search with the network off', async () => {
   const startedAt = Date.now();
-  assert.equal(process.env['WORLDVIEW_NETWORK'], 'off');
+  assert.equal(process.env['OPCB_NETWORK'], 'off');
   let networkCalls = 0;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => {
     networkCalls++;
-    throw new Error('network is off (WORLDVIEW_NETWORK=off)');
+    throw new Error('network is off (OPCB_NETWORK=off)');
   }) as typeof fetch;
-  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-offline-'));
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-offline-'));
   try {
     const clock = new VirtualClock(Date.parse('2026-09-21T12:00:00Z'));
     const policies = (id: string) => ({ ...seedPolicies(), [USGS]: USGS_POLICY })[id];
@@ -92,7 +92,7 @@ test('offline: Hawaii world pack builds, installs and serves local search with t
       'USGS attribution travels with the pack',
     );
     assert.ok(
-      attribution.some((a) => /WORLDVIEW project \(MIT\)/.test(a)),
+      attribution.some((a) => /OP-CB project \(MIT\)/.test(a)),
       'seed attribution travels with the pack',
     );
     const notices = await fs.readFile(path.join(pack!.dir, 'licenses', 'NOTICES.md'), 'utf8');
@@ -149,7 +149,7 @@ test('offline: Hawaii world pack builds, installs and serves local search with t
       JSON.stringify(
         {
           ranAt: new Date().toISOString(),
-          env: { WORLDVIEW_NETWORK: process.env['WORLDVIEW_NETWORK'], node: process.version },
+          env: { OPCB_NETWORK: process.env['OPCB_NETWORK'], node: process.version },
           durationMs,
           networkCalls,
           build: {

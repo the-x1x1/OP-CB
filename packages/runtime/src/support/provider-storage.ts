@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
-import { silentLogger, type Logger } from '@worldview/core';
-import { readJsonFile, writeFileAtomic } from '@worldview/core/node';
-import type { Clock, JsonValue } from '@worldview/world-model';
+import { silentLogger, type Logger } from '@opcb/core';
+import { readJsonFile, writeFileAtomic } from '@opcb/core/node';
+import type { Clock, JsonValue } from '@opcb/world-model';
 import type {
   ByteStreamEvents,
   ByteStreamHandle,
@@ -13,8 +13,8 @@ import type {
   ProviderSettings,
   ProviderLocalAccess,
   Unsubscribe,
-} from '@worldview/provider-sdk';
-import { ProviderError } from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import { createOgr2ogrAccess, readGrantedFile, statGrantedFile, type Ogr2ogrHostOptions } from './granted-folder.js';
 import { openSerialStream, type SerialStreamOptions } from './serial-stream.js';
 

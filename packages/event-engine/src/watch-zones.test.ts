@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WatchZone } from '@worldview/ipc-contract';
+import type { WatchZone } from '@opcb/ipc-contract';
 import { WATCH_ZONE_ENTRY_BASELINE_MS, WatchZoneEvaluator, inQuietHours, mayInterrupt } from './watch-zones.js';
 import { DAY, FixedClock, HOUR, T0, eventFrom, iso, obj } from './test-fixtures.js';
 

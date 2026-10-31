@@ -191,7 +191,7 @@ Live run, for the operator (needs an account and token on a demo server, e.g.
 
 ```powershell
 # after `git push origin phase/traccar`; a separate worktree, so the main checkout is not touched
-cd C:\Users\jconn\worldview
+cd C:\Users\jconn\opcb
 git fetch origin
 git worktree add --detach ..\wv-traccar origin/phase/traccar
 cd ..\wv-traccar; pnpm install --frozen-lockfile

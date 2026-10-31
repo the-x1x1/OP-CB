@@ -15,7 +15,7 @@
  *
  * MID_ALLOCATIONS: the ITU's public table of Maritime Identification Digits (ITU-R, MARS,
  * https://www.itu.int/gladapp/Allocation/MIDs, read 2026-09-27). Re-keyed as facts — which
- * number is allocated to which administration — with WORLDVIEW's own short English names in
+ * number is allocated to which administration — with OP-CB's own short English names in
  * place of the ITU's formal ones; no text of the ITU's document is reproduced. Recorded in
  * config/licenses/assets.json.
  */

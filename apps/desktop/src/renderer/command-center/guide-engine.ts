@@ -1,4 +1,4 @@
-import type { GuideProgress, GuideStepRecord } from '@worldview/ipc-contract';
+import type { GuideProgress, GuideStepRecord } from '@opcb/ipc-contract';
 import type { CheckResult, GuideDefinition, GuideStep } from './guide-types.js';
 
 /**

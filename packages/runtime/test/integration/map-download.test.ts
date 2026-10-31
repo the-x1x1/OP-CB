@@ -12,8 +12,8 @@ import {
   readPmTile,
   zxyToTileId,
   type PmEntry,
-} from '@worldview/offline';
-import type { MapDownloadStatus, WorldClient } from '@worldview/ipc-contract';
+} from '@opcb/offline';
+import type { MapDownloadStatus, WorldClient } from '@opcb/ipc-contract';
 import { startRuntime } from '../helpers/harness.js';
 
 /*
@@ -251,7 +251,7 @@ test('map download: a stopped whole-planet download is kept and, after a restart
     });
     return new Response(body, { status: 200 });
   }) as typeof fetch;
-  const dataDir = await fs.mkdtemp(path.join((await import('node:os')).tmpdir(), 'worldview-planet-'));
+  const dataDir = await fs.mkdtemp(path.join((await import('node:os')).tmpdir(), 'opcb-planet-'));
   try {
     const h = await startRuntime({ fetchImpl: stallFetch, dataDir });
     try {

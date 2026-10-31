@@ -1,4 +1,4 @@
-import { themeEntry, type Theme } from '@worldview/render-core';
+import { themeEntry, type Theme } from '@opcb/render-core';
 import type { ClusterOptions } from './sources.js';
 import type { Expr, GeoJsonSource, LayerSpec } from './styles/spec.js';
 

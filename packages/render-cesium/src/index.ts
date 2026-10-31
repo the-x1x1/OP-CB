@@ -1,5 +1,5 @@
 /**
- * @worldview/render-cesium — the 3D adapter for the WorldRenderer contract
+ * @opcb/render-cesium — the 3D adapter for the WorldRenderer contract
  * (ADR-008). Default stack: Cesium's bundled Natural Earth II on the WGS84
  * ellipsoid, zero network and zero credentials. Esri / OSM / Cesium ion / Google
  * 3D are selectable, non-default stacks (legal review conditional). Every Cesium

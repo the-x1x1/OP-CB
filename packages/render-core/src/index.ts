@@ -1,5 +1,5 @@
 /**
- * @worldview/render-core — the rendering contract (RenderFeature, WorldRenderer,
+ * @opcb/render-core — the rendering contract (RenderFeature, WorldRenderer,
  * ViewState), the presentation pipeline (LOD, clustering, density, lens rules),
  * lens definitions, the shared theme and icon set, the frame scheduler, the
  * presentation worker protocol and the RendererHost that owns the 2D/3D adapters.

@@ -1,6 +1,6 @@
-import { testing, ProviderError, checkRelativePath, type WorldProvider } from '@worldview/provider-sdk';
-import { observationSchema, type Observation } from '@worldview/world-model';
-import { DEFAULT_FILE_MAX_BYTES, compileMapping, mapRecord, requestsPerPoll } from '@worldview/connector-sdk';
+import { testing, ProviderError, checkRelativePath, type WorldProvider } from '@opcb/provider-sdk';
+import { observationSchema, type Observation } from '@opcb/world-model';
+import { DEFAULT_FILE_MAX_BYTES, compileMapping, mapRecord, requestsPerPoll } from '@opcb/connector-sdk';
 import { ConnectorRegistry, defaultConnectorRegistry } from '../registry.js';
 import { runMqttSuite } from '../connectors/mqtt/testing/suite.js';
 

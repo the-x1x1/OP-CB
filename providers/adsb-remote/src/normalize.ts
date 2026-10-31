@@ -5,8 +5,8 @@ import {
   type JsonValue,
   type Observation,
   type ProvenanceOrigin,
-} from '@worldview/world-model';
-import { buildObservation, type ObservationDraft, type ProviderManifest } from '@worldview/provider-sdk';
+} from '@opcb/world-model';
+import { buildObservation, type ObservationDraft, type ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * Normalizer for readsb-style aircraft rows as served by adsb.lol v2 (`{ ac: [...], now }`).

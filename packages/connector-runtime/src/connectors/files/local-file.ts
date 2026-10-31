@@ -1,5 +1,5 @@
-import type { ProviderContext } from '@worldview/provider-sdk';
-import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@worldview/connector-sdk';
+import type { ProviderContext } from '@opcb/provider-sdk';
+import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import { fileSpecOf, hasGrantedFolder, type FileFormat } from './contract.js';
 import { checkRelativePath } from './path-policy.js';
 import { formatOf } from './formats.js';

@@ -1,9 +1,9 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * Ships heard by the user's own AIS receiver — AIS-catcher, rtl_ais, a dAISy or a marine AIS
  * transponder behind an NMEA multiplexer — read as NMEA 0183 AIVDM/AIVDO sentences over a
- * TCP connection WORLDVIEW opens to it (the receiver is the server; WORLDVIEW never
+ * TCP connection OP-CB opens to it (the receiver is the server; OP-CB never
  * listens). 10110 is the port IANA registers for NMEA 0183 over IP ("nmea-0183").
  *
  * The receptions are the user's own: no third-party terms, never uploaded. Off by default;

@@ -1,6 +1,6 @@
 # ADR-009 — Camera gateway
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/camera-gateway`
+Status: Accepted · 2026-09-21 · Package: `@opcb/camera-gateway`
 
 ## Decision
 

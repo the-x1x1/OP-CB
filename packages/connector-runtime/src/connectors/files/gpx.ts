@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 import {
   MAX_LINE_POINTS,
   clip,

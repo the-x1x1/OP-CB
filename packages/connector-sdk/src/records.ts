@@ -1,5 +1,5 @@
-import type { JsonValue, Observation } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft, type ProviderManifest } from '@worldview/provider-sdk';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft, type ProviderManifest } from '@opcb/provider-sdk';
 import type { ConnectorProviderDefinition } from './definition.js';
 import { mapRecord, type CompiledMapping } from './mapping.js';
 import { readPath } from './path.js';

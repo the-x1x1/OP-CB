@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Icon, IconButton, StatusBadge } from '@worldview/ui';
+import { Icon, IconButton, StatusBadge } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 
 /** "RECORDED DATA" banner (directive §92) — shown whenever app.info.demoMode is true. */

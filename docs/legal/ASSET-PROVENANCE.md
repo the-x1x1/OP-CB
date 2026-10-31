@@ -1,10 +1,10 @@
-# WORLDVIEW — Bundled asset provenance
+# OP-CB — Bundled asset provenance
 
-Status: **draft for legal review** · Generated 2026-09-21 · Machine-readable twin: [`config/licenses/assets.json`](../../config/licenses/assets.json) (schema `worldview/licenses/assets/v1`, 65 records)
+Status: **draft for legal review** · Generated 2026-09-21 · Machine-readable twin: [`config/licenses/assets.json`](../../config/licenses/assets.json) (schema `opcb/licenses/assets/v1`, 65 records)
 
 Every file GEV ships that is _not_ ordinary MIT source code — 3D models, event imagery, bundled datasets, icons, curated camera catalogs, test fixtures, documentation media — with its provenance, licence and a decision:
 
-- **bundle** — goes into the WORLDVIEW repository and/or installer with the attribution recorded here.
+- **bundle** — goes into the OP-CB repository and/or installer with the attribution recorded here.
 - **exclude** — not imported (licence, privacy, branding or simply no value).
 - **review** — importable in principle but a human must confirm something first.
 
@@ -35,11 +35,11 @@ Sizes are the byte sizes in the GEV clone at commit `0dbde1e3`. Sources: GEV `pu
 | `public/models/atr72.glb`     | 263,948 | "ATR 72 - 600"                                     | [Oyan3D](https://sketchfab.com/oyan3D)                      | CC BY 4.0 |
 | `public/models/README.md`     | 4,929   | attribution table                                  | GEV                                                         | MIT (doc) |
 
-CC BY 4.0 permits commercial use and adaptation provided the credit, a licence link and a **modification notice** are retained ("These credits do not imply endorsement by the original creators" — README line 19-21). GEV's modifications (geometry/material simplification, 256 px WebP textures, Y-up / nose −X baking, origin centring) are documented per model. Obligations for WORLDVIEW:
+CC BY 4.0 permits commercial use and adaptation provided the credit, a licence link and a **modification notice** are retained ("These credits do not imply endorsement by the original creators" — README line 19-21). GEV's modifications (geometry/material simplification, 256 px WebP textures, Y-up / nose −X baking, origin centring) are documented per model. Obligations for OP-CB:
 
 1. Ship `public/models/README.md` verbatim beside the models (as `THIRD_PARTY_MODELS.md`) and reproduce it in `THIRD_PARTY_NOTICES.md` (done).
 2. Surface the nine credits in Help → About / Credits.
-3. If WORLDVIEW modifies a model further, extend the modification notice; do not drop GEV's.
+3. If OP-CB modifies a model further, extend the modification notice; do not drop GEV's.
 4. Sketchfab model pages are the canonical source URLs; record them, since Sketchfab licences can be changed by the uploader later (the licence at download time governs, and the README is the evidence).
 
 ### 2.2 Bundled datasets
@@ -88,14 +88,14 @@ CC BY 4.0 permits commercial use and adaptation provided the credit, a licence l
 
 ### 3.3 Branding, removed features, synthetic configs
 
-| File                                                  | Size    | Why                                                                                                                                                                                                                                                |
-| ----------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/logo.svg`                                     | 8,434   | GEV's brand identity. MIT on the bytes does not make another product's logo usable; trademark/passing-off risk.                                                                                                                                    |
-| `public/mic.svg`                                      | 498     | Voice feature removed.                                                                                                                                                                                                                             |
-| `config/cctv_sources.austin.json`                     | 3       | Empty array.                                                                                                                                                                                                                                       |
-| `config/cctv_sources.shinjuku.json`                   | 1,658   | Three _fake_ Tokyo cameras whose `url` points at Google's public sample-video bucket (`gtv-videos-bucket/sample/*.mp4`, licence of the bucket not stated). Misleading in a product; replace with a WORLDVIEW-owned sample clip for pipeline tests. |
-| `scripts/fixtures/voice/full-globe-turn-on-radio.wav` | 884,274 | Recording of a human voice with no stated consent/licence; voice feature removed.                                                                                                                                                                  |
-| `src/data/local_data/dams/dams.geojson`               | 730,321 | Duplicate of the JSONL. Not a licence issue.                                                                                                                                                                                                       |
+| File                                                  | Size    | Why                                                                                                                                                                                                                                             |
+| ----------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/logo.svg`                                     | 8,434   | GEV's brand identity. MIT on the bytes does not make another product's logo usable; trademark/passing-off risk.                                                                                                                                 |
+| `public/mic.svg`                                      | 498     | Voice feature removed.                                                                                                                                                                                                                          |
+| `config/cctv_sources.austin.json`                     | 3       | Empty array.                                                                                                                                                                                                                                    |
+| `config/cctv_sources.shinjuku.json`                   | 1,658   | Three _fake_ Tokyo cameras whose `url` points at Google's public sample-video bucket (`gtv-videos-bucket/sample/*.mp4`, licence of the bucket not stated). Misleading in a product; replace with an OP-CB-owned sample clip for pipeline tests. |
+| `scripts/fixtures/voice/full-globe-turn-on-radio.wav` | 884,274 | Recording of a human voice with no stated consent/licence; voice feature removed.                                                                                                                                                               |
+| `src/data/local_data/dams/dams.geojson`               | 730,321 | Duplicate of the JSONL. Not a licence issue.                                                                                                                                                                                                    |
 
 ### 3.4 Documentation media (19 files + README, 70 MB)
 
@@ -105,18 +105,18 @@ CC BY 4.0 permits commercial use and adaptation provided the credit, a licence l
 
 ## 4. Review
 
-| File                                                   | Size    | Question for the reviewer                                                                                                                                                                                                                                     |
-| ------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/pin.svg`                                       | 489     | Path geometry and style (24-viewBox, stroke-2, round caps) match the **Lucide "pin"** icon (ISC). GEV credits nobody. Either add the Lucide/Feather notice (ISC/MIT permit commercial use with notice) or replace with the WORLDVIEW icon set. Not a blocker. |
-| `public/location.svg`                                  | 325     | Matches **Feather "map-pin"** (MIT) / Lucide. Same as above.                                                                                                                                                                                                  |
-| `public/visual-presets.svg`                            | 351     | Resembles **Feather "layers"** (MIT). Same as above; the visual-presets feature itself is deferred.                                                                                                                                                           |
-| `config/cctv_sources.tallinn.json`                     | 172,173 | GEV-authored (MIT) pose catalog for 255 City of Tallinn cameras. Harmless on its own but only useful once the `tallinn-ristmikud` provider clears manual review. Convert to a pack manifest with a `license` field (matrix row 81).                           |
-| `config/cctv_sources.warendorf.json`                   | 757     | Same, for one Warendorf webcam; heading derived from OSM geometry (ODbL — keep the OSM credit). Plain-HTTP source URL is also a security item.                                                                                                                |
-| `src/data/fixtures/tomtom-flow-austin-12-935-1686.pbf` | 22,980  | One captured TomTom flow tile (© TomTom), test-only, never served. Committing it to a commercial repo is a small redistribution of TomTom content. Keep only with legal OK (matrix row 85); otherwise synthesise a fixture.                                   |
+| File                                                   | Size    | Question for the reviewer                                                                                                                                                                                                                                 |
+| ------------------------------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/pin.svg`                                       | 489     | Path geometry and style (24-viewBox, stroke-2, round caps) match the **Lucide "pin"** icon (ISC). GEV credits nobody. Either add the Lucide/Feather notice (ISC/MIT permit commercial use with notice) or replace with the OP-CB icon set. Not a blocker. |
+| `public/location.svg`                                  | 325     | Matches **Feather "map-pin"** (MIT) / Lucide. Same as above.                                                                                                                                                                                              |
+| `public/visual-presets.svg`                            | 351     | Resembles **Feather "layers"** (MIT). Same as above; the visual-presets feature itself is deferred.                                                                                                                                                       |
+| `config/cctv_sources.tallinn.json`                     | 172,173 | GEV-authored (MIT) pose catalog for 255 City of Tallinn cameras. Harmless on its own but only useful once the `tallinn-ristmikud` provider clears manual review. Convert to a pack manifest with a `license` field (matrix row 81).                       |
+| `config/cctv_sources.warendorf.json`                   | 757     | Same, for one Warendorf webcam; heading derived from OSM geometry (ODbL — keep the OSM credit). Plain-HTTP source URL is also a security item.                                                                                                            |
+| `src/data/fixtures/tomtom-flow-austin-12-935-1686.pbf` | 22,980  | One captured TomTom flow tile (© TomTom), test-only, never served. Committing it to a commercial repo is a small redistribution of TomTom content. Keep only with legal OK (matrix row 85); otherwise synthesise a fixture.                               |
 
 ## 5. Things that are _not_ assets but look like them
 
 - `src/locations.js` `CITY_POIS` (hand-authored city/POI presets with elevations) — GEV MIT code; keep (audit §(e)).
-- Material Symbols, Inter, JetBrains Mono — not in the GEV repo (loaded from Google Fonts CDN at runtime). WORLDVIEW will bundle them locally; they are tracked in `SOFTWARE-LICENSES.md` / `software.json`, not here.
+- Material Symbols, Inter, JetBrains Mono — not in the GEV repo (loaded from Google Fonts CDN at runtime). OP-CB will bundle them locally; they are tracked in `SOFTWARE-LICENSES.md` / `software.json`, not here.
 - The EGM96 geoid grid — inside the `egm96-universal` npm package (public domain data, MIT wrapper); tracked in `software.json` and `providers.json` (`nga-egm-geoid`).
 - `.gev-cache/` — gitignored runtime cache; never committed, never an asset.

@@ -14,7 +14,7 @@
  *   sign    <file.worldpack> --key key.worldpack-key [--out file]
  *   update  --from old.worldpack --to new.worldpack [--out file] [--sign key.worldpack-key]
  *           an update pack: only the files that changed, the rest taken from the installed old one
- *   bundle  <dir> [--trust a.worldpack-pub,…]   verify every pack in <dir>, write worldview-bundle.json
+ *   bundle  <dir> [--trust a.worldpack-pub,…]   verify every pack in <dir>, write opcb-bundle.json
  *           and SHA256SUMS.txt (sizes, SHA-256, ids) for carrying them to the field drive
  *   bundle  <dir> --check                        re-hash a copied bundle against its manifest
  *   regions
@@ -31,9 +31,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { dataPolicySchema } from '@worldview/provider-sdk';
-import { HistoryStore, createHistoryBackend } from '@worldview/history-store';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { dataPolicySchema } from '@opcb/provider-sdk';
+import { HistoryStore, createHistoryBackend } from '@opcb/history-store';
 import {
   REGION_PRESETS,
   WORLDPACK_INCLUDES,
@@ -54,7 +54,7 @@ import {
   type TrustedPublisher,
   type WorldPackInclude,
   type WorldPackRegionInput,
-} from '@worldview/offline';
+} from '@opcb/offline';
 
 import { BUNDLE_MANIFEST, BUNDLE_SUMS, checkBundle, makeBundle, writeBundle } from './bundle.js';
 
@@ -400,7 +400,7 @@ function keygen(args: Args): number {
     console.error('--name "<publisher name>" is required: it is what people who trust the key will read');
     return 2;
   }
-  const out = path.resolve(flag(args, 'out') ?? path.join(os.homedir(), '.worldview', 'pack-keys'));
+  const out = path.resolve(flag(args, 'out') ?? path.join(os.homedir(), '.opcb', 'pack-keys'));
   const repo = gitWorkTree(out);
   if (repo) {
     console.error(
@@ -426,7 +426,7 @@ function keygen(args: Args): number {
   writeFileSync(pubFile, publisherKeyFile(name, pair.publicKey), { flag: 'wx' });
   console.log(`key id     ${formatKeyId(pair.keyId)}`);
   console.log(`private    ${keyFile}   (keep it; anyone holding it can sign packs as "${name}")`);
-  console.log(`public     ${pubFile}   (share it; WorldView → Settings → Offline packs → Add publisher)`);
+  console.log(`public     ${pubFile}   (share it; OP-CB → Settings → Offline packs → Add publisher)`);
   if (process.platform === 'win32')
     console.log('note: on Windows the file keeps the folder’s permissions; keep the folder private.');
   return 0;

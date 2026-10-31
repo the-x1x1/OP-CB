@@ -1,4 +1,4 @@
-import type { JsonValue, WorldFilter } from '@worldview/world-model';
+import type { JsonValue, WorldFilter } from '@opcb/world-model';
 import { compareValues, comparableKind, toNumber, type FieldValue } from './fields.js';
 
 /**

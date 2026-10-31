@@ -1,5 +1,5 @@
-import type { ConnectorProviderDefinition, MappingSpec } from '@worldview/connector-sdk';
-import { extractRecords } from '@worldview/connector-sdk';
+import type { ConnectorProviderDefinition, MappingSpec } from '@opcb/connector-sdk';
+import { extractRecords } from '@opcb/connector-sdk';
 import { parseCsv } from '../../csv.js';
 import { FILE_FORMATS, type FileFormat, type FileSpec } from './contract.js';
 import { extensionOf } from './path-policy.js';

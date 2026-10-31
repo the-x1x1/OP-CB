@@ -1,5 +1,5 @@
-import { geodesicInverse, geodesicPolygonArea, haversineMeters, type GeoPosition } from '@worldview/world-model';
-import { splitAtAntimeridian, type RenderFeature } from '@worldview/render-core';
+import { geodesicInverse, geodesicPolygonArea, haversineMeters, type GeoPosition } from '@opcb/world-model';
+import { splitAtAntimeridian, type RenderFeature } from '@opcb/render-core';
 
 /**
  * The measure tool (M, or the ruler under the map controls): click points on the globe or the

@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 import type { WorldProvider } from './provider.js';
 
 /**
@@ -20,7 +20,7 @@ import type { WorldProvider } from './provider.js';
  * both are shown with it.
  */
 export interface ObjectDetailsRequest {
-  /** WORLDVIEW object id (`satellite:norad:25544`). */
+  /** OP-CB object id (`satellite:norad:25544`). */
   objectId: string;
   objectType: string;
   /** The source's own id for the object (the provider's `externalId`), when known. */

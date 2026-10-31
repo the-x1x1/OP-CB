@@ -1,7 +1,7 @@
-import { systemClock, type Clock, type WorldEvent, type WorldObject } from '@worldview/world-model';
-import type { StateChange, WorldState } from '@worldview/state-engine';
-import type { SourceHealthRegistry } from '@worldview/source-health';
-import { TypedEmitter } from '@worldview/core';
+import { systemClock, type Clock, type WorldEvent, type WorldObject } from '@opcb/world-model';
+import type { StateChange, WorldState } from '@opcb/state-engine';
+import type { SourceHealthRegistry } from '@opcb/source-health';
+import { TypedEmitter } from '@opcb/core';
 import { EventStore, type UpsertOutcome } from './store.js';
 import { earthquakeRule } from './rules/earthquake.js';
 import { wildfireClusterRule } from './rules/wildfire-cluster.js';

@@ -1,4 +1,4 @@
-import type { TelemetrySeries } from '@worldview/provider-sdk';
+import type { TelemetrySeries } from '@opcb/provider-sdk';
 
 /**
  * The payload keys the rest of the app already names (`docs/architecture/EVENT-RULES.md`, the

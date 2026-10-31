@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import { RendererHost, resolveRenderMode, type HostCapabilities } from './renderer-host.js';
 import { FakeWorldRenderer } from './testing/fake-renderer.js';
 import { ManualScheduler } from './scheduler.js';
@@ -238,7 +238,7 @@ test('host: AUTO re-resolves on capability change; basemap/terrain/attribution f
   assert.equal(r3d.basemap?.id, 'natural-earth');
   assert.deepEqual(r3d.terrain, { kind: 'ellipsoid' });
   await host.setBasemap(
-    { kind: 'pmtiles', id: 'pack', url: 'file:///pack.pmtiles', styleId: 'worldview-dark', attribution: 'OSM' },
+    { kind: 'pmtiles', id: 'pack', url: 'file:///pack.pmtiles', styleId: 'opcb-dark', attribution: 'OSM' },
     '2D',
   );
   assert.equal(r3d.basemap?.id, 'natural-earth', 'a 2D basemap does not touch the 3D renderer');

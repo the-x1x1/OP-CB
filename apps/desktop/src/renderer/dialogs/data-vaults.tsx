@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button, formatBytes } from '@worldview/ui';
-import type { OfflineStatus, VaultHealthSummary } from '@worldview/ipc-contract';
+import { Button, formatBytes } from '@opcb/ui';
+import type { OfflineStatus, VaultHealthSummary } from '@opcb/ipc-contract';
 import { useActions } from '../store/store.js';
 import { installLine } from './pack-trust.js';
 

@@ -1,4 +1,4 @@
-import type { IsoTimestamp, JsonValue, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, JsonValue, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   type ObservationEmitter,
@@ -11,7 +11,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -22,7 +22,7 @@ import {
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { DEFAULT_MAX_MESSAGE_BYTES, RECONNECT_MIN_MS, nextRetryMs } from '../shared/limits.js';
 import { credentialRef } from '../shared/credentials.js';
 

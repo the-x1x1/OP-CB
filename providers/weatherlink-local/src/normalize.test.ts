@@ -149,7 +149,7 @@ test('settings: nothing is contacted until the address and the position are both
 
 test('with no address set the source reads NEEDS_SETUP, not ERROR, and sends nothing', async () => {
   const { createProvider } = await import('./index.js');
-  const { testing } = await import('@worldview/provider-sdk');
+  const { testing } = await import('@opcb/provider-sdk');
   const provider = createProvider();
   let requests = 0;
   const ctx = testing.createFixtureContext({

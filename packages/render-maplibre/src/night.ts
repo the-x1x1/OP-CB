@@ -1,4 +1,4 @@
-import { NIGHT_BANDS_DEG, nightRing, subsolarPoint } from '@worldview/render-core';
+import { NIGHT_BANDS_DEG, nightRing, subsolarPoint } from '@opcb/render-core';
 import type { FillLayer, GeoJsonSource } from './styles/spec.js';
 
 /**

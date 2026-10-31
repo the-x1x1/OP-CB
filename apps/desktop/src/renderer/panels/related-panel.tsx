@@ -1,4 +1,4 @@
-import { EmptyState, Panel, StatusBadge, formatObjectType, formatUtcDateTime } from '@worldview/ui';
+import { EmptyState, Panel, StatusBadge, formatObjectType, formatUtcDateTime } from '@opcb/ui';
 import { displayName } from '../context/index.js';
 import { useActions, useAppState } from '../store/store.js';
 

@@ -1,4 +1,4 @@
-import { isValidLatLon, type GeoPosition, type JsonValue, type Observation } from '@worldview/world-model';
+import { isValidLatLon, type GeoPosition, type JsonValue, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -7,7 +7,7 @@ import {
   type ProviderContext,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { CAMERAS_LOCAL_MANIFEST } from './manifest.js';
 
 export { CAMERAS_LOCAL_MANIFEST } from './manifest.js';

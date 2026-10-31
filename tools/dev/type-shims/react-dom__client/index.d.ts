@@ -1,6 +1,6 @@
 /**
  * Declaration SHIM for `react-dom/client` — active only when `@types/react-dom`
- * is not installed. Declares only what WORLDVIEW uses.
+ * is not installed. Declares only what OP-CB uses.
  */
 import type { ReactNode } from 'react';
 

@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
-import type { WorldObject } from '@worldview/world-model';
-import type { WorldFlightAirport, WorldFlightInfo } from '@worldview/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
+import type { WorldFlightAirport, WorldFlightInfo } from '@opcb/ipc-contract';
 import {
   FieldList,
   formatAltitude,
@@ -9,14 +9,14 @@ import {
   formatSpeed,
   formatUtcTime,
   formatVerticalRate,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import {
   AIRCRAFT_CLASS_LABELS,
   aircraftClass,
   estimateArrivalMs,
   routeProgress,
   type RouteProgress,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import type { ShellActions } from '../store/actions.js';
 import type { FlightState } from '../store/types.js';
 import { bool, num, str, yesNo } from './props.js';

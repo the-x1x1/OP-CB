@@ -1,4 +1,4 @@
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 import type {
   Cartesian3Like,
   CesiumLike,
@@ -64,7 +64,7 @@ class LayerBundle {
 
   private ds(): DataSourceLike {
     if (!this.dataSource) {
-      this.dataSource = new this.cesium.CustomDataSource(`worldview:${this.id}`);
+      this.dataSource = new this.cesium.CustomDataSource(`opcb:${this.id}`);
       void this.viewer.dataSources.add(this.dataSource);
     }
     return this.dataSource;

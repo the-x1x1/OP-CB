@@ -13,12 +13,12 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
-} from '@worldview/world-model';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { IdentityResolver, defaultIdentityResolver } from '@worldview/identity';
-import { silentLogger, type Logger } from '@worldview/core';
-import type { TrackPoint } from '@worldview/state-engine';
-import type { ObservationBatch } from '@worldview/provider-runtime';
+} from '@opcb/world-model';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { IdentityResolver, defaultIdentityResolver } from '@opcb/identity';
+import { silentLogger, type Logger } from '@opcb/core';
+import type { TrackPoint } from '@opcb/state-engine';
+import type { ObservationBatch } from '@opcb/provider-runtime';
 import { observationToRow, type HistoryRow } from './row.js';
 import { partitionId, partitionKeyFor, type PartitionKey, type PartitionMeta } from './partition.js';
 import {

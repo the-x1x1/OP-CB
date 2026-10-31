@@ -1,12 +1,12 @@
-import type { TimeRange } from '@worldview/world-model';
-import type { ObjectTrackAnswer } from '@worldview/provider-sdk';
-import type { WorldTrackPoint } from '@worldview/ipc-contract';
+import type { TimeRange } from '@opcb/world-model';
+import type { ObjectTrackAnswer } from '@opcb/provider-sdk';
+import type { WorldTrackPoint } from '@opcb/ipc-contract';
 
 /**
- * Merging what a source says about the selected object into the track WORLDVIEW recorded
+ * Merging what a source says about the selected object into the track OP-CB recorded
  * (`world.track` with `selected`; provider-sdk object-track.ts).
  *
- * WORLDVIEW's own points are never replaced. A source's history fills the gaps in them: a
+ * OP-CB's own points are never replaced. A source's history fills the gaps in them: a
  * point is added only where no point of ours lies within GAP_TOLERANCE_MS of it, so the
  * hour before the aircraft came into view, or a stretch while the view was elsewhere, is
  * filled, and where we recorded the aircraft ourselves the track stays ours. A prediction

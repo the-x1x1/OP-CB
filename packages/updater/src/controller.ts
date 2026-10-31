@@ -1,5 +1,5 @@
-import type { UpdaterState } from '@worldview/ipc-contract';
-import { TypedEmitter, redactText, silentLogger, type Logger } from '@worldview/core';
+import type { UpdaterState } from '@opcb/ipc-contract';
+import { TypedEmitter, redactText, silentLogger, type Logger } from '@opcb/core';
 import {
   isAcceptableUpdate,
   resolveUpdatePolicy,

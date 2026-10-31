@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { MartinBasemap } from '@worldview/offline';
+import type { MartinBasemap } from '@opcb/offline';
 import { MARTIN_BASEMAP_IDS, MARTIN_CACHE_MS, MartinBasemaps, martinProviderEntries } from './martin-basemap.js';
 
 // An invented source in the shape readMartinBasemap returns, not a real server's answer.
@@ -37,10 +37,10 @@ test('a Martin source on this computer is offered in the dark and light styles, 
     minZoom: 0,
     maxZoom: 14,
     bounds: { west: -161, south: 18, east: -154, north: 23 },
-    styleId: 'worldview-dark',
+    styleId: 'opcb-dark',
     attribution: '© OpenStreetMap contributors',
   });
-  assert.equal(entries[1]!.descriptor.kind === 'vector-tiles' && entries[1]!.descriptor.styleId, 'worldview-light');
+  assert.equal(entries[1]!.descriptor.kind === 'vector-tiles' && entries[1]!.descriptor.styleId, 'opcb-light');
 });
 
 test('a source that cannot be read, or a LAN host over plain http, is listed unavailable with why', () => {

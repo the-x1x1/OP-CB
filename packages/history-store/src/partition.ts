@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { IsoTimestamp, JsonValue, TimeRange } from '@worldview/world-model';
-import { writeFileAtomic, readJsonFile } from '@worldview/core/node';
+import type { IsoTimestamp, JsonValue, TimeRange } from '@opcb/world-model';
+import { writeFileAtomic, readJsonFile } from '@opcb/core/node';
 
 /**
  * Partition layout (ADR-005):

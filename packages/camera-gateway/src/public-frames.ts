@@ -1,5 +1,5 @@
-import type { JsonValue, WorldObject } from '@worldview/world-model';
-import { silentLogger, type Logger } from '@worldview/core';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
+import { silentLogger, type Logger } from '@opcb/core';
 
 /**
  * PublicFrameRegistry — the allowlist of public-camera frame URLs the gateway may fetch.

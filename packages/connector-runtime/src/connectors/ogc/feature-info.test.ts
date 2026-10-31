@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
+import { testing, type ProviderHttpRequest } from '@opcb/provider-sdk';
 import { defaultConnectorRegistry } from '../../registry.js';
 import { featureInfoUrl, parseFeatureInfo, pickFeatureInfoFormat, queryBox } from './feature-info.js';
 import { parseWmsCapabilities } from './capabilities.js';

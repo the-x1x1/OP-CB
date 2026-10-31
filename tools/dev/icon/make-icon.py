@@ -1,6 +1,6 @@
 """
-Draws the WorldView application icon and writes apps/desktop/build/icon.png (512 px) and
-icon.ico (16–256 px), the files electron-builder embeds in WorldView.exe and the installer.
+Draws the OP-CB application icon and writes apps/desktop/build/icon.png (512 px) and
+icon.ico (16–256 px), the files electron-builder embeds in OP-CB.exe and the installer.
 
 An original mark in the app's own palette: a globe (teal, the map's vessel colour) with an
 equator and meridians, crossed by a tilted orbit (violet, the satellite colour) carrying

@@ -1,5 +1,5 @@
-import { geodesicCircle, type RenderFeature, type ResolvedStyle } from '@worldview/render-core';
-import type { GeoPosition } from '@worldview/world-model';
+import { geodesicCircle, type RenderFeature, type ResolvedStyle } from '@opcb/render-core';
+import type { GeoPosition } from '@opcb/world-model';
 import type { CesiumLike, ColorLike, DataSourceLike, EntityLike, EntityOptions } from '../cesium-like.js';
 import type { CesiumTheme } from '../theme.js';
 import { positionsValid, toCartesianArray } from '../geometry.js';

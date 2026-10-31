@@ -5,7 +5,7 @@ import {
   wmtsNeedsTileUrls,
   type RasterOverlay,
   type WmtsOverlay,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { wmtsProtocolTiles } from './wmts-protocol.js';
 import type { LayerSpec, SourceSpec } from './styles/spec.js';
 

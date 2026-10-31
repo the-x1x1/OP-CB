@@ -1,4 +1,4 @@
-import type { OverlayValue } from '@worldview/provider-sdk';
+import type { OverlayValue } from '@opcb/provider-sdk';
 import { classifyCrs } from './crs.js';
 import { KvpParams, joinUrl } from './common.js';
 

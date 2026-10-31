@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { UpdaterState } from '@worldview/ipc-contract';
+import type { UpdaterState } from '@opcb/ipc-contract';
 import { updateNoticeModel } from './update-notice.js';
 
 const base: UpdaterState = {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { JsonValue, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
 import {
   compassPoint,
   countdownText,

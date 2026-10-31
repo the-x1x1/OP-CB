@@ -165,7 +165,7 @@ definitions)" in `docs/OPERATOR-GUIDE.md` with:
 
 > A feed that publishes JSON, GeoJSON or CSV over HTTPS, or JSON over a WebSocket, can be
 > added without a release. Settings → Sources → Definitions shows your definition folder
-> (`%APPDATA%\@worldview\desktop\connectors\`, one `.json` per source) and every file in it, with
+> (`%APPDATA%\OP-CB\connectors\`, one `.json` per source) and every file in it, with
 > the files shipped with the application below yours. **Add source** takes the https
 > address of a sample, fetches it once and drafts a definition — the id, position, time and
 > fields it recognised — and shows whether it validates and what is still to decide (the

@@ -19,7 +19,7 @@ export interface Provenance {
   attribution?: string;
   licenseId?: string;
   termsUrl?: string;
-  /** When WORLDVIEW received the data (UTC ISO). */
+  /** When OP-CB received the data (UTC ISO). */
   receivedAt: IsoTimestamp;
   /** Provenance of inputs for derived data (events, correlations). */
   derivedFrom?: ObservationReference[];

@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { createProvider as createUsgs } from '@worldview/provider-usgs';
-import type { Collection, WatchZone, WorldEvents } from '@worldview/ipc-contract';
-import type { ProviderContext, ProviderHealth, ProviderManifest, WorldProvider } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { createProvider as createUsgs } from '@opcb/provider-usgs';
+import type { Collection, WatchZone, WorldEvents } from '@opcb/ipc-contract';
+import type { ProviderContext, ProviderHealth, ProviderManifest, WorldProvider } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { readFixture, settle, startRuntime, tableFetch } from '../helpers/harness.js';
 
 /**
@@ -163,7 +163,7 @@ test('integration: escalation — a zone can list everything in-app and reach th
 });
 
 test('integration: collections and lenses round-trip through the host bridge and survive a restart', async () => {
-  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'worldview-runtime-restart-'));
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-restart-'));
   const h = await startRuntime({ dataDir, providerInstances: [] });
   try {
     const collection: Collection = {
@@ -639,7 +639,7 @@ test('integration: a test notification takes the same paths a real one would, an
   }
 });
 
-test('integration: a worldview:// link is told to the window and kept once for one that was not yet listening', async () => {
+test('integration: an opcb:// link is told to the window and kept once for one that was not yet listening', async () => {
   const h = await startRuntime();
   try {
     const heard: Array<WorldEvents['link.opened']> = [];
@@ -661,8 +661,8 @@ test('integration: a worldview:// link is told to the window and kept once for o
       return true;
     };
     const r = await h.client.request('link.copy', { link: { latitude: 1, longitude: 2, zoom: 3, mode: '2D' } });
-    assert.deepEqual(r, { url: 'worldview://view?lat=1&lon=2&z=3&mode=2d', copied: true });
-    assert.deepEqual(copiedText, ['worldview://view?lat=1&lon=2&z=3&mode=2d']);
+    assert.deepEqual(r, { url: 'opcb://view?lat=1&lon=2&z=3&mode=2d', copied: true });
+    assert.deepEqual(copiedText, ['opcb://view?lat=1&lon=2&z=3&mode=2d']);
     delete h.host.copyText;
     assert.equal((await h.client.request('link.copy', { link: { latitude: 1, longitude: 2 } })).copied, false);
   } finally {

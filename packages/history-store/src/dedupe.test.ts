@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { Observation } from '@worldview/world-model';
-import { testing } from '@worldview/provider-sdk';
+import type { Observation } from '@opcb/world-model';
+import { testing } from '@opcb/provider-sdk';
 import { HistoryStore, NdjsonBackend, hash53, observationFingerprint, partitionFilePath } from './index.js';
 import {
   AIRCRAFT_PROVIDER,
@@ -322,7 +322,7 @@ test('replay: a reprojected type is placed at the cursor, and a bounded snapshot
   // Stand-in for the satellite reprojector: longitude advances a degree a minute from the epoch.
   const reprojector = {
     types: ['satellite'],
-    at: (o: import('@worldview/world-model').WorldObject, cursorMs: number) => {
+    at: (o: import('@opcb/world-model').WorldObject, cursorMs: number) => {
       const minutes = (cursorMs - Date.parse(o.observedAt)) / 60_000;
       return { ...o, position: { latitude: 0, longitude: -170 + minutes } };
     },

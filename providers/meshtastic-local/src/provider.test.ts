@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProviderError, testing } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { ProviderError, testing } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { HEARTBEAT_MS } from './manifest.js';
 import {
   createProvider,

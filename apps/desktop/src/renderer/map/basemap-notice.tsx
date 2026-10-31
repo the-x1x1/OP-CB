@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Icon, IconButton } from '@worldview/ui';
+import { Button, Icon, IconButton } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import { missingBasemapReason } from '../map-providers.js';
 

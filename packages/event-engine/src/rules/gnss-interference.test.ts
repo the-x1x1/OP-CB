@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
 import { DEFAULT_RULES } from '../engine.js';
 import {
   GNSS_CELL_DEG,

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readBuildList } from '@worldview/offline';
+import { readBuildList } from '@opcb/offline';
 import { MAP_PROVIDER_ID, PROTOMAPS_POLICY, packIdentity } from './map-download.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');

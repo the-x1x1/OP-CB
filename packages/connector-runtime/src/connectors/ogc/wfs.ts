@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,14 +6,14 @@ import {
   type ProviderHealth,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   type CompiledMapping,
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { withGeoJsonDefaults } from '../geojson.js';
 import { DEFAULT_MAX_PAGES } from '../../pagination.js';
 import { rejectedMessage, responseOrigin } from '../../shared/mapping.js';

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject, WorldQuery } from '@worldview/world-model';
+import type { WorldObject, WorldQuery } from '@opcb/world-model';
 import { executeEventQuery, executeQuery, executeQueryWithHistory, type HistoryReader } from './execute.js';
 import { matchesFilter } from './filters.js';
 import { compareValues, resolveObjectField } from './fields.js';

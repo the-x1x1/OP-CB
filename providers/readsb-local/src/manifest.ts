@@ -1,9 +1,9 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * readsb / dump1090 running on the user's own machine (or an explicitly trusted host).
  * The data is the user's own receiver output: no third-party terms, never uploaded.
- * readsb itself is GPL-3.0 and is not distributed by WORLDVIEW; this provider only reads
+ * readsb itself is GPL-3.0 and is not distributed by OP-CB; this provider only reads
  * its `aircraft.json` over HTTP. Detection is conservative: exactly one configured endpoint
  * is probed, never other ports or hosts.
  */
@@ -52,7 +52,7 @@ export const READSB_LOCAL_MANIFEST: ProviderManifest = {
       placeholder: 'http://127.0.0.1:8080/data/aircraft.json',
       defaultLabel: 'http://127.0.0.1:8080/data/aircraft.json',
       description:
-        'The one URL WORLDVIEW probes for your readsb or dump1090 JSON. Nothing else on your network is contacted.',
+        'The one URL OP-CB probes for your readsb or dump1090 JSON. Nothing else on your network is contacted.',
       helpUrl: 'https://github.com/wiedehopf/readsb',
     },
     {

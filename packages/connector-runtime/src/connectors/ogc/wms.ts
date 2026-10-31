@@ -1,6 +1,6 @@
-import type { GeoBounds, JsonValue, RasterOverlay, WmsOverlay } from '@worldview/world-model';
-import { ProviderError, type ProviderManifest } from '@worldview/provider-sdk';
-import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@worldview/connector-sdk';
+import type { GeoBounds, JsonValue, RasterOverlay, WmsOverlay } from '@opcb/world-model';
+import { ProviderError, type ProviderManifest } from '@opcb/provider-sdk';
+import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import { isParsed, parseProblem, parseWmsCapabilities, type WmsCapabilities, type WmsLayer } from './capabilities.js';
 import { classifyCrs, isWgs84 } from './crs.js';
 import {
@@ -20,7 +20,7 @@ import {
 } from './common.js';
 import { OgcOverlayProvider, overlayIdFor, overlayName, overlayRole } from './overlay-provider.js';
 import { featureInfoUrl, parseFeatureInfo, pickFeatureInfoFormat, type FeatureInfoQuery } from './feature-info.js';
-import type { OverlayValueAnswer, OverlayValueRequest, OverlayValueSource } from '@worldview/provider-sdk';
+import type { OverlayValueAnswer, OverlayValueRequest, OverlayValueSource } from '@opcb/provider-sdk';
 
 /**
  * WMS 1.3.0 and 1.1.1 as a raster overlay (`RasterOverlay`, kind `wms`).

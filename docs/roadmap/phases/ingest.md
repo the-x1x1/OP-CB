@@ -14,9 +14,9 @@ token (**A3**). A real curl run against the real host and listener is pasted bel
 ## Goal
 
 Anything the operator can make emit HTTP — a Node-RED flow, a script, a Raspberry Pi, a
-PLC gateway — can push observations in a documented envelope to a listener WORLDVIEW opens
+PLC gateway — can push observations in a documented envelope to a listener OP-CB opens
 on loopback, off by default, with a token. This is the escape hatch for every source that
-has no API: the operator writes the glue in whatever they already use, and WORLDVIEW stays
+has no API: the operator writes the glue in whatever they already use, and OP-CB stays
 declarative.
 
 ## Read first

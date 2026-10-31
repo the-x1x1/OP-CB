@@ -1,5 +1,5 @@
-import { stableStringify, type JsonValue, type Observation } from '@worldview/world-model';
-import { buildObservation, type ObservationDraft } from '@worldview/provider-sdk';
+import { stableStringify, type JsonValue, type Observation } from '@opcb/world-model';
+import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { FIRMS_MANIFEST, type FirmsSource } from './manifest.js';
 import { acquisitionMsUtc, type FirmsRow } from './csv.js';
 

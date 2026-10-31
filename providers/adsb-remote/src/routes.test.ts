@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import { ROUTES_ATTRIBUTION, flightCallsign, parseRoute, routeUrl } from './routes.js';
 import { AdsbLolProvider } from './index.js';
 

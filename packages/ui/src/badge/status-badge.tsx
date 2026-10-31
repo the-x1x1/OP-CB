@@ -1,6 +1,6 @@
-import type { ConfidenceClass, FreshnessClass, SeverityClass } from '@worldview/world-model';
-import type { ConnectionState, SourceHealthEntry } from '@worldview/source-health';
-import { describeStatus } from '@worldview/source-health';
+import type { ConfidenceClass, FreshnessClass, SeverityClass } from '@opcb/world-model';
+import type { ConnectionState, SourceHealthEntry } from '@opcb/source-health';
+import { describeStatus } from '@opcb/source-health';
 
 /** Provider status as exposed through source-health (ui does not depend on provider-sdk directly). */
 export type ProviderStatus = SourceHealthEntry['health']['status'];

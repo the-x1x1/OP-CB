@@ -1,4 +1,4 @@
-import type { EventChannel, RequestChannel } from '@worldview/ipc-contract';
+import type { EventChannel, RequestChannel } from '@opcb/ipc-contract';
 
 /**
  * How big events travel from the main process to the page.

@@ -218,4 +218,4 @@ pnpm connector:test --all                              # every example, includin
 node --import tsx --test connectors/examples/migrated/migration.test.ts
 ```
 
-`pnpm test` does not reach the last file until A7; named directly as above, it runs (tsx resolves its `@worldview/*` imports through the root `tsconfig.json`).
+`pnpm test` does not reach the last file until A7; named directly as above, it runs (tsx resolves its `@opcb/*` imports through the root `tsconfig.json`).

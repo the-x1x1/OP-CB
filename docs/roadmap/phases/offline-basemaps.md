@@ -14,7 +14,7 @@ Branch: `phase/offline-basemaps` · Target: 0.2.0 · Owner: session 01EGPj (2026
 
 An operator can build their own basemap extract for a region with Planetiler (or download
 a Protomaps build where the terms allow), put it in a pack, and see it offline; and can
-point WORLDVIEW at a Martin tile server on their network as a basemap source. Both with the
+point OP-CB at a Martin tile server on their network as a basemap source. Both with the
 attribution and the terms recorded, and nothing fetched from OSM's tile servers ever
 (constraint).
 
@@ -73,7 +73,7 @@ Out: bundling extracts with the installer; terrain; raster basemaps; hosting any
 - [ ] **The Martin source shows tiles from a local Martin.** B4 and B5 landed (2026-10-04):
       Settings → Rendering → Martin tile server; `map.providers.list` adds `martin-dark` and
       `martin-light` (packages/runtime/src/martin-basemap.ts); the 2D renderer draws the
-      `vector-tiles` descriptor with the WORLDVIEW styles. The read side is tested against a
+      `vector-tiles` descriptor with the OP-CB styles. The read side is tested against a
       loopback HTTP server serving a TileJSON invented in Martin's published shape, and the
       list against a closed loopback port. It has not been run against a real Martin, which
       needs the operator's build of a basemap. The CSP was not widened: a LAN server over
@@ -151,15 +151,15 @@ Out: bundling extracts with the installer; terrain; raster basemaps; hosting any
     markup. A source credited by neither is refused.
   - `publicHostProblem` follows connector-sdk `checkUrl`'s rules and also refuses the
     multicast, reserved, benchmarking and documentation ranges, which `checkUrl` does not.
-    It is written out here because `@worldview/offline` does not depend on
-    `@worldview/connector-sdk`, and adding that dependency would need an amendment.
+    It is written out here because `@opcb/offline` does not depend on
+    `@opcb/connector-sdk`, and adding that dependency would need an amendment.
 
 ## Amendment requests
 
 - Root scripts `basemap:build`, lockfile importer for `tools/basemap`, tsconfig path.
   **Landed** (2026-09-24, integrator item #11): `pnpm basemap:build` runs
-  `tools/basemap/src/cli.ts`; `tools/basemap/package.json` (`@worldview/tool-basemap`,
-  depending on `@worldview/offline` and `@worldview/world-model`) has its lockfile importer;
+  `tools/basemap/src/cli.ts`; `tools/basemap/package.json` (`@opcb/tool-basemap`,
+  depending on `@opcb/offline` and `@opcb/world-model`) has its lockfile importer;
   `tools/*/src` is already in the root tsconfig, and `tools/basemap/tsconfig.json` is there
   for a package-local check. The `cli.ts` in place is a placeholder that says it is not
   built and exits 2 — the phase replaces it. A new dependency (even a workspace one) needs
@@ -173,7 +173,7 @@ Out: bundling extracts with the installer; terrain; raster basemaps; hosting any
 - **B2: an installed pack's basemap reaches the map.** _(Blocks DoD 1 and deliverable 4. It
   affects every basemap pack, including one cut from a Protomaps build; found in this
   phase.)_
-  - **The problem:** `MAP_PROVIDER_CATALOG`'s `worldview-dark` and `worldview-light` entries
+  - **The problem:** `MAP_PROVIDER_CATALOG`'s `opcb-dark` and `opcb-light` entries
     carry `url: ''` ("the runtime fills in the pack path"), and nothing does.
     - `core.packs.pmtilesPaths()` is used only for `offlineBasemapAvailable`
       (packages/runtime/src/handlers.ts:115).
@@ -182,7 +182,7 @@ Out: bundling extracts with the installer; terrain; raster basemaps; hosting any
   - **Smallest change:**
     - **Main process** (apps/desktop/src/main): serve the enabled pack's PMTiles file to the
       page, with HTTP range support, at an app-protocol route such as
-      `worldview://app/__packs/<id>/maps/<file>.pmtiles`. It is on the page's own origin, as
+      `opcb://app/__packs/<id>/maps/<file>.pmtiles`. It is on the page's own origin, as
       the tile cache's `/__tiles/` route is, so no CSP change is expected.
     - **Runtime** (`map.providers.list`): set the descriptor's `url` to that route for the
       first enabled pack with a `pmtiles` entry.
@@ -193,7 +193,7 @@ Out: bundling extracts with the installer; terrain; raster basemaps; hosting any
   PMTiles content (render-core catalog and runtime).
 - **B4: Martin in the app.** _(Landed 2026-10-04; the CSP part was not done — see above.)_
   - **render-core:** a `BasemapDescriptor` variant
-    `{ kind: 'vector-tiles'; id; tiles: string[]; minZoom; maxZoom; bounds?; styleId: 'worldview-dark' | 'worldview-light'; attribution }`.
+    `{ kind: 'vector-tiles'; id; tiles: string[]; minZoom; maxZoom; bounds?; styleId: 'opcb-dark' | 'opcb-light'; attribution }`.
   - **render-maplibre:** `styleForBasemap` builds a `vector` source from `tiles`, zooms and
     bounds instead of `pmtiles://`.
   - **Settings:** `basemap.martin.url`, `basemap.martin.trustedHost` and

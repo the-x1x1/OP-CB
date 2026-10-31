@@ -1,5 +1,5 @@
 {
-  "$schema": "worldview/licenses/providers/v1",
+  "$schema": "opcb/licenses/providers/v1",
   "generatedAt": "2026-09-23T09:00:00Z",
   "records": [
     {
@@ -46,7 +46,7 @@
         "termsUrl": "https://celestrak.org/"
       },
       "commercialReview": "conditional",
-      "notes": "Widely used commercially and CelesTrak asks only for citation and reasonable fetch cadence (GEV refetches each group at most every 2-6 h with a contact User-Agent; server/providers/space/celestrak.js). But no licence text exists, so a human should confirm with CelesTrak before a commercial release and before shipping TLE snapshots inside worldpacks (redistributionAllowed=false blocks sharing TLE copies). offlinePackAllowed was set to false on 2026-09-21: the frozen provider-sdk manifest schema (architecture-contract-v1) requires offlinePackAllowed ⇒ redistributionAllowed, and mayIncludeInWorldpack() is false either way, so no capability is lost; revisit both flags together once CelesTrak confirms terms. Propagated positions (SGP4 output) are WORLDVIEW-derived state and may be exported with the citation. SATCAT (added 2026-09-27): the catalogue record of the satellite the operator selects — owner, launch date and site, object type, status, decay — is read from https://celestrak.org/satcat/records.php?CATNR=<n>&FORMAT=JSON, one small request per selected satellite, kept 24 h (memory and ProviderCache); a failure waits 10 min and a 403 two hours before the next lookup. Same host, same absence of a licence text and same citation as the GP data, so the same dataPolicy; the context panel shows 'Satellite catalogue: CelesTrak SATCAT (celestrak.org), Dr. T.S. Kelso' with the record. The bulk satcat.csv (every catalogued object) was deliberately not used: several megabytes a day for the handful of objects anyone looks at. Test fixtures for SATCAT are hand-written, not copied responses."
+      "notes": "Widely used commercially and CelesTrak asks only for citation and reasonable fetch cadence (GEV refetches each group at most every 2-6 h with a contact User-Agent; server/providers/space/celestrak.js). But no licence text exists, so a human should confirm with CelesTrak before a commercial release and before shipping TLE snapshots inside worldpacks (redistributionAllowed=false blocks sharing TLE copies). offlinePackAllowed was set to false on 2026-09-21: the frozen provider-sdk manifest schema (architecture-contract-v1) requires offlinePackAllowed ⇒ redistributionAllowed, and mayIncludeInWorldpack() is false either way, so no capability is lost; revisit both flags together once CelesTrak confirms terms. Propagated positions (SGP4 output) are OP-CB-derived state and may be exported with the citation. SATCAT (added 2026-09-27): the catalogue record of the satellite the operator selects — owner, launch date and site, object type, status, decay — is read from https://celestrak.org/satcat/records.php?CATNR=<n>&FORMAT=JSON, one small request per selected satellite, kept 24 h (memory and ProviderCache); a failure waits 10 min and a 403 two hours before the next lookup. Same host, same absence of a licence text and same citation as the GP data, so the same dataPolicy; the context panel shows 'Satellite catalogue: CelesTrak SATCAT (celestrak.org), Dr. T.S. Kelso' with the record. The bulk satcat.csv (every catalogued object) was deliberately not used: several megabytes a day for the handful of objects anyone looks at. Test fixtures for SATCAT are hand-written, not copied responses."
     },
     {
       "providerId": "nasa-firms",
@@ -69,7 +69,7 @@
         "termsUrl": "https://firms.modaps.eosdis.nasa.gov/api/area/"
       },
       "commercialReview": "approved",
-      "notes": "Requires a free per-user MAP_KEY (https://firms.modaps.eosdis.nasa.gov/api/map_key/); FIRMS API page (read 2026-09-21): \"MAP_KEY limit is 5000 transactions / 10-minute interval\". WORLDVIEW must never ship a shared key. GEV merges NOAA-20, NOAA-21, Suomi-NPP 24 h windows with a 30 min cache. The FIRMS map viewer's Esri basemap is NOT covered by NASA's policy (NASA forum thread p=21423) — irrelevant to the CSV API but do not screenshot the FIRMS viewer for docs."
+      "notes": "Requires a free per-user MAP_KEY (https://firms.modaps.eosdis.nasa.gov/api/map_key/); FIRMS API page (read 2026-09-21): \"MAP_KEY limit is 5000 transactions / 10-minute interval\". OP-CB must never ship a shared key. GEV merges NOAA-20, NOAA-21, Suomi-NPP 24 h windows with a 30 min cache. The FIRMS map viewer's Esri basemap is NOT covered by NASA's policy (NASA forum thread p=21423) — irrelevant to the CSV API but do not screenshot the FIRMS viewer for docs."
     },
     {
       "providerId": "adsb-lol",
@@ -92,14 +92,14 @@
         "termsUrl": "https://github.com/adsblol/globe_history"
       },
       "commercialReview": "conditional",
-      "notes": "Data licence is permissive for commercial use. Conditions needing sign-off: (1) ODbL share-alike — if WORLDVIEW publicly distributes a derived database (e.g. a shared worldpack or exported history built from adsb.lol observations) it must be offered under ODbL; user-local history is not \"public\"; (2) no formal API ToS: the API README says \"Rate limits are dynamic based on the environment load\" and \"In the future, you will require an API key which you can obtain by feeding adsb.lol\" (raw README, read 2026-09-21) — the default provider must degrade gracefully when keys become mandatory; (3) attribution must be visible whenever adsb.lol-derived aircraft are shown or exported; (4) the trace files (https://adsb.lol/data/traces/<xx>/trace_full_<hex>.json) are the tar1090 map's own data, not the documented API, and carry the same ODbL database (format: readsb README-json.md \"trace jsons\", read 2026-09-27) — fetched only for the aircraft the operator selects, at most once a minute per aircraft, best effort (8 s timeout, 4 MiB cap), and the points are labelled \"adsb.lol history\" with the attribution wherever they are shown.; (5) flight routes come from adsb.lol's static route files (GET https://vrs-standing-data.adsb.lol/routes/<XX>/<CALLSIGN>.json, since 2026-09-29, when the documented routeset endpoint POST https://api.adsb.lol/api/0/routeset began answering empty and its GET twin redirected to these files; the same data, and no aircraft position is sent; OpenAPI https://api.adsb.lol/api/openapi.json, whose licence reads \"The license for the API as well as all data ADSB.lol makes public is ODbL\", read 2026-09-28). adsb.lol builds them from Virtual Radar Server standing data (https://github.com/vradarserver/standing-data, LICENSE CC0 1.0 Universal, read 2026-09-28), so the route data itself is public-domain dedicated and served under ODbL — attribution \"Flight routes: adsb.lol (ODbL 1.0), from Virtual Radar Server standing data (CC0 1.0)\" is shown with every route. Asked only for the selected aircraft, one plane per request, only for callsigns shaped like an airline flight (never a registration), remembered 30 min per callsign, 8 s timeout, 64 KiB cap; never bulk. Routes are schedule-based and shown as \"planned route\", which may be wrong for charter or diverted flights. Alternatives considered and not used: adsbdb.com (its README: the route data \"may not be copied, published, or incorporated into other databases without the explicit permission of David J Taylor\", read 2026-09-28 — fails closed) and OpenSky routes (non-commercial terms)."
+      "notes": "Data licence is permissive for commercial use. Conditions needing sign-off: (1) ODbL share-alike — if OP-CB publicly distributes a derived database (e.g. a shared worldpack or exported history built from adsb.lol observations) it must be offered under ODbL; user-local history is not \"public\"; (2) no formal API ToS: the API README says \"Rate limits are dynamic based on the environment load\" and \"In the future, you will require an API key which you can obtain by feeding adsb.lol\" (raw README, read 2026-09-21) — the default provider must degrade gracefully when keys become mandatory; (3) attribution must be visible whenever adsb.lol-derived aircraft are shown or exported; (4) the trace files (https://adsb.lol/data/traces/<xx>/trace_full_<hex>.json) are the tar1090 map's own data, not the documented API, and carry the same ODbL database (format: readsb README-json.md \"trace jsons\", read 2026-09-27) — fetched only for the aircraft the operator selects, at most once a minute per aircraft, best effort (8 s timeout, 4 MiB cap), and the points are labelled \"adsb.lol history\" with the attribution wherever they are shown.; (5) flight routes come from adsb.lol's static route files (GET https://vrs-standing-data.adsb.lol/routes/<XX>/<CALLSIGN>.json, since 2026-09-29, when the documented routeset endpoint POST https://api.adsb.lol/api/0/routeset began answering empty and its GET twin redirected to these files; the same data, and no aircraft position is sent; OpenAPI https://api.adsb.lol/api/openapi.json, whose licence reads \"The license for the API as well as all data ADSB.lol makes public is ODbL\", read 2026-09-28). adsb.lol builds them from Virtual Radar Server standing data (https://github.com/vradarserver/standing-data, LICENSE CC0 1.0 Universal, read 2026-09-28), so the route data itself is public-domain dedicated and served under ODbL — attribution \"Flight routes: adsb.lol (ODbL 1.0), from Virtual Radar Server standing data (CC0 1.0)\" is shown with every route. Asked only for the selected aircraft, one plane per request, only for callsigns shaped like an airline flight (never a registration), remembered 30 min per callsign, 8 s timeout, 64 KiB cap; never bulk. Routes are schedule-based and shown as \"planned route\", which may be wrong for charter or diverted flights. Alternatives considered and not used: adsbdb.com (its README: the route data \"may not be copied, published, or incorporated into other databases without the explicit permission of David J Taylor\", read 2026-09-28 — fails closed) and OpenSky routes (non-commercial terms)."
     },
     {
       "providerId": "readsb-local",
       "name": "readsb (local receiver) — user's own ADS-B/Mode-S decoder output",
       "sourceUrl": "http://<user-host>/data/aircraft.json ; tcp://<user-host>:30005 (Beast)",
       "termsUrl": "n/a — data originates from the user's own receiver",
-      "license": "No third-party data policy (user-generated). readsb software is GPL-3.0 and is NOT distributed by WORLDVIEW (software.json readsb)",
+      "license": "No third-party data policy (user-generated). readsb software is GPL-3.0 and is NOT distributed by OP-CB (software.json readsb)",
       "category": "aircraft",
       "plannedStatus": "default",
       "dataPolicy": {
@@ -114,14 +114,14 @@
         "attributionText": "Local receiver (readsb)"
       },
       "commercialReview": "approved",
-      "notes": "Default only when the user configures a receiver; otherwise inert. Reception of 1090 MHz broadcasts is lawful in most jurisdictions but not all — the user, not WORLDVIEW, is the operator. If the user's readsb also feeds aggregators, that is between the user and the aggregator. WORLDVIEW must not upload receiver data anywhere."
+      "notes": "Default only when the user configures a receiver; otherwise inert. Reception of 1090 MHz broadcasts is lawful in most jurisdictions but not all — the user, not OP-CB, is the operator. If the user's readsb also feeds aggregators, that is between the user and the aggregator. OP-CB must not upload receiver data anywhere."
     },
     {
       "providerId": "ais-local",
       "name": "Local AIS receiver (NMEA 0183 over TCP) — the user's own receptions",
       "sourceUrl": "tcp://<user-host>:<port> (AIVDM/AIVDO sentences)",
       "termsUrl": "n/a — data originates from the user's own receiver; format reference https://gpsd.gitlab.io/gpsd/AIVDM.html",
-      "license": "No third-party data policy (the user's own AIS receptions). AIS-catcher, rtl_ais and other receiver software are not distributed by WORLDVIEW.",
+      "license": "No third-party data policy (the user's own AIS receptions). AIS-catcher, rtl_ais and other receiver software are not distributed by OP-CB.",
       "category": "maritime",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -136,7 +136,7 @@
         "attributionText": "Local AIS receiver"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-09-23 (roadmap 0.5: AIS SDR, NMEA devices). Off by default. Connects out to loopback, or the one host the user names, on the port they give (default 10110, IANA's nmea-0183); never listens. Reception of AIS broadcasts is lawful in most jurisdictions but not all — the user, not WORLDVIEW, is the operator. If the user's receiver also feeds aggregators, that is between the user and the aggregator. WORLDVIEW must not upload receptions anywhere."
+      "notes": "Added 2026-09-23 (roadmap 0.5: AIS SDR, NMEA devices). Off by default. Connects out to loopback, or the one host the user names, on the port they give (default 10110, IANA's nmea-0183); never listens. Reception of AIS broadcasts is lawful in most jurisdictions but not all — the user, not OP-CB, is the operator. If the user's receiver also feeds aggregators, that is between the user and the aggregator. OP-CB must not upload receptions anywhere."
     },
     {
       "providerId": "meshtastic-local",
@@ -180,7 +180,7 @@
         "attributionText": "Own NMEA 2000 network"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-10-05 (roadmap 0.6: NMEA 2000). Off by default. Connects out to loopback, or the one host the user names, on the port they give (default 1457); never listens, discovers nothing, and sends nothing onto the bus (RAW is read only). The boat's own position, course, heading, depth, wind and temperatures, and AIS reports the boat's own receiver hears — the same footing as the local AIS receiver (ais-local): reception of AIS broadcasts is lawful in most jurisdictions but not all, and WORLDVIEW must not upload receptions anywhere."
+      "notes": "Added 2026-10-05 (roadmap 0.6: NMEA 2000). Off by default. Connects out to loopback, or the one host the user names, on the port they give (default 1457); never listens, discovers nothing, and sends nothing onto the bus (RAW is read only). The boat's own position, course, heading, depth, wind and temperatures, and AIS reports the boat's own receiver hears — the same footing as the local AIS receiver (ais-local): reception of AIS broadcasts is lawful in most jurisdictions but not all, and OP-CB must not upload receptions anywhere."
     },
     {
       "providerId": "weatherlink-local",
@@ -202,7 +202,7 @@
         "attributionText": "Local weather station (WeatherLink Live)"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-09-23 (roadmap 0.5 local sensors). Off by default and inert until the user names the device's address and the station's position. Only the documented, unauthenticated local endpoint is read (GET /v1/current_conditions, at most every 10 s per Davis; polled every 60 s); the UDP real-time broadcast is not requested. Indoor (type 4) and leaf/soil (type 2) records are not used. WORLDVIEW must not upload station readings anywhere."
+      "notes": "Added 2026-09-23 (roadmap 0.5 local sensors). Off by default and inert until the user names the device's address and the station's position. Only the documented, unauthenticated local endpoint is read (GET /v1/current_conditions, at most every 10 s per Davis; polled every 60 s); the UDP real-time broadcast is not requested. Indoor (type 4) and leaf/soil (type 2) records are not used. OP-CB must not upload station readings anywhere."
     },
     {
       "providerId": "purpleair-local",
@@ -224,7 +224,7 @@
         "attributionText": "Local air-quality sensor (PurpleAir)"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-09-23 (roadmap 0.5 local sensors: environmental). Off by default; inert until the user names the sensor's address. Reads only GET /json (two-minute averages) every 2 min — PurpleAir asks for at least 10 s between requests. The network name, SSID and other device-status fields are not kept. PurpleAir is a trademark of PurpleAir, Inc.; the name only says which device is read. WORLDVIEW must not upload sensor readings anywhere."
+      "notes": "Added 2026-09-23 (roadmap 0.5 local sensors: environmental). Off by default; inert until the user names the sensor's address. Reads only GET /json (two-minute averages) every 2 min — PurpleAir asks for at least 10 s between requests. The network name, SSID and other device-status fields are not kept. PurpleAir is a trademark of PurpleAir, Inc.; the name only says which device is read. OP-CB must not upload sensor readings anywhere."
     },
     {
       "providerId": "aisstream-io",
@@ -248,7 +248,7 @@
         "termsUrl": "https://aisstream.io/documentation"
       },
       "commercialReview": "manual-review-required",
-      "notes": "User supplies their own API key (Electron main holds it; renderer never sees it — satisfies \"Direct browser connections are not permitted\"). No published licence means commercial use is unknown, not prohibited; the 24 h normalized-retention cap and export=false are WORLDVIEW's conservative defaults, not provider terms, and can be relaxed after a human reads whatever terms AISStream publishes or answers by email. AIS messages themselves are public safety broadcasts; the encumbrance, if any, is on the aggregated feed."
+      "notes": "User supplies their own API key (Electron main holds it; renderer never sees it — satisfies \"Direct browser connections are not permitted\"). No published licence means commercial use is unknown, not prohibited; the 24 h normalized-retention cap and export=false are OP-CB's conservative defaults, not provider terms, and can be relaxed after a human reads whatever terms AISStream publishes or answers by email. AIS messages themselves are public safety broadcasts; the encumbrance, if any, is on the aggregated feed."
     },
     {
       "providerId": "digitraffic-ais",
@@ -271,7 +271,7 @@
         "termsUrl": "https://www.digitraffic.fi/en/terms-of-service/"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-09-28 (ships without a key). Positions and static reports heard by the Finnish Transport Infrastructure Agency's coastal AIS base stations (Gulf of Finland, Archipelago and Bothnian Seas, northern Baltic Proper), published by Fintraffic (https://www.digitraffic.fi/en/marine-traffic/; OpenAPI https://meri.digitraffic.fi/swagger/). CC BY 4.0 permits commercial use, redistribution and adaptation with the notice, a link where feasible and an indication of changes: the notice is shown with every ship and stamped on exports; WORLDVIEW's only changes are unit conversions (knots to m/s, tenths of a metre to metres) and AIS codes decoded to text, and the provider's description says so. Etiquette from Digitraffic's instructions page (read 2026-09-28): send a Digitraffic-User header naming the application and never a person (WORLDVIEW sends 'worldview', as the Fintraffic camera pack does); gzip is mandatory (the runtime's fetch requests and decodes it); without the header the limit is 60 requests a minute per IP. WORLDVIEW asks for positions of the last 15 minutes once a minute and for changed static data every 15 minutes (a day's worth the first time). The live API could not be read from the build machine (robots.txt refuses automated readers), so the test fixtures are invented in the documented shape; a small recorded sample is permitted by the licence and should be added from a machine that can reach the API. MQTT over WebSocket (wss://meri.digitraffic.fi:443/mqtt) was not used: the provider SDK offers MQTT only to local transports (ADR-003), and a once-a-minute snapshot is all the map draws."
+      "notes": "Added 2026-09-28 (ships without a key). Positions and static reports heard by the Finnish Transport Infrastructure Agency's coastal AIS base stations (Gulf of Finland, Archipelago and Bothnian Seas, northern Baltic Proper), published by Fintraffic (https://www.digitraffic.fi/en/marine-traffic/; OpenAPI https://meri.digitraffic.fi/swagger/). CC BY 4.0 permits commercial use, redistribution and adaptation with the notice, a link where feasible and an indication of changes: the notice is shown with every ship and stamped on exports; OP-CB's only changes are unit conversions (knots to m/s, tenths of a metre to metres) and AIS codes decoded to text, and the provider's description says so. Etiquette from Digitraffic's instructions page (read 2026-09-28): send a Digitraffic-User header naming the application and never a person (OP-CB sends 'opcb', as the Fintraffic camera pack does); gzip is mandatory (the runtime's fetch requests and decodes it); without the header the limit is 60 requests a minute per IP. OP-CB asks for positions of the last 15 minutes once a minute and for changed static data every 15 minutes (a day's worth the first time). The live API could not be read from the build machine (robots.txt refuses automated readers), so the test fixtures are invented in the documented shape; a small recorded sample is permitted by the licence and should be added from a machine that can reach the API. MQTT over WebSocket (wss://meri.digitraffic.fi:443/mqtt) was not used: the provider SDK offers MQTT only to local transports (ADR-003), and a once-a-minute snapshot is all the map draws."
     },
     {
       "providerId": "open-meteo",
@@ -294,7 +294,7 @@
         "termsUrl": "https://open-meteo.com/en/terms"
       },
       "commercialReview": "conditional",
-      "notes": "GEV uses the free endpoint (server/providers/regional/weather.js) with a linked credit (DATA_SOURCES.md line 34). A commercial desktop product cannot rely on the free endpoint. Options for legal/product: (a) WORLDVIEW (the vendor) buys an Open-Meteo API subscription and ships requests through a vendor-held key — key must live in a WORLDVIEW-operated relay, never in the binary; (b) each customer enters their own commercial key (auth-required, the plan recorded here); (c) drop weather from R1. Attribution requirement is CC BY 4.0 with an adjacent link."
+      "notes": "GEV uses the free endpoint (server/providers/regional/weather.js) with a linked credit (DATA_SOURCES.md line 34). A commercial desktop product cannot rely on the free endpoint. Options for legal/product: (a) OP-CB (the vendor) buys an Open-Meteo API subscription and ships requests through a vendor-held key — key must live in an OP-CB-operated relay, never in the binary; (b) each customer enters their own commercial key (auth-required, the plan recorded here); (c) drop weather from R1. Attribution requirement is CC BY 4.0 with an adjacent link."
     },
     {
       "providerId": "nws-alerts",
@@ -363,7 +363,7 @@
         "termsUrl": "https://docs.protomaps.com/basemaps/downloads"
       },
       "commercialReview": "approved",
-      "notes": "Intended source of offline worldpacks (city/region extracts). ODbL: extracts are \"produced works\"/derived databases; redistributing a modified extract requires ODbL share-alike on the data and the OSM attribution — WORLDVIEW code is unaffected. Do NOT confuse with the Protomaps hosted API (api.protomaps.com), which is a paid keyed service with its own terms and is not planned. Natural Earth low-zoom layers inside Protomaps builds are public domain."
+      "notes": "Intended source of offline worldpacks (city/region extracts). ODbL: extracts are \"produced works\"/derived databases; redistributing a modified extract requires ODbL share-alike on the data and the OSM attribution — OP-CB code is unaffected. Do NOT confuse with the Protomaps hosted API (api.protomaps.com), which is a paid keyed service with its own terms and is not planned. Natural Earth low-zoom layers inside Protomaps builds are public domain."
     },
     {
       "providerId": "reearth-terrain-mapterhorn",
@@ -481,10 +481,10 @@
     },
     {
       "providerId": "worldview-seed-airports",
-      "name": "WORLDVIEW seed airports (bundled GeoJSON of major world airports)",
+      "name": "OP-CB seed airports (bundled GeoJSON of major world airports)",
       "sourceUrl": "fixtures/airports/seed-airports.geojson (bundled with the application)",
       "termsUrl": "https://opensource.org/license/mit",
-      "license": "MIT (authored in the WORLDVIEW repository). Content is curated public facts: ICAO/IATA codes, names, municipality, country and coordinates rounded to 0.01°",
+      "license": "MIT (authored in the OP-CB repository). Content is curated public facts: ICAO/IATA codes, names, municipality, country and coordinates rounded to 0.01°",
       "category": "infrastructure",
       "plannedStatus": "default",
       "dataPolicy": {
@@ -496,7 +496,7 @@
         "exportAllowed": true,
         "commercialUseAllowed": true,
         "attributionRequired": false,
-        "attributionText": "Airports: WORLDVIEW seed dataset",
+        "attributionText": "Airports: OP-CB seed dataset",
         "termsUrl": "https://opensource.org/license/mit"
       },
       "commercialReview": "approved",
@@ -545,7 +545,7 @@
         "termsUrl": "https://www.esri.com/en-us/legal/terms/full-master-agreement"
       },
       "commercialReview": "conditional",
-      "notes": "Not the WORLDVIEW default (PMTiles/OpenFreeMap is). Kept as an optional imagery source pending legal reading of the Master Agreement clauses on (a) use of ArcGIS Online basemaps inside a commercial third-party desktop product without an ArcGIS Location Platform account/API key, (b) caching/offline (Esri generally forbids persistent tile caches outside their own offline products), (c) whether the keyless classic endpoint may be retired. Screenshots/exports containing Esri imagery are blocked (exportAllowed=false) until legal confirms static-image reuse terms."
+      "notes": "Not the OP-CB default (PMTiles/OpenFreeMap is). Kept as an optional imagery source pending legal reading of the Master Agreement clauses on (a) use of ArcGIS Online basemaps inside a commercial third-party desktop product without an ArcGIS Location Platform account/API key, (b) caching/offline (Esri generally forbids persistent tile caches outside their own offline products), (c) whether the keyless classic endpoint may be retired. Screenshots/exports containing Esri imagery are blocked (exportAllowed=false) until legal confirms static-image reuse terms."
     },
     {
       "providerId": "nominatim-geocoder",
@@ -569,7 +569,7 @@
         "termsUrl": "https://operations.osmfoundation.org/policies/nominatim/"
       },
       "commercialReview": "conditional",
-      "notes": "Not a provider: the desktop main process asks it only when the operator presses Enter on \"Search places online\" (apps/desktop/src/main/place-search.ts). One request a second at most per installation, a day's in-memory cache, WorldView's own User-Agent, attribution under the results, nothing when offline. Settings -> Search switches it off or puts Photon first (the policy's switchability requirement, operator-side). Condition for review: the policy's aggregate limit is per application across all its users; a large installed base would need its own Nominatim instance or a commercial geocoder, which the service switch can point at in a later build."
+      "notes": "Not a provider: the desktop main process asks it only when the operator presses Enter on \"Search places online\" (apps/desktop/src/main/place-search.ts). One request a second at most per installation, a day's in-memory cache, OP-CB's own User-Agent, attribution under the results, nothing when offline. Settings -> Search switches it off or puts Photon first (the policy's switchability requirement, operator-side). Condition for review: the policy's aggregate limit is per application across all its users; a large installed base would need its own Nominatim instance or a commercial geocoder, which the service switch can point at in a later build."
     },
     {
       "providerId": "photon-geocoder",
@@ -617,7 +617,7 @@
         "termsUrl": "https://operations.osmfoundation.org/policies/tiles/"
       },
       "commercialReview": "excluded",
-      "notes": "Excluded as a DEFAULT basemap: the OSMF tile servers are donated community infrastructure and the policy has historically discouraged use as the default in distributed applications; the currently published wording (fetched 2026-09-21) does not repeat that sentence but does prohibit offline use, bulk fetching and generic User-Agents and reserves blocking without notice. Migration matrix row 7 flags this for legal sign-off. Users may add it manually as a custom XYZ source at their own risk with a WORLDVIEW User-Agent; the app must never pre-seed from it."
+      "notes": "Excluded as a DEFAULT basemap: the OSMF tile servers are donated community infrastructure and the policy has historically discouraged use as the default in distributed applications; the currently published wording (fetched 2026-09-21) does not repeat that sentence but does prohibit offline use, bulk fetching and generic User-Agents and reserves blocking without notice. Migration matrix row 7 flags this for legal sign-off. Users may add it manually as a custom XYZ source at their own risk with an OP-CB User-Agent; the app must never pre-seed from it."
     },
     {
       "providerId": "cesium-ion",
@@ -640,7 +640,7 @@
         "termsUrl": "https://cesium.com/legal/terms-of-service/"
       },
       "commercialReview": "conditional",
-      "notes": "BYO token only; WORLDVIEW ships no ion token and works without ion. A commercial customer using ion needs a commercial ion plan; the app should say so in the settings UI. Bing Maps imagery through ion carries Microsoft terms; Google Photorealistic through ion carries Google terms (see google-maps-platform). Never persist ion tiles outside Cesium's in-memory/HTTP cache."
+      "notes": "BYO token only; OP-CB ships no ion token and works without ion. A commercial customer using ion needs a commercial ion plan; the app should say so in the settings UI. Bing Maps imagery through ion carries Microsoft terms; Google Photorealistic through ion carries Google terms (see google-maps-platform). Never persist ion tiles outside Cesium's in-memory/HTTP cache."
     },
     {
       "providerId": "google-maps-platform",
@@ -686,7 +686,7 @@
         "termsUrl": "https://www.digitraffic.fi/en/terms-of-service/"
       },
       "commercialReview": "approved",
-      "notes": "Catalog + frames under CC BY 4.0. Service asks clients to identify with a Digitraffic-User header (GEV sends one) and to respect the 600 s station refresh. Frames are governed by the global CCTV frame rule (never retained/exported/redistributed by WORLDVIEW) regardless of the licence — the true flags here describe the catalog."
+      "notes": "Catalog + frames under CC BY 4.0. Service asks clients to identify with a Digitraffic-User header (GEV sends one) and to respect the 600 s station refresh. Frames are governed by the global CCTV frame rule (never retained/exported/redistributed by OP-CB) regardless of the licence — the true flags here describe the catalog."
     },
     {
       "providerId": "live-traffic-nsw",
@@ -709,11 +709,11 @@
         "termsUrl": "https://opendata.transport.nsw.gov.au/"
       },
       "commercialReview": "approved",
-      "notes": "GEV notes the image host answers non-browser clients with an HTML placeholder, so its proxy identifies as a browser for that one host (DATA_SOURCES.md line 76). WORLDVIEW should instead register a real User-Agent and ask TfNSW open data for the supported access pattern — impersonating a browser is a policy smell even when the licence is CC BY."
+      "notes": "GEV notes the image host answers non-browser clients with an HTML placeholder, so its proxy identifies as a browser for that one host (DATA_SOURCES.md line 76). OP-CB should instead register a real User-Agent and ask TfNSW open data for the supported access pattern — impersonating a browser is a policy smell even when the licence is CC BY."
     },
     {
       "providerId": "public-cameras",
-      "name": "Public cameras — WORLDVIEW provider aggregating the openly licensed CCTV packs (fintraffic-weathercams, live-traffic-nsw, tfl-jamcams, ontario-511, drivebc, open-calgary, hk-td-traffic-snapshots, irca-iceland-webcams, qldtraffic-webcams, trafikverket-cameras, tw-thb-cctv, tw-freeway-cctv, idot-gateway-cameras, dgt-etraffic-cameras)",
+      "name": "Public cameras — OP-CB provider aggregating the openly licensed CCTV packs (fintraffic-weathercams, live-traffic-nsw, tfl-jamcams, ontario-511, drivebc, open-calgary, hk-td-traffic-snapshots, irca-iceland-webcams, qldtraffic-webcams, trafikverket-cameras, tw-thb-cctv, tw-freeway-cctv, idot-gateway-cameras, dgt-etraffic-cameras)",
       "sourceUrl": "packs: fintraffic-weathercams ; live-traffic-nsw ; tfl-jamcams ; ontario-511 ; drivebc ; open-calgary ; hk-td-traffic-snapshots ; irca-iceland-webcams ; qldtraffic-webcams ; trafikverket-cameras ; tw-thb-cctv ; tw-freeway-cctv ; idot-gateway-cameras ; dgt-etraffic-cameras (see those records for endpoints)",
       "termsUrl": "https://www.digitraffic.fi/en/terms-of-service/ ; https://opendata.transport.nsw.gov.au/ ; https://tfl.gov.uk/info-for/open-data-users/ ; https://www.ontario.ca/page/open-government-licence-ontario ; https://www2.gov.bc.ca/gov/content/data/open-data/open-government-licence-bc ; https://data.calgary.ca/stories/s/Open-Calgary-Terms-of-Use/u45n-7awa ; https://data.gov.hk/en/terms-and-conditions ; https://www.vegagerdin.is/vegagerdin/gagnasafn/vefthjonustur/terms-and-conditions ; https://qldtraffic.qld.gov.au/more/Developers-and-Data/ ; https://www.trafikverket.se/e-tjanster/trafikverkets-oppna-api-for-trafikinformation/ ; https://data.gov.tw/license ; https://www.arcgis.com/home/item.html?id=8a885da23dfb46caaa1827ad920fb5b1 ; https://nap.dgt.es/en/dataset/mapa-de-trafico",
       "license": "Every pack in the aggregate permits commercial use with attribution: CC BY 4.0 (Fintraffic, TfNSW), CC BY 4.0 AU (QLDTraffic), TfL Open Data terms, Open Government Licence – Ontario, – British Columbia, – City of Calgary, DATA.GOV.HK Terms and Conditions, IRCA Terms and Conditions, CC0 1.0 (Trafikverket), Open Government Data License v1.0 (Taiwan Highway Bureau, Freeway Bureau), CC BY-SA 2.0 (IDOT Gateway), CC BY (DGT eTraffic, per Spain's traffic NAP). Each pack keeps its own record; this record is the manifest-level policy of providers/cctv-public and must stay equal to the intersection of its packs’ policies.",
@@ -737,9 +737,9 @@
     {
       "providerId": "cameras-local",
       "name": "User-configured cameras (local gateway)",
-      "sourceUrl": "user settings (camera list) ; media via @worldview/camera-gateway on 127.0.0.1",
+      "sourceUrl": "user settings (camera list) ; media via @opcb/camera-gateway on 127.0.0.1",
       "termsUrl": "",
-      "license": "Not third-party data: the catalog is the user's own configuration (names, positions, headings) and the frames come from cameras the user owns or is authorised to view. No licence attaches; WORLDVIEW imposes the privacy rule that frames are never retained.",
+      "license": "Not third-party data: the catalog is the user's own configuration (names, positions, headings) and the frames come from cameras the user owns or is authorised to view. No licence attaches; OP-CB imposes the privacy rule that frames are never retained.",
       "category": "cctv",
       "plannedStatus": "default",
       "dataPolicy": {
@@ -846,7 +846,7 @@
         "termsUrl": "https://data.calgary.ca/stories/s/Open-Calgary-Terms-of-Use/u45n-7awa"
       },
       "commercialReview": "approved",
-      "notes": "Dataset rows publish http:// frame URLs; GEV upgrades to https and pins the host. No facing/heading data — headings are WORLDVIEW estimates (must be labelled low-confidence, not attributed to Calgary)."
+      "notes": "Dataset rows publish http:// frame URLs; GEV upgrades to https and pins the host. No facing/heading data — headings are OP-CB estimates (must be labelled low-confidence, not attributed to Calgary)."
     },
     {
       "providerId": "hk-td-traffic-snapshots",
@@ -938,7 +938,7 @@
         "termsUrl": "https://creativecommons.org/licenses/by-sa/2.0/"
       },
       "commercialReview": "approved",
-      "notes": "1,749 camera views on 2026-09-27 (one row per view; the Gateway device id and facing are the camera id). Share-alike attaches to adaptations WORLDVIEW publishes — an exported or packed catalogue must be offered under CC BY-SA 2.0 with the attribution, as for the ODbL extracts; frames are never redistributed (global CCTV frame rule). The snapshot host could not be fetched from the build machine (its robots.txt refuses automated readers); the catalogue answered. Confirm on the operator's machine that stills load."
+      "notes": "1,749 camera views on 2026-09-27 (one row per view; the Gateway device id and facing are the camera id). Share-alike attaches to adaptations OP-CB publishes — an exported or packed catalogue must be offered under CC BY-SA 2.0 with the attribution, as for the ODbL extracts; frames are never redistributed (global CCTV frame rule). The snapshot host could not be fetched from the build machine (its robots.txt refuses automated readers); the catalogue answered. Confirm on the operator's machine that stills load."
     },
     {
       "providerId": "dgt-etraffic-cameras",
@@ -1007,7 +1007,7 @@
         "termsUrl": "https://qldtraffic.qld.gov.au/more/Developers-and-Data/"
       },
       "commercialReview": "approved",
-      "notes": "The API takes a key. The specification publishes a shared anonymous key (globally limited to 100 requests a minute) for developers who do not register; WORLDVIEW uses it at one catalogue request per 15 minutes. A registered key is not needed. Cameras whose images are sourced from another organisation (image_sourced_from set) are dropped, because the CC BY statement cannot be assumed to cover third-party material. Specification: https://qldtraffic.qld.gov.au/media/moreDevelopers-and-Data/qldtraffic-website-api-specification-v1-10.pdf."
+      "notes": "The API takes a key. The specification publishes a shared anonymous key (globally limited to 100 requests a minute) for developers who do not register; OP-CB uses it at one catalogue request per 15 minutes. A registered key is not needed. Cameras whose images are sourced from another organisation (image_sourced_from set) are dropped, because the CC BY statement cannot be assumed to cover third-party material. Specification: https://qldtraffic.qld.gov.au/media/moreDevelopers-and-Data/qldtraffic-website-api-specification-v1-10.pdf."
     },
     {
       "providerId": "trafikverket-cameras",
@@ -1053,11 +1053,11 @@
         "termsUrl": "https://data.gov.sg/open-data-licence"
       },
       "commercialReview": "approved",
-      "notes": "Keyless (an optional API key only raises rate limits). The v1 endpoint listed eight cameras on 2026-09-23 (checkpoint approaches); the v2 real-time endpoint answered 403 from the build machine. every camera's image URL changes with each capture, so the pack runs in its own provider polled every minute. The licence permits retention and redistribution; WORLDVIEW keeps none of these rows (normalizedRetentionAllowed false by choice — only the URLs change) and makes no offline pack of URLs that expire in a minute. Each camera carries the notice with the date of the catalogue fetch. Response shape follows the published API and one open-source client; checked against a live response on the operator's machine on 2026-09-23 (8 cameras loaded)."
+      "notes": "Keyless (an optional API key only raises rate limits). The v1 endpoint listed eight cameras on 2026-09-23 (checkpoint approaches); the v2 real-time endpoint answered 403 from the build machine. every camera's image URL changes with each capture, so the pack runs in its own provider polled every minute. The licence permits retention and redistribution; OP-CB keeps none of these rows (normalizedRetentionAllowed false by choice — only the URLs change) and makes no offline pack of URLs that expire in a minute. Each camera carries the notice with the date of the catalogue fetch. Response shape follows the published API and one open-source client; checked against a live response on the operator's machine on 2026-09-23 (8 cameras loaded)."
     },
     {
       "providerId": "public-cameras-singapore",
-      "name": "Public cameras — Singapore (WORLDVIEW provider for the datagovsg-traffic-images pack)",
+      "name": "Public cameras — Singapore (OP-CB provider for the datagovsg-traffic-images pack)",
       "sourceUrl": "pack: datagovsg-traffic-images (see that record)",
       "termsUrl": "https://data.gov.sg/open-data-licence",
       "license": "Singapore Open Data Licence v1.0 (the pack's). Manifest-level policy of the public-cameras-singapore provider (providers/cctv-public/src/singapore); must equal its pack's record.",
@@ -1284,7 +1284,7 @@
         "attributionText": "Powered by 511NY (courtesy)"
       },
       "commercialReview": "conditional",
-      "notes": "A revocable grant with conditions (attribution with the 511NY logo and link, unaltered data), accepted by the operator when registering the key. WORLDVIEW shows the text \"Powered by 511NY\" only (no logo). Shipped in public-cameras-unverified (off by default) under that provider's stricter policy until the logo condition and the images' coverage are reviewed."
+      "notes": "A revocable grant with conditions (attribution with the 511NY logo and link, unaltered data), accepted by the operator when registering the key. OP-CB shows the text \"Powered by 511NY\" only (no logo). Shipped in public-cameras-unverified (off by default) under that provider's stricter policy until the logo condition and the images' coverage are reviewed."
     },
     {
       "providerId": "udot-traffic-cameras",
@@ -1380,7 +1380,7 @@
     },
     {
       "providerId": "public-cameras-unverified",
-      "name": "Public cameras (licence not confirmed) — WORLDVIEW provider aggregating the camera catalogues whose images have no confirmed licence (caltrans-cctv, city-of-austin-cctv, nyc-dot-webcams, iowa-dot-cameras, nzta-traffic-cameras, wsdot-cameras, eismoinfo-lt-cameras, ny511-cameras, udot-traffic-cameras, az511-cameras, ga511-cameras, idaho511-cameras)",
+      "name": "Public cameras (licence not confirmed) — OP-CB provider aggregating the camera catalogues whose images have no confirmed licence (caltrans-cctv, city-of-austin-cctv, nyc-dot-webcams, iowa-dot-cameras, nzta-traffic-cameras, wsdot-cameras, eismoinfo-lt-cameras, ny511-cameras, udot-traffic-cameras, az511-cameras, ga511-cameras, idaho511-cameras)",
       "sourceUrl": "packs: caltrans-cctv ; city-of-austin-cctv ; nyc-dot-webcams ; iowa-dot-cameras ; nzta-traffic-cameras ; wsdot-cameras ; eismoinfo-lt-cameras ; ny511-cameras ; udot-traffic-cameras ; az511-cameras ; ga511-cameras ; idaho511-cameras (see those records for endpoints)",
       "termsUrl": "see the pack records",
       "license": "None confirmed. Each pack keeps its own record; this record is the manifest-level policy of the public-cameras-unverified provider (providers/cctv-public/src/unverified) and must stay equal to the intersection of its packs' policies.",
@@ -1491,7 +1491,7 @@
         "termsUrl": "https://cdn.mbta.com/sites/default/files/2023-08/mbta-massdot-develop-license-agreement.pdf"
       },
       "commercialReview": "conditional",
-      "notes": "The agreement is a revocable licence that a human should read in full (fee, indemnity and termination clauses are typical in MassDOT agreements). Logos/trademarks forbidden with the data. GEV keeps 15 min of history in memory; WORLDVIEW history-store retention must be confirmed against the agreement. Realtime positions are not meaningful offline, hence offlinePackAllowed=false by design."
+      "notes": "The agreement is a revocable licence that a human should read in full (fee, indemnity and termination clauses are typical in MassDOT agreements). Logos/trademarks forbidden with the data. GEV keeps 15 min of history in memory; OP-CB history-store retention must be confirmed against the agreement. Realtime positions are not meaningful offline, hence offlinePackAllowed=false by design."
     },
     {
       "providerId": "capmetro-gtfs-rt",
@@ -1584,7 +1584,7 @@
         "termsUrl": "https://data.norge.no/nlod/en/2.0"
       },
       "commercialReview": "approved",
-      "notes": "NLOD 2.0 permits commercial use with attribution. ET-Client-Name header is mandatory — WORLDVIEW must send its own value (e.g. \"worldview-transit\"), not GEV's."
+      "notes": "NLOD 2.0 permits commercial use with attribution. ET-Client-Name header is mandatory — OP-CB must send its own value (e.g. \"opcb-transit\"), not GEV's."
     },
     {
       "providerId": "translink-seq-gtfs-rt",
@@ -1630,7 +1630,7 @@
         "termsUrl": "https://www.hsl.fi/en/hsl/open-data"
       },
       "commercialReview": "approved",
-      "notes": "A WORLDVIEW reviewer should open the HSL page in a browser and file a screenshot/quote in docs/providers since automated fetch fails."
+      "notes": "An OP-CB reviewer should open the HSL page in a browser and file a screenshot/quote in docs/providers since automated fetch fails."
     },
     {
       "providerId": "gbfs-operators",
@@ -1652,7 +1652,7 @@
         "attributionText": "Operator name + license_url from each feed's system_information.json"
       },
       "commercialReview": "conditional",
-      "notes": "Lyft's data licence agreements generally permit use \"for any lawful purpose\" including in products, forbid Lyft/operator trademarks and implying endorsement, and are revocable — a human must read each before the feed is default-on. WORLDVIEW should read license_url from system_information.json at runtime and display it, rather than hard-coding. Default-off in R1 (migration matrix folds bikeshare into the transit family)."
+      "notes": "Lyft's data licence agreements generally permit use \"for any lawful purpose\" including in products, forbid Lyft/operator trademarks and implying endorsement, and are revocable — a human must read each before the feed is default-on. OP-CB should read license_url from system_information.json at runtime and display it, rather than hard-coding. Default-off in R1 (migration matrix folds bikeshare into the transit family)."
     },
     {
       "providerId": "tomtom-traffic",
@@ -1699,7 +1699,7 @@
         "termsUrl": "https://www.openstreetmap.org/copyright"
       },
       "commercialReview": "conditional",
-      "notes": "Data licence approved (ODbL, share-alike on derived databases). Condition: a commercial product at scale should not lean on volunteer Overpass mirrors — plan for a WORLDVIEW-operated Overpass instance or pre-extracted PMTiles feature packs; keep GEV's query sanitiser, disk cache and 10° viewport cap so per-user load stays interactive. ALPR queries against OSM are excluded (osm-alpr-deflock)."
+      "notes": "Data licence approved (ODbL, share-alike on derived databases). Condition: a commercial product at scale should not lean on volunteer Overpass mirrors — plan for an OP-CB-operated Overpass instance or pre-extracted PMTiles feature packs; keep GEV's query sanitiser, disk cache and 10° viewport cap so per-user load stays interactive. ALPR queries against OSM are excluded (osm-alpr-deflock)."
     },
     {
       "providerId": "photon-komoot",
@@ -1722,7 +1722,7 @@
         "termsUrl": "https://photon.komoot.io/"
       },
       "commercialReview": "conditional",
-      "notes": "Interactive, user-initiated searches only; no autocomplete spam; identify with User-Agent. Condition: legal/ops accept reliance on komoot's courtesy instance for a commercial product, or WORLDVIEW self-hosts Photon (Apache-2.0 software, ODbL data)."
+      "notes": "Interactive, user-initiated searches only; no autocomplete spam; identify with User-Agent. Condition: legal/ops accept reliance on komoot's courtesy instance for a commercial product, or OP-CB self-hosts Photon (Apache-2.0 software, ODbL data)."
     },
     {
       "providerId": "nominatim-osm",
@@ -1971,7 +1971,7 @@
         "attributionText": "© OpenStreetMap contributors; DeFlock community mapping"
       },
       "commercialReview": "excluded",
-      "notes": "WORLDVIEW privacy boundary: no surveillance-camera mapping layer in the product. The ODbL data itself would be usable; the exclusion is a policy decision recorded here so nobody re-adds it as \"just another Overpass query\"."
+      "notes": "OP-CB privacy boundary: no surveillance-camera mapping layer in the product. The ODbL data itself would be usable; the exclusion is a policy decision recorded here so nobody re-adds it as \"just another Overpass query\"."
     },
     {
       "providerId": "nhc-storms",
@@ -2714,7 +2714,7 @@
       "name": "Home Assistant sensors (your own instance)",
       "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
       "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
-      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by OP-CB.",
       "category": "environment",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -2737,7 +2737,7 @@
       "name": "Home Assistant weather (your own instance)",
       "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
       "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
-      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by OP-CB.",
       "category": "weather",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -2760,7 +2760,7 @@
       "name": "Home Assistant zones (your own instance)",
       "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
       "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
-      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by OP-CB.",
       "category": "infrastructure",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -2783,7 +2783,7 @@
       "name": "Home Assistant people and their phones (your own instance)",
       "sourceUrl": "http://<user-host>:8123/api/states ; ws://<user-host>:8123/api/websocket",
       "termsUrl": "https://developers.home-assistant.io/docs/api/rest/",
-      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by WORLDVIEW.",
+      "license": "No third-party data policy: the data comes from the operator's own Home Assistant, read with their own token. Home Assistant (Apache-2.0) is not distributed by OP-CB.",
       "category": "infrastructure",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -2868,7 +2868,7 @@
         "termsUrl": "https://kiwix.org/en/"
       },
       "commercialReview": "approved",
-      "notes": "Operator decision 2026-10-30 (built-in ZIM reader and catalogue downloads). The operator chooses and downloads each file onto their own computer; WorldView bundles no library content and redistributes nothing (redistribution/offline-pack flags false for that reason, not because the content forbids it). Credits and licence stay inside each file and are shown in the reader. Downloads only from download.kiwix.org links (and https mirrors named in its Metalink files), checked by size, SHA-256 when given, and the ZIM file's own MD5."
+      "notes": "Operator decision 2026-10-30 (built-in ZIM reader and catalogue downloads). The operator chooses and downloads each file onto their own computer; OP-CB bundles no library content and redistributes nothing (redistribution/offline-pack flags false for that reason, not because the content forbids it). Credits and licence stay inside each file and are shown in the reader. Downloads only from download.kiwix.org links (and https mirrors named in its Metalink files), checked by size, SHA-256 when given, and the ZIM file's own MD5."
     },
     {
       "providerId": "us-federal-preparedness",

@@ -1,4 +1,4 @@
-import { formatUtcDateTime } from '@worldview/ui';
+import { formatUtcDateTime } from '@opcb/ui';
 
 /**
  * An event's end as the panel shows it: "Ended" once it is past; before then "Ends", or

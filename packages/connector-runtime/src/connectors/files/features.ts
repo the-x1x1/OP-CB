@@ -1,4 +1,4 @@
-import type { JsonValue, WorldGeometry } from '@worldview/world-model';
+import type { JsonValue, WorldGeometry } from '@opcb/world-model';
 
 /**
  * What the GPX, KML and TopoJSON readers produce: GeoJSON features, so that one mapping

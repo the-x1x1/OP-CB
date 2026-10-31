@@ -1,6 +1,6 @@
-import { isBasemapOverlay, type RasterOverlay } from '@worldview/world-model';
-import { VISUAL_STYLE_IDS, type VisualStyleId } from '@worldview/ipc-contract';
-import type { ResolvedMapProvider } from '@worldview/render-core';
+import { isBasemapOverlay, type RasterOverlay } from '@opcb/world-model';
+import { VISUAL_STYLE_IDS, type VisualStyleId } from '@opcb/ipc-contract';
+import type { ResolvedMapProvider } from '@opcb/render-core';
 import { useActions, useAppState } from '../store/store.js';
 import { displaySettings, VISUAL_STYLE_NAMES } from '../store/display.js';
 import { sourceBasemapId } from '../map-providers.js';
@@ -30,8 +30,8 @@ export interface ViewChoice {
 
 const BASEMAP_LABELS: Readonly<Record<string, string>> = {
   'natural-earth': 'Natural Earth',
-  'worldview-dark': 'Dark',
-  'worldview-light': 'Light',
+  'opcb-dark': 'Dark',
+  'opcb-light': 'Light',
   'esri-world-imagery': 'Satellite HD',
   'osm-raster': 'Streets',
   'cesium-ion-bing': 'Bing Aerial',

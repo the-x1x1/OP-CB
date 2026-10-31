@@ -9,7 +9,7 @@ import {
   type GeoPosition,
   type GeoRegion,
   type WorldGeometry,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 /** All vertices of a geometry as lon/lat pairs. */
 export function geometryPoints(g: WorldGeometry): Array<[number, number]> {

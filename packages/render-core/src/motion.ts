@@ -1,4 +1,4 @@
-import { EARTH_RADIUS_M, normalizeLongitude, type GeoPosition, type WorldObject } from '@worldview/world-model';
+import { EARTH_RADIUS_M, normalizeLongitude, type GeoPosition, type WorldObject } from '@opcb/world-model';
 import type { RenderMotion } from './contract.js';
 
 /**

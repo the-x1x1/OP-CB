@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import { DemoClient } from '../demo/demo-client.js';
 import { installClock } from '../hooks/use-now.js';
 import { loadInitialState } from '../store/bootstrap-state.js';

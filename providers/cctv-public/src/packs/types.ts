@@ -1,5 +1,5 @@
-import { stableStringify, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft, ProviderHttpRequest } from '@worldview/provider-sdk';
+import { stableStringify, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft, ProviderHttpRequest } from '@opcb/provider-sdk';
 
 /**
  * A catalog pack turns one public camera catalog into observation drafts.

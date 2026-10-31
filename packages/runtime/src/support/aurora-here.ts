@@ -1,5 +1,5 @@
-import { pointInPolygon, type GeoPosition, type WorldGeometry, type WorldObject } from '@worldview/world-model';
-import type { SkyAurora } from '@worldview/ipc-contract';
+import { pointInPolygon, type GeoPosition, type WorldGeometry, type WorldObject } from '@opcb/world-model';
+import type { SkyAurora } from '@opcb/ipc-contract';
 
 /**
  * The aurora forecast at a place, for the Sky tab (`sky.overhead`'s `aurora`): of the

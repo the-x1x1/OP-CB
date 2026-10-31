@@ -1,6 +1,6 @@
-# WORLDVIEW on Linux and the cyberdeck — north star
+# OP-CB on Linux and the cyberdeck — north star
 
-WORLDVIEW runs as an ordinary, installable, secure Linux desktop application on the operator's
+OP-CB runs as an ordinary, installable, secure Linux desktop application on the operator's
 ThinkPad P16s, stays useful with no internet, shows real local radio and GNSS observations, and
 offers a narrow read-only local interface that a separate Formicaria app can use later.
 
@@ -9,7 +9,7 @@ navigation scheme and no redesign; the cyberdeck is a Linux laptop running the n
 
 ## What "done" means
 
-1. A `.deb` installs WORLDVIEW on a supported Ubuntu
+1. A `.deb` installs OP-CB on a supported Ubuntu
    LTS. It launches from the desktop menu with no development tools, with Chromium's sandbox
    on, its data under the XDG directories, API keys in the desktop keyring or refused, and
    history in DuckDB or, when the native engine cannot load, NDJSON with the reason shown.
@@ -27,7 +27,7 @@ navigation scheme and no redesign; the cyberdeck is a Linux laptop running the n
 
 ## Rules that do not bend
 
-The 10 design rules in the implementation prompt (one OS, no containers or app server; WORLDVIEW
+The 10 design rules in the implementation prompt (one OS, no containers or app server; OP-CB
 stays standalone; Windows preserved; provider/runtime contracts extended, never bypassed; radios
 receive-only — amended 2026-10-30 by the operator: a Meshtastic radio may send a test message on
 the operator's press, never an RTL-SDR or anything not permitted; `docs/PRODUCT-BOUNDARIES.md`; honest LIVE/RECORDED/STALE/OFFLINE state; no GPL
@@ -38,7 +38,7 @@ operator). Two more that this work added:
   the answer is the `.deb`'s AppArmor profile (or a setuid helper in development), not a weaker
   app. Tests fail if the flag appears.
 - **A keyring that is not a keyring is no keyring.** Electron's Linux `basic_text` fallback
-  encrypts with a constant compiled into Chromium; WORLDVIEW refuses to store keys on it.
+  encrypts with a constant compiled into Chromium; OP-CB refuses to store keys on it.
 
 ## Evidence vocabulary
 

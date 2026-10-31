@@ -29,7 +29,7 @@ function linuxRelease(opts: { extra?: string[]; omit?: string[]; feed?: string |
   writeFileSync(
     out(l.sbom),
     JSON.stringify({
-      metadata: { component: { version: V }, properties: [{ name: 'worldview:commit', value: COMMIT }] },
+      metadata: { component: { version: V }, properties: [{ name: 'opcb:commit', value: COMMIT }] },
     }),
   );
   const hashes = (opts.hashed ?? [l.deb, 'latest-linux.yml']).map((file) => ({
@@ -55,7 +55,7 @@ function withRoot(root: string, fn: () => void): void {
 
 test('linux artifact names are the ones electron-builder.yml declares', () => {
   const l = expectedLinuxArtifacts(V);
-  assert.equal(l.deb, `worldview_${V}_amd64.deb`);
+  assert.equal(l.deb, `opcb_${V}_amd64.deb`);
   assert.equal(l.sbom, expectedArtifacts(V).sbom, 'one SBOM name: it describes the lockfile, not the platform');
 });
 
@@ -74,7 +74,7 @@ test('release:assert-version --platform linux passes on a complete Linux release
 
 test('release:assert-version --platform linux fails on a stale package, a Windows file, or an AppImage', () => {
   const root = linuxRelease({
-    extra: ['worldview_0.2.9_amd64.deb', `WorldView-Setup-${V}.exe`, `WorldView-${V}-x86_64.AppImage`],
+    extra: ['opcb_0.2.9_amd64.deb', `OP-CB-Setup-${V}.exe`, `OP-CB-${V}-x86_64.AppImage`],
   });
   withRoot(root, () => {
     const r = assertReleaseVersion({ root, commit: COMMIT, platform: 'linux' });
@@ -82,9 +82,9 @@ test('release:assert-version --platform linux fails on a stale package, a Window
     assert.deepEqual(
       r.problems.sort(),
       [
-        `stale or foreign artifact apps/desktop/release/WorldView-${V}-x86_64.AppImage`,
-        `stale or foreign artifact apps/desktop/release/WorldView-Setup-${V}.exe`,
-        'stale or foreign artifact apps/desktop/release/worldview_0.2.9_amd64.deb',
+        `stale or foreign artifact apps/desktop/release/OP-CB-${V}-x86_64.AppImage`,
+        `stale or foreign artifact apps/desktop/release/OP-CB-Setup-${V}.exe`,
+        'stale or foreign artifact apps/desktop/release/opcb_0.2.9_amd64.deb',
       ].sort(),
     );
   });
@@ -105,14 +105,14 @@ test('release:assert-version --platform linux fails when the .deb is missing; la
 
 test('release:assert-version --platform linux checks latest-linux.yml and that the report hashed the .deb', () => {
   const root = linuxRelease({
-    feed: 'version: 0.2.9\npath: worldview_0.2.9_amd64.deb\n',
+    feed: 'version: 0.2.9\npath: opcb_0.2.9_amd64.deb\n',
     hashed: ['latest-linux.yml'],
   });
   withRoot(root, () => {
     const text = assertReleaseVersion({ root, commit: COMMIT, platform: 'linux' }).problems.join('\n');
     assert.match(text, /latest-linux\.yml version 0\.2\.9 is not/);
-    assert.match(text, /latest-linux\.yml path worldview_0\.2\.9_amd64\.deb/);
-    assert.match(text, /verification report does not hash worldview_0\.3\.0-rc\.1_amd64\.deb/);
+    assert.match(text, /latest-linux\.yml path opcb_0\.2\.9_amd64\.deb/);
+    assert.match(text, /verification report does not hash opcb_0\.3\.0-rc\.1_amd64\.deb/);
   });
 });
 

@@ -1,11 +1,11 @@
-import { OGR_INPUT_EXTENSIONS, ProviderError, type ProviderContext } from '@worldview/provider-sdk';
-import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@worldview/connector-sdk';
+import { OGR_INPUT_EXTENSIONS, ProviderError, type ProviderContext } from '@opcb/provider-sdk';
+import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import { fileSpecOf, hasGrantedFolder, ogr2ogrOf, type Ogr2ogrAccess, type Ogr2ogrDetection } from './contract.js';
 import { checkRelativePath, extensionOf } from './path-policy.js';
 import { FileBackedProvider, unsupportedSource, validateFileDefinition, type FileSource } from './provider.js';
 
 /**
- * `gdal-import`: anything GDAL reads that WORLDVIEW does not read itself — a shapefile, a
+ * `gdal-import`: anything GDAL reads that OP-CB does not read itself — a shapefile, a
  * GeoPackage, a File Geodatabase, FlatGeobuf, MapInfo, DXF, SpatiaLite, KMZ — converted to
  * GeoJSON by the operator's own `ogr2ogr` and then read exactly as a GeoJSON `local-file`.
  *

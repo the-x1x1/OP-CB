@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { ViewState } from '@worldview/render-core';
-import { haversineMeters } from '@worldview/world-model';
+import type { ViewState } from '@opcb/render-core';
+import { haversineMeters } from '@opcb/world-model';
 import {
   chainedKeyView,
   globeKeyView,

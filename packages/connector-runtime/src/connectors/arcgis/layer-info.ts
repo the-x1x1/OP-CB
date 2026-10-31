@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import { parsePath, type ConnectorProviderDefinition, type Field, type PathSegment } from '@worldview/connector-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import { parsePath, type ConnectorProviderDefinition, type Field, type PathSegment } from '@opcb/connector-sdk';
 import { ESRI_DATE_FIELD, ESRI_OID_FIELD, parseEsriFields, type EsriField } from './esri-json.js';
 import { finiteNumber, isPlainObject as isObj } from '../../shared/json.js';
 

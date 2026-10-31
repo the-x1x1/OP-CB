@@ -1,4 +1,4 @@
-import type { FieldHostStatus, GuideProgress } from '@worldview/ipc-contract';
+import type { FieldHostStatus, GuideProgress } from '@opcb/ipc-contract';
 import { type CheckData, MESH_PROVIDER, RECEIVER_PROVIDERS } from './checks.js';
 import { completion, stepVerified } from './guide-engine.js';
 import type { GuideDefinition, SectionId } from './guide-types.js';

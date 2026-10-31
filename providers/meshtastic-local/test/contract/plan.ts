@@ -1,4 +1,4 @@
-import { definePlan } from '@worldview/tool-provider-validator';
+import { definePlan } from '@opcb/tool-provider-validator';
 import { createProvider, PORT_POSITION, PORT_TELEMETRY, PORT_TEXT_MESSAGE } from '../../src/index.js';
 import {
   concat,

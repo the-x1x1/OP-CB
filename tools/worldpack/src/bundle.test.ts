@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { WorldPackBuilder, regionPreset, seedPolicies } from '@worldview/offline';
+import { WorldPackBuilder, regionPreset, seedPolicies } from '@opcb/offline';
 import { BUNDLE_MANIFEST, BUNDLE_SUMS, checkBundle, makeBundle, sha256OfFile, writeBundle } from './bundle.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');

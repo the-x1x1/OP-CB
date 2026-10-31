@@ -10,7 +10,7 @@ import type {
   ViewState,
   WorldRenderer,
 } from '../contract.js';
-import type { RasterOverlay } from '@worldview/world-model';
+import type { RasterOverlay } from '@opcb/world-model';
 import { zoomToAltitudeM, altitudeToZoom } from '../contract.js';
 import type { ImagerySplit } from '../imagery-split.js';
 

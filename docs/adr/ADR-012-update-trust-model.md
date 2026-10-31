@@ -1,6 +1,6 @@
 # ADR-012 — Update trust model
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/updater`
+Status: Accepted · 2026-09-21 · Package: `@opcb/updater`
 
 ## Decision
 

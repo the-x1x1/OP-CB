@@ -1,5 +1,5 @@
 import { BrowserWindow, type WebContents } from 'electron';
-import type { Logger } from '@worldview/core';
+import type { Logger } from '@opcb/core';
 import { isTrustedRendererUrl } from '../shared/app-origin.js';
 import { watchRenderer } from './renderer-watchdog.js';
 

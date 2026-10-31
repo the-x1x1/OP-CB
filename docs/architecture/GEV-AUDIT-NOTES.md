@@ -1,7 +1,7 @@
 # GEV Audit Notes — code-level reuse guide
 
 Companion to [GEV-MIGRATION-MATRIX.md](./GEV-MIGRATION-MATRIX.md). Written so an
-engineer can lift GEV code into WORLDVIEW packages without re-reading the GEV tree.
+engineer can lift GEV code into OP-CB packages without re-reading the GEV tree.
 All paths are relative to the GEV clone root (base commit `0dbde1e3`, see
 [/UPSTREAM.md](../../UPSTREAM.md)). Line counts and shapes were read from source on
 2026-09-21; anything marked _verify_ was not confirmed beyond what GEV documents.
@@ -141,7 +141,7 @@ updateInterval : 0` → `setInterval(update)`; if `updateInterval === 0` it inst
 - `src/data/manager.js` (`DataLayerManager`) is the compatibility facade that also
   mounts the toggle panel via `src/app/layerPresentation.js`.
 
-WORLDVIEW mapping: the "intent epoch / transaction" model for visibility belongs to
+OP-CB mapping: the "intent epoch / transaction" model for visibility belongs to
 state-engine; the `setInterval` refresh loop belongs to provider-runtime (main
 process), and `update()` becomes "apply latest snapshot from the world model".
 
@@ -233,7 +233,7 @@ and `getEnrichment({kind:'type'|'route', id}, {signal})`. Concrete sources
 **Track point**: `{latitude, longitude, observedAtMs, baroAltitudeM, ellipsoidAltitudeM, onGround}`
 (aircraft) or `{latitude, longitude, observedAtMs, altitudeDatum}` (vessel).
 
-This is the closest existing analogue to WORLDVIEW's normalized Observation; the
+This is the closest existing analogue to OP-CB's normalized Observation; the
 provider-sdk type should be a superset with `source`, `layerKind`, `datum` and an
 explicit `observedAtMs` on every record.
 
@@ -508,7 +508,7 @@ return [
 ]; // 'A1'..'B7' → OpenSky ints
 ```
 
-WORLDVIEW should skip this OpenSky-array detour and use `normalizeReadsbAircraft`
+OP-CB should skip this OpenSky-array detour and use `normalizeReadsbAircraft`
 (`src/sources/live/aircraft.js`) directly, which already produces the observation
 shape from readsb JSON (`hex, flight, lat, lon, alt_baro ('ground'|ft), alt_geom, gs (kts),
 track, baro_rate (ft/min), seen, seen_pos, category, t, r, ownOp`).
@@ -659,7 +659,7 @@ poseSource ('curated'|undefined), license, credit, code, groundHeights|null}`; i
   envelopes are decoded only for the official origin and the JPEG header validated;
   NSW is fetched with a browser User-Agent (`cctvUpstreamUserAgent(url)`); order of
   fallbacks: upstream image → Google Street View Static (needs server key; **drop in
-  WORLDVIEW**) → synthetic SVG placeholder (`buildSyntheticCctvSvg`). Response header
+  OP-CB**) → synthetic SVG placeholder (`buildSyntheticCctvSvg`). Response header
   `X-CCTV-Source: upstream-image|streetview|synthetic`; per-camera health map
   (`/api/cctv/health` → `{cameras:{id:{status:'ok'|'degraded', sourceKind, label, message}}}`).
   `/api/cctv/media/<id>` streams video with a canonicalised single `bytes=` Range capped
@@ -860,7 +860,7 @@ Runner: `scripts/run-unit-tests.mjs` discovers `src/**/*.test.mjs`, runs them wi
 `--expose-gc --test-concurrency=1`: `src/data/focusAllocations.test.mjs` and
 `src/overlays/worldOverlayAllocation.test.mjs`. Their byte budgets are **calibrated on
 Node 24 only** (`isCalibratedAllocationRuntime` checks `major === 24`); on other majors
-they are skipped unless `GEV_REQUIRE_ALLOCATION_GATE=1`. WORLDVIEW (Electron's Node)
+they are skipped unless `GEV_REQUIRE_ALLOCATION_GATE=1`. OP-CB (Electron's Node)
 should drop the allocation probes or recalibrate.
 
 Retain **verbatim** (pure modules, no DOM/Cesium coupling):
@@ -898,7 +898,7 @@ provider tests in `src/tooling/*.test.mjs` (they spin the Vite middleware with m
 Drop: the ~74 source-text regression tests (`readLayerSource`, `readShellSource`,
 `readFileSync` + string assertions), `src/*Markup.test.mjs`, pinokio/keySetup/devFresh
 tests, voice/director/scenes tests, `src/tooling/{format,importDirections,packageBoundaries}.test.mjs`
-(re-create for the WORLDVIEW gate).
+(re-create for the OP-CB gate).
 
 ---
 
@@ -917,7 +917,7 @@ tests, voice/director/scenes tests, `src/tooling/{format,importDirections,packag
 | `public/models/airplane.glb` (747, 88 KB), `jet.glb` (271 KB), `ship.glb` (230 KB), `bell206.glb` (321 KB), `c172.glb` (526 KB), `citation2.glb` (562 KB), `mq9.glb` (543 KB), `b789.glb` (470 KB), `atr72.glb` (264 KB) + README | Sketchfab models, optimised, Y-up, nose −X, origin centred                                                                                                                                                                           | 3.2 MB total    | **CC BY 4.0** each, creators listed in README                                               | Yes, with attribution + modification notice retained                                                                |
 | `public/logo.svg`, `pin.svg`, `mic.svg`, `location.svg`, `visual-presets.svg`                                                                                                                                                     | GEV branding/UI icons                                                                                                                                                                                                                | small           | Part of GEV MIT code (branding — do not reuse the logo)                                     | Icons only                                                                                                          |
 | `config/cctv_sources.austin.json`                                                                                                                                                                                                 | `[]` (Austin loads live)                                                                                                                                                                                                             | 2 B             | –                                                                                           | n/a                                                                                                                 |
-| `config/cctv_sources.shinjuku.json`                                                                                                                                                                                               | 3 synthetic "Pilot Feed Pack" cameras whose `url` points at Google's public sample MP4 bucket (`storage.googleapis.com/gtv-videos-bucket/sample/*.mp4`); used only via `CCTV_SOURCES_FILE` to exercise the video projection pipeline | small           | "Demo sample stream for projection pipeline testing" (no real camera data)                  | No — test fixture at most; replace with a WORLDVIEW-owned sample clip                                               |
+| `config/cctv_sources.shinjuku.json`                                                                                                                                                                                               | 3 synthetic "Pilot Feed Pack" cameras whose `url` points at Google's public sample MP4 bucket (`storage.googleapis.com/gtv-videos-bucket/sample/*.mp4`); used only via `CCTV_SOURCES_FILE` to exercise the video projection pipeline | small           | "Demo sample stream for projection pipeline testing" (no real camera data)                  | No — test fixture at most; replace with an OP-CB-owned sample clip                                                  |
 | `config/cctv_sources.tallinn.json`, `config/cctv_sources.warendorf.json`                                                                                                                                                          | Curated poses for Tallinn ristmikud and Warendorf webcam                                                                                                                                                                             | small           | Municipal camera data (courtesy); OSM-derived headings (ODbL)                               | Verify per pack                                                                                                     |
 | `src/data/fixtures/firms-viirs-noaa20-sample.csv`, `firms-csv-cases.json`                                                                                                                                                         | FIRMS decode fixtures (45 rows)                                                                                                                                                                                                      | <20 KB          | CC0 / US public domain                                                                      | Yes (fixtures/\*)                                                                                                   |
 | `src/data/fixtures/tomtom-flow-austin-12-935-1686.pbf`                                                                                                                                                                            | One TomTom flow tile captured 2026-07-16                                                                                                                                                                                             | 23 KB           | © TomTom (test-only, never served)                                                          | Only with legal OK; otherwise synthesise a fixture                                                                  |
@@ -1021,5 +1021,5 @@ tests, voice/director/scenes tests, `src/tooling/{format,importDirections,packag
 - `server/standalone/key-setup.js` writes secrets to `.env` / Pinokio `ENVIRONMENT` in
   plaintext (dev-only, documented); do not port.
 - Vite `define` exposes `import.meta.env.GOOGLE_MAPS_API_KEY` / `CESIUM_ION_TOKEN` to the
-  renderer bundle (`build/vite.js`); WORLDVIEW must keep _all_ keys in main and hand the
+  renderer bundle (`build/vite.js`); OP-CB must keep _all_ keys in main and hand the
   renderer only what an adapter explicitly needs.

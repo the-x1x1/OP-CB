@@ -1,5 +1,5 @@
 import type { CategoryGroup } from './categories.js';
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * CelesTrak — GP element sets (TLE / OMM JSON) for the public satellite catalog.
@@ -13,7 +13,7 @@ import type { ProviderManifest } from '@worldview/provider-sdk';
  * small request per satellite, kept a day.
  *
  * Observation semantics: `observedAt` is the element-set epoch (the source's
- * measurement); the position is WORLDVIEW-derived state propagated to
+ * measurement); the position is OP-CB-derived state propagated to
  * `payload.propagatedAt`. Freshness therefore describes element-set age, which is
  * what actually bounds position accuracy — the manifest overrides the world-model
  * default (which assumes observedAt = propagation time).

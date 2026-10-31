@@ -1,13 +1,13 @@
 import { promises as fs } from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 import path from 'node:path';
-import { ZimArchive, ZimError, fileZimSource, htmlToText, type ZimEntry } from '@worldview/offline';
-import type { Logger } from '@worldview/core';
-import type { LibraryBook, LibraryFindAnswer, LibraryFindHit, LibraryFindRequest } from '@worldview/ipc-contract';
+import { ZimArchive, ZimError, fileZimSource, htmlToText, type ZimEntry } from '@opcb/offline';
+import type { Logger } from '@opcb/core';
+import type { LibraryBook, LibraryFindAnswer, LibraryFindHit, LibraryFindRequest } from '@opcb/ipc-contract';
 
 /**
- * The operator's ZIM files, read by WorldView itself (2026-10-30): every `.zim` in the library
- * folder (inside WorldView's data folder, so on the SSD when the data is), opened lazily and
+ * The operator's ZIM files, read by OP-CB itself (2026-10-30): every `.zim` in the library
+ * folder (inside OP-CB's data folder, so on the SSD when the data is), opened lazily and
  * kept open. Title search across them, articles for the reader window, and plain article text
  * for answers grounded in the library.
  */

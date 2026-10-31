@@ -1,5 +1,5 @@
-import type { RenderStyle } from '@worldview/render-core';
-import type { GeoBounds, GeoPosition } from '@worldview/world-model';
+import type { RenderStyle } from '@opcb/render-core';
+import type { GeoBounds, GeoPosition } from '@opcb/world-model';
 import type { Cartesian3Like, CesiumLike, RectangleLike } from './cesium-like.js';
 
 /**

@@ -1,4 +1,4 @@
-import type { JsonValue } from '@worldview/world-model';
+import type { JsonValue } from '@opcb/world-model';
 
 /**
  * What kind of aircraft an object is, for its silhouette on the map and a line in the

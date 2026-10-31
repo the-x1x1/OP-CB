@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RenderFeature, ViewState } from '@worldview/render-core';
+import type { RenderFeature, ViewState } from '@opcb/render-core';
 import { GRATICULE_LAYER, formatGridLabel, graticuleExtent, graticuleFeatures, graticuleSpacing } from './graticule.js';
 
 const view = (bounds: ViewState['bounds'], center = { latitude: 0, longitude: 0 }): ViewState => ({

@@ -3,27 +3,27 @@
 # `pnpm release:package` builds for the machine it runs on (scripts/platform.mjs).
 #
 # Outputs on Windows (apps/desktop/release/):
-#   WorldView-Setup-<version>.exe       NSIS installer (per-user, no admin)
-#   WorldView-Portable-<version>.zip    unpacked build as a zip (run WorldView.exe from any folder)
+#   OP-CB-Setup-<version>.exe       NSIS installer (per-user, no admin)
+#   OP-CB-Portable-<version>.zip    unpacked build as a zip (run OP-CB.exe from any folder)
 #   latest.yml + *.blockmap             electron-updater metadata (only meaningful once published)
 #
 # Outputs on Linux x86_64 (apps/desktop/release/):
-#   worldview_<version>_amd64.deb       Debian/Ubuntu package: /opt/WorldView, /usr/bin/worldview,
+#   opcb_<version>_amd64.deb       Debian/Ubuntu package: /opt/OP-CB, /usr/bin/opcb,
 #                                       a menu entry, and an AppArmor profile so Chromium's
 #                                       sandbox works on Ubuntu 24.04+
 #
 # No AppImage: electron-builder's AppImage launcher (AppRun) adds --no-sandbox by itself whenever
 # unprivileged user namespaces are unavailable — which is Ubuntu 24.04+ by default — and no
-# option turns that off. WorldView never runs unsandboxed (docs/cyberdeck/ARCHITECTURE.md).
+# option turns that off. OP-CB never runs unsandboxed (docs/cyberdeck/ARCHITECTURE.md).
 #
 # Publishing is MANUAL until a Windows code-signing certificate exists
 # (SIGNING_REQUIRED blocker): `pnpm release:package` runs with `--publish never`;
 # the release workflow uploads the artifacts to a *draft* prerelease and a human
 # promotes it (docs/releases/RELEASE-PROCESS.md). Never set `publish: always`.
 
-appId: com.worldview.desktop
-productName: WorldView
-copyright: Copyright © 2026 WorldView contributors
+appId: com.opcb.desktop
+productName: OP-CB
+copyright: Copyright © 2026 OP-CB contributors
 electronLanguages: [en-US]
 
 directories:
@@ -51,15 +51,15 @@ asarUnpack:
   # The dropped-file reader's worker thread loads its script from a real path.
   - 'dist/main/geodata-worker.cjs'
   # The MCP server for AI clients is run by them as a script of the executable (src/mcp).
-  - 'dist/mcp/worldview-mcp.cjs'
+  - 'dist/mcp/opcb-mcp.cjs'
 
-# worldview://view?lat=…&lon=… links open the app at a place (ADR-004 amendment 2026-10-20;
+# opcb://view?lat=…&lon=… links open the app at a place (ADR-004 amendment 2026-10-20;
 # packages/ipc-contract/src/view-link.ts). The NSIS installer registers the scheme for the user
-# (HKCU\Software\Classes\worldview); the .deb's menu entry declares
-# x-scheme-handler/worldview with %U on its Exec line.
+# (HKCU\Software\Classes\opcb); the .deb's menu entry declares
+# x-scheme-handler/opcb with %U on its Exec line.
 protocols:
   - name: OP-CB link
-    schemes: [worldview]
+    schemes: [opcb]
 
 extraResources:
   # Read-only bundled data granted to filesystem providers at runtime. `pnpm stage:resources`
@@ -83,10 +83,10 @@ win:
   # nsis, portable, msi, appx, squirrelWindows and so on, and a `zip:` key fails schema
   # validation before any packaging starts. The zip target therefore takes the platform
   # artifactName set here, and NSIS overrides it below with its own.
-  artifactName: WorldView-Portable-${version}.${ext}
+  artifactName: OP-CB-Portable-${version}.${ext}
   # No certificate yet: leave signing unset so electron-builder does not attempt it.
   # When SIGNING_REQUIRED is resolved, configure `signtoolOptions` / CSC_LINK + CSC_KEY_PASSWORD
-  # in the workflow secrets and set WORLDVIEW_SIGNED=1 for scripts/build-main.mjs.
+  # in the workflow secrets and set OPCB_SIGNED=1 for scripts/build-main.mjs.
   verifyUpdateCodeSignature: true
   requestedExecutionLevel: asInvoker
 
@@ -96,10 +96,11 @@ nsis:
   allowToChangeInstallationDirectory: true
   allowElevation: false
   deleteAppDataOnUninstall: false
-  artifactName: WorldView-Setup-${version}.${ext}
-  # Shown in the Start menu and in Apps & features (the operator's rename to OP-CB, 2026-10-30).
-  # productName, the executable and the file names stay WorldView for now so an installed copy
-  # upgrades in place and its data folder and update channel are unchanged.
+  artifactName: OP-CB-Setup-${version}.${ext}
+  # Shown in the Start menu and in Apps & features. Since 0.7.2 every name is OP-CB, the appId
+  # included (the operator's decision, 2026-10-30): an installation from before does not upgrade
+  # into this one; OP-CB is installed once by hand and its first start moves the earlier data into
+  # place (src/main/legacy-data.ts).
   shortcutName: OP-CB
   uninstallDisplayName: OP-CB — Operation Civilization Backup
   # `license:` (the installer EULA page) is added once the project's own licence text exists
@@ -110,8 +111,8 @@ linux:
     - target: deb
       arch: [x64]
   # The command, the .deb's /usr/bin link and the AppArmor profile's name. Without it
-  # electron-builder derives "worldview-desktop" from the package name.
-  executableName: worldview
+  # electron-builder derives "opcb-desktop" from the package name.
+  executableName: opcb
   # Electron uses package.json desktopName as the Wayland app_id / X11 WM_CLASS; this makes the
   # installed menu entry's file name and StartupWMClass the same, so the dock groups the window
   # under its own icon instead of a generic one.
@@ -135,17 +136,17 @@ linux:
   # MimeType is the link scheme, from `protocols` above.
 
 deb:
-  artifactName: worldview_${version}_amd64.${ext}
+  artifactName: opcb_${version}_amd64.${ext}
   # electron-builder's default Depends (libgtk-3-0, libnss3, libsecret-1-0 …) resolve on Ubuntu
   # 24.04 through the t64 packages' Provides. libsecret talks to whatever Secret Service the
   # desktop runs (GNOME Keyring, KWallet); without one, API keys are refused, never stored in
   # plain text (src/main/credential-store.ts).
-  maintainer: WorldView contributors
+  maintainer: OP-CB contributors
 
 publish:
   provider: github
   owner: the-x1x1
-  repo: oneview
+  repo: OP-CB
   releaseType: prerelease
   # electron-updater reads latest.yml from the GitHub release assets.
   # vPrefixedTagName: true (default) — tags are v<version>.

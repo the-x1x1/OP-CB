@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import type { WorldObject } from '@worldview/world-model';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import type { WorldObject } from '@opcb/world-model';
 import {
   LOCAL_API_LIMITS,
   defaultSocketPath,
@@ -332,7 +332,7 @@ test('local API: offline status gives vault labels and states, not where drives 
 /**
  * Contract fixtures for a consumer (fixtures/local-api/v1): each endpoint's answer to the
  * invented world above. They must match what the router answers today; regenerate with
- * WORLDVIEW_UPDATE_FIXTURES=1 when the API changes on purpose (and say so in ADR-014).
+ * OPCB_UPDATE_FIXTURES=1 when the API changes on purpose (and say so in ADR-014).
  */
 test('local API: the contract fixtures are what the router answers', async () => {
   const { promises: fs } = await import('node:fs');
@@ -352,11 +352,11 @@ test('local API: the contract fixtures are what the router answers', async () =>
     ['error-restricted-track.json', '/v1/track?id=sensor:meshtastic:!22222222', allowed],
     ['error-bad-request.json', '/v1/objects?lat=91&lon=0', allowed],
   ];
-  if (process.env['WORLDVIEW_UPDATE_FIXTURES'] === '1') await fs.mkdir(dir, { recursive: true });
+  if (process.env['OPCB_UPDATE_FIXTURES'] === '1') await fs.mkdir(dir, { recursive: true });
   for (const [file, url, d] of cases) {
     const r = await get(url, d);
     const actual = { request: `GET ${url}`, status: r.status, body: r.body };
-    if (process.env['WORLDVIEW_UPDATE_FIXTURES'] === '1')
+    if (process.env['OPCB_UPDATE_FIXTURES'] === '1')
       await fs.writeFile(path.join(dir, file), `${JSON.stringify(actual, null, 2)}\n`);
     assert.deepEqual(
       JSON.parse(await fs.readFile(path.join(dir, file), 'utf8')),
@@ -367,14 +367,14 @@ test('local API: the contract fixtures are what the router answers', async () =>
 });
 
 test('local API on Windows: a named pipe per user, the name made safe', () => {
-  assert.equal(windowsPipePath({ USERNAME: 'Temp' }), '\\\\.\\pipe\\worldview-api-temp');
-  assert.equal(windowsPipePath({ USERNAME: 'J Conn/../x' }), '\\\\.\\pipe\\worldview-api-j_conn_.._x');
+  assert.equal(windowsPipePath({ USERNAME: 'Temp' }), '\\\\.\\pipe\\opcb-api-temp');
+  assert.equal(windowsPipePath({ USERNAME: 'J Conn/../x' }), '\\\\.\\pipe\\opcb-api-j_conn_.._x');
   assert.equal(windowsPipePath({}), undefined);
   assert.equal(
     defaultSocketPath({ USERNAME: 'temp', XDG_RUNTIME_DIR: '/run/user/1000' }, 'win32'),
-    '\\\\.\\pipe\\worldview-api-temp',
+    '\\\\.\\pipe\\opcb-api-temp',
   );
-  assert.equal(defaultSocketPath({ XDG_RUNTIME_DIR: '/run/user/1000' }, 'linux'), '/run/user/1000/worldview/api.sock');
-  assert.equal(isNamedPipe('\\\\.\\pipe\\worldview-api-temp'), true);
-  assert.equal(isNamedPipe('/run/user/1000/worldview/api.sock'), false);
+  assert.equal(defaultSocketPath({ XDG_RUNTIME_DIR: '/run/user/1000' }, 'linux'), '/run/user/1000/opcb/api.sock');
+  assert.equal(isNamedPipe('\\\\.\\pipe\\opcb-api-temp'), true);
+  assert.equal(isNamedPipe('/run/user/1000/opcb/api.sock'), false);
 });

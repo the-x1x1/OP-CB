@@ -2,7 +2,7 @@ import { lstatSync, promises as fs, unlinkSync } from 'node:fs';
 import http from 'node:http';
 import net from 'node:net';
 import path from 'node:path';
-import type { Logger } from '@worldview/core';
+import type { Logger } from '@opcb/core';
 import type {
   LocalApiError,
   LocalApiHealth,
@@ -15,10 +15,10 @@ import type {
   LocalApiTrack,
   OfflineStatus,
   WorldTrackPoint,
-} from '@worldview/ipc-contract';
-import type { OwnPositionHealth, ProviderDataPolicy } from '@worldview/provider-sdk';
-import type { ConnectionSnapshot, SourceHealthEntry } from '@worldview/source-health';
-import { haversineMeters, type WorldObject } from '@worldview/world-model';
+} from '@opcb/ipc-contract';
+import type { OwnPositionHealth, ProviderDataPolicy } from '@opcb/provider-sdk';
+import type { ConnectionSnapshot, SourceHealthEntry } from '@opcb/source-health';
+import { haversineMeters, type WorldObject } from '@opcb/world-model';
 
 /**
  * The local read-only API (docs/adr/ADR-014-local-api.md, docs/cyberdeck M6): HTTP/1.1 GET over
@@ -287,7 +287,7 @@ export async function handleLocalApi(req: LocalApiRequest, deps: LocalApiDeps): 
   if (req.url.length > LOCAL_API_LIMITS.maxUrlLength) return fail(413, 'too-large', 'request too long');
   let url: URL;
   try {
-    url = new URL(req.url, 'http://worldview.local');
+    url = new URL(req.url, 'http://opcb.local');
   } catch {
     return fail(400, 'bad-request', 'bad request path');
   }
@@ -300,7 +300,7 @@ export async function handleLocalApi(req: LocalApiRequest, deps: LocalApiDeps): 
         return {
           status: 200,
           body: {
-            api: 'worldview-local',
+            api: 'opcb-local',
             version: 1,
             app: { ...deps.app },
             endpoints: ENDPOINTS,
@@ -395,7 +395,7 @@ export interface LocalApiServerOptions {
 }
 
 /**
- * Where the socket goes: `$XDG_RUNTIME_DIR/worldview/api.sock` — the per-user runtime folder the
+ * Where the socket goes: `$XDG_RUNTIME_DIR/opcb/api.sock` — the per-user runtime folder the
  * login session creates (mode 0700, on tmpfs, removed at logout). No XDG_RUNTIME_DIR, no API:
  * a socket in a shared /tmp is exactly what this design avoids.
  */
@@ -406,12 +406,12 @@ export function defaultSocketPath(
   if (platform === 'win32') return windowsPipePath(env);
   // A Unix socket path whatever the host: path.posix, so it reads the same when checked on Windows.
   const dir = env['XDG_RUNTIME_DIR'];
-  return dir && path.posix.isAbsolute(dir) ? path.posix.join(dir, 'worldview', 'api.sock') : undefined;
+  return dir && path.posix.isAbsolute(dir) ? path.posix.join(dir, 'opcb', 'api.sock') : undefined;
 }
 
 /**
  * Windows (ADR-014 amendment 2026-10-20): a named pipe per signed-in user,
- * `\\.\pipe\worldview-api-<user>`. A pipe made without a security descriptor gets Windows'
+ * `\\.\pipe\opcb-api-<user>`. A pipe made without a security descriptor gets Windows'
  * default for pipes — full control for this user (its creator), SYSTEM and administrators, and
  * read-only for everyone else — and a client that can only read cannot send a request. The name
  * is not a secret; who can write to it is the control.
@@ -421,7 +421,7 @@ export function windowsPipePath(env: NodeJS.ProcessEnv = process.env): string | 
     .toLowerCase()
     .replace(/[^a-z0-9._-]/g, '_')
     .slice(0, 64);
-  return user ? `\\\\.\\pipe\\worldview-api-${user}` : undefined;
+  return user ? `\\\\.\\pipe\\opcb-api-${user}` : undefined;
 }
 
 /** Whether `p` is a Windows named pipe path rather than a socket file. */
@@ -518,8 +518,8 @@ export class LocalApiServer {
     if (existing) {
       if (!existing.isSocket()) throw new Error(`${socketPath} exists and is not a socket`);
       if (uid !== undefined && existing.uid !== uid) throw new Error(`${socketPath} belongs to another user`);
-      // Another WORLDVIEW (a second profile, a development build) answering there: leave it be.
-      if (await answers(socketPath)) throw new Error(`another WORLDVIEW is serving ${socketPath}`);
+      // Another OP-CB (a second profile, a development build) answering there: leave it be.
+      if (await answers(socketPath)) throw new Error(`another OP-CB is serving ${socketPath}`);
       await fs.unlink(socketPath); // left by a run that did not close cleanly
     }
     const server = this.createServer();
@@ -561,9 +561,9 @@ export class LocalApiServer {
     return server;
   }
 
-  /** Windows: the named pipe (windowsPipePath). Another WORLDVIEW answering on it is left be. */
+  /** Windows: the named pipe (windowsPipePath). Another OP-CB answering on it is left be. */
   private async startPipe(pipe: string): Promise<void> {
-    if (await answers(pipe)) throw new Error(`another WORLDVIEW is serving ${pipe}`);
+    if (await answers(pipe)) throw new Error(`another OP-CB is serving ${pipe}`);
     const server = this.createServer();
     const listening = listened(server);
     // Neither readable nor writable by all: Windows' default pipe security (see windowsPipePath).

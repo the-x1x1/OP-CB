@@ -1,10 +1,10 @@
-import type { HomeSettings, HomeView } from '@worldview/ipc-contract';
-import type { ViewState } from '@worldview/render-core';
+import type { HomeSettings, HomeView } from '@opcb/ipc-contract';
+import type { ViewState } from '@opcb/render-core';
 
 /**
  * The operator's home view (Settings → Home view, the Home key and Shift+H).
  *
- * It is a place the operator chose from the map — never one WorldView worked out: there is
+ * It is a place the operator chose from the map — never one OP-CB worked out: there is
  * no IP geolocation and no location permission (the session refuses every permission
  * request). The ground in the middle of the view is kept, with the camera's altitude for
  * the globe and the zoom for the 2D map, and the tilt and heading it was seen with: a home

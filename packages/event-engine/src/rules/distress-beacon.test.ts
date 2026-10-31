@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
 import { DISTRESS_BEACON_QUIET_MS, beaconKindOf, distressBeaconRule } from './distress-beacon.js';
 
 const T0 = Date.parse('2026-10-05T21:00:00Z');

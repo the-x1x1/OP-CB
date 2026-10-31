@@ -1,5 +1,5 @@
-import type { JsonValue, Observation, WorldEvent, WorldObject } from '@worldview/world-model';
-import { WorldState } from '@worldview/state-engine';
+import type { JsonValue, Observation, WorldEvent, WorldObject } from '@opcb/world-model';
+import { WorldState } from '@opcb/state-engine';
 
 /**
  * Shared synthetic fixtures for engine tests (no live data). Everything is built from

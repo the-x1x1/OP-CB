@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { boundsContain, isValidBounds } from '@worldview/world-model';
+import { boundsContain, isValidBounds } from '@opcb/world-model';
 import {
   BOUNDED_SUBSCRIPTION_MIN_ZOOM,
   containsBounds,

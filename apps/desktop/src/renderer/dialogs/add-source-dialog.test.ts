@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { DefinitionsReload } from '@worldview/ipc-contract';
+import type { DefinitionsReload } from '@opcb/ipc-contract';
 import { DemoClient } from '../demo/demo-client.js';
 import { AddSourceFlow, checkDefinitionId, checkDraftUrl } from '../panels/sources-definitions-model.js';
 import {
@@ -16,7 +16,7 @@ import {
 } from '../panels/sources-test-client.js';
 import { AddSourceDialog, announce } from './add-source-dialog.js';
 
-const FOLDER = '/home/op/.config/WorldView/connectors';
+const FOLDER = '/home/op/.config/OP-CB/connectors';
 const URL_OK = 'https://example.org/stations.geojson';
 
 function renderDialog(flow: AddSourceFlow): string {

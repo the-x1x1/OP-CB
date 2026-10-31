@@ -9,7 +9,7 @@ import {
   type ProviderHttp,
   type ProviderHttpRequest,
   type ProviderHttpResponse,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { CelestrakProvider, mapUpstreamError, parseSettings, restoreEntry, CATALOG_MAX_AGE_MS } from './index.js';
 import { CircularOrbitPropagator } from './circular-orbit-propagator.js';
 import { SatelliteJsPropagator } from './satellite-js-propagator.js';

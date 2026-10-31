@@ -1,4 +1,4 @@
-import type { JsonValue, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
 import { validateElements, type GpElements } from './elements.js';
 import { ELEMENT_VALIDITY_MS } from './manifest.js';
 import type { Propagator } from './propagator.js';

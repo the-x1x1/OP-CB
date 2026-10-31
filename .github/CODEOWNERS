@@ -1,4 +1,4 @@
-# Ownership for the parts of WORLDVIEW where a mistake is expensive: frozen contracts,
+# Ownership for the parts of OP-CB where a mistake is expensive: frozen contracts,
 # the legal registries, security-sensitive code and anything that produces a release.
 # Everything else is reviewed by the usual contributors.
 

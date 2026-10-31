@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { definePlan } from '@worldview/tool-provider-validator';
+import { definePlan } from '@opcb/tool-provider-validator';
 import { createProvider, SEED_AIRPORTS_FILE } from '../../src/index.js';
 
 const fixtures = path.resolve(

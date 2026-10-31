@@ -1,4 +1,4 @@
-import type { GlyphContext } from '@worldview/render-core';
+import type { GlyphContext } from '@opcb/render-core';
 import type { GeoJsonFeatureCollection } from '../geojson.js';
 import type {
   ControlLike,

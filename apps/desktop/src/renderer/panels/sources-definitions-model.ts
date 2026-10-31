@@ -5,8 +5,8 @@ import {
   type DefinitionsListing,
   type DefinitionsReload,
   type WorldClient,
-} from '@worldview/ipc-contract';
-import type { SourceHealthEntry } from '@worldview/source-health';
+} from '@opcb/ipc-contract';
+import type { SourceHealthEntry } from '@opcb/source-health';
 
 /**
  * State and requests behind the Sources panel's Definitions section and the Add-source

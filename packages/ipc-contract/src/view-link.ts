@@ -1,7 +1,7 @@
 /**
- * Links to a view: `worldview://view?lat=21.31&lon=-157.86&z=11` opens the app at that place
+ * Links to a view: `opcb://view?lat=21.31&lon=-157.86&z=11` opens the app at that place
  * (ADR-004 amendment 2026-10-20). Registered with the operating system at install, so a link
- * in an email, a chat or a web page opens WorldView where it points.
+ * in an email, a chat or a web page opens OP-CB where it points.
  *
  * A link arrives from outside the app, so it is read here, strictly, before anything acts on
  * it: a place, how close, 2D or 3D, a lens, layers shown or hidden, and one thing to select.
@@ -10,7 +10,7 @@
  * named back rather than half read.
  */
 
-export const VIEW_LINK_SCHEME = 'worldview';
+export const VIEW_LINK_SCHEME = 'opcb';
 export const VIEW_LINK_MAX_LENGTH = 2048;
 
 export interface ViewLink {
@@ -44,21 +44,21 @@ function num(value: string | null): number | undefined {
 
 /** Whether `text` is a link to read here, rather than a search or anything else. */
 export function isViewLink(text: string): boolean {
-  return /^worldview:/i.test(text.trim());
+  return /^opcb:/i.test(text.trim());
 }
 
-/** Reads a `worldview://view?...` link. */
+/** Reads a `opcb://view?...` link. */
 export function readViewLink(text: string): ViewLinkRead {
   const raw = text.trim();
   if (raw.length > VIEW_LINK_MAX_LENGTH) return { ok: false, reason: 'the link is too long' };
-  if (!isViewLink(raw)) return { ok: false, reason: 'not a worldview: link' };
+  if (!isViewLink(raw)) return { ok: false, reason: 'not an opcb: link' };
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
     return { ok: false, reason: 'the link is not a URL' };
   }
-  // `worldview://view?…` puts "view" in the host; `worldview:view?…` in the path.
+  // `opcb://view?…` puts "view" in the host; `opcb:view?…` in the path.
   const target = (url.hostname || url.pathname).replace(/^\/+|\/+$/g, '').toLowerCase();
   if (target !== 'view') return { ok: false, reason: `"${target || '(nothing)'}" is not something a link can open` };
 

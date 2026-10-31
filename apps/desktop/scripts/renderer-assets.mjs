@@ -140,7 +140,7 @@ export function maplibrePackageDir() {
  *
  * The worker: maplibre-gl 6 stopped inlining its worker. It ships
  * `maplibre-gl-worker.mjs` (which imports `./maplibre-gl-shared.mjs`) and finds it from
- * `import.meta.url` — but only when that URL is http(s). Under `worldview://app` its lookup
+ * `import.meta.url` — but only when that URL is http(s). Under `opcb://app` its lookup
  * returns an empty string, `new Worker("", { type: "module" })` loads the document itself,
  * the protocol answers `/` with index.html, and Chromium reports "Failed to load module
  * script: … MIME type of text/html". Vite never emitted the worker either, because nothing

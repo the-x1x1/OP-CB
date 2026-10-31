@@ -1,10 +1,10 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
+import type { WorldProvider } from '@opcb/provider-sdk';
 import {
   parseDefinition,
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { restJsonConnector } from './connectors/rest-json.js';
 import { webSocketJsonConnector } from './connectors/websocket-json.js';
 import { geoJsonConnector } from './connectors/geojson.js';

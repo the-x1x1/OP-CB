@@ -1,11 +1,5 @@
-import type { JsonValue, Provenance, WorldEvent, WorldObject, SeverityClass } from '@worldview/world-model';
-import {
-  classifyFreshness,
-  computeConfidence,
-  freshnessPolicyFor,
-  makeEventId,
-  makeObjectId,
-} from '@worldview/world-model';
+import type { JsonValue, Provenance, WorldEvent, WorldObject, SeverityClass } from '@opcb/world-model';
+import { classifyFreshness, computeConfidence, freshnessPolicyFor, makeEventId, makeObjectId } from '@opcb/world-model';
 import { USGS_NORMAL_FIXTURE } from './fixtures/usgs-normal.js';
 
 /**

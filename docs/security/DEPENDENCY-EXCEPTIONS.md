@@ -45,7 +45,7 @@ installer no longer uses this chain (`@electron/get@5`, without got).
 
 **When to revisit:** if http-cache-semantics publishes a fix (take it, with an override if
 electron-builder has not caught up); if electron-builder moves to `@electron/get@4` or later;
-or if anything shipped by WorldView starts depending on it. Check on every electron-builder
+or if anything shipped by OP-CB starts depending on it. Check on every electron-builder
 update.
 
 ## Resolved: the extract-zip pair, GHSA-jmr9-qjv8-65gv and GHSA-7pqw-9j4j-h8q3
@@ -61,7 +61,7 @@ Recorded 2026-09-23. Two high advisories — `builder-util-runtime < 9.7.0` (a c
 redirect leaks `PRIVATE-TOKEN` / `Authorization`) and `app-builder-lib < 26.15.0` (an
 AppImage search path) — reached the tree through `electron-builder-squirrel-windows@25.1.8`,
 an optional peer of `app-builder-lib` that pnpm had auto-installed when electron-builder was
-25 and kept after it went to 26.15.3 (it warned: "unmet peer … found 25.1.8"). WorldView
+25 and kept after it went to 26.15.3 (it warned: "unmet peer … found 25.1.8"). OP-CB
 builds nsis and zip targets and never runs Squirrel, but a patched version exists, so the
 answer was the fix. A `pnpm.overrides` entry did not do it — pnpm kept the auto-installed
 peer's old resolution — so `apps/desktop` declares the peer itself,

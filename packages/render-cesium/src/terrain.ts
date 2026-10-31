@@ -8,7 +8,7 @@
  * shell (worldpack terrain) — `file://` is not fetchable from the renderer, so the
  * shell hands us an app-scheme URL for it.
  */
-import type { TerrainDescriptor } from '@worldview/render-core';
+import type { TerrainDescriptor } from '@opcb/render-core';
 import type { CesiumLike, TerrainProviderLike } from './cesium-like.js';
 
 export type TerrainFactoryModule = Pick<

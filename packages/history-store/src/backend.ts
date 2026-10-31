@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoRegion, IsoTimestamp, JsonValue, TimeRange } from '@worldview/world-model';
+import type { GeoBounds, GeoRegion, IsoTimestamp, JsonValue, TimeRange } from '@opcb/world-model';
 import type { HistoryRow } from './row.js';
 import type { PartitionFilter, PartitionKey, PartitionMeta } from './partition.js';
 import type { ThinColumns, ThinPlan } from './retention.js';

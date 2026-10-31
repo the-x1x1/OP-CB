@@ -16,10 +16,10 @@ import {
   session,
   shell,
 } from 'electron';
-import { LoggerHub, type Logger } from '@worldview/core';
-import { RotatingFileSink } from '@worldview/core/node';
-import { StartupValidator, dataDirs, type StartupCheck } from '@worldview/config';
-import { exportBundle } from '@worldview/diagnostics';
+import { LoggerHub, type Logger } from '@opcb/core';
+import { RotatingFileSink } from '@opcb/core/node';
+import { StartupValidator, dataDirs, type StartupCheck } from '@opcb/config';
+import { exportBundle } from '@opcb/diagnostics';
 import {
   UpdaterController,
   createInertAutoUpdater,
@@ -27,7 +27,7 @@ import {
   loadElectronAutoUpdater,
   policyInputFromSettings,
   type AutoUpdaterLike,
-} from '@worldview/updater';
+} from '@opcb/updater';
 import {
   VIEW_LINK_SCHEME,
   linkInArgs,
@@ -36,11 +36,11 @@ import {
   wireChannel,
   type DefinitionsListing,
   type DiagnosticsSnapshot,
-} from '@worldview/ipc-contract';
-import type { HostBridge, RequestHandlers, WorldRuntime } from '@worldview/runtime';
-import { chooseMode, libraryPath, modeState, readLibraryOpen, serviceOrigin } from '@worldview/runtime';
-import type { ProviderManifest } from '@worldview/provider-sdk';
-import { MAP_PROVIDER_CATALOG } from '@worldview/render-core';
+} from '@opcb/ipc-contract';
+import type { HostBridge, RequestHandlers, WorldRuntime } from '@opcb/runtime';
+import { chooseMode, libraryPath, modeState, readLibraryOpen, serviceOrigin } from '@opcb/runtime';
+import type { ProviderManifest } from '@opcb/provider-sdk';
+import { MAP_PROVIDER_CATALOG } from '@opcb/render-core';
 import { APP_ORIGIN, DEV_SERVER_ORIGIN, isTrustedRendererUrl } from '../shared/app-origin.js';
 import { registerAppScheme, serveRenderer } from './app-protocol.js';
 import { PACK_BASEMAP_ROUTE, packBasemapResponse } from './pack-basemap.js';
@@ -57,6 +57,7 @@ import { PlaceSearch } from './place-search.js';
 import { StreetLevel } from './street-level.js';
 import { blockInternetRequests, gatedFetch, launchModeFromArgs } from './network-gate.js';
 import { moveDataTo, resolveDataLocation, backToUsualData } from './data-location.js';
+import { migrateLegacyData } from './legacy-data.js';
 import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './library-reader.js';
 
 /**
@@ -67,7 +68,7 @@ import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './li
  *  4. runtime + updater + IPC router
  *  5. window
  */
-const DEV = !app.isPackaged && process.env.WORLDVIEW_DEV === '1';
+const DEV = !app.isPackaged && process.env.OPCB_DEV === '1';
 const NETWORK_POLL_MS = 15_000;
 /** The first update check after start, and the gap between the next ones. */
 const UPDATE_FIRST_CHECK_MS = 20_000;
@@ -93,10 +94,26 @@ if (process.platform === 'linux') {
   if (store) app.commandLine.appendSwitch('password-store', store);
 }
 
-// Where all data lives (data-location.ts): a portable `WorldView-data` folder beside the app, a
+// The usual data folder is `<appData>/OP-CB`, named here rather than left to Electron's
+// derivation from package.json, so nothing about the folder depends on the package's name.
+const usualRoot = path.join(app.getPath('appData'), 'OP-CB');
+app.setPath('userData', usualRoot);
+
+// Data from before the rename to OP-CB (legacy-data.ts): moved into place on the first start of a
+// packaged build. Before the lock and before anything is written.
+const legacy = app.isPackaged
+  ? migrateLegacyData({
+      appData: app.getPath('appData'),
+      newUsual: usualRoot,
+      exeDir: path.dirname(process.execPath),
+      dev: DEV,
+    })
+  : { moved: [], problems: [] };
+
+// Where all data lives (data-location.ts): a portable `OP-CB-data` folder beside the app, a
 // folder the operator moved it to, or the usual one. Before the lock, which lives there too.
 const dataLocation = resolveDataLocation({
-  usualRoot: app.getPath('userData'),
+  usualRoot,
   exeDir: path.dirname(process.execPath),
   dev: DEV,
 });
@@ -105,7 +122,7 @@ if (dataLocation.root !== dataLocation.usualRoot) app.setPath('userData', dataLo
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.setAppUserModelId('com.worldview.desktop');
+  app.setAppUserModelId('com.opcb.desktop');
   void bootstrap().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     try {
@@ -120,6 +137,19 @@ if (!app.requestSingleInstanceLock()) {
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
+  // The old WorldView still has its data open: moving half of it would split the data in two.
+  if (legacy.busy) {
+    dialog.showMessageBoxSync({
+      type: 'warning',
+      title: 'Close WorldView first',
+      message:
+        'OP-CB is ready to take over the data the earlier version (WorldView) left, but WorldView still has it open.',
+      detail: `Close WorldView (also from the notification area), then start OP-CB again. Nothing has been moved yet.\n\n${legacy.busy}`,
+      buttons: ['Quit'],
+    });
+    app.exit(0);
+    return;
+  }
   // The moved data folder is not usable (the drive is out): say so before anything is written.
   if (dataLocation.missing) {
     const choice = dialog.showMessageBoxSync({
@@ -169,6 +199,8 @@ async function bootstrap(): Promise<void> {
     arch: process.arch,
     dev: DEV,
   });
+  for (const m of legacy.moved) log.info('data from before the rename moved', { move: m });
+  for (const p of legacy.problems) log.warn('data from before the rename', { problem: p });
 
   // Every WebContents — including ones we did not create on purpose — gets the same lockdown.
   const appDir = app.getAppPath();
@@ -362,7 +394,7 @@ async function bootstrap(): Promise<void> {
   };
 
   // An app that cannot check for updates should still show you a globe. Before this, any
-  // throw here became "WorldView could not start" with the raw message and no window at
+  // throw here became "OP-CB could not start" with the raw message and no window at
   // all — which is how a one-line interop bug in electron-updater stopped the packaged
   // build dead. Degrade to the inert updater and say so loudly instead.
   const autoUpdater = await resolveAutoUpdater(app.isPackaged, hub.logger('updater'));
@@ -370,7 +402,7 @@ async function bootstrap(): Promise<void> {
     updater: autoUpdater,
     currentVersion: app.getVersion(),
     // The installed Windows build updates itself (NSIS); the .deb is the package manager's. A
-    // portable copy (WorldView-data beside it) is told, not updated: the installer would put a
+    // portable copy (OP-CB-data beside it) is told, not updated: the installer would put a
     // second copy on this computer instead of updating the one on the drive.
     policy: () =>
       policyInputFromSettings(settings.get().updater, {
@@ -534,7 +566,7 @@ async function bootstrap(): Promise<void> {
       return { opened: true };
     },
     // The library: a book in the reader window, a reference in the system's PDF viewer, or the
-    // library folder in the file manager. Paths are WorldView's own, never from the page.
+    // library folder in the file manager. Paths are OP-CB's own, never from the page.
     'library.open': async (req) => {
       const r = readLibraryOpen(req);
       if (r.kind === 'folder') {
@@ -582,7 +614,7 @@ async function bootstrap(): Promise<void> {
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       const chosen = await dialog.showSaveDialog(win, {
         title: 'Save a picture of the map',
-        defaultPath: path.join(app.getPath('pictures'), `worldview-${stamp}.png`),
+        defaultPath: path.join(app.getPath('pictures'), `opcb-${stamp}.png`),
         filters: [{ name: 'PNG image', extensions: ['png'] }],
       });
       if (chosen.canceled || !chosen.filePath) return { cancelled: true } as const;
@@ -598,7 +630,7 @@ async function bootstrap(): Promise<void> {
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       const opts = {
         title: 'Export diagnostics bundle',
-        defaultPath: path.join(app.getPath('downloads'), `worldview-diagnostics-${stamp}.json`),
+        defaultPath: path.join(app.getPath('downloads'), `opcb-diagnostics-${stamp}.json`),
         filters: [{ name: 'JSON', extensions: ['json'] }],
       };
       const chosen = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts);

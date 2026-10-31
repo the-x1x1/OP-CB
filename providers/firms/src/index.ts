@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,7 +6,7 @@ import {
   type ProviderContext,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { DEFAULT_FIRMS_SOURCES, FIRMS_MANIFEST, isFirmsSource, type FirmsSource } from './manifest.js';
 import { boundsToArea, clampDayRange, firmsRequest, type FirmsArea } from './url.js';
 import { isKeyRejection, parseFirmsCsv } from './csv.js';

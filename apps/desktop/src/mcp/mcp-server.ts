@@ -1,7 +1,7 @@
 /**
- * WorldView as an MCP server for AI clients on this computer (operator decision 2026-10-20,
+ * OP-CB as an MCP server for AI clients on this computer (operator decision 2026-10-20,
  * ADR-014 amendment): a client — Formicaria's tools, any Model Context Protocol client —
- * starts WorldView's own executable as a stdio server (`worldview-mcp.ts`), and each tool it
+ * starts OP-CB's own executable as a stdio server (`opcb-mcp.ts`), and each tool it
  * offers is one read of the local API (`/v1/…`), which the running app serves only while
  * Settings → Local API is on. Read-only: no tool changes anything, and what the local API will
  * not give (a source whose data may not leave the app, the household's people, this computer's
@@ -12,7 +12,7 @@
  */
 
 export const MCP_PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'] as const;
-export const MCP_SERVER_NAME = 'worldview';
+export const MCP_SERVER_NAME = 'opcb';
 
 /** One GET of the local API: `{ status, body }`, or a thrown error when the app is not there. */
 export type LocalApiGet = (path: string) => Promise<{ status: number; body: unknown }>;
@@ -38,7 +38,7 @@ function query(params: Record<string, string | number | undefined>): string {
 
 export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
   {
-    name: 'worldview_status',
+    name: 'opcb_status',
     title: 'OP-CB status',
     description:
       'Whether OP-CB is running and connected: online or offline, how many of its sources are live, whether what it shows is recorded (demo) data, and the app version.',
@@ -46,7 +46,7 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
     path: () => '/v1/health',
   },
   {
-    name: 'worldview_sources',
+    name: 'opcb_sources',
     title: 'OP-CB sources',
     description:
       'Every data source OP-CB has (aircraft, ships, satellites, earthquakes, weather, alerts, local receivers…): on or off, its state, and — when its licence lets its data out of the app — how many objects it has and when it last reported.',
@@ -54,7 +54,7 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
     path: () => '/v1/sources',
   },
   {
-    name: 'worldview_objects',
+    name: 'opcb_objects',
     title: 'Objects on OP-CB’s map',
     description:
       'Objects OP-CB holds now — aircraft, vessels, satellites, earthquakes, storms, weather stations, fires, sensors and more — optionally within a radius of a place and of given types. Each comes with its position, labels, freshness and source. Only objects every source of which allows its data out of the app are listed. Page with `cursor`.',
@@ -93,14 +93,14 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
     },
   },
   {
-    name: 'worldview_track',
+    name: 'opcb_track',
     title: 'An object’s track',
     description:
-      'Where one object (by its id from worldview_objects) has been: its recorded positions over a time range of up to 24 hours (default the last hour), when its sources allow keeping and sharing them.',
+      'Where one object (by its id from opcb_objects) has been: its recorded positions over a time range of up to 24 hours (default the last hour), when its sources allow keeping and sharing them.',
     inputSchema: {
       type: 'object',
       properties: {
-        id: { type: 'string', description: 'Object id, as worldview_objects gives it' },
+        id: { type: 'string', description: 'Object id, as opcb_objects gives it' },
         from: { type: 'string', description: 'ISO 8601 start (default an hour before `to`)' },
         to: { type: 'string', description: 'ISO 8601 end (default now)' },
       },
@@ -114,7 +114,7 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
     },
   },
   {
-    name: 'worldview_offline',
+    name: 'opcb_offline',
     title: 'OP-CB offline readiness',
     description:
       'What OP-CB can do without the internet now: the connection, whether Work offline is on, what works locally, the offline packs installed and the data vaults.',
@@ -122,7 +122,7 @@ export const MCP_TOOLS: readonly ToolDef[] = Object.freeze([
     path: () => '/v1/offline',
   },
   {
-    name: 'worldview_own_position',
+    name: 'opcb_own_position',
     title: 'This computer’s position',
     description:
       'This computer’s own GPS position, from a receiver plugged into it, with its fix time and accuracy — only when the operator has allowed it in Settings → Local API, and no coordinates without a fix.',

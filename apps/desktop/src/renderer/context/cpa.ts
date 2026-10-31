@@ -1,6 +1,6 @@
-import type { WorldObject } from '@worldview/world-model';
-import { geodesicInverse, type GeoPosition } from '@worldview/world-model';
-import { destinationPoint } from '@worldview/render-core';
+import type { WorldObject } from '@opcb/world-model';
+import { geodesicInverse, type GeoPosition } from '@opcb/world-model';
+import { destinationPoint } from '@opcb/render-core';
 import { compassPoint } from './object-knowledge.js';
 
 /**

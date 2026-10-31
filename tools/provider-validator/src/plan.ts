@@ -1,6 +1,6 @@
-import type { WorldProvider, ProviderHealth } from '@worldview/provider-sdk';
-import type { testing } from '@worldview/provider-sdk';
-import type { Observation, JsonValue } from '@worldview/world-model';
+import type { WorldProvider, ProviderHealth } from '@opcb/provider-sdk';
+import type { testing } from '@opcb/provider-sdk';
+import type { Observation, JsonValue } from '@opcb/world-model';
 
 /**
  * A provider test plan wires a provider to its fixtures so the generic contract

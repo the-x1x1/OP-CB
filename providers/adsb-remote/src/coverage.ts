@@ -1,4 +1,4 @@
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import type { PointQuery } from './bounds.js';
 import { PRIOR_BASELINE, priorAircraft, type Tile } from './tiles.js';
 

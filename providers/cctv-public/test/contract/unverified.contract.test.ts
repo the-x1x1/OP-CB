@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runProviderChecklist, formatReport } from '@worldview/tool-provider-validator';
+import { runProviderChecklist, formatReport } from '@opcb/tool-provider-validator';
 import { unverifiedPlan } from './plan.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');

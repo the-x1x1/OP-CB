@@ -6,7 +6,7 @@ import path from 'node:path';
 import { MAX_RANGE_BYTES, PACK_BASEMAP_ROUTE, packBasemapResponse, parseRange } from './pack-basemap.js';
 
 const request = (range?: string) =>
-  new Request(`worldview://app${PACK_BASEMAP_ROUTE}?pack=x`, range ? { headers: { Range: range } } : {});
+  new Request(`opcb://app${PACK_BASEMAP_ROUTE}?pack=x`, range ? { headers: { Range: range } } : {});
 
 test('parseRange: the forms a PMTiles reader sends, and what is refused', () => {
   assert.deepEqual(parseRange('bytes=0-126', 1000), { start: 0, end: 126 });

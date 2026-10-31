@@ -1,6 +1,6 @@
 # ADR-005 — History: DuckDB + Parquet partitions, NDJSON fallback
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/history-store`
+Status: Accepted · 2026-09-21 · Package: `@opcb/history-store`
 
 ## Decision
 

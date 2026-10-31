@@ -162,8 +162,8 @@ test('electron-builder has the metadata it warns about', () => {
  * Too few: `@duckdb/node-api` was external, unpacked by name in `asarUnpack`, and declared
  * nowhere but as an optional peer of packages/history-store, so it would not have shipped.
  *
- * Too many: every `@worldview/*` workspace package sat here, and electron-builder resolved
- * each symlink to `worldview/packages/<name>`. Its `getRelativePath` tolerates a path
+ * Too many: every `@opcb/*` workspace package sat here, and electron-builder resolved
+ * each symlink to `opcb/packages/<name>`. Its `getRelativePath` tolerates a path
  * outside the app directory *only* when the path contains a `node_modules` segment — which
  * is why pnpm's `.pnpm/<pkg>/node_modules/<pkg>` layout works for ordinary dependencies and
  * a workspace link does not. Packaging died with "packages/camera-gateway/package.json must
@@ -209,7 +209,7 @@ test('nothing bundled is left in dependencies', () => {
 });
 
 test('no production dependency is a workspace link', () => {
-  // electron-builder resolves the symlink to worldview/packages/<name>, a path with no
+  // electron-builder resolves the symlink to opcb/packages/<name>, a path with no
   // node_modules segment, and throws before producing anything.
   const workspaceLinks = Object.entries(pkg.dependencies)
     .filter(([, v]) => v.startsWith('workspace:'))
@@ -249,7 +249,7 @@ test('pnpm dev launches Electron, which is what DEVELOPMENT.md promises', () => 
     /require\('electron'\)/,
     'nothing in the repo launched Electron for a long time; keep it launched here',
   );
-  assert.match(dev, /WORLDVIEW_DEV/, 'main.ts only enters dev mode when WORLDVIEW_DEV=1');
+  assert.match(dev, /OPCB_DEV/, 'main.ts only enters dev mode when OPCB_DEV=1');
   assert.doesNotMatch(
     pkg.scripts.dev,
     /&/,
@@ -311,21 +311,21 @@ test('packaging builds the app itself, so an installer can never carry a stale r
 test('a packaged build never reports the dev channel', () => {
   const script = read('scripts/package.mjs');
   assert.ok(
-    script.indexOf('process.env.WORLDVIEW_CHANNEL = packagedChannel()') < script.indexOf('buildApp();'),
+    script.indexOf('process.env.OPCB_CHANNEL = packagedChannel()') < script.indexOf('buildApp();'),
     'the channel is set before main is built (build-main.mjs reads it)',
   );
   assert.match(script, /version\.includes\('-'\) \? 'prerelease' : 'stable'/);
 });
 
 /**
- * Windows locks a running image against writes, so packaging over a launched WorldView
+ * Windows locks a running image against writes, so packaging over a launched OP-CB
  * fails minutes in with an EPERM naming a path and not a cause. It cost a full rebuild to
  * work out the first time.
  */
 test('packaging stops immediately when the packaged app is still running', () => {
   const script = read('scripts/package.mjs');
   assert.match(script, /assertPreviousBuildNotRunning\(\);/);
-  assert.match(script, /win-unpacked['"\s,)]*,\s*['"]WorldView\.exe/, 'probe the exe electron-builder will overwrite');
+  assert.match(script, /win-unpacked['"\s,)]*,\s*['"]OP-CB\.exe/, 'probe the exe electron-builder will overwrite');
   assert.match(script, /EBUSY/, 'the lock shows up as an open-for-write failure');
   assert.match(script, /taskkill/i, 'tell the operator how to clear it');
 });
@@ -354,7 +354,7 @@ test('the build helper and its declaration describe the same module', () => {
 
 /**
  * maplibre-gl 6 loads its worker as a separate module file, found from `import.meta.url` —
- * and only when that URL is http(s). Under `worldview://app` it built `new Worker("")`,
+ * and only when that URL is http(s). Under `opcb://app` it built `new Worker("")`,
  * loaded the page itself as the worker, and got index.html back; the packaged 2D map had no
  * worker, and the only trace was "Failed to load module script … text/html" in the log. The
  * fix has three parts that live in three files, and each is checked here against the others.
@@ -392,7 +392,7 @@ test('packaging targets the host: --win on Windows, --linux on Linux x64, nothin
   assert.equal(win.ok && win.target.flag, '--win');
   assert.equal(linux.ok && linux.target.flag, '--linux');
   assert.equal(PACKAGE_TARGETS.win32.unpackedDir, 'win-unpacked');
-  assert.equal(PACKAGE_TARGETS.linux.executable, 'worldview');
+  assert.equal(PACKAGE_TARGETS.linux.executable, 'opcb');
   for (const [platform, arch] of [
     ['darwin', 'x64'],
     ['linux', 'arm64'],
@@ -417,7 +417,7 @@ test('electron-builder.yml builds an x64 .deb, and no AppImage, with names relea
   // 24.04+ by default), whatever this file says. Until that can be built without, there is none.
   assert.doesNotMatch(linux, /target: AppImage/);
   assert.ok(!rootKeys(builderYml).includes('appImage'));
-  assert.match(linux, /executableName: worldview/);
+  assert.match(linux, /executableName: opcb/);
   assert.match(linux, /syncDesktopName: true/);
   assert.match(linux, /icon: build\/icon\.png/);
   assert.doesNotMatch(
@@ -425,11 +425,11 @@ test('electron-builder.yml builds an x64 .deb, and no AppImage, with names relea
     /^\s+(mimeTypes|fileAssociations):/m,
     'no file associations until something opens by double-click',
   );
-  assert.match(rootBlock(builderYml, 'deb'), /artifactName: worldview_\$\{version\}_amd64\.\$\{ext\}/);
+  assert.match(rootBlock(builderYml, 'deb'), /artifactName: opcb_\$\{version\}_amd64\.\$\{ext\}/);
   // The window's app_id / WM_CLASS is package.json desktopName; syncDesktopName names the menu entry after it.
   // fpm refuses to build a .deb without a homepage (electron-builder FpmTarget, "Please specify project homepage").
   const desktop = JSON.parse(read('package.json')) as { desktopName?: string; homepage?: string };
-  assert.equal(desktop.desktopName, 'worldview.desktop');
+  assert.equal(desktop.desktopName, 'opcb.desktop');
   assert.match(desktop.homepage ?? '', /^https:\/\//);
   // Never weaken Chromium's sandbox to make Linux start.
   const uncommented = (text: string) => text.replace(/^\s*(#|\/\/|\*).*$/gm, '');
@@ -466,10 +466,10 @@ test('the dropped-file worker is built beside main and shipped outside the asar 
   assert.match(builderYml, /^\s*-\s*'dist\/main\/geodata-worker\.cjs'\s*$/m);
 });
 
-test('worldview:// links are registered by the installer and the .deb', () => {
+test('opcb:// links are registered by the installer and the .deb', () => {
   // electron-builder writes the NSIS registry keys and the .desktop MimeType from `protocols`;
   // main.ts reads the link from the command line (view-link.ts linkInArgs).
-  assert.match(builderYml, /^protocols:\s*\n\s*-\s*name:\s*OP-CB link\s*\n\s*schemes:\s*\[worldview\]\s*$/m);
+  assert.match(builderYml, /^protocols:\s*\n\s*-\s*name:\s*OP-CB link\s*\n\s*schemes:\s*\[opcb\]\s*$/m);
   const main = read('src/main/main.ts');
   assert.match(main, /setAsDefaultProtocolClient\(VIEW_LINK_SCHEME\)/);
   assert.match(main, /linkInArgs\(argv\)/);
@@ -477,7 +477,7 @@ test('worldview:// links are registered by the installer and the .deb', () => {
 
 test('the MCP server is built beside main and shipped outside the asar archive', () => {
   const buildMain = read('scripts/build-main.mjs');
-  assert.match(buildMain, /worldview-mcp\.ts/);
-  assert.match(buildMain, /dist', 'mcp', 'worldview-mcp\.cjs'/);
-  assert.match(builderYml, /^\s*-\s*'dist\/mcp\/worldview-mcp\.cjs'\s*$/m);
+  assert.match(buildMain, /opcb-mcp\.ts/);
+  assert.match(buildMain, /dist', 'mcp', 'opcb-mcp\.cjs'/);
+  assert.match(builderYml, /^\s*-\s*'dist\/mcp\/opcb-mcp\.cjs'\s*$/m);
 });

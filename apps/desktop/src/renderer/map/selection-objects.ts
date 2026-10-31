@@ -1,4 +1,4 @@
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import type { RootState } from '../store/types.js';
 
 /**

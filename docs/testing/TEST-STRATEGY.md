@@ -49,7 +49,7 @@ a failure is always visible in source health or diagnostics rather than silent.
 
 ## Network-off mode (directive §117)
 
-`pnpm test:offline` sets `WORLDVIEW_NETWORK=off`. In that mode the composed runtime must:
+`pnpm test:offline` sets `OPCB_NETWORK=off`. In that mode the composed runtime must:
 start, serve the local map and pack search, keep collections and history working, report
 every remote provider OFFLINE, keep filesystem/local-process providers answering, and
 make zero HTTP requests. Offline support is claimed only because this passes.

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import type { GeoPosition, WorldObject } from '@worldview/world-model';
-import { destinationPoint, splitAtAntimeridian, type RenderFeature } from '@worldview/render-core';
+import type { GeoPosition, WorldObject } from '@opcb/world-model';
+import { destinationPoint, splitAtAntimeridian, type RenderFeature } from '@opcb/render-core';
 import { CPA_MAX_AGE_S, cpa, cpaPoints, nm, overGround, type Cpa } from '../context/cpa.js';
 import { currentTime, useNow } from '../hooks/use-now.js';
 import type { RendererHostLike } from '../renderer-host-like.js';

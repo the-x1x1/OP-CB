@@ -61,7 +61,7 @@ export function Splash() {
     flown.current = true;
     if (!ui.pendingLink) actions.goHome();
   }, [home, ui.firstFrame, ui.pendingLink, actions]);
-  // A worldview:// link (store/view-link.ts): opened once the map can fly, then let go.
+  // A opcb:// link (store/view-link.ts): opened once the map can fly, then let go.
   useEffect(() => {
     if (!ui.firstFrame || !ui.pendingLink || session.status !== 'ready') return;
     const link = ui.pendingLink;

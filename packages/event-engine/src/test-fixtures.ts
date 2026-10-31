@@ -1,5 +1,5 @@
-import type { JsonValue, Observation, WorldEvent, WorldObject } from '@worldview/world-model';
-import { WorldState } from '@worldview/state-engine';
+import type { JsonValue, Observation, WorldEvent, WorldObject } from '@opcb/world-model';
+import { WorldState } from '@opcb/state-engine';
 import type { RuleContext } from './rules/types.js';
 import type { EventStore } from './store.js';
 

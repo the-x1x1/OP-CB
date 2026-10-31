@@ -16,7 +16,7 @@ import { isPlainObject as isObj } from '../../shared/json.js';
  * The position's `attributes.driverUniqueId` (a driver's RFID or iButton id) is dropped.
  *
  * A device whose Traccar category is `person` is left out altogether (docs/PRODUCT-BOUNDARIES.md:
- * WORLDVIEW is not a people-tracking system); its positions are counted, never mapped. This
+ * OP-CB is not a people-tracking system); its positions are counted, never mapped. This
  * fails closed: until one whole device list has been read, a position of a device no list
  * or socket message has described is held back (kept as its last, not mapped), since its
  * category cannot be known. After that, a device the list does not name — one added since —

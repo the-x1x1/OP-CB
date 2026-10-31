@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ProviderError } from '@worldview/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import { SERIAL_PATH, openSerialStream } from './serial-stream.js';
 import { ptyDevice } from '../../test/helpers/pty-device.js';
 

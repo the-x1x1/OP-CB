@@ -1,7 +1,7 @@
-import type { GeoBounds, WorldGeometry } from '@worldview/world-model';
-import { geometryCentroid, pointInPolygon } from '@worldview/world-model';
-import type { GeodataShape } from '@worldview/ipc-contract';
-import type { RenderFeature, RenderGeometry } from '@worldview/render-core';
+import type { GeoBounds, WorldGeometry } from '@opcb/world-model';
+import { geometryCentroid, pointInPolygon } from '@opcb/world-model';
+import type { GeodataShape } from '@opcb/ipc-contract';
+import type { RenderFeature, RenderGeometry } from '@opcb/render-core';
 
 /**
  * Files the operator dropped on the map (or chose from the palette): their shapes drawn for

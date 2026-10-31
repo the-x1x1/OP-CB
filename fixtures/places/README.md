@@ -6,7 +6,7 @@ in `test/offline` ("Honolulu", "HNL", "Oahu", "Japan", "Tokyo", "LAX").
 
 ## Provenance and licence
 
-- Authored for WORLDVIEW on 2026-09-21 from general public knowledge: country names,
+- Authored for OP-CB on 2026-09-21 from general public knowledge: country names,
   ISO 3166-1 alpha-2 codes, capital cities, well-known cities, IATA/ICAO airport codes
   and Hawaiian place names. These are facts, not a copy of any third-party database.
   No OpenStreetMap, GeoNames, OurAirports, Natural Earth or GEV data was copied.

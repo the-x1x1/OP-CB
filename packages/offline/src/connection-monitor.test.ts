@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing } from '@worldview/provider-sdk';
-import type { ConnectionSnapshot, ConnectionState } from '@worldview/source-health';
+import { testing } from '@opcb/provider-sdk';
+import type { ConnectionSnapshot, ConnectionState } from '@opcb/source-health';
 import { ConnectionMonitor, type NetworkSignal, type Scheduler } from './connection-monitor.js';
 
 const { VirtualClock } = testing;

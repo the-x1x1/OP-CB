@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters } from '@worldview/world-model';
+import { haversineMeters } from '@opcb/world-model';
 import { parseHomePosition, pointQueryForBounds } from './bounds.js';
 import { pointQueryUrl } from './manifest.js';
 

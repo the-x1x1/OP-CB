@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, manifestSchema, testing, type ProviderHttpRequest } from '@worldview/provider-sdk';
-import type { JsonValue, Observation } from '@worldview/world-model';
+import { ProviderError, manifestSchema, testing, type ProviderHttpRequest } from '@opcb/provider-sdk';
+import type { JsonValue, Observation } from '@opcb/world-model';
 import { defaultConnectorRegistry, formatSuite, runConnectorSuite, type SuiteFixtures } from '../../index.js';
 import type { Timers } from '../websocket-json.js';
 import {

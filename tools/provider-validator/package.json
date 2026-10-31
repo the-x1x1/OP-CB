@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/tool-provider-validator",
+  "name": "@opcb/tool-provider-validator",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,11 +7,11 @@
   "license": "MIT",
   "main": "./src/runner.ts",
   "bin": {
-    "worldview-provider-test": "./src/cli.ts"
+    "opcb-provider-test": "./src/cli.ts"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*",
-    "@worldview/provider-sdk": "workspace:*",
-    "@worldview/state-engine": "workspace:*"
+    "@opcb/world-model": "workspace:*",
+    "@opcb/provider-sdk": "workspace:*",
+    "@opcb/state-engine": "workspace:*"
   }
 }

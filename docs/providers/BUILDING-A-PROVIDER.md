@@ -45,7 +45,7 @@ registered either: that is the last step below, taken once the record is settled
 
 ```
 providers/<dir>/
-  package.json          copy from providers/usgs/package.json; name @worldview/provider-<dir>
+  package.json          copy from providers/usgs/package.json; name @opcb/provider-<dir>
   tsconfig.json         copy verbatim from providers/usgs/tsconfig.json
   src/manifest.ts       ProviderManifest + URL helpers
   src/normalize.ts      raw payload → ObservationDraft[]
@@ -54,15 +54,15 @@ providers/<dir>/
   test/contract/plan.ts + <dir>.contract.test.ts
 ```
 
-`tsconfig.base.json` already maps `@worldview/provider-<dir>` to `providers/<dir>/src/index.ts`
+`tsconfig.base.json` already maps `@opcb/provider-<dir>` to `providers/<dir>/src/index.ts`
 for the planned providers; add the mapping if yours is new. The directory name and
 the manifest id may differ (`providers/firms` hosts `nasa-firms`, `providers/weather`
 hosts `nws-alerts`) — declare that in the plan's `aliases`.
 
-Import only `@worldview/world-model` and `@worldview/provider-sdk`.
+Import only `@opcb/world-model` and `@opcb/provider-sdk`.
 `node tools/dev/boundary-check.mjs` fails on `node:fs`, `node:http`, `undici`, `ws`,
-React, Cesium, MapLibre, Electron, `@worldview/render-*`, `@worldview/ui`,
-`@worldview/state-engine` and relative imports into other packages.
+React, Cesium, MapLibre, Electron, `@opcb/render-*`, `@opcb/ui`,
+`@opcb/state-engine` and relative imports into other packages.
 
 ## 2. Manifest
 
@@ -112,7 +112,7 @@ and attribution are filled from the manifest and cannot be mislabelled.
 - **externalId** is the upstream's stable id: USGS event id, NORAD number, FIRMS
   `source:date T time:lat:lon` (a pixel at a minute), NWS alert URN. Authoritative
   namespaces (`satellite:norad`, `earthquake:usgs`, …) resolve through
-  `@worldview/identity`; everything else becomes `<type>:<providerId>:<externalId>`.
+  `@opcb/identity`; everything else becomes `<type>:<providerId>:<externalId>`.
 - **observedAt** is when the _source_ measured the thing, in UTC ISO
   (`epochToIso`, `Date.parse` for offset strings). Never invent it; clamp to
   `receivedAt` if upstream clocks run ahead. `effectiveFrom/Until` carry the source's
@@ -269,7 +269,7 @@ data policy, normalizer, fixtures, the same 16-check checklist — with three di
 - **Detection.** The SDK's local-sensor kit does the rest the same way everywhere:
 
 ```ts
-import { LocalDeviceDetector, resolveLocalEndpoint, stringSetting } from '@worldview/provider-sdk';
+import { LocalDeviceDetector, resolveLocalEndpoint, stringSetting } from '@opcb/provider-sdk';
 
 const host = stringSetting(raw, 'host', { host: true });
 const endpoint = resolveLocalEndpoint(`http://${host}/v1/current_conditions`, {

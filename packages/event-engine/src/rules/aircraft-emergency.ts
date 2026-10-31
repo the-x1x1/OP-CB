@@ -1,4 +1,4 @@
-import { EventTypes, ObjectTypes, type SeverityClass, type WorldObject } from '@worldview/world-model';
+import { EventTypes, ObjectTypes, type SeverityClass, type WorldObject } from '@opcb/world-model';
 import { episodeRule } from './episodes.js';
 import { shortUtc, stringProp } from './types.js';
 

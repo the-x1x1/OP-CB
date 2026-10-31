@@ -1,7 +1,7 @@
 # Offline basemaps
 
 The 2D map draws vector tiles in the Protomaps basemap schema (`earth`, `water`, `roads`,
-`places`, `boundaries`, …) with WORLDVIEW's own dark and light styles. Offline, those tiles
+`places`, `boundaries`, …) with OP-CB's own dark and light styles. Offline, those tiles
 come from a PMTiles file inside an installed world pack (see "Installing it"). This page covers
 three ways to make the tiles:
 
@@ -137,8 +137,8 @@ this section: the extract's size, Planetiler's `durationMs`, `pmtiles.sizeBytes`
 ### Installing it
 
 In the app: Settings → Offline packs → Install offline pack, then choose
-`<out>/<id>.worldpack`. The pack is verified and installed, and "WORLDVIEW dark" and
-"WORLDVIEW light" become selectable in 2D.
+`<out>/<id>.worldpack`. The pack is verified and installed, and "OP-CB dark" and
+"OP-CB light" become selectable in 2D.
 
 **The map cannot show it yet.** The catalog's two PMTiles entries hand the renderer an
 empty file path (`url: ''`, packages/render-core/src/map-providers.ts), and nothing in the
@@ -148,12 +148,12 @@ and draws the map without one; this has not been watched in a running app. This 
 every basemap pack, including one cut from a Protomaps build. The runtime and the catalog
 are frozen, so the fix is an amendment request in the phase brief: serve the enabled
 pack's PMTiles file to the page and put its address in the descriptor. Once that lands,
-the check is: switch to 2D, choose WORLDVIEW dark, disconnect the network, restart the
+the check is: switch to 2D, choose OP-CB dark, disconnect the network, restart the
 app, and pan and zoom over the region.
 
 The full credit is in the pack's `licenses/NOTICES.md`. The credit line on the map is a
-different matter: it shows the fixed text of the map-provider catalog's "WORLDVIEW dark"
-and "WORLDVIEW light" entries, "© OpenMapTiles © OpenStreetMap contributors", whatever
+different matter: it shows the fixed text of the map-provider catalog's "OP-CB dark"
+and "OP-CB light" entries, "© OpenMapTiles © OpenStreetMap contributors", whatever
 pack supplies the tiles. That names OpenMapTiles for tiles in the Protomaps schema and
 leaves out Protomaps and ESA WorldCover. The catalog is frozen code, so the fix, taking
 the credit line from the installed pack's record, is an amendment request in the phase
@@ -166,7 +166,7 @@ A basemap built this way contains:
 - **OpenStreetMap data**, © OpenStreetMap contributors, under the Open Database Licence
   1.0. The tiles are a _Produced Work_. Anyone who sees them must see
   "© OpenStreetMap contributors". If you redistribute a modified extract, the data stays
-  under the ODbL (share-alike). WORLDVIEW's code is unaffected.
+  under the ODbL (share-alike). OP-CB's code is unaffected.
 - **The Protomaps basemap profile and map design**: code BSD-3-Clause, map design CC0
   (github.com/protomaps/basemaps). Protomaps asks for credit on web maps, and a modified
   fork has to use a different name.
@@ -201,7 +201,7 @@ asks the integrator to add:
     "termsUrl": "https://www.openstreetmap.org/copyright"
   },
   "commercialReview": "approved",
-  "notes": "Built by the operator with pnpm basemap:build from an OSM extract they downloaded; nothing is fetched by WORLDVIEW. ODbL share-alike applies to redistributed modified extracts. Not tile.openstreetmap.org."
+  "notes": "Built by the operator with pnpm basemap:build from an OSM extract they downloaded; nothing is fetched by OP-CB. ODbL share-alike applies to redistributed modified extracts. Not tile.openstreetmap.org."
 }
 ```
 
@@ -222,7 +222,7 @@ Martin's default address is `0.0.0.0:3000`, which is every interface. Give
 lists the sources, and a source's TileJSON is at `http://127.0.0.1:3000/<source id>`.
 Martin names a file source after the file, so check the catalog for the exact id.
 
-What WORLDVIEW accepts as a Martin source (`packages/offline/src/basemaps/martin.ts`):
+What OP-CB accepts as a Martin source (`packages/offline/src/basemaps/martin.ts`):
 
 - **Where it may be.** A loopback address (`127.0.0.1`, `localhost`, `::1`) over http or
   https, or exactly the one host you trust (for a server on your network, e.g. a NAS). Any
@@ -234,7 +234,7 @@ What WORLDVIEW accepts as a Martin source (`packages/offline/src/basemaps/martin
   request times out after 10 s.
 - **Where the tiles may come from.** Every tile template must use the same scheme and origin
   as the TileJSON. If Martin's TileJSON names another address (behind a proxy, say), the
-  source is refused and the message names both; give WORLDVIEW the address Martin's tile
+  source is refused and the message names both; give OP-CB the address Martin's tile
   URLs use.
 - **What it must contain.** The Protomaps basemap layers (`earth`, `water`, `roads`,
   `places`, `boundaries`), because those are what the styles draw. A PostGIS table or an
@@ -247,7 +247,7 @@ What WORLDVIEW accepts as a Martin source (`packages/offline/src/basemaps/martin
 Settings → Rendering → **Martin tile server**: the TileJSON URL of one source (for example
 `http://127.0.0.1:3000/basemap-hawaii`), the host you trust if Martin runs elsewhere on your
 network, and a credit if the TileJSON states none. Save, and the Basemap list gains
-"<source name> (Martin, dark)" and "(Martin, light)", drawn in 2D with WORLDVIEW's own
+"<source name> (Martin, dark)" and "(Martin, light)", drawn in 2D with OP-CB's own
 styles. When the source cannot be used, both are listed as unavailable and the line under
 the field says why (the rules above, or the server not answering).
 

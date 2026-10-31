@@ -1,9 +1,9 @@
 # History store
 
-Package `@worldview/history-store` implements ADR-005: observation history in
+Package `@opcb/history-store` implements ADR-005: observation history in
 date-partitioned files, policy-aware retention with tiered track downsampling, and
 the timeline/replay controller. It never serves hot-state lookups (those live in
-`@worldview/state-engine`); it answers "what was known at time T" and "where did this
+`@opcb/state-engine`); it answers "what was known at time T" and "where did this
 object go".
 
 ## Write path

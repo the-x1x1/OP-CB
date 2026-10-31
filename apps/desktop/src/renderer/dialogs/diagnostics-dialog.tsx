@@ -1,6 +1,6 @@
 import { providerErrors } from '../source-errors.js';
 import { useEffect, useState } from 'react';
-import type { DiagnosticsSnapshot } from '@worldview/ipc-contract';
+import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
 import {
   Button,
   Dialog,
@@ -11,7 +11,7 @@ import {
   StatusBadge,
   formatBytes,
   formatUtcDateTime,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 
 /** Help → Diagnostics (directive §83): every field of DiagnosticsSnapshot plus a redacted export. */

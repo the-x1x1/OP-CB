@@ -1,4 +1,4 @@
-import type { TelemetryFormat, TelemetryLimits, TelemetrySeries } from '@worldview/provider-sdk';
+import type { TelemetryFormat, TelemetryLimits, TelemetrySeries } from '@opcb/provider-sdk';
 
 /**
  * What each fixed format means: decimals and the unit shown when the series names none.

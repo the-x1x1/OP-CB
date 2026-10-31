@@ -10,7 +10,7 @@ import {
   type JsonValue,
   type Schema,
   type WorldGeometry,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 /**
  * The slice of GeoJSON a world pack carries: a FeatureCollection of features with a

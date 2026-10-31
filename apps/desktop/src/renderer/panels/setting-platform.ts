@@ -1,4 +1,4 @@
-import type { ProviderSettingDefinition } from '@worldview/provider-sdk';
+import type { ProviderSettingDefinition } from '@opcb/provider-sdk';
 
 const PLATFORM_NAMES: Record<string, string> = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' };
 

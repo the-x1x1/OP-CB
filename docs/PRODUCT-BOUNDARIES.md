@@ -1,10 +1,10 @@
 # Product boundaries
 
-WORLDVIEW models the physical world: aircraft, ships, satellites, earthquakes, fires,
+OP-CB models the physical world: aircraft, ships, satellites, earthquakes, fires,
 weather, public alerts, infrastructure, public cameras, transit, and equipment the user
 owns. It is a browser for places, objects and events — not a people-tracking system.
 
-## WORLDVIEW will not intentionally implement
+## OP-CB will not intentionally implement
 
 - named-person surveillance or person search;
 - facial recognition, gait or biometric analysis;

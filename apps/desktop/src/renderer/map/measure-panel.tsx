@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { GeoPosition } from '@worldview/world-model';
-import { Button } from '@worldview/ui';
+import type { GeoPosition } from '@opcb/world-model';
+import { Button } from '@opcb/ui';
 import { useActions } from '../store/store.js';
 import {
   formatArea,

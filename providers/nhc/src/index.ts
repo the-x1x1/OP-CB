@@ -1,11 +1,11 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
   assertAtomicAdmission,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { NHC_CURRENT_STORMS_URL, NHC_MANIFEST } from './manifest.js';
 import { normalizeCurrentStorms } from './normalize.js';
 

@@ -3,7 +3,7 @@
  * E-8). It constructs a tileset only when the user's own key resolves from a
  * `credentialRef`; it is never a default, never bundled with a key, and the
  * history store denies persistence for `google-*` providers. Google content is
- * never cached by WORLDVIEW (Cesium's in-memory tile cache is the only cache).
+ * never cached by OP-CB (Cesium's in-memory tile cache is the only cache).
  *
  * Deliberately NOT ported from gods-eye-view src/maps/google3d.js: the ion-hosted
  * route and Google-first startup selection are out of scope.

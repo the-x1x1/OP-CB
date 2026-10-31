@@ -1,5 +1,5 @@
 /**
- * @worldview/render-maplibre — the 2D adapter for the WorldRenderer contract
+ * @opcb/render-maplibre — the 2D adapter for the WorldRenderer contract
  * (ADR-008). A typed dark style for the Protomaps basemap schema (worldpacks
  * over the `pmtiles://` protocol; OpenFreeMap/user styles online), one GeoJSON
  * source per presentation layer with MapLibre clustering, circle/symbol/line/
@@ -20,4 +20,4 @@ export * from './attribution.js';
 export * from './pmtiles.js';
 export * from './images.js';
 export * from './styles/spec.js';
-export * from './styles/worldview-dark.js';
+export * from './styles/opcb-dark.js';

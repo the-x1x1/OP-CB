@@ -1,4 +1,4 @@
-import type { SkyOverheadAnswer, SkySatellite } from '@worldview/ipc-contract';
+import type { SkyOverheadAnswer, SkySatellite } from '@opcb/ipc-contract';
 import { compassPoint } from '../context/object-knowledge.js';
 
 /**

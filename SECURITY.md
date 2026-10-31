@@ -3,10 +3,10 @@
 ## Reporting a vulnerability
 
 Report privately through GitHub Security Advisories:
-<https://github.com/the-x1x1/oneview/security/advisories/new>. Please do not open a
+<https://github.com/the-x1x1/OP-CB/security/advisories/new>. Please do not open a
 public issue for a vulnerability.
 
-Include what you did, what happened, the WorldView version (Help → Diagnostics) and, if
+Include what you did, what happened, the OP-CB version (Help → Diagnostics) and, if
 you have one, a minimal reproduction. A redacted diagnostics bundle helps; check it
 before attaching — it is redacted automatically, but you know your own environment.
 
@@ -16,7 +16,7 @@ you prefer otherwise.
 
 ## Supported versions
 
-WORLDVIEW is pre-1.0. Only the latest release on each channel (`stable`, `prerelease`)
+OP-CB is pre-1.0. Only the latest release on each channel (`stable`, `prerelease`)
 receives fixes.
 
 ## What is in scope
@@ -31,7 +31,7 @@ receives fixes.
 ## What is not a vulnerability
 
 - Data being wrong or missing because an upstream source is wrong or unavailable.
-  WORLDVIEW shows source health and provenance; it does not vouch for third-party data.
+  OP-CB shows source health and provenance; it does not vouch for third-party data.
 - A user deliberately pointing a "camera" at a service on their own machine — the relay
   is loopback-only and serves only what the user registered.
 - Findings that require an already-compromised Windows account.

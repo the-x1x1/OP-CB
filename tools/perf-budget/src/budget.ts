@@ -1,9 +1,9 @@
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { runPresentationBenchmark, type BenchmarkReport } from '@worldview/render-dense';
-import { SqlitePlaceIndex, loadSqlite, type PlaceEntry } from '@worldview/offline';
-import { NdjsonBackend, type HistoryRow } from '@worldview/history-store';
+import { runPresentationBenchmark, type BenchmarkReport } from '@opcb/render-dense';
+import { SqlitePlaceIndex, loadSqlite, type PlaceEntry } from '@opcb/offline';
+import { NdjsonBackend, type HistoryRow } from '@opcb/history-store';
 
 /**
  * Performance budgets enforced in CI (roadmap 1.0). `config/perf-budgets.json` holds a

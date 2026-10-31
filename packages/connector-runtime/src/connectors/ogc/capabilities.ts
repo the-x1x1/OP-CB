@@ -1,4 +1,4 @@
-import type { GeoBounds } from '@worldview/world-model';
+import type { GeoBounds } from '@opcb/world-model';
 import {
   at,
   child,

@@ -1,5 +1,5 @@
-import { geometryCentroid, type GeoPosition } from '@worldview/world-model';
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import { geometryCentroid, type GeoPosition } from '@opcb/world-model';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 
 /**
  * Map tools that draw features of their own — the latitude and longitude grid, range rings —

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Button, EmptyState, LoadingState, Panel, Toggle } from '@worldview/ui';
-import type { SkyOverheadAnswer } from '@worldview/ipc-contract';
-import { resolveStyle } from '@worldview/render-core';
-import { moonPosition, sunPosition, type GeoPosition } from '@worldview/world-model';
+import { Button, EmptyState, LoadingState, Panel, Toggle } from '@opcb/ui';
+import type { SkyOverheadAnswer } from '@opcb/ipc-contract';
+import { resolveStyle } from '@opcb/render-core';
+import { moonPosition, sunPosition, type GeoPosition } from '@opcb/world-model';
 import { useActions, useAppState } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { pastShownAtMs } from '../store/shown-time.js';

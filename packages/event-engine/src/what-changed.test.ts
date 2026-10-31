@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { GeoRegion, WorldObject } from '@worldview/world-model';
-import type { HistoryReader } from '@worldview/query-engine';
+import type { GeoRegion, WorldObject } from '@opcb/world-model';
+import type { HistoryReader } from '@opcb/query-engine';
 import { EventStore } from './store.js';
 import { whatChanged } from './what-changed.js';
 import { DAY, FixedClock, HOUR, eventFrom, iso, obj, quake, stateOf } from './test-fixtures.js';
@@ -67,7 +67,7 @@ function synthetic() {
       geometry: { type: 'Point', coordinates: [-156.3, 20.8] },
     }),
     eventFrom({
-      id: 'event:wildfire-cluster:worldview:abc',
+      id: 'event:wildfire-cluster:opcb:abc',
       type: 'wildfire-cluster',
       title: 'Wildfire cluster — 4 detections',
       startAt: iso(-20 * HOUR),
@@ -122,7 +122,7 @@ test('whatChanged without history: events in range/region, source-status fallbac
   assert.deepEqual(r.time, last24h);
   assert.deepEqual(
     r.newEvents.map((e) => e.id),
-    ['event:earthquake:usgs:new1', 'event:weather-alert:nws:surf', 'event:wildfire-cluster:worldview:abc'],
+    ['event:earthquake:usgs:new1', 'event:weather-alert:nws:surf', 'event:wildfire-cluster:opcb:abc'],
     'started in range, in region, newest first; Japan and the 2-day-old quake excluded',
   );
   assert.deepEqual(

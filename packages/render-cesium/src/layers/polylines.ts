@@ -1,4 +1,4 @@
-import type { RenderFeature, ResolvedStyle } from '@worldview/render-core';
+import type { RenderFeature, ResolvedStyle } from '@opcb/render-core';
 import type { CesiumLike, MaterialLike, PolylineCollectionLike, PolylineLike } from '../cesium-like.js';
 import type { CesiumTheme } from '../theme.js';
 import { positionsValid, toCartesianArray } from '../geometry.js';

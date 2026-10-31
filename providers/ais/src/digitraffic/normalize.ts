@@ -1,5 +1,5 @@
-import { isValidLatLon, type IsoTimestamp, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import { isValidLatLon, type IsoTimestamp, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import { KNOT_TO_MPS, NAV_STATUS_TEXT, flagFields, normalizeMmsi, shipTypeText } from '../normalize.js';
 
 /**

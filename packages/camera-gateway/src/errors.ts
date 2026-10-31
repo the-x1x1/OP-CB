@@ -1,4 +1,4 @@
-import { redactText } from '@worldview/core';
+import { redactText } from '@opcb/core';
 
 export type CameraErrorCode =
   | 'INVALID_URL'

@@ -3,7 +3,7 @@ import type { GuideDefinition } from '../guide-types.js';
 /**
  * Meshtastic and LoRa: the reference walkthrough. Written for someone who has never used a radio.
  *
- * WorldView reads the node's node list, positions, telemetry, firmware and LoRa settings, and
+ * OP-CB reads the node's node list, positions, telemetry, firmware and LoRa settings, and
  * never reads text messages. It sends one thing only, on the operator's press each time: a test
  * message to one node (the operator's decision of 2026-10-30), refused while the radio has no
  * region. The radio's region, channel and key are set in the Meshtastic client.

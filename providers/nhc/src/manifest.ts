@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * NOAA National Hurricane Center — active tropical cyclones (roadmap 0.4 storm tracks).

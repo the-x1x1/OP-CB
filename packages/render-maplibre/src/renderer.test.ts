@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ManualScheduler, type PickResult, type RenderFeature, type RendererEvents } from '@worldview/render-core';
+import { ManualScheduler, type PickResult, type RenderFeature, type RendererEvents } from '@opcb/render-core';
 import { MapLibreWorldRenderer, TILE_FAILURE_CHECK_MS } from './renderer.js';
 import {
   createFakeMapLibre,
@@ -326,12 +326,12 @@ test('MapLibreWorldRenderer: basemap descriptors swap the style and overlays sur
     kind: 'pmtiles',
     id: 'pack',
     url: 'packs/europe.pmtiles',
-    styleId: 'worldview-dark',
+    styleId: 'opcb-dark',
     attribution: '© OpenStreetMap contributors',
   });
   assert.ok(maplibre.protocols.has('pmtiles'));
   const style = map.style as MapStyle;
-  assert.equal(style.name, 'worldview-dark');
+  assert.equal(style.name, 'opcb-dark');
   assert.equal(
     style.sources['basemap']?.type === 'vector' && style.sources['basemap'].url,
     'pmtiles://packs/europe.pmtiles',
@@ -370,7 +370,7 @@ test('MapLibreWorldRenderer: basemap descriptors swap the style and overlays sur
 
   const noPm = await mounted({ withPmtiles: false });
   await assert.rejects(
-    noPm.renderer.setBasemap({ kind: 'pmtiles', id: 'p', url: 'x', styleId: 'worldview-dark', attribution: '' }),
+    noPm.renderer.setBasemap({ kind: 'pmtiles', id: 'p', url: 'x', styleId: 'opcb-dark', attribution: '' }),
     /pmtiles module/,
   );
   noPm.renderer.dispose();
@@ -459,7 +459,7 @@ test('MapLibreWorldRenderer: a style that never loads gives up and says so, inst
       kind: 'pmtiles',
       id: 'pack',
       url: 'packs/absent.pmtiles',
-      styleId: 'worldview-dark',
+      styleId: 'opcb-dark',
       attribution: '',
     })
     .then(() => {

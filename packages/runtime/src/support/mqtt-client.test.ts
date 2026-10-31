@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
-import { ProviderError } from '@worldview/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import { createMqtt } from './mqtt-client.js';
 import {
   PacketReader,

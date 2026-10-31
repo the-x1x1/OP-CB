@@ -92,7 +92,7 @@ export const SDR_GUIDE: GuideDefinition = {
 };
 
 /**
- * The offline library (version 2, 2026-10-30): ZIM files WorldView opens itself, books from the
+ * The offline library (version 2, 2026-10-30): ZIM files OP-CB opens itself, books from the
  * Kiwix catalogue, and the public-domain emergency references. kiwix-serve is optional now.
  */
 export const LIBRARY_GUIDE: GuideDefinition = {

@@ -21,7 +21,7 @@ import { READER_SCHEME } from './library-reader-pages.js';
  * allowed, and `'self'` in the Content-Security-Policy finally means something specific
  * (src/main/csp.ts) instead of matching nothing.
  */
-export const APP_SCHEME = 'worldview';
+export const APP_SCHEME = 'opcb';
 export const APP_HOST = 'app';
 export const APP_ORIGIN = `${APP_SCHEME}://${APP_HOST}`;
 

@@ -1,5 +1,5 @@
 import type { WebContents } from 'electron';
-import type { Logger } from '@worldview/core';
+import type { Logger } from '@opcb/core';
 
 /**
  * A window that opens and shows nothing is the worst failure this app can have: it reports

@@ -1,13 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Button, Dialog, FieldList, Section, StatusBadge, Toggle, formatAgo, formatBytes } from '@worldview/ui';
-import type { HistoryUsage, TileCacheStatus } from '@worldview/ipc-contract';
+import { Button, Dialog, FieldList, Section, StatusBadge, Toggle, formatAgo, formatBytes } from '@opcb/ui';
+import type { HistoryUsage, TileCacheStatus } from '@opcb/ipc-contract';
 import { basemapChoices, terrainChoices, type MapProviderChoice } from '../map-providers.js';
 import { useActions, useAppState, useClient } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
 import { InstallPackButton, PackFreshness, PackPublishers, PackSignature } from './pack-trust.js';
 import { DataVaults } from './data-vaults.js';
-import { VISUAL_STYLE_IDS, type AppSettings, type VisualStyleId } from '@worldview/ipc-contract';
-import { graphicsProfile, resolveGraphicsQuality } from '@worldview/render-core';
+import { VISUAL_STYLE_IDS, type AppSettings, type VisualStyleId } from '@opcb/ipc-contract';
+import { graphicsProfile, resolveGraphicsQuality } from '@opcb/render-core';
 import { gpuRenderer } from '../map/gpu-info.js';
 import { describeHome } from '../store/home.js';
 
@@ -745,7 +745,7 @@ function HistorySettings({ history }: { history: AppSettings['history'] }) {
 
 /**
  * RTSP support is an optional binary the operator installs and verifies themselves
- * (docs/operator/cameras.md). WORLDVIEW never downloads it, never searches for it and
+ * (docs/operator/cameras.md). OP-CB never downloads it, never searches for it and
  * never runs anything until this names a file that exists; the runtime rejects a
  * relative path, and the rejection surfaces as an ordinary "settings not saved" notice.
  */

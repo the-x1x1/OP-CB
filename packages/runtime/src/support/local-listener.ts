@@ -6,11 +6,11 @@ import {
   type LocalListenerHandle,
   type LocalListenerHandler,
   type LocalListenerOptions,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 
 /**
  * `ProviderLocalAccess.listen` (ADR-003 amendment 2026-09-23, for phase `ingest`): the one
- * thing WORLDVIEW listens on. An HTTP/1.1 server bound to 127.0.0.1 — the address is fixed
+ * thing OP-CB listens on. An HTTP/1.1 server bound to 127.0.0.1 — the address is fixed
  * here, not taken from the provider — at one path. Before the provider is asked, a request
  * must: come from loopback; name a loopback Host with the listener's port (a page that
  * rebinds a DNS name to 127.0.0.1 sends its own name, and is refused); be a POST to the path;

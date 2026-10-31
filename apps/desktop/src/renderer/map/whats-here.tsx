@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@opcb/ipc-contract';
 import { streetLevelText } from './whats-here-text.js';
-import type { GeoPosition, JsonValue } from '@worldview/world-model';
-import { Button } from '@worldview/ui';
+import type { GeoPosition, JsonValue } from '@opcb/world-model';
+import { Button } from '@opcb/ui';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { useActions } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';

@@ -11,7 +11,7 @@ import {
   formatObjectType,
   formatUtcDateTime,
   mergedAvailability,
-} from '@worldview/ui';
+} from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 
 const RANGE_PRESETS: Array<{ label: string; ms: number }> = [

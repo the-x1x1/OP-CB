@@ -1,4 +1,4 @@
-import type { JsonValue, WorldEvent, WorldObject } from '@worldview/world-model';
+import type { JsonValue, WorldEvent, WorldObject } from '@opcb/world-model';
 
 /**
  * Field-path resolution for WorldFilter / SortDefinition.

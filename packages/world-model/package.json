@@ -1,8 +1,8 @@
 {
-  "name": "@worldview/world-model",
+  "name": "@opcb/world-model",
   "version": "0.1.0",
   "private": true,
-  "description": "Canonical WORLDVIEW world model: Observation, WorldObject, WorldEvent, provenance, freshness, confidence, identifiers, queries. Zero dependencies.",
+  "description": "Canonical OP-CB world model: Observation, WorldObject, WorldEvent, provenance, freshness, confidence, identifiers, queries. Zero dependencies.",
   "license": "MIT",
   "type": "module",
   "main": "./src/index.ts",

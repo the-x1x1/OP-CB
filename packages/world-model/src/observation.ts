@@ -21,7 +21,7 @@ export interface Observation {
 
   /** When the phenomenon was observed by the source (UTC ISO). */
   observedAt: IsoTimestamp;
-  /** When WORLDVIEW received it (UTC ISO). */
+  /** When OP-CB received it (UTC ISO). */
   receivedAt: IsoTimestamp;
 
   /** Validity window declared by the source (e.g. alerts, TLE epochs). */

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { testing } from '@worldview/provider-sdk';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import {
   SEED_AIRPORTS_PROVIDER_ID,
   SEED_PLACES_PROVIDER_ID,
@@ -72,7 +72,7 @@ function baseRequest(dir: string, over: Partial<WorldPackBuildRequest> = {}): Wo
     sources: { placesGeoJsonPath: PLACES, airportsGeoJsonPath: AIRPORTS },
     policies: policies(),
     licenses: (id) =>
-      id.startsWith('worldview-seed') ? 'MIT' : id === USGS ? 'U.S. Government work — public domain' : 'ODbL 1.0',
+      id.startsWith('opcb-seed') ? 'MIT' : id === USGS ? 'U.S. Government work — public domain' : 'ODbL 1.0',
     outputPath: path.join(dir, 'hawaii.worldpack'),
     clock: new VirtualClock(Date.parse('2026-09-21T12:00:00Z')),
     ...over,

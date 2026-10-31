@@ -1,6 +1,6 @@
-import type { PlaceSearchAnswer, SearchResult } from '@worldview/ipc-contract';
-import type { IconName, SearchResultItem } from '@worldview/ui';
-import { readGridReference } from '@worldview/world-model';
+import type { PlaceSearchAnswer, SearchResult } from '@opcb/ipc-contract';
+import type { IconName, SearchResultItem } from '@opcb/ui';
+import { readGridReference } from '@opcb/world-model';
 
 /**
  * What the top bar's search list shows: the local results (objects, events, commands and

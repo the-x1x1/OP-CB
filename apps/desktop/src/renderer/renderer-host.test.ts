@@ -8,7 +8,7 @@ import {
   type RenderFeature,
   type ViewState,
   type WorldRenderer,
-} from '@worldview/render-core';
+} from '@opcb/render-core';
 import { DesktopRendererHost, RELEASE_HIDDEN_AFTER_MS } from './renderer-host.js';
 import type { RendererHostLike } from './renderer-host-like.js';
 

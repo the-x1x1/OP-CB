@@ -8,12 +8,12 @@
  * back to the declared stack, and repeated tile failures switch to the fallback
  * once (with the on-screen credit following the stack actually shown).
  *
- * WORLDVIEW differences: the default and the recovery stack are Natural Earth II
+ * OP-CB differences: the default and the recovery stack are Natural Earth II
  * (bundled with Cesium, zero credentials, works offline); Esri / OSM are
  * selectable but conditional; Google 3D is an optional tileset stack that needs
  * a user-supplied key; terrain is controlled separately (see terrain.ts).
  */
-import type { BasemapDescriptor } from '@worldview/render-core';
+import type { BasemapDescriptor } from '@opcb/render-core';
 import type {
   CesiumLike,
   ImageryLayerCollectionLike,

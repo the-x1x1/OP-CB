@@ -16,7 +16,7 @@ import {
   substituteXmlBodyCredential,
   causeReason,
 } from './index.js';
-import { ProviderError, testing } from '@worldview/provider-sdk';
+import { ProviderError, testing } from '@opcb/provider-sdk';
 
 const { VirtualClock } = testing;
 

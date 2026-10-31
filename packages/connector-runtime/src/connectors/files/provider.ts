@@ -1,4 +1,4 @@
-import { observationId, type Observation } from '@worldview/world-model';
+import { observationId, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,7 +6,7 @@ import {
   type ProviderHealth,
   type ProviderQuery,
   type ProviderSettingDefinition,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -14,7 +14,7 @@ import {
   type CompiledMapping,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import {
   DEFAULT_FILE_INTERVAL_SECONDS,
   DEFAULT_FILE_MAX_BYTES,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { JsonValue, Observation } from '@worldview/world-model';
+import type { JsonValue, Observation } from '@opcb/world-model';
 import { defaultIdentityResolver } from './index.js';
 
 /**

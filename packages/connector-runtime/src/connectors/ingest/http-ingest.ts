@@ -1,4 +1,4 @@
-import type { IsoTimestamp, JsonValue, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, JsonValue, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   checkListenerOptions,
@@ -18,7 +18,7 @@ import {
   type ProviderSubscription,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -27,7 +27,7 @@ import {
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import type { Timers } from '../websocket-json.js';
 import { MAX_RECORDS_PER_PUSH, parseEnvelope } from './envelope.js';
 

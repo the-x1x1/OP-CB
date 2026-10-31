@@ -1,4 +1,4 @@
-import type { RasterOverlay } from '@worldview/world-model';
+import type { RasterOverlay } from '@opcb/world-model';
 
 /**
  * Before/after imagery comparison: two raster sources shown either side of a vertical divider

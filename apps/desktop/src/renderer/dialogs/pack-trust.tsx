@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Button, Toggle, formatAgo } from '@worldview/ui';
-import type { OfflineStatus, WorldPackSignatureSummary, WorldPackSummary } from '@worldview/ipc-contract';
+import { Button, Toggle, formatAgo } from '@opcb/ui';
+import type { OfflineStatus, WorldPackSignatureSummary, WorldPackSummary } from '@opcb/ipc-contract';
 import { useActions } from '../store/store.js';
 
 /**

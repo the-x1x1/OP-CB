@@ -1,15 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_RULES, zoomToAltitudeM, type RenderFeature } from '@worldview/render-core';
+import { DEFAULT_RULES, zoomToAltitudeM, type RenderFeature } from '@opcb/render-core';
 import {
   buildEmptyStyle,
   buildRasterStyle,
-  buildWorldviewStyle,
+  buildOpcbStyle,
   styleForBasemap,
   DARK_PALETTE,
   LIGHT_PALETTE,
   DEFAULT_GLYPHS_URL,
-} from './styles/worldview-dark.js';
+} from './styles/opcb-dark.js';
 import { validateStyle, type MapStyle, type SymbolLayer } from './styles/spec.js';
 import { interactiveLayerIds, overlayLayerIds, overlayLayers, overlaySource } from './layers.js';
 import { SourceModel, clusterOptionsFromRules } from './sources.js';
@@ -36,8 +36,8 @@ const PROTOMAPS_LAYERS = new Set([
   'physical_point',
 ]);
 
-test('style: worldview-dark is a valid style for the Protomaps basemap schema (unique ids, known sources and source-layers, glyphs for text)', () => {
-  const style = buildWorldviewStyle({
+test('style: opcb-dark is a valid style for the Protomaps basemap schema (unique ids, known sources and source-layers, glyphs for text)', () => {
+  const style = buildOpcbStyle({
     sourceUrl: 'pmtiles://packs/europe.pmtiles',
     variant: 'dark',
     attribution: '© OpenStreetMap contributors',
@@ -68,7 +68,7 @@ test('style: worldview-dark is a valid style for the Protomaps basemap schema (u
     (style.layers[0] as { paint: { 'background-color': string } }).paint['background-color'],
     DARK_PALETTE.background,
   );
-  const light = buildWorldviewStyle({
+  const light = buildOpcbStyle({
     sourceUrl: 'pmtiles://x',
     variant: 'light',
     attribution: '',
@@ -112,7 +112,7 @@ test('style: validation catches broken styles; raster/empty/basemap-descriptor s
     kind: 'pmtiles',
     id: 'pack',
     url: 'packs/na.pmtiles',
-    styleId: 'worldview-dark',
+    styleId: 'opcb-dark',
     attribution: 'OSM',
   });
   assert.ok(
@@ -135,7 +135,7 @@ test('style: validation catches broken styles; raster/empty/basemap-descriptor s
       esri.sources['basemap']?.type === 'raster' &&
       /Powered by Esri/.test(esri.sources['basemap'].attribution ?? ''),
   );
-  // A Martin source (offline-basemaps B4): the same WORLDVIEW style, its tiles named directly.
+  // A Martin source (offline-basemaps B4): the same OP-CB style, its tiles named directly.
   const martin = styleForBasemap({
     kind: 'vector-tiles',
     id: 'martin-light',
@@ -143,7 +143,7 @@ test('style: validation catches broken styles; raster/empty/basemap-descriptor s
     minZoom: 0,
     maxZoom: 14,
     bounds: { west: -161, south: 18, east: -154, north: 23 },
-    styleId: 'worldview-light',
+    styleId: 'opcb-light',
     attribution: '© OpenStreetMap contributors',
   });
   assert.ok(typeof martin === 'object' && typeof fromPack === 'object');
@@ -156,7 +156,7 @@ test('style: validation catches broken styles; raster/empty/basemap-descriptor s
     maxzoom: 14,
     bounds: [-161, 18, -154, 23],
   });
-  assert.equal(martin.name, 'worldview-light');
+  assert.equal(martin.name, 'opcb-light');
   assert.equal(martin.layers.length, fromPack.layers.length, 'every layer the pack basemap has');
   assert.deepEqual(validateStyle(martin), []);
   const globeOnly = styleForBasemap({ kind: 'cesium-natural-earth', id: 'ne', attribution: '' });

@@ -34,7 +34,7 @@ function release(
     JSON.stringify({
       metadata: {
         component: { version: opts.sbomVersion ?? v },
-        properties: [{ name: 'worldview:commit', value: COMMIT }],
+        properties: [{ name: 'opcb:commit', value: COMMIT }],
       },
     }),
   );
@@ -68,7 +68,7 @@ test('release:assert-version passes when every artifact is this version and this
 
 test('release:assert-version fails on the rc.4 mistake: the previous version’s installer, zip and SBOM beside this one', () => {
   const root = release({
-    extra: ['WorldView-Setup-0.1.0-rc.4.exe', 'WorldView-Portable-0.1.0-rc.4.zip', 'WorldView-0.1.0-rc.4.sbom.json'],
+    extra: ['OP-CB-Setup-0.1.0-rc.4.exe', 'OP-CB-Portable-0.1.0-rc.4.zip', 'OP-CB-0.1.0-rc.4.sbom.json'],
   });
   try {
     const r = assertReleaseVersion({ root, commit: COMMIT });
@@ -76,9 +76,9 @@ test('release:assert-version fails on the rc.4 mistake: the previous version’s
     assert.deepEqual(
       r.problems.sort(),
       [
-        'stale or foreign SBOM artifacts/release/WorldView-0.1.0-rc.4.sbom.json',
-        'stale or foreign artifact apps/desktop/release/WorldView-Portable-0.1.0-rc.4.zip',
-        'stale or foreign artifact apps/desktop/release/WorldView-Setup-0.1.0-rc.4.exe',
+        'stale or foreign SBOM artifacts/release/OP-CB-0.1.0-rc.4.sbom.json',
+        'stale or foreign artifact apps/desktop/release/OP-CB-Portable-0.1.0-rc.4.zip',
+        'stale or foreign artifact apps/desktop/release/OP-CB-Setup-0.1.0-rc.4.exe',
       ].sort(),
     );
   } finally {
@@ -91,7 +91,7 @@ test('release:assert-version fails on a wrong tag, a stale report, SBOM or lates
     sbomVersion: '0.1.0-rc.4',
     reportRelease: '0.1.0-rc.4',
     reportCommit: 'b'.repeat(40),
-    latest: 'version: 0.1.0-rc.4\npath: WorldView-Setup-0.1.0-rc.4.exe\n',
+    latest: 'version: 0.1.0-rc.4\npath: OP-CB-Setup-0.1.0-rc.4.exe\n',
   });
   try {
     const r = assertReleaseVersion({ root, tag: 'v0.1.0-rc.4', commit: COMMIT });
@@ -101,7 +101,7 @@ test('release:assert-version fails on a wrong tag, a stale report, SBOM or lates
     assert.match(text, /verification report is for 0\.1\.0-rc\.4/);
     assert.match(text, /verification report is for commit b{40}/);
     assert.match(text, /latest\.yml version 0\.1\.0-rc\.4/);
-    assert.match(text, /latest\.yml path WorldView-Setup-0\.1\.0-rc\.4\.exe/);
+    assert.match(text, /latest\.yml path OP-CB-Setup-0\.1\.0-rc\.4\.exe/);
     assert.equal(
       assertReleaseVersion({ root, commit: COMMIT, requireTag: true }).problems.some((p) => /no release tag/.test(p)),
       true,
@@ -118,8 +118,8 @@ test('release:assert-version fails when nothing was packaged, or the report was 
     writeFileSync(path.join(root, 'apps', 'desktop', 'package.json'), JSON.stringify({ version: V }));
     const r = assertReleaseVersion({ root });
     assert.equal(r.ok, false);
-    assert.ok(r.problems.includes(`missing apps/desktop/release/WorldView-Setup-${V}.exe`));
-    assert.ok(r.problems.includes(`missing artifacts/release/WorldView-${V}.sbom.json`));
+    assert.ok(r.problems.includes(`missing apps/desktop/release/OP-CB-Setup-${V}.exe`));
+    assert.ok(r.problems.includes(`missing artifacts/release/OP-CB-${V}.sbom.json`));
     assert.ok(r.problems.includes('missing artifacts/release/verification-report.json'));
   } finally {
     rmSync(root, { recursive: true, force: true });

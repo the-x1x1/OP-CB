@@ -1,6 +1,6 @@
-import type { RenderFeature } from '@worldview/render-core';
-import { resolveStyle, splitAtAntimeridian, type ResolvedStyle, type Theme } from '@worldview/render-core';
-import type { GeoBounds, GeoPosition } from '@worldview/world-model';
+import type { RenderFeature } from '@opcb/render-core';
+import { resolveStyle, splitAtAntimeridian, type ResolvedStyle, type Theme } from '@opcb/render-core';
+import type { GeoBounds, GeoPosition } from '@opcb/world-model';
 
 /**
  * GeoJSON shapes (subset of RFC 7946 / @types/geojson) and the RenderFeature →

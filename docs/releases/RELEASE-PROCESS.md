@@ -102,7 +102,7 @@ Built only on Linux — the **Build desktop** workflow's `linux` job (Ubuntu 24.
 laptop — never cross-built. The job runs the same gates, then:
 
 ```bash
-pnpm release:package                        # empties the output directories first, builds worldview_x.y.z_amd64.deb
+pnpm release:package                        # empties the output directories first, builds opcb_x.y.z_amd64.deb
 pnpm sbom
 pnpm release:verify                         # hashes the .deb into SHA256SUMS.txt and verification-report.json
 pnpm release:assert-version --platform linux
@@ -111,8 +111,8 @@ pnpm release:assert-version --platform linux
 and installs the `.deb` it just built with apt, runs the packaged-app smoke test with and
 without a keyring (`apps/desktop/scripts/smoke-linux.mjs`), the offline trace
 (`offline-trace-linux.mjs`: no outside connection with Work offline on; its control run must
-reach out) and an uninstall that keeps user data. Its output is the `worldview-linux-x64`
-workflow artifact — `worldview_x.y.z_amd64.deb`, `WorldView-x.y.z.sbom.json`,
+reach out) and an uninstall that keeps user data. Its output is the `opcb-linux-x64`
+workflow artifact — `opcb_x.y.z_amd64.deb`, `OP-CB-x.y.z.sbom.json`,
 `SHA256SUMS.txt`, `verification-report.json` and the smoke and trace JSON. **It never attaches
 anything to a release**: Linux assets are published only by the operator's decision, by exact
 name, after comparing the hashes in `SHA256SUMS.txt` with the files.
@@ -138,8 +138,8 @@ Only after explicit human approval:
 
 ## Release assets
 
-`WorldView-Setup-x.y.z.exe`, `WorldView-Portable-x.y.z.zip`, `SHA256SUMS.txt`,
-`THIRD_PARTY_NOTICES.txt`, `WorldView-x.y.z.sbom.json`, `verification-report.json`, and
+`OP-CB-Setup-x.y.z.exe`, `OP-CB-Portable-x.y.z.zip`, `SHA256SUMS.txt`,
+`THIRD_PARTY_NOTICES.txt`, `OP-CB-x.y.z.sbom.json`, `verification-report.json`, and
 `latest.yml` (updater metadata) once the channel is live.
 
 ## Signing

@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * adsb.lol — community ADS-B aggregator, v2 API point queries.
@@ -14,7 +14,7 @@ import type { ProviderManifest } from '@worldview/provider-sdk';
  * (`/v2/type/{type}`) or, once a minute, the worldwide military list (`/v2/mil`); and in every
  * view, once a minute, the aircraft squawking one of the emergency codes (`/v2/sqk/{code}`,
  * 7700, 7600 and 7500 in turn) so an emergency anywhere raises its event. Query centres sit
- * on a fixed grid or are quantised, so viewport jitter does not create new endpoints. The app identifies itself with its own User-Agent (`WorldView/<version>`, set
+ * on a fixed grid or are quantised, so viewport jitter does not create new endpoints. The app identifies itself with its own User-Agent (`OP-CB/<version>`, set
  * by the host for every provider).
  *
  * `adsb.lol` itself (not the API host) serves the tar1090 map's trace files, the recent history
@@ -59,7 +59,7 @@ export const ADSB_LOL_MANIFEST: ProviderManifest = {
     // serve (null for our own limiter, 429 for theirs), and that field is what to read
     // before changing anything else here.
     //
-    // It is still right on its own terms. This does not make WORLDVIEW ask adsb.lol for
+    // It is still right on its own terms. This does not make OP-CB ask adsb.lol for
     // anything more often — `intervalMs` sets the cadence and is unchanged at ten seconds —
     // it only stops our own safety net being set exactly at the rate we poll. Twenty a
     // minute is one request every three seconds at worst, well inside adsb.lol's guidance,

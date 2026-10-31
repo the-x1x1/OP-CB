@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react';
 import { noteRenderMark, noteShellCommit } from './map/delta-marks.js';
-import { ErrorState, LoadingState } from '@worldview/ui';
+import { ErrorState, LoadingState } from '@opcb/ui';
 import { useAppState } from './store/store.js';
 import { TopBar } from './components/top-bar.js';
 import { FieldStatus } from './components/field-status.js';

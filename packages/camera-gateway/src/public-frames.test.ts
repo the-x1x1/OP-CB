@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldObject } from '@worldview/world-model';
+import type { WorldObject } from '@opcb/world-model';
 import { PublicFrameRegistry, publicCameraFromObject, isAllowedFrameUrl, PUBLIC_FRAME_HOSTS } from './public-frames.js';
 import { CameraHub, imageTime } from './hub.js';
 import { DirectGateway } from './direct-gateway.js';
@@ -8,7 +8,7 @@ import { MemorySecretStore } from './secret-store.js';
 import { CameraRelay } from './relay.js';
 import { CameraError } from './errors.js';
 import { fakeByteFetcher, fakeUpstreamOpener, JPEG_BYTES, HTML_BYTES } from './testing.js';
-import { PUBLIC_CAMERA_FRAME_HOSTS } from '@worldview/provider-cctv-public';
+import { PUBLIC_CAMERA_FRAME_HOSTS } from '@opcb/provider-cctv-public';
 
 test('gateway frame-host allowlist equals the provider pack definitions (defence in depth, kept in sync)', () => {
   assert.deepEqual(
@@ -158,7 +158,7 @@ test('hub routes registrations by scheme and snapshots by id shape; public frame
     assert.equal(fin.cameraId, 'public:fintraffic:C0150201');
     assert.equal(fin.mimeType, 'image/jpeg');
     const call = fetchBytes.calls.find((c) => c.url.includes('digitraffic'))!;
-    assert.match(call.headers['User-Agent'] ?? '', /^WorldView\//);
+    assert.match(call.headers['User-Agent'] ?? '', /^OP-CB\//);
     assert.equal(call.headers['Authorization'], undefined);
 
     // The NSW host answers non-browser clients with an HTML placeholder: we do NOT impersonate a browser; the frame is unavailable.
@@ -294,7 +294,7 @@ test('public frame time: the host’s Last-Modified when believable, else the fe
 
 test('gateway stream-host allowlist equals the provider pack definitions', async () => {
   const { PUBLIC_STREAM_HOSTS } = await import('./public-frames.js');
-  const { PUBLIC_CAMERA_STREAM_HOSTS } = await import('@worldview/provider-cctv-public');
+  const { PUBLIC_CAMERA_STREAM_HOSTS } = await import('@opcb/provider-cctv-public');
   assert.deepEqual(
     Object.fromEntries(Object.entries(PUBLIC_STREAM_HOSTS).map(([k, v]) => [k, [...v]])),
     Object.fromEntries(Object.entries(PUBLIC_CAMERA_STREAM_HOSTS).map(([k, v]) => [k, [...v]])),

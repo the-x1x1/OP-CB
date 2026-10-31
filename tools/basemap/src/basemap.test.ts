@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { deflateSync, gzipSync } from 'node:zlib';
-import { ZipWriter, extractWorldPack, verifyWorldPack } from '@worldview/offline';
+import { ZipWriter, extractWorldPack, verifyWorldPack } from '@opcb/offline';
 import {
   BASEMAP_PROVIDER_ID,
   buildBasemap,

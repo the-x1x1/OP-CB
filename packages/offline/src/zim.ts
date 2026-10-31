@@ -3,7 +3,7 @@ import zlib from 'node:zlib';
 
 /**
  * A reader for ZIM files — the offline archives Kiwix publishes (Wikipedia, WikiMed, iFixit,
- * survival and medicine collections, …) — so WorldView can open them itself, with no Kiwix
+ * survival and medicine collections, …) — so OP-CB can open them itself, with no Kiwix
  * program installed (operator decision 2026-10-30).
  *
  * Written from the openZIM file format as libzim lays it out and as the openZIM test files

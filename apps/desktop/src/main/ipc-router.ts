@@ -8,11 +8,11 @@ import {
   type IpcError,
   type RequestChannel,
   type WorldEvents,
-} from '@worldview/ipc-contract';
-import type { RequestContext, RequestHandlers, WorldRuntime } from '@worldview/runtime';
-import { formatIssues, systemClock, type Clock } from '@worldview/world-model';
-import { RateLimiter, redactText, silentLogger, type Logger } from '@worldview/core';
-import { ProviderError } from '@worldview/provider-sdk';
+} from '@opcb/ipc-contract';
+import type { RequestContext, RequestHandlers, WorldRuntime } from '@opcb/runtime';
+import { formatIssues, systemClock, type Clock } from '@opcb/world-model';
+import { RateLimiter, redactText, silentLogger, type Logger } from '@opcb/core';
+import { ProviderError } from '@opcb/provider-sdk';
 import { REQUEST_SCHEMAS, schemaFor } from './ipc-schemas.js';
 import { okEnvelope, errorEnvelope, type IpcResultEnvelope } from '../shared/ipc-envelope.js';
 import { responseToWire, toWire, worldDeltaWireParts } from '../shared/event-wire.js';

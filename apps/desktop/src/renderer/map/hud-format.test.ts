@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { VISUAL_STYLE_IDS as SETTINGS_STYLE_IDS } from '@worldview/ipc-contract';
-import { VISUAL_STYLE_IDS as RENDERER_STYLE_IDS } from '@worldview/render-core';
+import { VISUAL_STYLE_IDS as SETTINGS_STYLE_IDS } from '@opcb/ipc-contract';
+import { VISUAL_STYLE_IDS as RENDERER_STYLE_IDS } from '@opcb/render-core';
 import {
   formatAltitude,
   formatDecimal,

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LoggerHub, RingBufferSink } from '@worldview/core';
+import { LoggerHub, RingBufferSink } from '@opcb/core';
 import { CameraRelay } from './relay.js';
 import { hlsBaseFor, rewritePlaylist, containedRelativePath, resolveContained } from './hls.js';
 import { fakeByteFetcher, fakeUpstreamOpener, JPEG_BYTES, HTML_BYTES, mjpegChunks } from './testing.js';
@@ -50,7 +50,7 @@ function relayWith(opts: { max?: number; playlist?: string; slow?: boolean } = {
     token: () => TOKEN,
     ...(opts.max !== undefined ? { maxConcurrentStreams: opts.max } : {}),
   });
-  const headers = async () => ({ Authorization: SECRET_HEADER, 'User-Agent': 'WorldView/test' });
+  const headers = async () => ({ Authorization: SECRET_HEADER, 'User-Agent': 'OP-CB/test' });
   return { relay, sink, fetchBytes, openUpstream, headers, release: () => release?.() };
 }
 

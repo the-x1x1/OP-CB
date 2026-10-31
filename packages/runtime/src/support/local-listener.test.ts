@@ -2,13 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
 import http from 'node:http';
-import {
-  ProviderError,
-  bearerMatches,
-  checkListenerOptions,
-  testing,
-  type LocalRequest,
-} from '@worldview/provider-sdk';
+import { ProviderError, bearerMatches, checkListenerOptions, testing, type LocalRequest } from '@opcb/provider-sdk';
 import { createLocalListener } from './local-listener.js';
 
 /** A port nothing is listening on right now (≥ 1024, as the contract requires). */

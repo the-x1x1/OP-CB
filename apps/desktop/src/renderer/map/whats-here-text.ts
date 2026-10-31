@@ -1,4 +1,4 @@
-import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@worldview/ipc-contract';
+import type { NearbyPlaceResult, OverlayValueResult, StreetLevelAnswer } from '@opcb/ipc-contract';
 import {
   geodesicInverse,
   moonIllumination,
@@ -6,8 +6,8 @@ import {
   sunEvents,
   sunPosition,
   type GeoPosition,
-} from '@worldview/world-model';
-import type { JsonValue } from '@worldview/world-model';
+} from '@opcb/world-model';
+import type { JsonValue } from '@opcb/world-model';
 import { compassPoint, noPassesText, passViews } from '../context/object-knowledge.js';
 import { skyPositionText, skyTimeText } from '../context/sky-rows.js';
 import { formatDistance } from './measure.js';

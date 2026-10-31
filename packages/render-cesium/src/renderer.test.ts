@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RasterOverlay } from '@worldview/world-model';
-import { ManualScheduler, type PickResult, type RenderFeature, type RendererEvents } from '@worldview/render-core';
+import type { RasterOverlay } from '@opcb/world-model';
+import { ManualScheduler, type PickResult, type RenderFeature, type RendererEvents } from '@opcb/render-core';
 import { ALWAYS_VISIBLE, type HorizonTest, type Vec3 } from './horizon.js';
 import { CesiumWorldRenderer, type VisibilityTarget } from './renderer.js';
 import {
@@ -237,14 +237,14 @@ test('CesiumWorldRenderer: features land in the right collections with height mo
   assert.equal(polylines[0]!.material!.type, 'PolylineDash');
   assert.equal(polylines[0]!.width, 2);
   const ds = viewer.dataSources.sources as FakeDataSource[];
-  const eventDs = ds.find((d) => d.name === 'worldview:events')!;
+  const eventDs = ds.find((d) => d.name === 'opcb:events')!;
   assert.ok(eventDs.entities.entities[0]!.options.polygon);
   // A clamped area gets its edge as a ground polyline: Cesium draws no outline on it.
   const alert = eventDs.entities.entities[0]!.options;
   assert.equal(alert.polygon!.outline, false);
   assert.equal(alert.polyline?.clampToGround, true);
   assert.equal((alert.polyline?.positions as unknown[]).length, 4, 'the outer ring, closed');
-  const eqDs = ds.find((d) => d.name === 'worldview:earthquake')!;
+  const eqDs = ds.find((d) => d.name === 'opcb:earthquake')!;
   assert.ok(eqDs.entities.entities[0]!.options.ellipse);
   assert.equal(
     (eqDs.entities.entities[0]!.options.polyline?.positions as unknown[]).length,
@@ -502,7 +502,7 @@ test('CesiumWorldRenderer: basemap descriptors, terrain descriptors (cached, gen
   const { renderer, viewer, events } = await mounted({ cesium });
   await renderer.setBasemap({ kind: 'esri-world-imagery', id: 'esri', attribution: 'Powered by Esri' });
   assert.equal(renderer.basemapState?.activeId, 'esri-world-imagery');
-  await renderer.setBasemap({ kind: 'pmtiles', id: 'pack', url: 'x', styleId: 'worldview-dark', attribution: '' });
+  await renderer.setBasemap({ kind: 'pmtiles', id: 'pack', url: 'x', styleId: 'opcb-dark', attribution: '' });
   assert.match(
     (events.filter((e) => e.type === 'error').at(-1)!.payload as { message: string }).message,
     /2D map only/,

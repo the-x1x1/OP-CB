@@ -90,9 +90,9 @@ jobs:
           set -euo pipefail
           VERSION=$(node -p "require('./apps/desktop/package.json').version")
           mkdir -p artifacts/release
-          cp "apps/desktop/release/WorldView-Setup-$VERSION.exe" artifacts/release/
-          cp "apps/desktop/release/WorldView-Setup-$VERSION.exe.blockmap" artifacts/release/
-          cp "apps/desktop/release/WorldView-Portable-$VERSION.zip" artifacts/release/
+          cp "apps/desktop/release/OP-CB-Setup-$VERSION.exe" artifacts/release/
+          cp "apps/desktop/release/OP-CB-Setup-$VERSION.exe.blockmap" artifacts/release/
+          cp "apps/desktop/release/OP-CB-Portable-$VERSION.zip" artifacts/release/
           cp apps/desktop/release/latest.yml artifacts/release/
           cp THIRD_PARTY_NOTICES.md artifacts/release/THIRD_PARTY_NOTICES.txt
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
@@ -100,7 +100,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: worldview-windows-x64
+          name: opcb-windows-x64
           path: |
             artifacts/release/**
             artifacts/verification/**
@@ -130,13 +130,13 @@ jobs:
         with:
           draft: true
           prerelease: true
-          name: WorldView ${{ github.ref_name }}
+          name: OP-CB ${{ github.ref_name }}
           body_path: docs/releases/RELEASE-NOTES-TEMPLATE.md
           files: |
-            artifacts/release/WorldView-Setup-${{ env.VERSION }}.exe
-            artifacts/release/WorldView-Portable-${{ env.VERSION }}.zip
+            artifacts/release/OP-CB-Setup-${{ env.VERSION }}.exe
+            artifacts/release/OP-CB-Portable-${{ env.VERSION }}.zip
             artifacts/release/SHA256SUMS.txt
-            artifacts/release/WorldView-${{ env.VERSION }}.sbom.json
+            artifacts/release/OP-CB-${{ env.VERSION }}.sbom.json
             artifacts/release/verification-report.json
             artifacts/release/THIRD_PARTY_NOTICES.txt
             artifacts/release/latest.yml
@@ -195,36 +195,36 @@ jobs:
           set -euo pipefail
           VERSION=$(node -p "require('./apps/desktop/package.json').version")
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          DEB="apps/desktop/release/worldview_${VERSION}_amd64.deb"
+          DEB="apps/desktop/release/opcb_${VERSION}_amd64.deb"
           mkdir -p artifacts/verification /tmp/wv-deb
           dpkg-deb --info "$DEB" | tee artifacts/verification/linux-deb-info.txt
           dpkg-deb --contents "$DEB" > artifacts/verification/linux-deb-contents.txt
           dpkg-deb -x "$DEB" /tmp/wv-deb
-          desktop-file-validate /tmp/wv-deb/usr/share/applications/worldview.desktop
-          cat /tmp/wv-deb/usr/share/applications/worldview.desktop
-          # worldview:// links open the app (electron-builder.yml protocols).
-          grep -q 'x-scheme-handler/worldview' /tmp/wv-deb/usr/share/applications/worldview.desktop
+          desktop-file-validate /tmp/wv-deb/usr/share/applications/opcb.desktop
+          cat /tmp/wv-deb/usr/share/applications/opcb.desktop
+          # opcb:// links open the app (electron-builder.yml protocols).
+          grep -q 'x-scheme-handler/opcb' /tmp/wv-deb/usr/share/applications/opcb.desktop
           # The native history engine must ship unpacked, for this platform.
-          find /tmp/wv-deb/opt/WorldView/resources/app.asar.unpacked -name duckdb.node | tee /tmp/duckdb-bindings.txt
+          find /tmp/wv-deb/opt/OP-CB/resources/app.asar.unpacked -name duckdb.node | tee /tmp/duckdb-bindings.txt
           grep -q 'node-bindings-linux-x64/duckdb.node' /tmp/duckdb-bindings.txt
           # The dropped-file reader's worker thread loads its script from a real path.
-          test -f /tmp/wv-deb/opt/WorldView/resources/app.asar.unpacked/dist/main/geodata-worker.cjs
-          test -f /tmp/wv-deb/opt/WorldView/resources/apparmor-profile
+          test -f /tmp/wv-deb/opt/OP-CB/resources/app.asar.unpacked/dist/main/geodata-worker.cjs
+          test -f /tmp/wv-deb/opt/OP-CB/resources/apparmor-profile
 
       - name: Install the .deb as a user would
         run: |
           set -euo pipefail
-          sudo apt-get install -y "./apps/desktop/release/worldview_${VERSION}_amd64.deb"
-          command -v worldview
-          ls -l /opt/WorldView/worldview /opt/WorldView/chrome-sandbox
+          sudo apt-get install -y "./apps/desktop/release/opcb_${VERSION}_amd64.deb"
+          command -v opcb
+          ls -l /opt/OP-CB/opcb /opt/OP-CB/chrome-sandbox
           echo "apparmor_restrict_unprivileged_userns=$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || echo n/a)"
-          ls -l /etc/apparmor.d/worldview || echo "no AppArmor profile installed (AppArmor off or too old for it)"
+          ls -l /etc/apparmor.d/opcb || echo "no AppArmor profile installed (AppArmor off or too old for it)"
 
       # Sandbox on, isolated profile, no keyring: keys must be refused, DuckDB must load.
       - name: Smoke test — installed app, no keyring
         run: >-
           xvfb-run -a -s "-screen 0 1920x1080x24"
-          node apps/desktop/scripts/smoke-linux.mjs /opt/WorldView/worldview
+          node apps/desktop/scripts/smoke-linux.mjs /opt/OP-CB/opcb
           --expect-history duckdb-parquet --expect-keyring refused
           --out artifacts/verification/linux-smoke-deb.json
 
@@ -237,7 +237,7 @@ jobs:
             printf "smoke\n" | gnome-keyring-daemon --unlock --components=secrets > /dev/null
             eval "$(gnome-keyring-daemon --start --components=secrets)"
             xvfb-run -a -s "-screen 0 1920x1080x24" \
-              node apps/desktop/scripts/smoke-linux.mjs /opt/WorldView/worldview \
+              node apps/desktop/scripts/smoke-linux.mjs /opt/OP-CB/opcb \
               --expect-history duckdb-parquet --expect-keyring usable \
               --out artifacts/verification/linux-smoke-deb-keyring.json'
 
@@ -247,27 +247,27 @@ jobs:
       - name: Work offline attempts no WAN connection (strace)
         run: >-
           xvfb-run -a -s "-screen 0 1920x1080x24"
-          node apps/desktop/scripts/offline-trace-linux.mjs /opt/WorldView/worldview --seconds 60
+          node apps/desktop/scripts/offline-trace-linux.mjs /opt/OP-CB/opcb --seconds 60
           --out artifacts/verification/linux-offline-trace.json
       - name: Offline trace control (online, must reach out)
         run: >-
           xvfb-run -a -s "-screen 0 1920x1080x24"
-          node apps/desktop/scripts/offline-trace-linux.mjs /opt/WorldView/worldview --seconds 60 --control
+          node apps/desktop/scripts/offline-trace-linux.mjs /opt/OP-CB/opcb --seconds 60 --control
           --out artifacts/verification/linux-offline-trace-control.json
 
       - name: Uninstall removes the app, not the user's data
         run: |
           set -euo pipefail
-          mkdir -p "$HOME/.config/@worldview/desktop" && echo keep > "$HOME/.config/@worldview/desktop/marker"
-          sudo apt-get remove -y worldview
-          test ! -e /opt/WorldView/worldview
-          test -f "$HOME/.config/@worldview/desktop/marker"
+          mkdir -p "$HOME/.config/OP-CB" && echo keep > "$HOME/.config/OP-CB/marker"
+          sudo apt-get remove -y opcb
+          test ! -e /opt/OP-CB/opcb
+          test -f "$HOME/.config/OP-CB/marker"
 
       # By exact name, never by glob: only what assert-version just checked.
       - name: Collect Linux assets
         run: |
           set -euo pipefail
-          cp "apps/desktop/release/worldview_${VERSION}_amd64.deb" artifacts/release/
+          cp "apps/desktop/release/opcb_${VERSION}_amd64.deb" artifacts/release/
           # Written by electron-builder when it has update info for the .deb; checked by
           # assert-version when present. Nothing installs Linux updates from it yet.
           if [[ -f apps/desktop/release/latest-linux.yml ]]; then cp apps/desktop/release/latest-linux.yml artifacts/release/; fi
@@ -277,7 +277,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: worldview-linux-x64
+          name: opcb-linux-x64
           path: |
             artifacts/release/**
             artifacts/verification/**

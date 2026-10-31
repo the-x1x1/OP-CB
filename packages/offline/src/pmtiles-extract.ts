@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { GeoBounds } from '@worldview/world-model';
+import type { GeoBounds } from '@opcb/world-model';
 import {
   PM_HEADER_BYTES,
   PM_MAX_ZOOM,

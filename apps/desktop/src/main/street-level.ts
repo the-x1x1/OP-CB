@@ -1,5 +1,5 @@
-import type { GeoPosition } from '@worldview/world-model';
-import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@worldview/ipc-contract';
+import type { GeoPosition } from '@opcb/world-model';
+import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@opcb/ipc-contract';
 
 /**
  * Street-level pictures near a point (`imagery.streetLevel`), asked from the main process on the

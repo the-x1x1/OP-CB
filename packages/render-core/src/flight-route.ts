@@ -1,4 +1,4 @@
-import { EARTH_RADIUS_M, haversineMeters, type GeoPosition } from '@worldview/world-model';
+import { EARTH_RADIUS_M, haversineMeters, type GeoPosition } from '@opcb/world-model';
 
 /**
  * Where a flight is along its planned route: which leg it is on, how far it has come and

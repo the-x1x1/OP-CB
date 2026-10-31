@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import type { SourceHealthEntry } from '@worldview/source-health';
-import { describeStatus } from '@worldview/source-health';
+import type { SourceHealthEntry } from '@opcb/source-health';
+import { describeStatus } from '@opcb/source-health';
 import {
   Button,
   EmptyState,
@@ -12,9 +12,9 @@ import {
   formatAgo,
   formatDuration,
   formatUtcDateTime,
-} from '@worldview/ui';
-import type { JsonValue } from '@worldview/world-model';
-import type { ProviderSettingDefinition } from '@worldview/provider-sdk';
+} from '@opcb/ui';
+import type { JsonValue } from '@opcb/world-model';
+import type { ProviderSettingDefinition } from '@opcb/provider-sdk';
 import { settingUnavailableNote } from './setting-platform.js';
 import { useActions, useAppState, useClient } from '../store/store.js';
 import { getByPath } from '../store/actions.js';
@@ -427,7 +427,7 @@ export function ProviderSettingField({
   const id = `setting-${providerId}-${def.key.replace(/\./g, '-')}`;
   const set = (next: JsonValue | undefined) => void actions.setProviderSetting(providerId, def.key, next);
   // A setting for another platform (a USB serial port on Windows): its label and why, no control.
-  const unavailable = settingUnavailableNote(def, window.worldview?.platform);
+  const unavailable = settingUnavailableNote(def, window.opcb?.platform);
   if (unavailable)
     return (
       <div className="wv-setting wv-setting--unavailable">

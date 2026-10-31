@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing, type ProviderHealth, type ProviderManifest } from '@worldview/provider-sdk';
+import { testing, type ProviderHealth, type ProviderManifest } from '@opcb/provider-sdk';
 import { SourceHealthRegistry } from './index.js';
 
 function manifest(id: string, required = false): ProviderManifest {

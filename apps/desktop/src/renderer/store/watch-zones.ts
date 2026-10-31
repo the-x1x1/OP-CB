@@ -1,4 +1,4 @@
-import type { EventTypeInfo } from '@worldview/ipc-contract';
+import type { EventTypeInfo } from '@opcb/ipc-contract';
 
 /** What a new watch zone listens for when nothing else is said. */
 export const DEFAULT_ZONE_EVENT_TYPES: readonly string[] = ['earthquake', 'wildfire-cluster', 'weather-alert'];

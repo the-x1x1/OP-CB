@@ -29,7 +29,7 @@ On the operator's Windows machine (`Downloads\wv-build\check.bat`: install, form
 typecheck, boundary-check, test, license-audit, todo-report, staged-res, sbom,
 release-verify, package, doctor), most recently at `39c2d8a`: every step exits 0 except
 `pnpm audit` (see Blocked); **839 tests pass, 0 fail** (2 WebGL-only skipped). The packaged
-`win-unpacked\WorldView.exe` is launched after each gate and checked on screen and in
+`win-unpacked\OP-CB.exe` is launched after each gate and checked on screen and in
 `app.log` — at `39c2d8a`: offline-pack place search through the SQLite index (`place index
 backend=sqlite`), and a pack removed while installed (the `EBUSY` of `57f7d26` gone).
 `develop` was pushed to GitHub at `39c2d8a` on 2026-09-23; GitHub CI passed every job there

@@ -1,11 +1,11 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import {
   defaultConnectorRegistry,
   listDefinitionFiles,
   loadDefinitionsFrom,
   type LoadedDefinitions,
-} from '@worldview/connector-runtime';
+} from '@opcb/connector-runtime';
 import type { ProviderFactory } from './index.js';
 
 /**
@@ -85,6 +85,6 @@ export function loadConnectorDefinitions(dirs: ConnectorDirectories, reservedIds
 }
 
 export { defaultConnectorRegistry };
-export { draftDefinition, type DraftResult, type DefinitionFile } from '@worldview/connector-runtime';
-export { checkUrl as checkDefinitionUrl, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
+export { draftDefinition, type DraftResult, type DefinitionFile } from '@opcb/connector-runtime';
+export { checkUrl as checkDefinitionUrl, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 export type { WorldProvider };

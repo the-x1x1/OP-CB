@@ -1,6 +1,6 @@
-import type { GeoPosition, JsonValue, WorldObject } from '@worldview/world-model';
-import { lookAngles, MMSI_STATION_KIND_TEXT, mmsiFlag, type MmsiStationKind } from '@worldview/world-model';
-import { formatDuration, formatUtcDateTime, formatUtcTime } from '@worldview/ui';
+import type { GeoPosition, JsonValue, WorldObject } from '@opcb/world-model';
+import { lookAngles, MMSI_STATION_KIND_TEXT, mmsiFlag, type MmsiStationKind } from '@opcb/world-model';
+import { formatDuration, formatUtcDateTime, formatUtcTime } from '@opcb/ui';
 
 /**
  * What the context panel says about a satellite's catalogue record and passes, a ship's

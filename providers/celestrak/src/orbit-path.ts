@@ -1,4 +1,4 @@
-import type { ObjectTrackPoint } from '@worldview/provider-sdk';
+import type { ObjectTrackPoint } from '@opcb/provider-sdk';
 import { orbitSummary, type GpElements } from './elements.js';
 import type { Propagator } from './propagator.js';
 

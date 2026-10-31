@@ -1,5 +1,5 @@
-import type { GeoBounds, GeoPosition, GeoRegion, WorldEvent, WorldObject } from '@worldview/world-model';
-import { boundsContain, circleBounds, haversineMeters } from '@worldview/world-model';
+import type { GeoBounds, GeoPosition, GeoRegion, WorldEvent, WorldObject } from '@opcb/world-model';
+import { boundsContain, circleBounds, haversineMeters } from '@opcb/world-model';
 import type { FeatureUpdate, RenderFeature, RenderGeometry, RenderMotion, RenderStyle, ViewState } from './contract.js';
 import { worldGeometryParts, worldGeometryToRender } from './contract.js';
 import { deadReckonedMotion } from './motion.js';

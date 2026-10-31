@@ -6,7 +6,7 @@
  * Credits are diffed by entry id + text so re-applying the same list is a no-op.
  * The map-stack credit is separate and follows the imagery actually shown.
  */
-import type { AttributionEntry } from '@worldview/render-core';
+import type { AttributionEntry } from '@opcb/render-core';
 import type { CreditDisplayLike, CreditLike } from './cesium-like.js';
 
 export type CreditFactory = (html: string, showOnScreen: boolean) => CreditLike;

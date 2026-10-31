@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import {
   createInProcessClient,
   createWorldRuntime,
@@ -10,7 +10,7 @@ import {
   type WorldRuntimeDeps,
 } from '../../src/index.js';
 import type { HostBridge } from '../../src/deps.js';
-import type { WorldClient } from '@worldview/ipc-contract';
+import type { WorldClient } from '@opcb/ipc-contract';
 
 /** Shared setup for the runtime integration suites: a temp data dir, a fake network and a fake shell. */
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -46,7 +46,7 @@ export function tableFetch(table: Record<string, () => Response | Promise<Respon
 export function offlineFetch(calls: { count: number }): typeof fetch {
   return (async () => {
     calls.count++;
-    throw new Error('network is off (WORLDVIEW_NETWORK=off)');
+    throw new Error('network is off (OPCB_NETWORK=off)');
   }) as typeof fetch;
 }
 
@@ -94,7 +94,7 @@ export interface Harness {
 }
 
 export async function startRuntime(deps: WorldRuntimeDeps & { tmpPrefix?: string } = {}): Promise<Harness> {
-  const dataDir = deps.dataDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), deps.tmpPrefix ?? 'worldview-runtime-')));
+  const dataDir = deps.dataDir ?? (await fs.mkdtemp(path.join(os.tmpdir(), deps.tmpPrefix ?? 'opcb-runtime-')));
   const clock =
     (deps.clock as testing.VirtualClock | undefined) ??
     new testing.VirtualClock(Date.parse('2026-09-21T08:05:00.000Z'));

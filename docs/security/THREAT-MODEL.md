@@ -1,10 +1,10 @@
-# WORLDVIEW threat model
+# OP-CB threat model
 
-Scope: the WORLDVIEW desktop application (Electron main, preload, renderer), the
+Scope: the OP-CB desktop application (Electron main, preload, renderer), the
 provider runtime that reaches external data sources, the local data it stores, the
 optional local sidecars, and the release/update path. Release 0.1.0-rc.1.
 
-The application is local-first and account-free. There is no WORLDVIEW server: the
+The application is local-first and account-free. There is no OP-CB server: the
 "backend" is the user's own machine. That shapes the model — most assets are local
 (user data, credentials, history) and most untrusted input arrives as data from
 third-party feeds, files the user imports, or cameras the user configures.
@@ -14,8 +14,8 @@ third-party feeds, files the user imports, or cameras the user configures.
 | Asset                                                                                    | Where it lives                                                               | Why it matters                                                                                      |
 | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Provider credentials (FIRMS MAP_KEY, AISStream key, camera passwords, ion/Google tokens) | `credentials.json`, encrypted with Electron `safeStorage` (DPAPI on Windows) | Theft gives an attacker the user's paid/limited quota and, for cameras, access to their own devices |
-| User data: collections, watch zones, settings, lenses                                    | `%APPDATA%/WorldView/*.json`, atomic writes                                  | Loss or corruption destroys the user's work; watch zones reveal what they care about                |
-| Observation history                                                                      | `%APPDATA%/WorldView/history/**` (Parquet/NDJSON)                            | Shows where the user has been looking, and when                                                     |
+| User data: collections, watch zones, settings, lenses                                    | `%APPDATA%/OP-CB/*.json`, atomic writes                                      | Loss or corruption destroys the user's work; watch zones reveal what they care about                |
+| Observation history                                                                      | `%APPDATA%/OP-CB/history/**` (Parquet/NDJSON)                                | Shows where the user has been looking, and when                                                     |
 | The rendering/ingest process itself                                                      | Electron renderer + main                                                     | A renderer compromise is the gateway to everything above                                            |
 | Release artifacts and update metadata                                                    | GitHub Releases                                                              | Compromise here reaches every installation                                                          |
 
@@ -75,7 +75,7 @@ _Verification:_ `http: rejects hosts outside the allowlist and non-https schemes
 `http: retries 5xx with backoff, gives up after maxRetries, opens circuit, serves stale
 within window`; `http: timeout and cancellation are classified`.
 
-_Residual:_ TLS trust is the OS store's; WORLDVIEW does not pin certificates.
+_Residual:_ TLS trust is the OS store's; OP-CB does not pin certificates.
 
 ### T3 Cross-site scripting / untrusted content in the renderer
 
@@ -89,7 +89,7 @@ _Mitigation:_ React escapes text by default and the shell never uses
 app's own origin (or the Vite dev origin), `setWindowOpenHandler` denies all window
 opens, and every permission request is denied.
 
-The packaged renderer is served over a registered scheme, `worldview://app`
+The packaged renderer is served over a registered scheme, `opcb://app`
 (`apps/desktop/src/main/app-protocol.ts`), not from `file:`. That is what makes `'self'`
 denote something specific; a `file:` document has an opaque origin, so `'self'` matches
 nothing and the policy is both unenforceable and — because Vite emits `crossorigin`
@@ -188,7 +188,7 @@ main-process only (`HostBridge`), so the renderer never chooses a path.
 _Verification:_ `data dirs: isInsideDir rejects traversal and absolute escapes`.
 
 _Residual:_ a user who points an export at a directory they should not write to is
-exercising their own permissions; WORLDVIEW constrains its own data directory, not the
+exercising their own permissions; OP-CB constrains its own data directory, not the
 account's reach.
 
 ### T8 Local sidecar exposure and localhost CSRF
@@ -279,7 +279,7 @@ _Verification:_ `integration: collections and lenses round-trip through the host
 and survive a restart`; the settings/user-document validation tests.
 
 _Residual:_ a collection that validates can still describe somewhere misleading — it is
-the sender's claim about the world, shown as text, and WORLDVIEW does not vouch for it.
+the sender's claim about the world, shown as text, and OP-CB does not vouch for it.
 
 ### T13 Denial of service through resource exhaustion
 
@@ -320,7 +320,7 @@ runs on a frame`; `boundary: no module that handles frame bytes writes them to d
 `boundary: the document and the threat model still state the commitment`.
 
 _Residual:_ aircraft and vessel identifiers are public data that can be correlated with
-ownership records outside WORLDVIEW. The boundary is about what this product builds,
+ownership records outside OP-CB. The boundary is about what this product builds,
 not about what public data exists.
 
 ### T15 Tampered settings naming an arbitrary binary
@@ -345,14 +345,14 @@ is the default — nothing is spawned and the status says so`, and `sidecar: cha
 binary path stops the running process before the swap`.
 
 _Residual:_ anything able to rewrite `settings.json` is already running as the user and
-can execute code without WORLDVIEW's help, so this is hardening, not a privilege
-boundary. WORLDVIEW checks that the configured binary exists and reports a version
+can execute code without OP-CB's help, so this is hardening, not a privilege
+boundary. OP-CB checks that the configured binary exists and reports a version
 mismatch against the pinned release, but does not verify its provenance — see
 Assumptions.
 
 ### T16 The loopback listener (HTTP ingest)
 
-_Threat:_ the one listener WORLDVIEW opens (`ProviderLocalAccess.listen`, for `local-process`
+_Threat:_ the one listener OP-CB opens (`ProviderLocalAccess.listen`, for `local-process`
 sources such as HTTP ingest) is reached from the network, from a web page the user visits
 (a cross-site POST, or a page that rebinds a DNS name to `127.0.0.1`), or by a pusher that
 floods it, and so writes observations — or reads the token — it should not.
@@ -391,19 +391,19 @@ file it checked. A source that declares its folder setting reads that folder and
 else (no fallback to the bundled resources). `ogr2ogr` is offered only to such sources: the
 host looks it up on `PATH` (an `.exe` on Windows, never a `.bat` or `.cmd`, never the working
 directory), runs it with a fixed argument list and `shell: false`, an environment reduced to
-what GDAL needs (no `WORLDVIEW_`/`ONEVIEW_` variables), a timeout, an output cap and a fresh
+what GDAL needs (no `OPCB_`/`ONEVIEW_` variables), a timeout, an output cap and a fresh
 temporary directory that is always removed, and converts only self-contained formats —
 never VRT, GML or anything that can name other files — with every part of a dataset (a
 shapefile's sidecars) checked inside the grant.
 
 _Verification:_ `granted folder: a directory link out of the folder is refused; one that stays inside is read`;
-`ogr2ogr host: fixed arguments, no shell, no WORLDVIEW secrets in its environment, the temporary folder removed`;
+`ogr2ogr host: fixed arguments, no shell, no OP-CB secrets in its environment, the temporary folder removed`;
 `ogr2ogr host: a failure, a hang, an empty run, an oversized result and refused inputs`;
 `ogr2ogr host: a shapefile is its parts — an edited .dbf is a change, a .dbf linked out of the folder is refused`.
 
 _Residual:_ unlike go2rtc (T15), `ogr2ogr` is found by name on `PATH`: whatever can change
 the user's `PATH` can put another program there — but it is already running as the user.
-GDAL is the user's own install; WORLDVIEW does not verify its provenance (see Assumptions).
+GDAL is the user's own install; OP-CB does not verify its provenance (see Assumptions).
 
 ### T18 Adding a source from the app (a URL the operator types, a file the app writes)
 
@@ -446,7 +446,7 @@ backs. Checklist checks and other non-test evidence are named in plain quotes.
   strong as the OS account.
 - The OS certificate store is intact.
 - Sidecars and tools the user installs (go2rtc, readsb, GDAL's `ogr2ogr`) are the genuine
-  builds — WORLDVIEW checks reachability or version, not provenance.
+  builds — OP-CB checks reachability or version, not provenance.
 
 ## Review triggers
 

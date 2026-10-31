@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GuideProgress, PrepRecord } from '@worldview/ipc-contract';
+import type { GuideProgress, PrepRecord } from '@opcb/ipc-contract';
 import { startRuntime } from '../helpers/harness.js';
 
 const at = '2026-09-21T08:05:00.000Z';

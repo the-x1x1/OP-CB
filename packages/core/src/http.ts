@@ -1,5 +1,5 @@
-import type { Clock } from '@worldview/world-model';
-import { ProviderError, type ProviderHttpRequest, type ProviderHttpResponse } from '@worldview/provider-sdk';
+import type { Clock } from '@opcb/world-model';
+import { ProviderError, type ProviderHttpRequest, type ProviderHttpResponse } from '@opcb/provider-sdk';
 import {
   RateLimiter,
   CircuitBreaker,
@@ -14,7 +14,7 @@ import { silentLogger } from './logger.js';
 
 /**
  * Centralized network layer (directive §90–91). Every outbound HTTP request in
- * WORLDVIEW goes through an HttpClient:
+ * OP-CB goes through an HttpClient:
  *
  *  - host allowlist (per client; providers get their manifest.allowedHosts)
  *  - AbortSignal + timeout

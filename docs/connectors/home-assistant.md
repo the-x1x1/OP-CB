@@ -38,14 +38,14 @@ the zone emits nothing.
 ## 1. Create the token
 
 In Home Assistant, open your **profile** (your name, bottom left) → **Security** → **Long-lived
-access tokens** → **Create token**. Name it after this computer ("WORLDVIEW on the desk
+access tokens** → **Create token**. Name it after this computer ("OP-CB on the desk
 PC"). Home Assistant shows the token once; copy it.
 
 Make the token for a user who can see the entities you want. It does not need to be an
 administrator: nothing here needs more than reading states and subscribing to
 `state_changed`, which Home Assistant allows every user.
 
-In WORLDVIEW, store it under **Sources → Credentials** as `home-assistant-token` (the
+In OP-CB, store it under **Sources → Credentials** as `home-assistant-token` (the
 `secretRef` the examples declare). The definition holds only that name; the host attaches the
 token to each request and to the socket's first frame, and the connector never sees it
 anywhere else. For `connector:test --live` the token comes from `ONEVIEW_SECRET_HOME_ASSISTANT_TOKEN`.

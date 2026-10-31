@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { JsonValue, WorldObject } from '@worldview/world-model';
-import type { WorldObjectDetails } from '@worldview/ipc-contract';
-import { Button, FieldList, Toggle } from '@worldview/ui';
+import type { JsonValue, WorldObject } from '@opcb/world-model';
+import type { WorldObjectDetails } from '@opcb/ipc-contract';
+import { Button, FieldList, Toggle } from '@opcb/ui';
 import { DEFAULT_PASS_ALERTS, type ShellActions } from '../store/actions.js';
 import { displayName } from './props.js';
 import { useAppState } from '../store/store.js';

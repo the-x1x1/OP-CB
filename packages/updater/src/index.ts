@@ -1,5 +1,5 @@
 /**
- * @worldview/updater — update trust policy (ADR-012) and the controller that
+ * @opcb/updater — update trust policy (ADR-012) and the controller that
  * drives electron-updater behind an injectable interface.
  */
 export * from './policy.js';

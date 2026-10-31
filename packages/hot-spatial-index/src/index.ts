@@ -7,10 +7,10 @@ import {
   regionContains,
   type GeoBounds,
   type GeoRegion,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 
 /**
- * @worldview/hot-spatial-index — live (hot-state) spatial index.
+ * @opcb/hot-spatial-index — live (hot-state) spatial index.
  *
  * Decision (ADR-006): fixed-resolution geographic grid cells + exact final filtering.
  * Cells are `cellSizeDeg` × `cellSizeDeg` (default 1°). Every query first collects

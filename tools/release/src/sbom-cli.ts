@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** pnpm sbom — writes artifacts/release/WorldView-<version>.sbom.json (CycloneDX 1.5). */
+/** pnpm sbom — writes artifacts/release/OP-CB-<version>.sbom.json (CycloneDX 1.5). */
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,7 @@ try {
   /* not a git checkout */
 }
 const sbom = buildSbom({ root, version, commit, includeDev: process.argv.includes('--include-dev') });
-const out = path.join(root, 'artifacts', 'release', `WorldView-${version}.sbom.json`);
+const out = path.join(root, 'artifacts', 'release', `OP-CB-${version}.sbom.json`);
 mkdirSync(path.dirname(out), { recursive: true });
 writeFileSync(out, JSON.stringify(sbom, null, 2) + '\n');
 console.log(`[sbom] ${sbom.components.length} components → ${path.relative(root, out)}`);

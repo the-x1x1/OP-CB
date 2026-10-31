@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createReadStream, constants as fsConstants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoBounds } from '@worldview/world-model';
+import type { GeoBounds } from '@opcb/world-model';
 
 /**
  * Planetiler, as the basemap builder uses it: found on this machine, never downloaded, and

@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * USGS Earthquake Hazards Program — GeoJSON summary feeds.

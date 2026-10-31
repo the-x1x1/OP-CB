@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldEvent, WorldObject } from '@worldview/world-model';
-import type { WhatChangedResult } from '@worldview/ipc-contract';
+import type { WorldEvent, WorldObject } from '@opcb/world-model';
+import type { WhatChangedResult } from '@opcb/ipc-contract';
 import { changeRows } from './changes-panel.js';
 import { visibleTabs } from '../components/context-rail.js';
 

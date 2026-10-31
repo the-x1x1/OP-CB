@@ -1,4 +1,4 @@
-import type { FeatureUpdate, RenderFeature } from '@worldview/render-core';
+import type { FeatureUpdate, RenderFeature } from '@opcb/render-core';
 
 /**
  * Hands feature changes to the renderer a slice per frame, instead of all at once.

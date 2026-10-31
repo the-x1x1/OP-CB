@@ -1,5 +1,5 @@
-import { EARTH_RADIUS_M, type GeoPosition } from '@worldview/world-model';
-import { splitAtAntimeridian, type RenderFeature } from '@worldview/render-core';
+import { EARTH_RADIUS_M, type GeoPosition } from '@opcb/world-model';
+import { splitAtAntimeridian, type RenderFeature } from '@opcb/render-core';
 
 /**
  * The selected satellite's footprint: where on the ground it is above the horizon right now,

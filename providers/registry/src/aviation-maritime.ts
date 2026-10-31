@@ -1,13 +1,13 @@
-import type { WorldProvider } from '@worldview/provider-sdk';
-import { createProvider as createAdsbLol } from '@worldview/provider-adsb-remote';
-import { createProvider as createReadsbLocal } from '@worldview/provider-readsb-local';
+import type { WorldProvider } from '@opcb/provider-sdk';
+import { createProvider as createAdsbLol } from '@opcb/provider-adsb-remote';
+import { createProvider as createReadsbLocal } from '@opcb/provider-readsb-local';
 import {
   createProvider as createAisStream,
   createDigitrafficAisProvider,
   type AisStreamProviderOptions,
   type SecretResolver,
-} from '@worldview/provider-ais';
-import { createProvider as createSeedAirports } from '@worldview/provider-infrastructure';
+} from '@opcb/provider-ais';
+import { createProvider as createSeedAirports } from '@opcb/provider-infrastructure';
 
 /**
  * Partial provider registry: aviation, maritime and bundled infrastructure. Merged into the

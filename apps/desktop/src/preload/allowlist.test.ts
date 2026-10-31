@@ -1,21 +1,21 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { REQUEST_CHANNELS, EVENT_CHANNELS } from '@worldview/ipc-contract';
+import { REQUEST_CHANNELS, EVENT_CHANNELS } from '@opcb/ipc-contract';
 import { isEventChannel, isPlainPayload, isRequestChannel, unwrapEnvelope, wireNameFor } from './allowlist.js';
 import { IpcRequestError, okEnvelope, errorEnvelope } from '../shared/ipc-envelope.js';
 
 test('preload allowlist: only catalogue channels get a wire name', () => {
   for (const c of REQUEST_CHANNELS) {
     assert.equal(isRequestChannel(c), true);
-    assert.equal(wireNameFor('request', c), `worldview:${c}`);
+    assert.equal(wireNameFor('request', c), `opcb:${c}`);
   }
   for (const e of EVENT_CHANNELS) {
     assert.equal(isEventChannel(e), true);
-    assert.equal(wireNameFor('event', e), `worldview:${e}`);
+    assert.equal(wireNameFor('event', e), `opcb:${e}`);
   }
   for (const bad of [
     'fs.readFile',
-    'worldview:settings.get',
+    'opcb:settings.get',
     '',
     'constructor',
     '__proto__',

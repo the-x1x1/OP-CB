@@ -1,8 +1,8 @@
-import { Button, Dialog, Icon, Toggle } from '@worldview/ui';
+import { Button, Dialog, Icon, Toggle } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 
 /**
- * First-run welcome (directive §133): one screen — what WORLDVIEW is, the privacy
+ * First-run welcome (directive §133): one screen — what OP-CB is, the privacy
  * boundary, "Start with Earth". Optional links to sources and offline packs. It never
  * blocks: the map is already loading behind it and Esc/Start dismiss it.
  */

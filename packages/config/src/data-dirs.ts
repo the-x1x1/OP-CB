@@ -17,7 +17,7 @@ import path from 'node:path';
  *     preparedness.json      the operator's preparedness inventory (this computer only)
  *     history/               DuckDB partitions (history-store)
  *     worldpacks/            installed offline packs
- *     library/               ZIM files WorldView reads itself, and references/ (public-domain PDFs)
+ *     library/               ZIM files OP-CB reads itself, and references/ (public-domain PDFs)
  *     provider-cache/        provider response caches (bounded, deletable)
  *     tiles/                 map tiles kept by the desktop's tile cache (size-capped)
  *     logs/app.log           RotatingFileSink (JSON lines)

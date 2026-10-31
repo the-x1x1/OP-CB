@@ -1,5 +1,5 @@
 import type * as SatelliteJs from 'satellite.js';
-import { bearingDegrees } from '@worldview/world-model';
+import { bearingDegrees } from '@opcb/world-model';
 import type { GpElements } from './elements.js';
 import type { Propagator, PropagatedState } from './propagator.js';
 

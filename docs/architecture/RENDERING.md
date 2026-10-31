@@ -1,7 +1,7 @@
 # Rendering
 
-Packages `@worldview/render-core`, `@worldview/render-cesium`, `@worldview/render-maplibre`
-and `@worldview/render-dense` implement ADR-008: one `WorldRenderer` contract, two
+Packages `@opcb/render-core`, `@opcb/render-cesium`, `@opcb/render-maplibre`
+and `@opcb/render-dense` implement ADR-008: one `WorldRenderer` contract, two
 adapters (Cesium globe, MapLibre map), level-of-detail in the presentation layer, and a
 host that owns the active adapter. Renderers never see providers, observations or raw
 payloads; they consume `RenderFeature`s only (contract frozen in
@@ -121,7 +121,7 @@ is not fetched again on the way back.
 
 ### Map tile cache (desktop)
 
-Esri World Imagery tiles are served to both renderers from `worldview://app/__tiles/…`, the
+Esri World Imagery tiles are served to both renderers from `opcb://app/__tiles/…`, the
 page's own origin, by `apps/desktop/src/main/tile-cache.ts`. On a miss it fetches from Esri
 and keeps the tile on disk (`userData/tiles/`); on a hit it serves the file, online or not.
 The operator sets the size cap in Settings → Map tile cache (default 2 GB); the least
@@ -229,7 +229,7 @@ cached per descriptor, generation-guarded): `ellipsoid` (default), `quantized-me
 (e.g. Re:Earth / Mapterhorn ellipsoidal mesh, CC BY 4.0), `cesium-ion-world-terrain`
 (token), `local` (worldpack terrain served by the shell).
 
-2D styles (`render-maplibre/src/styles/worldview-dark.ts`): `pmtiles` descriptors become
+2D styles (`render-maplibre/src/styles/opcb-dark.ts`): `pmtiles` descriptors become
 the typed dark/light style for the Protomaps basemap schema over `pmtiles://` (worldpacks,
 zero network); `vector-style` passes a style URL through (OpenFreeMap pending C-3 sign-off,
 or a user style); `raster-xyz` / `esri-world-imagery` become raster styles; globe-only
@@ -325,7 +325,7 @@ moves the renderer directly while dragged and commits to the store when released
 
 ## Dense layers and benchmarks
 
-`@worldview/render-dense` defines `DenseLayerRenderer` and the `NativeDenseAdapter`
+`@opcb/render-dense` defines `DenseLayerRenderer` and the `NativeDenseAdapter`
 that replaces a layer wholesale on the active renderer within a `DenseBudget` (per-band
 caps, priority-ordered, scalable under low power). deck.gl is added only if
 `tools/benchmark` shows the native adapters missing the 30 FPS heavy-region target.
@@ -495,8 +495,8 @@ shapes — `RendererHost` presents a world snapshot itself, while the shell runs
 presentation pipeline and pushes a `FeatureUpdate` — and the two were never joined.
 Until this adapter, `resolveHost()` fell through to the demo canvas host in _every_
 build, including packaged ones: the Cesium and MapLibre adapters were written, tested and
-never composed, so WORLDVIEW shipped with neither of its map renderers. The
-`window.worldviewHost` hook remains as an override for a host supplied from outside; it
+never composed, so OP-CB shipped with neither of its map renderers. The
+`window.opcbHost` hook remains as an override for a host supplied from outside; it
 is no longer what production depends on.
 
 A renderer that fails to construct is reported through the host's `error` event and the

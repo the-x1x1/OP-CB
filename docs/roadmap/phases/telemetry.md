@@ -86,7 +86,7 @@ displays.
   carries it; a definition's `telemetry` is validated by the same schema and copied to its
   manifest. One difference from the brief: the descriptor is validated where the manifest
   is, so the package re-exports rather than defines it. A renderer import of
-  `@worldview/telemetry` should stay type-only or pure — the provider SDK's index also
+  `@opcb/telemetry` should stay type-only or pure — the provider SDK's index also
   exports `testing`, which imports `node:crypto`.
 
 ## Decisions

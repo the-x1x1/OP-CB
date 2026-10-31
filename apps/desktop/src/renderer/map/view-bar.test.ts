@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RasterOverlay } from '@worldview/world-model';
-import type { ResolvedMapProvider } from '@worldview/render-core';
+import type { RasterOverlay } from '@opcb/world-model';
+import type { ResolvedMapProvider } from '@opcb/render-core';
 import { activeMapChoice, basemapLabel, imageryLabel, mapChoices } from './view-bar.js';
 import { sourceBasemapId } from '../map-providers.js';
 
@@ -21,7 +21,7 @@ const overlay = (providerId: string, name: string, extra: Partial<RasterOverlay>
 test('the Map choices: usable basemaps for the mode, sources’ maps, then imagery layers — no weather', () => {
   const basemaps = [
     basemap('natural-earth', 'Natural Earth II (bundled)', ['3D']),
-    basemap('worldview-dark', 'WORLDVIEW dark (offline vector)', ['2D']),
+    basemap('opcb-dark', 'OP-CB dark (offline vector)', ['2D']),
     basemap('esri-world-imagery', 'Esri World Imagery', ['2D', '3D']),
     basemap('cesium-ion-bing', 'Bing Aerial with labels (Cesium ion)', ['3D'], false),
   ];

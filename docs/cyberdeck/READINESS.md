@@ -1,6 +1,6 @@
 # Cyberdeck readiness checklist
 
-One line per thing that has to be true before WORLDVIEW is called ready on the P16s cyberdeck:
+One line per thing that has to be true before OP-CB is called ready on the P16s cyberdeck:
 who proves it, where, with what evidence, and where it stands. Statuses follow
 [NORTHSTAR.md](NORTHSTAR.md): **PASS** (run, evidence recorded), **FAIL**, **UNVERIFIED** (not
 yet run where it counts), **BLOCKED** (cannot run here; says why), **EXPECTED EXCEPTION**
@@ -28,16 +28,16 @@ State as of `51a0cb6` (v0.3.0, released 2026-10-09). The quality gates are settl
 | `pnpm license-audit`                    | container | —                            | 0 errors                                                                                                                      | PASS                                                        |
 | `pnpm stage:resources -- --check`       | container | —                            | up to date                                                                                                                    | PASS                                                        |
 | `pnpm build`                            | CI        | Vite 8                       | Build desktop run 37908005425 on `f7efa28`: `release:package` builds the app before packing                                   | PASS (CI, as part of packaging)                             |
-| Linux package build (`.deb`)            | CI        | Ubuntu 24.04                 | Build desktop run 37908005425 on `f7efa28`: `worldview-linux-x64` artifact                                                    | PASS (CI) — the artifact itself not yet inspected by hand   |
+| Linux package build (`.deb`)            | CI        | Ubuntu 24.04                 | Build desktop run 37908005425 on `f7efa28`: `opcb-linux-x64` artifact                                                         | PASS (CI) — the artifact itself not yet inspected by hand   |
 | Packaged-app smoke test                 | CI        | apt-installed `.deb`, Xvfb   | Build desktop run 37908005425 on `f7efa28`: installed with apt, smoke with and without a keyring, offline trace, uninstall    | PASS (CI, Xvfb — no GPU)                                    |
-| `test:offline` with the network blocked | container | `WORLDVIEW_NETWORK=off`      | offline group 4/4; strace: 0 DNS, 0 outside connects with Work offline                                                        | PASS (container); CI runs the trace on the installed `.deb` |
+| `test:offline` with the network blocked | container | `OPCB_NETWORK=off`           | offline group 4/4; strace: 0 DNS, 0 outside connects with Work offline                                                        | PASS (container); CI runs the trace on the installed `.deb` |
 | Windows build and regression            | CI        | windows-latest               | Build desktop run 37908005425 on `f7efa28` (the first run, 37906699021, failed 5 test-only path problems, fixed in `f7efa28`) | PASS (CI); hands-on installer check still the operator's    |
 
 ## Field acceptance (the final demonstration, on the P16s, no cloud)
 
 | #   | What                                                                                              | Owner         | Container / CI substitute evidence (not hardware proof)                                       | Proof wanted on the laptop                                  | Status           |
 | --- | ------------------------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------- |
-| A   | Ubuntu boots; WORLDVIEW installed from the `.deb`; launched from the menu, no terminal            | operator      | CI installs the `.deb` and starts it under Xvfb                                               | screenshot, `app.log` head (H2)                             | UNVERIFIED       |
+| A   | Ubuntu boots; OP-CB installed from the `.deb`; launched from the menu, no terminal                | operator      | CI installs the `.deb` and starts it under Xvfb                                               | screenshot, `app.log` head (H2)                             | UNVERIFIED       |
 | B   | Wi-Fi off, Ethernet out: no WAN attempts; loopback allowed                                        | operator      | strace trace: 0 DNS / 0 outside with Work offline; control run reaches out (§M2)              | `offline-trace-linux.mjs` on the laptop, screenshots (H7)   | UNVERIFIED       |
 | C   | O'ahu PMTiles basemap, search a saved place, local history, restart, still there                  | operator      | offline runtime test searches a pack on a vault; settings survive a restart (smoke)           | screenshots before and after restart (H5, H7)               | UNVERIFIED       |
 | D   | T-Beam by USB: node telemetry; with a lock, position with fix time and accuracy; NO FIX otherwise | operator      | serial transport and provider over a pseudo-terminal: fix, STALE, NO FIX off the map (§M4)    | `ls -l /dev/serial/by-id`, screenshots of both states (H10) | UNVERIFIED       |

@@ -1,5 +1,5 @@
-import { isValidLatLon, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import { isValidLatLon, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import { normalizeHeading } from '../direction.js';
 import { draftFromCamera, type CatalogPack, type PackNormalizeOptions, type PackNormalizeResult } from './types.js';
 
@@ -22,7 +22,7 @@ import { draftFromCamera, type CatalogPack, type PackNormalizeOptions, type Pack
  */
 export const FINTRAFFIC_STATIONS_URL = 'https://tie.digitraffic.fi/api/weathercam/v1/stations';
 export const FINTRAFFIC_FRAME_ORIGIN = 'https://weathercam.digitraffic.fi/';
-export const DIGITRAFFIC_USER = 'worldview';
+export const DIGITRAFFIC_USER = 'opcb';
 
 const PRESET_ID = /^C\d{7}$/;
 const STATION_ID = /^C\d{5}$/;

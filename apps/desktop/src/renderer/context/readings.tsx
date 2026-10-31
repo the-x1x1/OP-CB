@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { WorldObject } from '@worldview/world-model';
-import type { WorldClient } from '@worldview/ipc-contract';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { WorldObject } from '@opcb/world-model';
+import type { WorldClient } from '@opcb/ipc-contract';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import {
   objectReadings,
   resolveTelemetry,
@@ -11,7 +11,7 @@ import {
   type ReadingWindow,
   type ResolvedTelemetry,
   type TelemetryDescriptor,
-} from '@worldview/telemetry';
+} from '@opcb/telemetry';
 import { useActions, useAppState, useClient } from '../store/store.js';
 import { contextRegistry, type ContextSection, type ContextSectionProps } from './registry.js';
 import { READING_WINDOWS, ReadingsView } from './readings-view.js';

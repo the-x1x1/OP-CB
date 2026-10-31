@@ -1,5 +1,5 @@
-import type { GeoBounds, WorldObject } from '@worldview/world-model';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { GeoBounds, WorldObject } from '@opcb/world-model';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import { OVERVIEW_LAYERS, typeLayerId, type OverviewLayer } from './overview-layers.js';
 import { WEATHER_GROUP_ID, WEATHER_IMAGERY, type WeatherImageryLayer } from './weather-imagery.js';
 

@@ -5,15 +5,15 @@ import {
   type IsoTimestamp,
   type JsonValue,
   type Observation,
-} from '@worldview/world-model';
-import { buildObservation, type ObservationDraft, type ProviderManifest } from '@worldview/provider-sdk';
+} from '@opcb/world-model';
+import { buildObservation, type ObservationDraft, type ProviderManifest } from '@opcb/provider-sdk';
 import { SEED_AIRPORTS_DATASET_DATE } from './manifest.js';
 
 /**
  * Seed airports GeoJSON → airport observations.
  * Feature: Point geometry, properties { id, name, iata, icao, type, municipality, countryCode }.
  * The collection's `datasetDate` is the observation time (airports are long-lived facts).
- * externalId is the ICAO code; @worldview/identity joins airports authoritatively on it
+ * externalId is the ICAO code; @opcb/identity joins airports authoritatively on it
  * as `airport:icao:<ICAO4>` (ADR-011), so the same airport from another source is one object.
  */
 export interface AirportNormalizeOptions {

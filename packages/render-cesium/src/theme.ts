@@ -1,4 +1,4 @@
-import { resolveStyle, type ResolvedStyle, type RenderStyle, type RgbaColor, type Theme } from '@worldview/render-core';
+import { resolveStyle, type ResolvedStyle, type RenderStyle, type RgbaColor, type Theme } from '@opcb/render-core';
 import type { CesiumLike, ColorLike } from './cesium-like.js';
 
 /**

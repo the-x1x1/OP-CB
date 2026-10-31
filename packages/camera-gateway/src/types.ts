@@ -1,10 +1,5 @@
-import type { GeoPosition } from '@worldview/world-model';
-import type {
-  CameraRegistration,
-  CameraSnapshot,
-  CameraSourceInput,
-  CameraStreamDescriptor,
-} from '@worldview/ipc-contract';
+import type { GeoPosition } from '@opcb/world-model';
+import type { CameraRegistration, CameraSnapshot, CameraSourceInput, CameraStreamDescriptor } from '@opcb/ipc-contract';
 
 /**
  * CameraGateway — the interface behind `camera.*` IPC channels (ADR-009, directive §71).
@@ -123,7 +118,7 @@ export type UpstreamOpener = (
   opts: { headers?: Record<string, string>; signal: AbortSignal; timeoutMs: number },
 ) => Promise<UpstreamStream>;
 
-export const CAMERA_USER_AGENT = 'WorldView/0.1 camera-gateway (+https://github.com/the-x1x1/oneview)';
+export const CAMERA_USER_AGENT = 'OP-CB/0.1 camera-gateway (+https://github.com/the-x1x1/OP-CB)';
 
 /** Hard cap for a single still frame (directive: 8 MiB). */
 export const MAX_FRAME_BYTES = 8 * 1024 * 1024;

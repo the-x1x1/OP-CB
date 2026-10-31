@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { SearchResult } from '@worldview/ipc-contract';
+import type { SearchResult } from '@opcb/ipc-contract';
 import { BuiltinGazetteer } from './builtin-gazetteer.js';
 import { CompositeGazetteer, StaticGazetteer, type PlaceKind } from './gazetteer.js';
 import { cityBeforeItsRegion, collapseDuplicatePlaces, placeResultKind, samePlace } from './place-duplicates.js';

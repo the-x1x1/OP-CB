@@ -16,7 +16,7 @@ Settings → Display → _Field status strip_, or by choosing the Field profile.
 | ADS-B | The local aircraft receiver: `12 aircraft · 2 s` (connected, data 2 s ago), `no data yet` (connected, nothing heard), `not detected`, `off` — with an on/off switch              |
 | MESH  | The Meshtastic source: `9 nodes · 1 min`, `no data yet`, `no node`, `off` — with an on/off switch                                                                                |
 | VAULT | The data vault in the worst state: `ready · 812 GB`, `ABSENT`, `low-space`, `read-only` (shown only when a vault is set up)                                                      |
-| DISK  | Free space where WORLDVIEW keeps its data (history, caches); amber under 10 GB, red under 2 GB                                                                                   |
+| DISK  | Free space where OP-CB keeps its data (history, caches); amber under 10 GB, red under 2 GB                                                                                       |
 | PWR   | `BAT 64%` (amber under 20%, red under 10%), `AC 80% ↑` (charging), `AC`. Not shown when the computer cannot say                                                                  |
 
 A coloured dot gives the state at a glance; hovering (or a screen reader) gives the full
@@ -45,7 +45,7 @@ changed afterwards (Low graphics with the globe, say); the profile name stays as
 
 ## Sleep, wake and power changes
 
-WORLDVIEW listens to the operating system's own events (Electron's `powerMonitor`; on Linux,
+OP-CB listens to the operating system's own events (Electron's `powerMonitor`; on Linux,
 logind): nothing is polled for them.
 
 - **Waking from sleep**: the network is asked again at once (not in up to 15 s), the vaults are
@@ -53,12 +53,12 @@ logind): nothing is polled for them.
   waking is logged (`resumed from sleep`).
 - **USB devices across sleep**: a Meshtastic node that went away reconnects by itself (5 s,
   doubling to a minute) and says so meanwhile; the ADS-B decoder is the OS's service, and
-  WORLDVIEW shows "not detected" until it answers again.
+  OP-CB shows "not detected" until it answers again.
 - **Mains ↔ battery**: logged (`power source`) and the strip updates at once.
 
 ## Measuring (H12)
 
-`apps/desktop/scripts/measure-linux.mjs` launches an installed WORLDVIEW as you would, with
+`apps/desktop/scripts/measure-linux.mjs` launches an installed OP-CB as you would, with
 its sandbox on, in a throw-away profile, and records from `/proc` and `/sys`:
 
 - time from launch until the runtime started and until the page loaded (from the app's own
@@ -68,22 +68,22 @@ its sandbox on, in a throw-away profile, and records from `/proc` and `/sys`:
 - CPU over the idle period, in % of one core, per process type;
 - GPU busy % where the driver gives it (amdgpu: `gpu_busy_percent` — the P16s's Radeon 740M);
 - the whole computer's draw from the battery while on battery (`power_now`, and the
-  `energy_now` drop) — not WORLDVIEW's own use. Run `--baseline` (WORLDVIEW closed) under the
+  `energy_now` drop) — not OP-CB's own use. Run `--baseline` (OP-CB closed) under the
   same conditions and compare;
 - the conditions: kernel, OS, CPU, desktop, mains or battery, brightness, load.
 
 ```bash
 # on battery, brightness fixed, Wi-Fi as you mean to use it, nothing else running
 node measure-linux.mjs --baseline --idle 300 --label "battery, 50% brightness, Wi-Fi off" --out base.json
-node measure-linux.mjs /opt/WorldView/worldview --profile field --runs 3 --idle 300 \
+node measure-linux.mjs /opt/OP-CB/opcb --profile field --runs 3 --idle 300 \
   --label "battery, 50% brightness, Wi-Fi off" --out field.json
-node measure-linux.mjs /opt/WorldView/worldview --profile docked --runs 3 --idle 300 \
+node measure-linux.mjs /opt/OP-CB/opcb --profile docked --runs 3 --idle 300 \
   --label "battery, 50% brightness, Wi-Fi off" --out docked.json
 ```
 
 Each run records what was in effect: the runtime's `profile applied` line (profile, internet
 poll scale) and the graphics and map mode the settings held after the run. Only the launched
-app's own processes are counted (its process tree), so an everyday WORLDVIEW left open does not
+app's own processes are counted (its process tree), so an everyday OP-CB left open does not
 add to the numbers. The throw-away profile has no sources configured beyond the defaults: that is
 the app at its quietest. Say so when comparing with daily use, or measure the daily profile by
 hand with the same readings.

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FakeWorldRenderer, type RenderFeature } from '@worldview/render-core';
+import { FakeWorldRenderer, type RenderFeature } from '@opcb/render-core';
 import { DEFAULT_DENSE_CAPS, DenseBudget, NativeDenseAdapter } from './dense.js';
 import { mulberry32, runPresentationBenchmark, syntheticObjects } from './benchmark.js';
 

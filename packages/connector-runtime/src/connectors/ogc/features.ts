@@ -1,11 +1,6 @@
-import type { GeoBounds, Observation } from '@worldview/world-model';
-import {
-  ProviderError,
-  assertAtomicAdmission,
-  type ProviderContext,
-  type ProviderManifest,
-} from '@worldview/provider-sdk';
-import { mapRecords, type CompiledMapping, type ConnectorProviderDefinition } from '@worldview/connector-sdk';
+import type { GeoBounds, Observation } from '@opcb/world-model';
+import { ProviderError, assertAtomicAdmission, type ProviderContext, type ProviderManifest } from '@opcb/provider-sdk';
+import { mapRecords, type CompiledMapping, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { classifyCrs } from './crs.js';
 import { addUnseen, warnRejected } from '../../shared/mapping.js';
 

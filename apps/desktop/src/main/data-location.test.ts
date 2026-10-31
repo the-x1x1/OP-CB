@@ -16,7 +16,7 @@ async function tmp(): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), 'wv-data-'));
 }
 
-test('data location: usual by default; a WorldView-data folder beside the app wins; never in development', async () => {
+test('data location: usual by default; an OP-CB-data folder beside the app wins; never in development', async () => {
   const usual = await tmp();
   const exeDir = await tmp();
   assert.deepEqual(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }), {
@@ -37,7 +37,7 @@ test('moving: the small files are carried, the drive marked, the pointer written
   await fs.writeFile(path.join(usual, 'settings.json'), '{"schemaVersion":8}');
   await fs.writeFile(path.join(usual, 'collections.json'), '{"version":1,"items":[]}');
   await fs.mkdir(path.join(usual, 'history'));
-  const drive = path.join(await tmp(), 'WorldView');
+  const drive = path.join(await tmp(), 'OP-CB');
   const r = await moveDataTo(drive, usual, usual);
   assert.ok(r.ok);
   if (!r.ok) return;
@@ -63,10 +63,10 @@ test('moving: the small files are carried, the drive marked, the pointer written
   assert.equal(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing, undefined);
 });
 
-test('moving: a folder WorldView already uses is adopted as it is; anything else non-empty is refused', async () => {
+test('moving: a folder OP-CB already uses is adopted as it is; anything else non-empty is refused', async () => {
   const usual = await tmp();
   const used = await tmp();
-  await fs.writeFile(path.join(used, MARKER_FILE), '{"kind":"worldview-data"}');
+  await fs.writeFile(path.join(used, MARKER_FILE), '{"kind":"opcb-data"}');
   await fs.writeFile(path.join(used, 'settings.json'), '{"from":"the drive"}');
   await fs.writeFile(path.join(usual, 'settings.json'), '{"from":"this computer"}');
   const r = await moveDataTo(used, usual, usual);

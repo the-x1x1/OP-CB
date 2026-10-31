@@ -1,5 +1,5 @@
 /**
- * @worldview/camera-gateway — ADR-009.
+ * @opcb/camera-gateway — ADR-009.
  *
  * `CameraGateway` (status/register/snapshot/stream/unregister/list) with two
  * implementations: `DirectGateway` (http(s) MJPEG / HLS / still cameras behind the

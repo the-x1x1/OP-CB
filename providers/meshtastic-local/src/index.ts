@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, Observation } from '@opcb/world-model';
 import {
   ProviderError,
   buildObservation,
@@ -17,7 +17,7 @@ import {
   type TestMessageSource,
   type Unsubscribe,
   type WorldProvider,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import { HEARTBEAT_MS, MESHTASTIC_LOCAL_MANIFEST, RECONNECT_MAX_MS, RECONNECT_MIN_MS } from './manifest.js';
 import { NodeStore } from './nodes.js';
 import {
@@ -471,7 +471,7 @@ export class MeshtasticLocalProvider implements WorldProvider, TestMessageSource
     const answer = (outcome: TestMessageAnswer['outcome'], message: string, extra: Partial<TestMessageAnswer> = {}) =>
       ({ outcome, evidence: { ...evidence }, message, at: this.nowIso(), ...extra }) satisfies TestMessageAnswer;
     const stream = this.session?.stream;
-    if (!this.connected || !stream) return answer('not-connected', 'WorldView is not connected to your radio');
+    if (!this.connected || !stream) return answer('not-connected', 'OP-CB is not connected to your radio');
     evidence.connected = true;
     const to = nodeNum(request.to);
     if (to === undefined) return answer('refused', 'that is not a node id (!a1b2c3d4)');

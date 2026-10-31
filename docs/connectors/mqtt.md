@@ -42,7 +42,7 @@ in Source Health with the setting to name it in.
 | `tls`                  | false                    | TLS to the broker. The certificate is verified against the system's CAs and the host name; a self-signed one is refused (no CA option yet). |
 | `username`             | none                     | The MQTT username. Not a secret.                                                                                                            |
 | `credential`           | none                     | `{ "name": "<key of credentials>" }`: the stored secret is the MQTT password.                                                               |
-| `clientId`             | `worldview-<random>`     | Letters, digits, `_` and `-`.                                                                                                               |
+| `clientId`             | `opcb-<random>`          | Letters, digits, `_` and `-`.                                                                                                               |
 | `preset`               | none                     | `rtl_433`, `owntracks` or `meshtastic` (below).                                                                                             |
 | `itemsPath`            | the message              | Path in each message to its record(s).                                                                                                      |
 | `filter`               | none                     | Conditions on the message (as `mapping.filter`); a message failing one is skipped.                                                          |
@@ -61,7 +61,7 @@ The username is plain text in the definition. The password is never in a file: d
 credential and name it, and store the secret under its `secretRef` (Sources → Credentials).
 
 ```json
-"mqtt": { "topics": [{ "topic": "owntracks/+/+", "qos": 1 }], "username": "worldview", "credential": { "name": "broker" } },
+"mqtt": { "topics": [{ "topic": "owntracks/+/+", "qos": 1 }], "username": "opcb", "credential": { "name": "broker" } },
 "credentials": { "broker": { "secretRef": "owntracks-devices.broker", "label": "Broker password", "kind": "basic" } }
 ```
 
@@ -167,7 +167,7 @@ For your own phones and tablets running OwnTracks in MQTT mode against your own 
 waypoints, cards and last-will messages are skipped, and so is an encrypted payload
 (OwnTracks' own encryption), which the connector cannot read.
 
-This preset is for devices you own and have set up to report to your broker. WORLDVIEW does not
+This preset is for devices you own and have set up to report to your broker. OP-CB does not
 track other people's phones (docs/PRODUCT-BOUNDARIES.md); the operator allowed this preset for
 their own devices as a recorded exception in the phase brief.
 

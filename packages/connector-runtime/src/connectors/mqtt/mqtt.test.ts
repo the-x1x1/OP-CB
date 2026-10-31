@@ -11,9 +11,9 @@ import {
   type ProviderMqttEvents,
   type ProviderMqttHandle,
   type ProviderMqttOptions,
-} from '@worldview/provider-sdk';
-import type { JsonValue, Observation } from '@worldview/world-model';
-import { unambiguousTimestamp as unambiguousTime } from '@worldview/connector-sdk';
+} from '@opcb/provider-sdk';
+import type { JsonValue, Observation } from '@opcb/world-model';
+import { unambiguousTimestamp as unambiguousTime } from '@opcb/connector-sdk';
 import { formatSuite, runConnectorSuite } from '../../testing/suite.js';
 import { defaultConnectorRegistry } from '../../registry.js';
 import {
@@ -272,7 +272,7 @@ test('connect options: loopback by default, the named host, port, TLS, username 
   assert.equal(c.options.host, 'broker.home.example');
   assert.equal(c.options.port, 8883);
   assert.equal(c.options.tls, true);
-  assert.equal(c.options.username, 'worldview');
+  assert.equal(c.options.username, 'opcb');
   assert.deepEqual(c.options.credential, { key: 'owntracks-devices.broker' });
   assert.equal(c.password, 'hunter2', 'the runtime resolves the password; the provider only names the key');
   assert.equal(c.options.clientId, 'wv-test');

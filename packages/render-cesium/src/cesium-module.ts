@@ -21,9 +21,9 @@ import type {
  * It imports **@cesium/engine, not cesium**, and that is a hard requirement rather than a
  * preference. The `cesium` package re-exports @cesium/engine *and* @cesium/widgets, and
  * @cesium/widgets bundles Knockout, whose first statement is `var t = this || (0, eval)("this")`
- * at module scope. Under WORLDVIEW's Content-Security-Policy (`script-src 'self'
+ * at module scope. Under OP-CB's Content-Security-Policy (`script-src 'self'
  * 'wasm-unsafe-eval'`, see src/main/csp.ts) that throws EvalError the moment the chunk is
- * evaluated, before any WORLDVIEW code runs — the packaged application opened to a blank
+ * evaluated, before any OP-CB code runs — the packaged application opened to a blank
  * window because of it. Importing the engine alone removes Knockout from the bundle
  * entirely, which is why the policy can stay strict.
  *

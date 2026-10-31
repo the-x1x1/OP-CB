@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { haversineMeters, type WorldObject } from '@worldview/world-model';
+import { haversineMeters, type WorldObject } from '@opcb/world-model';
 import {
   MIN_ETA_SPEED_MPS,
   estimateArrivalMs,

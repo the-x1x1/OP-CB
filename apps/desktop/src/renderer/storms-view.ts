@@ -1,5 +1,5 @@
-import type { WorldObject } from '@worldview/world-model';
-import { cycloneOf, cycloneRank, tornadoWarningRank } from '@worldview/render-core';
+import type { WorldObject } from '@opcb/world-model';
+import { cycloneOf, cycloneRank, tornadoWarningRank } from '@opcb/render-core';
 import { OVERVIEW_LAYERS, TYPE_LAYER_PREFIX, type OverviewLayer } from './overview-layers.js';
 
 /**

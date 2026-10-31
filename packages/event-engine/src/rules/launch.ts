@@ -9,7 +9,7 @@ import {
   type JsonValue,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { derivedProvenance, refsOf, shortUtc, stringProp, type ObjectRule, type RuleContext } from './types.js';
 
 /**

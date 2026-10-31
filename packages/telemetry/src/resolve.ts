@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import type { TelemetryDescriptor, TelemetrySeries } from '@worldview/provider-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import type { TelemetryDescriptor, TelemetrySeries } from '@opcb/provider-sdk';
 import { DEFAULT_READINGS, DISCOVERED_TYPES, KNOWN_READINGS } from './known.js';
 
 /** Same cap and key shape as the descriptor schema (`provider-sdk/telemetry.ts`). */

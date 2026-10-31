@@ -8,11 +8,11 @@ import { fileURLToPath } from 'node:url';
  * These assert a property of the *source text*, not of a value, because the property
  * only exists at bundling time: which package the renderer chunk pulls in.
  *
- * WORLDVIEW's packaged renderer opened to a blank window for exactly one reason — the
+ * OP-CB's packaged renderer opened to a blank window for exactly one reason — the
  * adapter imported `cesium`, which re-exports @cesium/widgets, which bundles Knockout,
  * whose module-scope `(0, eval)("this")` is refused by `script-src 'self'
  * 'wasm-unsafe-eval'`. Nothing in the running program can notice the regression coming
- * back: the import is evaluated before any WORLDVIEW code, so the failure is a dead
+ * back: the import is evaluated before any OP-CB code, so the failure is a dead
  * window and a console entry, which is what this project keeps mistaking for progress.
  * A string check on the specifier is crude and it is the only check that runs early
  * enough to matter.

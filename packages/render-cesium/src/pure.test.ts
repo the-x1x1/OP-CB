@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { RenderFeature } from '@worldview/render-core';
+import type { RenderFeature } from '@opcb/render-core';
 import { declutterLabels, estimateLabelSize, labelBox } from './labelDeclutter.js';
 import {
   altitudeForBounds,
@@ -21,7 +21,7 @@ import { MARKER_DEPTH_TEST_DISTANCE_M } from './layers/depth.js';
 import { EntityLayer } from './layers/entities.js';
 import { CesiumTheme } from './theme.js';
 import { createFakeCesium, FakeDataSource } from './testing/fake-cesium.js';
-import { resolveStyle, zoomToAltitudeM } from '@worldview/render-core';
+import { resolveStyle, zoomToAltitudeM } from '@opcb/render-core';
 
 const DEG = Math.PI / 180;
 
@@ -295,7 +295,7 @@ test('viewer: GEV options (no widgets, msaa 4, preserved buffer) and trackpad pi
   const opts = viewerOptions({ container: {} as Element, creditContainer: {} as Element });
   // No widget-chrome flags to assert any more: the adapter builds a CesiumWidget, which
   // has no chrome. What has to stay true is that Cesium installs no base layer of its
-  // own — WORLDVIEW picks the stack — and that the options carry nothing else.
+  // own — OP-CB picks the stack — and that the options carry nothing else.
   assert.deepEqual(Object.keys(opts).sort(), [
     'baseLayer',
     'contextOptions',

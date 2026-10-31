@@ -7,7 +7,7 @@ const evalWorker = (code: string) => () => new Worker(code, { eval: true });
 
 test('the worker path is read from app.asar.unpacked inside the archive', () => {
   assert.match(
-    geodataWorkerPath('C:\\Program Files\\WorldView\\resources\\app.asar'),
+    geodataWorkerPath('C:\\Program Files\\OP-CB\\resources\\app.asar'),
     /app\.asar\.unpacked[\\/]dist[\\/]main[\\/]geodata-worker\.cjs$/,
   );
   assert.match(geodataWorkerPath('/repo/apps/desktop'), /apps[\\/]desktop[\\/]dist[\\/]main[\\/]geodata-worker\.cjs$/);

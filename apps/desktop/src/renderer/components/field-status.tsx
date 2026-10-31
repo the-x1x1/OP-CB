@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Toggle } from '@worldview/ui';
+import { Toggle } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { displaySettings } from '../store/display.js';
 import { useNow } from '../hooks/use-now.js';

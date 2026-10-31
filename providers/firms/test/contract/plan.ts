@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { definePlan, type FixtureResponder } from '@worldview/tool-provider-validator';
+import { definePlan, type FixtureResponder } from '@opcb/tool-provider-validator';
 import { createProvider, parseFirmsAreaUrl, FIRMS_CREDENTIAL_KEY } from '../../src/index.js';
 
 const fixtures = path.resolve(

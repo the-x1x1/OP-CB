@@ -193,7 +193,7 @@ Slot files: the registry has no import slot, so `registry.ts` gains one import l
 8. **The shim's host side is real.** `testing/host.ts` uses `node:fs` and `node:child_process`
    so the path rules are tested against real links, junctions, a FIFO and a real child process;
    it is test-only (the package index does not export it) and is the reference for A2/A3.
-9. `files.test.ts` reads sidecars with `loadSidecar` from `@worldview/tool-connector-validator`
+9. `files.test.ts` reads sidecars with `loadSidecar` from `@opcb/tool-connector-validator`
    so they mean exactly what they will mean to `connector:test`; that test-only import goes
    when A4 lands.
 10. **gdal-import converts one layer per run** (GDAL's GeoJSON writer holds one) and merges,
@@ -311,7 +311,7 @@ ok 30 - gdal-import validation: self-contained formats only; VRT and friends ref
 ok 31 - gdal-import without ogr2ogr is OFFLINE with a message, and looks again only after five minutes
 ok 32 - gdal-import on a host without the converter amendment reports UNSUPPORTED
 ok 33 - gdal-import converts several layers one at a time and keeps their ids apart
-ok 34 - ogr2ogr host: fixed arguments, no shell, no WORLDVIEW secrets in its environment, the temporary folder removed
+ok 34 - ogr2ogr host: fixed arguments, no shell, no OP-CB secrets in its environment, the temporary folder removed
 ok 35 - ogr2ogr host: a failure, a hang, an empty run, an oversized result and refused inputs
 ok 36 - ogr2ogr host: a shapefile is its parts — an edited .dbf is a change, a .dbf linked out of the folder is refused
 ok 37 - gdal-import end to end: granted folder, the host running a stand-in ogr2ogr, re-conversion only when a part changed

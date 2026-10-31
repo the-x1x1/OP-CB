@@ -1,6 +1,6 @@
-import type { Observation } from '@worldview/world-model';
-import type { ProviderDataPolicy } from '@worldview/provider-sdk';
-import { HistoryStore, NdjsonBackend } from '@worldview/history-store';
+import type { Observation } from '@opcb/world-model';
+import type { ProviderDataPolicy } from '@opcb/provider-sdk';
+import { HistoryStore, NdjsonBackend } from '@opcb/history-store';
 
 /** Test-only: an NDJSON-backed history store seeded with earthquake observations. */
 export const USGS = 'usgs-earthquakes';

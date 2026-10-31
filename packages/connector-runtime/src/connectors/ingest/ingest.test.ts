@@ -10,10 +10,10 @@ import {
   type LocalListenerHandler,
   type LocalListenerOptions,
   type LocalResponse,
-} from '@worldview/provider-sdk';
-import { observationSchema, type JsonValue, type Observation } from '@worldview/world-model';
-import type { ConnectorProviderDefinition } from '@worldview/connector-sdk';
-import { loadSidecar } from '@worldview/tool-connector-validator';
+} from '@opcb/provider-sdk';
+import { observationSchema, type JsonValue, type Observation } from '@opcb/world-model';
+import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import { loadSidecar } from '@opcb/tool-connector-validator';
 import { defaultConnectorRegistry } from '../../registry.js';
 import { runConnectorSuite } from '../../testing/suite.js';
 import {

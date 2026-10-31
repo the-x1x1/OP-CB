@@ -1,12 +1,6 @@
-import {
-  SEVERITY_ORDER,
-  isValidLatLon,
-  type GeoPosition,
-  type GeoRegion,
-  type SeverityClass,
-} from '@worldview/world-model';
-import type { Collection, CollectionItem, WatchZone } from '@worldview/ipc-contract';
-import type { LensDefinition } from '@worldview/render-core';
+import { SEVERITY_ORDER, isValidLatLon, type GeoPosition, type GeoRegion, type SeverityClass } from '@opcb/world-model';
+import type { Collection, CollectionItem, WatchZone } from '@opcb/ipc-contract';
+import type { LensDefinition } from '@opcb/render-core';
 
 /**
  * Trust-boundary validation for user documents and IPC requests. Everything that comes

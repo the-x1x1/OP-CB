@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { WorldChangedEvent } from '@worldview/ipc-contract';
-import { REQUEST_CHANNELS, isIpcError } from '@worldview/ipc-contract';
+import type { WorldChangedEvent } from '@opcb/ipc-contract';
+import { REQUEST_CHANNELS, isIpcError } from '@opcb/ipc-contract';
 import { DemoClient } from './demo-client.js';
 import { advance } from './world.js';
 

@@ -1,8 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { WorldObject } from '@worldview/world-model';
-import type { FlightRouteAnswer } from '@worldview/provider-sdk';
-import type { WorldFlightAirport, WorldFlightInfo, WorldFlightRoute } from '@worldview/ipc-contract';
+import type { WorldObject } from '@opcb/world-model';
+import type { FlightRouteAnswer } from '@opcb/provider-sdk';
+import type { WorldFlightAirport, WorldFlightInfo, WorldFlightRoute } from '@opcb/ipc-contract';
 
 /**
  * What is known of the selected aircraft's flight (`world.flight`): its airline and aircraft
@@ -13,7 +13,7 @@ import type { WorldFlightAirport, WorldFlightInfo, WorldFlightRoute } from '@wor
  *   aviation-reference.json — airline names by ICAO designator and aircraft type names by
  *     ICAO type designator, built from Virtual Radar Server standing data (CC0 1.0) by
  *     tools/dev/aviation-reference/build.mjs;
- *   airports.geojson — WORLDVIEW's seed airports (MIT), used to name and place a route's
+ *   airports.geojson — OP-CB's seed airports (MIT), used to name and place a route's
  *     airport the route source did not describe.
  * Either may be missing (a test runtime, a damaged install): the answer then has less in it,
  * never an error.
@@ -26,7 +26,7 @@ export const AVIATION_REFERENCE_FILE = 'aviation-reference.json';
 export const AVIATION_REFERENCE_FORMAT = 'worldview-aviation-reference@1';
 export const SEED_AIRPORTS_FILE = 'airports.geojson';
 export const REFERENCE_CREDIT = 'Airline and aircraft type names: Virtual Radar Server standing data (CC0 1.0)';
-export const SEED_AIRPORTS_CREDIT = 'Airports: WORLDVIEW seed dataset';
+export const SEED_AIRPORTS_CREDIT = 'Airports: OP-CB seed dataset';
 
 /** A callsign shaped like an airline flight: ICAO designator + flight number (routes.ts in adsb-remote keeps the same rule). */
 const FLIGHT_CALLSIGN = /^([A-Z]{3})([0-9][0-9A-Z]{0,3})$/;
@@ -207,7 +207,7 @@ function describeAirport(
   if (!hasPlace) {
     out.latitude = seed.latitude;
     out.longitude = seed.longitude;
-    // Placed by WORLDVIEW's table, not the source: say so (the panel shows it).
+    // Placed by OP-CB's table, not the source: say so (the panel shows it).
     out.describedBy = 'reference';
   } else out.describedBy ??= 'reference';
   credits.add(SEED_AIRPORTS_CREDIT);

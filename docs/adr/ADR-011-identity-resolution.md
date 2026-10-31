@@ -1,6 +1,6 @@
 # ADR-011 — Deterministic identity resolution
 
-Status: Accepted · 2026-09-21 · Package: `@worldview/identity`
+Status: Accepted · 2026-09-21 · Package: `@opcb/identity`
 
 ## Decision
 

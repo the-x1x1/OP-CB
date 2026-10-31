@@ -1,4 +1,4 @@
-import type { FlightRouteAirport, FlightRouteAnswer } from '@worldview/provider-sdk';
+import type { FlightRouteAirport, FlightRouteAnswer } from '@opcb/provider-sdk';
 import { FOOT_TO_M } from './normalize.js';
 
 /**

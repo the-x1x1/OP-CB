@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoPosition } from '@worldview/world-model';
+import type { GeoPosition } from '@opcb/world-model';
 import {
   PLACE_NEAR_DEFAULT_M,
   indexedForms,

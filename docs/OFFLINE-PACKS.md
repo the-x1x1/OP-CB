@@ -1,8 +1,8 @@
 # Offline world packs (`.worldpack`)
 
-Status: Release 1 · ADR-007 · Package `@worldview/offline` · CLI `pnpm worldpack`
+Status: Release 1 · ADR-007 · Package `@opcb/offline` · CLI `pnpm worldpack`
 
-A world pack is a portable bundle of **data only** that lets WORLDVIEW work without a
+A world pack is a portable bundle of **data only** that lets OP-CB work without a
 network: a basemap extract, place and airport layers, a local search index, historical
 observations (earthquakes in Release 1) and the licence notices for all of it. Packs are
 built on one machine with `pnpm worldpack build`, verified byte-for-byte on import and
@@ -24,9 +24,9 @@ A `.worldpack` is a ZIP archive with a fixed layout:
 | `definitions/<id>.json` | `definitions`  | A connector definition (ADR-013) — a signed definition set (§4b). Loaded only from a trusted publisher's pack. |
 
 **The 2D basemap.** The installed app serves the newest enabled pack's PMTiles archive to
-its own window at `worldview://app/__pack/basemap.pmtiles`, answering the byte ranges the
+its own window at `opcb://app/__pack/basemap.pmtiles`, answering the byte ranges the
 PMTiles reader asks for (apps/desktop/src/main/pack-basemap.ts). The two offline vector
-basemaps (WORLDVIEW dark and light) read it; without a pack they are listed but not
+basemaps (OP-CB dark and light) read it; without a pack they are listed but not
 selectable. A development build, whose page comes from Vite, does not serve it.
 
 **Allowed files.** The manifest schema enforces the path pattern per kind
@@ -117,7 +117,7 @@ refuses the **whole build** when:
 - `redistributionAllowed` is false (a pack is something you can hand to another machine),
 - `attributionRequired` is true but no attribution text is declared.
 
-`mayIncludeInWorldpack(policy)` from `@worldview/provider-sdk` is the single rule. The
+`mayIncludeInWorldpack(policy)` from `@opcb/provider-sdk` is the single rule. The
 same flags are copied into `sourcePolicies`, so an importing app can re-check them, and
 `licenses/NOTICES.md` is rendered from the policies' attribution text. Examples from the
 registry: `usgs-earthquakes`, `protomaps-builds`, `natural-earth` are allowed;
@@ -198,10 +198,10 @@ everything else on install and sets aside installed packs that do not qualify.
 **Making and using a key:**
 
 ```
-pnpm worldpack keygen --name "Example Maps"                 # ~/.worldview/pack-keys/example-maps.worldpack-key + .worldpack-pub
-pnpm worldpack build --region hawaii --include places,airports --sign ~/.worldview/pack-keys/example-maps.worldpack-key
-pnpm worldpack sign hawaii.worldpack --key ~/.worldview/pack-keys/example-maps.worldpack-key   # a pack built elsewhere
-pnpm worldpack verify hawaii.worldpack --trust ~/.worldview/pack-keys/example-maps.worldpack-pub --require-trusted
+pnpm worldpack keygen --name "Example Maps"                 # ~/.opcb/pack-keys/example-maps.worldpack-key + .worldpack-pub
+pnpm worldpack build --region hawaii --include places,airports --sign ~/.opcb/pack-keys/example-maps.worldpack-key
+pnpm worldpack sign hawaii.worldpack --key ~/.opcb/pack-keys/example-maps.worldpack-key   # a pack built elsewhere
+pnpm worldpack verify hawaii.worldpack --trust ~/.opcb/pack-keys/example-maps.worldpack-pub --require-trusted
 ```
 
 `keygen` writes the private key owner-only and refuses to write it inside a git work tree
@@ -239,7 +239,7 @@ _publisher_". Building one:
 
 ```
 pnpm worldpack build --region hawaii --include definitions --definitions my-sources/ \
-  --id hawaii-sources --name "Hawaii sources" --sign ~/.worldview/pack-keys/example.worldpack-key
+  --id hawaii-sources --name "Hawaii sources" --sign ~/.opcb/pack-keys/example.worldpack-key
 ```
 
 `my-sources/` holds `<id>.json` files (a `*.test.json` sidecar is a fixture and is left out);
@@ -256,7 +256,7 @@ the `definitions` kind) — it fails closed.
 ```
 pnpm worldpack regions                       # list presets
 pnpm worldpack build --region hawaii --include map,places,airports,earthquakes \
-    --pmtiles hawaii.pmtiles --history-dir "%APPDATA%/@worldview/desktop" --out hawaii.worldpack
+    --pmtiles hawaii.pmtiles --history-dir "%APPDATA%/OP-CB" --out hawaii.worldpack
 pnpm worldpack build --bbox -161,18.5,-154.5,22.5 --include places,airports
 pnpm worldpack build --center 21.3,-157.9 --radius-km 150 --include places
 pnpm worldpack verify hawaii.worldpack
@@ -299,7 +299,7 @@ uncompressed (PMTiles tiles are already gzip/brotli-compressed internally).
 ### Earthquake history
 
 `--include earthquakes` reads `earthquake` rows from the app's history store
-(`--history-dir` = the WorldView data directory; DuckDB/Parquet when available, NDJSON
+(`--history-dir` = the OP-CB data directory; DuckDB/Parquet when available, NDJSON
 otherwise), clipped to the pack bounds and to the last `--days` days, and writes them as
 `data/earthquakes.ndjson` (one file per provider when several contributed). Rows keep
 their provenance; the registry serves them as `origin: 'historical'` objects.
@@ -333,7 +333,7 @@ schema does not know `base`) — it fails closed.
 
 ## 6. Importing and using a pack in the app
 
-`WorldPackRegistry` (`@worldview/offline`) backs the IPC channels `offline.status`,
+`WorldPackRegistry` (`@opcb/offline`) backs the IPC channels `offline.status`,
 `offline.installPack`, `offline.removePack` and `offline.setPackEnabled`:
 
 - `install(file)` → verify + extract to staging + atomic rename into
@@ -352,7 +352,7 @@ schema does not know `base`) — it fails closed.
 `SourceHealthRegistry` snapshot into `CONNECTED / DEGRADED / OFFLINE` with hysteresis
 (two agreeing evaluations before a probe- or source-driven change; an OS "offline" signal
 applies immediately). `pnpm test:offline` builds a Hawaii pack from the seed fixtures,
-installs it into a temporary data directory with `WORLDVIEW_NETWORK=off` and every fetch
+installs it into a temporary data directory with `OPCB_NETWORK=off` and every fetch
 disabled, and records the proof in
 `artifacts/verification/offline/worldpack-build-report.json` (regenerated by each run; not tracked).
 

@@ -1,5 +1,5 @@
 {
-  "name": "@worldview/hot-spatial-index",
+  "name": "@opcb/hot-spatial-index",
   "version": "0.1.0",
   "private": true,
   "description": "Live spatial index: geographic grid cells + exact filtering (bbox, radius, nearest, region, density).",
@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@worldview/world-model": "workspace:*"
+    "@opcb/world-model": "workspace:*"
   },
   "sideEffects": false
 }

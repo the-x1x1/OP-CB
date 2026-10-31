@@ -1,11 +1,11 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoBounds } from '@worldview/world-model';
-import type { TileCacheStatus } from '@worldview/ipc-contract';
-import { silentLogger, type Logger } from '@worldview/core';
+import type { GeoBounds } from '@opcb/world-model';
+import type { TileCacheStatus } from '@opcb/ipc-contract';
+import { silentLogger, type Logger } from '@opcb/core';
 
 /**
- * Map tiles kept on disk, served to the page from `worldview://app/__tiles/…`.
+ * Map tiles kept on disk, served to the page from `opcb://app/__tiles/…`.
  *
  * The globe and the flat map both asked Esri for every tile, every time: Cesium keeps a few
  * hundred in memory and Chromium keeps what the server's cache headers allow, so a place
@@ -240,7 +240,7 @@ export class TileCache {
       if ('status' in r) return new Response(r.reason, { status: r.status, headers: { 'Content-Type': 'text/plain' } });
       return new Response(r.bytes as Uint8Array<ArrayBuffer>, {
         status: 200,
-        headers: { 'Content-Type': r.contentType, 'X-Worldview-Tile-Cache': r.cached ? 'hit' : 'miss' },
+        headers: { 'Content-Type': r.contentType, 'X-OP-CB-Tile-Cache': r.cached ? 'hit' : 'miss' },
       });
     } finally {
       this.foreground--;

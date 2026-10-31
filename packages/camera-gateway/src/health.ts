@@ -1,4 +1,4 @@
-import type { Clock } from '@worldview/world-model';
+import type { Clock } from '@opcb/world-model';
 import type { CameraError } from './errors.js';
 import type { CameraHealth } from './types.js';
 

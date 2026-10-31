@@ -1,6 +1,6 @@
-import { systemClock, type Clock } from '@worldview/world-model';
-import { TypedEmitter, silentLogger, type Logger } from '@worldview/core';
-import type { ConnectionSnapshot, ConnectionState } from '@worldview/source-health';
+import { systemClock, type Clock } from '@opcb/world-model';
+import { TypedEmitter, silentLogger, type Logger } from '@opcb/core';
+import type { ConnectionSnapshot, ConnectionState } from '@opcb/source-health';
 
 /**
  * ConnectionMonitor — the application's single answer to "are we online?".

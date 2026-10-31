@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
-import type { AppSettings } from '@worldview/ipc-contract';
+import type { AppSettings } from '@opcb/ipc-contract';
 import { useActions, useAppSlice, useClient } from '../store/store.js';
 import { commandCenterStoreFor, type CommandCenterState, type CommandCenterStore } from './cc-store.js';
 import { checkNeeds, runCheck, type CheckData } from './checks.js';

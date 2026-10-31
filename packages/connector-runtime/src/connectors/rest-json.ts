@@ -1,4 +1,4 @@
-import { haversineMeters, type Observation } from '@worldview/world-model';
+import { haversineMeters, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -8,7 +8,7 @@ import {
   type ProviderHttpRequest,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -19,7 +19,7 @@ import {
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
   type EndpointSpec,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import { createPaginator, type PageRequest, type Paginator } from '../pagination.js';
 import { parseCsv } from '../csv.js';
 import { contourRecords } from '../contours.js';

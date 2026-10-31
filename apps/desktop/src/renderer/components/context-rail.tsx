@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { lensById } from '@worldview/render-core';
-import { Tabs, type TabItem } from '@worldview/ui';
+import { lensById } from '@opcb/render-core';
+import { Tabs, type TabItem } from '@opcb/ui';
 import { useActions, useAppState } from '../store/store.js';
 import type { ContextTab } from '../store/types.js';
 import { SelectionPanel } from '../panels/selection-panel.js';

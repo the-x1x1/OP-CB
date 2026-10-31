@@ -7,8 +7,8 @@ import {
   type SeverityClass,
   type WorldEvent,
   type WorldObject,
-} from '@worldview/world-model';
-import { stableHash } from '@worldview/query-engine';
+} from '@opcb/world-model';
+import { stableHash } from '@opcb/query-engine';
 import { boundsOfPoints, convexHull, footprintGeometry, roundCoord } from '../geometry.js';
 import { confidenceOf } from '../severity.js';
 import { derivedProvenance, numberProp, refsOf, shortUtc, type ObjectRule, type RuleContext } from './types.js';
@@ -17,7 +17,7 @@ import { derivedProvenance, numberProp, refsOf, shortUtc, type ObjectRule, type 
  * wildfireClusterRule — fire detections → clusters.
  *
  *   linkage   single-linkage: two detections join when ≤ 5 km apart and ≤ 24 h apart (grid-accelerated)
- *   identity  event:wildfire-cluster:worldview:<hash(earliest detection id)>; an existing cluster that
+ *   identity  event:wildfire-cluster:opcb:<hash(earliest detection id)>; an existing cluster that
  *             shares a member keeps its id (earliest startAt wins); merged clusters are ended with
  *             properties.mergedInto; clusters whose detections all expired are ended.
  *   severity  ≥ 50 detections or FRP sum ≥ 500 MW → SEVERE · ≥ 10 detections → MODERATE · else MINOR

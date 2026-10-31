@@ -8,11 +8,11 @@ import {
   type GeoBounds,
   type GeoPosition,
   type JsonValue,
-} from '@worldview/world-model';
-import { mayIncludeInWorldpack, type ProviderDataPolicy } from '@worldview/provider-sdk';
-import { silentLogger, type Logger } from '@worldview/core';
-import { writeFileAtomic } from '@worldview/core/node';
-import { rowToLine, type HistoryRow, type HistoryStore } from '@worldview/history-store';
+} from '@opcb/world-model';
+import { mayIncludeInWorldpack, type ProviderDataPolicy } from '@opcb/provider-sdk';
+import { silentLogger, type Logger } from '@opcb/core';
+import { writeFileAtomic } from '@opcb/core/node';
+import { rowToLine, type HistoryRow, type HistoryStore } from '@opcb/history-store';
 import { clipFeatureCollection, parseFeatureCollection, type PackFeatureCollection } from './geojson.js';
 import {
   WORLDPACK_EXTENSION,
@@ -84,7 +84,7 @@ export const SEED_DATA_POLICY: ProviderDataPolicy = Object.freeze({
   exportAllowed: true,
   commercialUseAllowed: true,
   attributionRequired: false,
-  attributionText: 'Seed places and airports: WORLDVIEW project (MIT)',
+  attributionText: 'Seed places and airports: OP-CB project (MIT)',
 });
 
 /** Policies for the bundled seed fixtures; merge these over the legal registry lookup. */

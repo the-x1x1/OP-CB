@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react';
-import { Icon, IconButton } from '@worldview/ui';
+import { Icon, IconButton } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
 import { OVERVIEW_LAYERS, OVERVIEW_LENS_ID } from '../overview-layers.js';
 import { LayerPanel } from './layer-panel.js';

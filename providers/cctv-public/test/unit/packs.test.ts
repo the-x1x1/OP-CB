@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { testing, ProviderError } from '@worldview/provider-sdk';
+import { testing, ProviderError } from '@opcb/provider-sdk';
 import {
   PublicCamerasProvider,
   PUBLIC_CAMERA_PACKS,

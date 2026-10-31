@@ -1,4 +1,4 @@
-import type { ProviderManifest } from '@worldview/provider-sdk';
+import type { ProviderManifest } from '@opcb/provider-sdk';
 
 /**
  * public-cameras-singapore — Singapore's traffic images (LTA via data.gov.sg), in a provider
@@ -7,7 +7,7 @@ import type { ProviderManifest } from '@worldview/provider-sdk';
  * fifteen would show frames up to fifteen minutes old), one small request each time.
  *
  * The licence (Singapore Open Data Licence v1.0) permits keeping and redistributing the
- * data; WORLDVIEW does not keep these rows: from one minute to the next only the image URLs
+ * data; OP-CB does not keep these rows: from one minute to the next only the image URLs
  * change, and history would gain ~130,000 rows a day of nothing else. Frames follow the
  * global CCTV frame rule — fetched live, never retained. Policy equals the registry records
  * `datagovsg-traffic-images` and `public-cameras-singapore`.

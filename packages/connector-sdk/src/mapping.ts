@@ -1,4 +1,4 @@
-import { isValidLatLon, type GeoPosition, type JsonValue, type WorldGeometry } from '@worldview/world-model';
+import { isValidLatLon, type GeoPosition, type JsonValue, type WorldGeometry } from '@opcb/world-model';
 import { parsePath, readPath, type PathSegment } from './path.js';
 import { resolveTransform, type Transform } from './transforms.js';
 
@@ -31,7 +31,7 @@ export interface FieldSpec {
   /**
    * A lookup table applied after the transforms: the value, as text, is looked up and the
    * entry's value taken; a value with no entry is absent (so `default` applies). For a code a
-   * source publishes that WORLDVIEW names differently — a volcano's aviation colour code as a
+   * source publishes that OP-CB names differently — a volcano's aviation colour code as a
    * CAP severity. At most MAX_MAP_ENTRIES entries; keys are exact, case and all.
    */
   map?: Record<string, JsonValue>;

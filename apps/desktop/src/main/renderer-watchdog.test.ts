@@ -10,11 +10,11 @@ test('watchdog: says something useful even when the renderer said nothing', () =
 
 test('watchdog: reports carry level, message and where it came from', () => {
   const text = describeReports([
-    { level: 'error', message: 'Failed to load module script', source: 'worldview://app/', line: 1 },
+    { level: 'error', message: 'Failed to load module script', source: 'opcb://app/', line: 1 },
     { level: 'warning', message: 'something milder' },
   ]);
   assert.match(text, /\[error\] Failed to load module script/);
-  assert.match(text, /worldview:\/\/app\/:1/);
+  assert.match(text, /opcb:\/\/app\/:1/);
   assert.match(text, /\[warning\] something milder/);
 });
 

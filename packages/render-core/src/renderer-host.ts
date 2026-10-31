@@ -1,4 +1,4 @@
-import type { RasterOverlay, WorldEvent, WorldObject } from '@worldview/world-model';
+import type { RasterOverlay, WorldEvent, WorldObject } from '@opcb/world-model';
 import type {
   AttributionEntry,
   BasemapDescriptor,

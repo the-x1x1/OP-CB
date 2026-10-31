@@ -1,12 +1,12 @@
-import { readGpx, readKml, type FeatureReadResult } from '@worldview/connector-runtime';
-import type { Collection, CollectionItem } from '@worldview/ipc-contract';
-import { splitAtAntimeridian } from '@worldview/render-core';
-import type { WorldObject } from '@worldview/world-model';
+import { readGpx, readKml, type FeatureReadResult } from '@opcb/connector-runtime';
+import type { Collection, CollectionItem } from '@opcb/ipc-contract';
+import { splitAtAntimeridian } from '@opcb/render-core';
+import type { WorldObject } from '@opcb/world-model';
 
 /**
  * A collection's places as geodata other tools read: GPX waypoints (handheld GPS units, most
  * navigation apps), KML placemarks (Google Earth, ATAK) and GeoJSON points (QGIS and the
- * web). Only items with a position are written; the WorldView collection file (.json) keeps
+ * web). Only items with a position are written; the OP-CB collection file (.json) keeps
  * everything. Which items may go out is the caller's choice (handlers.ts: the operator's own
  * places always, a collected object only when its sources allow export).
  */
@@ -91,7 +91,7 @@ export function toGpx(
 ): string {
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<gpx version="1.1" creator="WorldView" xmlns="http://www.topografix.com/GPX/1/1">',
+    '<gpx version="1.1" creator="OP-CB" xmlns="http://www.topografix.com/GPX/1/1">',
     '  <metadata>',
     `    <name>${xmlText(collection.name)}</name>`,
     ...(opts.attribution.length ? [`    <desc>${xmlText(`Data: ${opts.attribution.join('; ')}`)}</desc>`] : []),
@@ -127,7 +127,7 @@ export function toKml(
     `    <name>${xmlText(collection.name)}</name>`,
     `    <description>${xmlText(
       [
-        `Exported from WorldView ${opts.exportedAt}`,
+        `Exported from OP-CB ${opts.exportedAt}`,
         ...(opts.attribution.length ? [`Data: ${opts.attribution.join('; ')}`] : []),
       ].join('\n'),
     )}</description>`,
@@ -357,7 +357,7 @@ export function lineGeodata(
   if (format === 'gpx') {
     return [
       '<?xml version="1.0" encoding="UTF-8"?>',
-      '<gpx version="1.1" creator="WorldView" xmlns="http://www.topografix.com/GPX/1/1">',
+      '<gpx version="1.1" creator="OP-CB" xmlns="http://www.topografix.com/GPX/1/1">',
       '  <metadata>',
       `    <name>${xmlText(name)}</name>`,
       `    <time>${xmlText(exportedAt)}</time>`,
@@ -383,7 +383,7 @@ export function lineGeodata(
       '<kml xmlns="http://www.opengis.net/kml/2.2">',
       '  <Document>',
       `    <name>${xmlText(name)}</name>`,
-      `    <description>${xmlText(`Measured in WorldView ${exportedAt}`)}</description>`,
+      `    <description>${xmlText(`Measured in OP-CB ${exportedAt}`)}</description>`,
       '    <Placemark>',
       `      <name>${xmlText(name)}</name>`,
       `      ${geometry}`,
@@ -451,12 +451,11 @@ export function objectsToKml(
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<kml xmlns="http://www.opengis.net/kml/2.2">',
     '  <Document>',
-    '    <name>WorldView export</name>',
+    '    <name>OP-CB export</name>',
     `    <description>${xmlText(
-      [
-        `Exported from WorldView ${exportedAt}`,
-        ...(attribution.length ? [`Data: ${attribution.join('; ')}`] : []),
-      ].join('\n'),
+      [`Exported from OP-CB ${exportedAt}`, ...(attribution.length ? [`Data: ${attribution.join('; ')}`] : [])].join(
+        '\n',
+      ),
     )}</description>`,
   ];
   for (const [type, list] of [...byType.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
@@ -513,7 +512,7 @@ export function trackGeodata(
   if (format === 'gpx') {
     return [
       '<?xml version="1.0" encoding="UTF-8"?>',
-      '<gpx version="1.1" creator="WorldView" xmlns="http://www.topografix.com/GPX/1/1">',
+      '<gpx version="1.1" creator="OP-CB" xmlns="http://www.topografix.com/GPX/1/1">',
       '  <metadata>',
       `    <name>${xmlText(name)}</name>`,
       ...(opts.attribution.length ? [`    <desc>${xmlText(`Data: ${opts.attribution.join('; ')}`)}</desc>`] : []),
@@ -550,7 +549,7 @@ export function trackGeodata(
     `    <name>${xmlText(name)}</name>`,
     `    <description>${xmlText(
       [
-        `Exported from WorldView ${opts.exportedAt}`,
+        `Exported from OP-CB ${opts.exportedAt}`,
         ...(opts.attribution.length ? [`Data: ${opts.attribution.join('; ')}`] : []),
       ].join('\n'),
     )}</description>`,

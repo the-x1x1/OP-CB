@@ -1,13 +1,7 @@
-import {
-  EventTypes,
-  SEVERITY_ORDER,
-  keepWeightiest,
-  type SeverityClass,
-  type WorldEvent,
-} from '@worldview/world-model';
-import type { FeedItem } from '@worldview/ipc-contract';
-import { geometryRepresentativePoint } from '@worldview/query-engine';
-import { TypedEmitter } from '@worldview/core';
+import { EventTypes, SEVERITY_ORDER, keepWeightiest, type SeverityClass, type WorldEvent } from '@opcb/world-model';
+import type { FeedItem } from '@opcb/ipc-contract';
+import { geometryRepresentativePoint } from '@opcb/query-engine';
+import { TypedEmitter } from '@opcb/core';
 import { severityAtLeast } from './severity.js';
 
 /**
@@ -103,7 +97,7 @@ export class FeedBuilder {
  * was raised — a gale watch issued this morning for the day after tomorrow. Such an item used
  * to carry its future start as its time, so every watch in the feed read "0s ago" and sorted
  * above everything that had actually happened. It is dated by when it was issued
- * (`properties.issuedAt`), or else when WORLDVIEW raised it.
+ * (`properties.issuedAt`), or else when OP-CB raised it.
  */
 export function feedTime(event: WorldEvent): string {
   const start = Date.parse(event.startAt);

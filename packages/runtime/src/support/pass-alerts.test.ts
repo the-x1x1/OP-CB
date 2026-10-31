@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { PassAlertSettings } from '@worldview/ipc-contract';
-import type { JsonValue } from '@worldview/world-model';
+import type { PassAlertSettings } from '@opcb/ipc-contract';
+import type { JsonValue } from '@opcb/world-model';
 import { PASS_ALERT_HORIZON_MS, PassAlerts, passAlertBody } from './pass-alerts.js';
 
 const T0 = Date.parse('2026-10-05T04:00:00.000Z');

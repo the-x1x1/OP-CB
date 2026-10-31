@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { PlaceSearchAnswer, SearchResult } from '@worldview/ipc-contract';
+import type { PlaceSearchAnswer, SearchResult } from '@opcb/ipc-contract';
 import { ONLINE_ROW_ID, onlinePlaceText, searchList } from './search-items.js';
 
 // Invented results in the shapes the runtime and main return.

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ProviderError, testing } from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+import { ProviderError, testing } from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { createProvider, OWN_VESSEL_ID, parseNmea2000LocalSettings, type Timers } from './index.js';
 
 const fixture = path.resolve(

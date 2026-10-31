@@ -1,7 +1,7 @@
-# The external SSD: formatting, mounting, and what WORLDVIEW does with it
+# The external SSD: formatting, mounting, and what OP-CB does with it
 
-WORLDVIEW keeps its packs (maps, places, offline data) on an external SSD as a **data vault**:
-a folder on the drive marked with a small `.worldview-vault.json`. History and settings stay on
+OP-CB keeps its packs (maps, places, offline data) on an external SSD as a **data vault**:
+a folder on the drive marked with a small `.opcb-vault.json`. History and settings stay on
 the laptop's own SSD. Building and carrying packs is [OFFLINE-FIELD.md](OFFLINE-FIELD.md); this
 page is the drive itself.
 
@@ -21,7 +21,7 @@ Give it a label you will recognise — it becomes the mount folder name:
 
 ## Mounting
 
-Two ways; WORLDVIEW works with either.
+Two ways; OP-CB works with either.
 
 - **Plug it in** (the desktop does it): GNOME/udisks mounts it at `/media/$USER/FIELD` as you.
   Unmounted when you eject it or log out.
@@ -35,11 +35,11 @@ Two ways; WORLDVIEW works with either.
 
   then `sudo mkdir -p /mnt/field && sudo mount -a && sudo chown $USER: /mnt/field`.
 
-Either way, add the vault on a folder **inside** the drive (e.g. `/media/$USER/FIELD/worldview`),
-not the mount point itself: WORLDVIEW refuses a bare mount point, because with the drive out
+Either way, add the vault on a folder **inside** the drive (e.g. `/media/$USER/FIELD/opcb`),
+not the mount point itself: OP-CB refuses a bare mount point, because with the drive out
 that folder is an empty folder on the laptop's own disk.
 
-## What WORLDVIEW does
+## What OP-CB does
 
 - **Recognises it by its marker**, not by its path: if the drive comes back at a different place,
   remove the vault and add the new folder; the marker says it is the same vault.
@@ -53,12 +53,12 @@ that folder is an empty folder on the laptop's own disk.
   forgotten; the app starts and runs without the drive, and they come back when it does (checked
   every 30 s, at once on waking from sleep).
 - **Will not be installed onto the laptop's own drive** as a "vault" by mistake: a vault must be
-  on another device than WORLDVIEW's data.
+  on another device than OP-CB's data.
 
 ## Pulling it out
 
 Eject it first when you can (the desktop's eject, or `udisksctl unmount -b /dev/sdX1`). If it is
-pulled while WORLDVIEW is installing a pack onto it, the install fails and says so; the partial
+pulled while OP-CB is installing a pack onto it, the install fails and says so; the partial
 copy is in a staging folder that the next install clears. Packs already installed are not
 touched by a pull. After an unclean pull of an ext4 drive, `sudo fsck.ext4 -f /dev/sdX1` before
 using it again.

@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@worldview/world-model';
+import type { IsoTimestamp, Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -16,7 +16,7 @@ import {
   type ProviderSocketHandle,
   type ProviderSubscription,
   type Unsubscribe,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   compileMapping,
   definitionToManifest,
@@ -25,7 +25,7 @@ import {
   type Connector,
   type ConnectorProviderDefinition,
   type ConnectorValidationResult,
-} from '@worldview/connector-sdk';
+} from '@opcb/connector-sdk';
 import type { Timers } from '../websocket-json.js';
 import { TraccarDirectory, readDevice, readEvent, readSocketMessage } from './session.js';
 import { DEFAULT_MAX_BYTES, DEFAULT_MAX_MESSAGE_BYTES, RECONNECT_MIN_MS, nextRetryMs } from '../../shared/limits.js';

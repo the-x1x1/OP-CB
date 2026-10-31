@@ -13,8 +13,8 @@ import {
   type ProviderManifest,
   type ProviderQuery,
   type WorldProvider,
-} from '@worldview/provider-sdk';
-import type { Observation } from '@worldview/world-model';
+} from '@opcb/provider-sdk';
+import type { Observation } from '@opcb/world-model';
 import { settle, startRuntime } from '../helpers/harness.js';
 
 /**

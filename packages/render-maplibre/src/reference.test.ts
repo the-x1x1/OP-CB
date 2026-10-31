@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ManualScheduler, type ReferenceData, type RenderFeature } from '@worldview/render-core';
+import { ManualScheduler, type ReferenceData, type RenderFeature } from '@opcb/render-core';
 import { MapLibreWorldRenderer } from './renderer.js';
 import { REFERENCE_LABELS_SOURCE, REFERENCE_LINES_SOURCE, referenceLayers, referenceSources } from './reference.js';
 import { validateStyle, type MapStyle } from './styles/spec.js';
-import { buildEmptyStyle, buildRasterStyle, DEFAULT_GLYPHS_URL, styleForBasemap } from './styles/worldview-dark.js';
+import { buildEmptyStyle, buildRasterStyle, DEFAULT_GLYPHS_URL, styleForBasemap } from './styles/opcb-dark.js';
 import { createFakeMapLibre, fakeImageCanvasFactory } from './testing/fake-maplibre.js';
 import { resolveWmtsProtocolUrl } from './wmts-protocol.js';
 
@@ -66,7 +66,7 @@ test('every 2D style can draw text: raster and empty styles carry the bundled gl
   assert.equal(typeof esri === 'object' && esri.glyphs, DEFAULT_GLYPHS_URL);
   const none = styleForBasemap({ kind: 'none', id: 'none', attribution: '' } as never);
   assert.equal(typeof none === 'object' && none.glyphs, DEFAULT_GLYPHS_URL);
-  assert.equal(DEFAULT_GLYPHS_URL, 'worldview://app/fonts/{fontstack}/{range}.pbf', 'served by the app protocol');
+  assert.equal(DEFAULT_GLYPHS_URL, 'opcb://app/fonts/{fontstack}/{range}.pbf', 'served by the app protocol');
 });
 
 test('reference (2D): drawn beneath the world, kept across a basemap change, removed when switched off', async () => {

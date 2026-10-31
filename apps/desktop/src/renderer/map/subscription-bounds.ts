@@ -1,4 +1,4 @@
-import { clampBounds, type GeoBounds } from '@worldview/world-model';
+import { clampBounds, type GeoBounds } from '@opcb/world-model';
 
 /**
  * Below this zoom the shell subscribes to the whole world. The renderers cull what is off

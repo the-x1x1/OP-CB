@@ -1,5 +1,5 @@
-import { isValidLatLon, mmsiFlag, type JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import { isValidLatLon, mmsiFlag, type JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import type { AisPositionMessage, AisStaticMessage, N2kMessage } from './pgns.js';
 
 /**

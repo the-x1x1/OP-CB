@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import { unambiguousTimestamp } from '@worldview/connector-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import { unambiguousTimestamp } from '@opcb/connector-sdk';
 import type { MqttPreset } from './contract.js';
 import { finiteNumber } from '../../shared/json.js';
 

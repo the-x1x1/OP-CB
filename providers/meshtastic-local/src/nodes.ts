@@ -1,5 +1,5 @@
-import type { JsonValue } from '@worldview/world-model';
-import type { ObservationDraft } from '@worldview/provider-sdk';
+import type { JsonValue } from '@opcb/world-model';
+import type { ObservationDraft } from '@opcb/provider-sdk';
 import {
   LOC_EXTERNAL,
   LOC_INTERNAL,

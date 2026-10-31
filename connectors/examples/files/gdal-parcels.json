@@ -2,7 +2,7 @@
   "schema": "oneview.connector.v1",
   "id": "gdal-parcels",
   "name": "Parcels (shapefile, through GDAL)",
-  "description": "A shapefile in the operator's granted folder, converted to GeoJSON by the operator's own ogr2ogr (reprojected to WGS 84) whenever any of its files changes. Needs GDAL installed; WORLDVIEW never installs it.",
+  "description": "A shapefile in the operator's granted folder, converted to GeoJSON by the operator's own ogr2ogr (reprojected to WGS 84) whenever any of its files changes. Needs GDAL installed; OP-CB never installs it.",
   "connector": "gdal-import",
   "objectType": "place",
   "categories": ["infrastructure"],

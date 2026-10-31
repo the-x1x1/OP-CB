@@ -12,8 +12,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkUrl } from '@worldview/connector-sdk';
-import { defaultConnectorRegistry, draftDefinition } from '@worldview/connector-runtime';
+import { checkUrl } from '@opcb/connector-sdk';
+import { defaultConnectorRegistry, draftDefinition } from '@opcb/connector-runtime';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const args = process.argv.slice(2);

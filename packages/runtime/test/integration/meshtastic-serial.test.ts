@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { realpathSync } from 'node:fs';
-import { testing } from '@worldview/provider-sdk';
-import { createProvider, PORT_POSITION } from '@worldview/provider-meshtastic-local';
-import type { Observation } from '@worldview/world-model';
+import { testing } from '@opcb/provider-sdk';
+import { createProvider, PORT_POSITION } from '@opcb/provider-meshtastic-local';
+import type { Observation } from '@opcb/world-model';
 import { createLocalAccess } from '../../src/support/provider-storage.js';
 import { ptyDevice } from '../helpers/pty-device.js';
 import {

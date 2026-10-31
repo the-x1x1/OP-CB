@@ -1,9 +1,9 @@
-import type { ProviderHealth, ProviderStatus, ProviderManifest } from '@worldview/provider-sdk';
-import type { Clock } from '@worldview/world-model';
-import { systemClock } from '@worldview/world-model';
+import type { ProviderHealth, ProviderStatus, ProviderManifest } from '@opcb/provider-sdk';
+import type { Clock } from '@opcb/world-model';
+import { systemClock } from '@opcb/world-model';
 
 /**
- * @worldview/source-health — one registry of every source's health plus the
+ * @opcb/source-health — one registry of every source's health plus the
  * application-level connection state (CONNECTED / DEGRADED / OFFLINE).
  *
  * The registry is the single truth the Source Health panel, diagnostics, the

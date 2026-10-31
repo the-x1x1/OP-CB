@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { REQUEST_CHANNELS, type RequestChannel, type RequestOf } from '@worldview/ipc-contract';
+import { REQUEST_CHANNELS, type RequestChannel, type RequestOf } from '@opcb/ipc-contract';
 import { settle, startRuntime } from '../helpers/harness.js';
 
 /**
@@ -25,7 +25,7 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'world.details': { objectId: 'earthquake:usgs:nope' },
   'world.flight': { objectId: 'earthquake:usgs:nope' },
   'world.events': { eventTypes: ['earthquake'] },
-  'world.event': { eventId: 'event:worldview:nope' },
+  'world.event': { eventId: 'event:opcb:nope' },
   'world.subscribe': { objectTypes: ['earthquake', 'aircraft'] },
   'world.subscribe.more': { token: 'no-such-snapshot' },
   'world.related': { objectId: 'earthquake:usgs:nope' },
@@ -563,10 +563,10 @@ test('search finds cities offline (the bundled populated places), and typed quer
 });
 
 test('an installed pack basemap: the offline vector basemaps get its address, versioned by the pack', async () => {
-  const h = await startRuntime({ offlineBasemapUrl: 'worldview://app/__pack/basemap.pmtiles' });
+  const h = await startRuntime({ offlineBasemapUrl: 'opcb://app/__pack/basemap.pmtiles' });
   try {
     const none = await h.client.request('map.providers.list', undefined);
-    const dark = none.basemaps.find((b) => b.id === 'worldview-dark')!;
+    const dark = none.basemaps.find((b) => b.id === 'opcb-dark')!;
     assert.equal(dark.available, false, 'no pack: not selectable');
     const empty = dark.descriptor;
     assert.equal(empty.kind === 'pmtiles' && empty.url, '');
@@ -574,12 +574,12 @@ test('an installed pack basemap: the offline vector basemaps get its address, ve
     h.runtime.core.packs.pmtilesPaths = () => [path.join('packs', 'hawaii-2026-09', 'maps', 'basemap.pmtiles')];
     h.runtime.core.packs.pmtilesAttribution = () => 'Protomaps · © OpenStreetMap contributors (ODbL)';
     const list = await h.client.request('map.providers.list', undefined);
-    const entry = list.basemaps.find((b) => b.id === 'worldview-dark')!;
+    const entry = list.basemaps.find((b) => b.id === 'opcb-dark')!;
     assert.equal(entry.available, true);
     assert.ok(entry.descriptor.kind === 'pmtiles');
     assert.equal(
       entry.descriptor.kind === 'pmtiles' && entry.descriptor.url,
-      'worldview://app/__pack/basemap.pmtiles?pack=hawaii-2026-09',
+      'opcb://app/__pack/basemap.pmtiles?pack=hawaii-2026-09',
     );
     assert.equal(entry.attribution, 'Protomaps · © OpenStreetMap contributors (ODbL)', "the pack's own credit");
     assert.equal(

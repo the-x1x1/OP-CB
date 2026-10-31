@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { WorldGeometry } from '@worldview/world-model';
+import type { WorldGeometry } from '@opcb/world-model';
 import { normalizeNwsAlerts, REJECT_NO_GEOMETRY, REJECT_ZONE_ONLY } from './normalize.js';
 import { NWS_MANIFEST } from './manifest.js';
-import { ProviderError } from '@worldview/provider-sdk';
+import { ProviderError } from '@opcb/provider-sdk';
 import {
   ZONE_FETCH_BUDGET,
   ZONE_FAILURE_BACKOFF_MS,

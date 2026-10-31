@@ -2,7 +2,7 @@ import { open, stat } from 'node:fs/promises';
 
 /**
  * The installed world pack's PMTiles basemap, served to the renderer over the app scheme
- * (`worldview://app/__pack/basemap.pmtiles`) so the 2D map can draw it with no network and
+ * (`opcb://app/__pack/basemap.pmtiles`) so the 2D map can draw it with no network and
  * no file: URL. A PMTiles reader asks for byte ranges — the header, then each directory and
  * tile — so this answers `Range: bytes=a-b` with a 206 and just those bytes, never the whole
  * archive (a country extract is hundreds of megabytes).

@@ -1,11 +1,11 @@
-import type { ViewLink } from '@worldview/ipc-contract';
-import type { ViewState } from '@worldview/render-core';
+import type { ViewLink } from '@opcb/ipc-contract';
+import type { ViewState } from '@opcb/render-core';
 import { LAYER_GROUPS } from '../layer-tree.js';
 import { withLayer } from '../overview-layers.js';
 import { withWeatherImagery } from '../weather-imagery.js';
 
 /**
- * A worldview:// link in the shell (packages/ipc-contract view-link.ts reads and writes the
+ * A opcb:// link in the shell (packages/ipc-contract view-link.ts reads and writes the
  * text): which layer switches it turns, and the link for what is on the map now.
  */
 

@@ -1,5 +1,5 @@
-import type { WorldClient, WorldSubscription } from '@worldview/ipc-contract';
-import { lensById } from '@worldview/render-core';
+import type { WorldClient, WorldSubscription } from '@opcb/ipc-contract';
+import { lensById } from '@opcb/render-core';
 import { initialState, rootReducer } from './reducer.js';
 import type { RootAction, RootState } from './types.js';
 

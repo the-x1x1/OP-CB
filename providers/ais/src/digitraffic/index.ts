@@ -1,4 +1,4 @@
-import type { Observation } from '@worldview/world-model';
+import type { Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -6,7 +6,7 @@ import {
   buildObservation,
   type ProviderManifest,
   type ProviderQuery,
-} from '@worldview/provider-sdk';
+} from '@opcb/provider-sdk';
 import {
   DIGITRAFFIC_AIS_MANIFEST,
   DIGITRAFFIC_USER,

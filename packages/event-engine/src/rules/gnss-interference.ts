@@ -7,7 +7,7 @@ import {
   type WorldEvent,
   type WorldGeometry,
   type WorldObject,
-} from '@worldview/world-model';
+} from '@opcb/world-model';
 import { derivedProvenance, refsOf, type ObjectRule, type RuleContext } from './types.js';
 
 /**
@@ -27,7 +27,7 @@ import { derivedProvenance, refsOf, type ObjectRule, type RuleContext } from './
  *   raised    a cell with at least GNSS_MIN_DEGRADED degraded aircraft that are at least 2 %
  *             of the aircraft with integrity in it — MINOR (gpsjam's yellow band, 2–10 %) or
  *             MODERATE (red, above 10 %). One degraded aircraft is a faulty unit, not a jammer.
- *   identity  event:gnss-interference:worldview:<south>_<west>-<start second>: one event per
+ *   identity  event:gnss-interference:opcb:<south>_<west>-<start second>: one event per
  *             episode of a cell, so an ended one stays in history when the cell qualifies again.
  *   ends      once the cell has not qualified for GNSS_HOLD_MS: a cell at the threshold (two
  *             degraded aircraft of forty) would otherwise end and be raised again on every

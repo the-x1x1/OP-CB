@@ -9,7 +9,7 @@
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { REGION_PRESETS } from '@worldview/offline';
+import { REGION_PRESETS } from '@opcb/offline';
 import {
   BASEMAP_PROVIDER_ID,
   DEFAULT_MAX_ZOOM,

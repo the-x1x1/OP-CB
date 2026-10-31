@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { GeoBounds } from '@worldview/world-model';
-import { Icon, type IconName } from '@worldview/ui';
-import type { SourceHealthEntry } from '@worldview/source-health';
+import type { GeoBounds } from '@opcb/world-model';
+import { Icon, type IconName } from '@opcb/ui';
+import type { SourceHealthEntry } from '@opcb/source-health';
 import { useActions, useAppState } from '../store/store.js';
 import { layerNotes } from '../overview-layers.js';
 import {
@@ -62,7 +62,7 @@ function Track() {
 }
 
 /**
- * The Overview's layers, grouped (OSIRIS's layer panel, on WorldView's own switches): a
+ * The Overview's layers, grouped (OSIRIS's layer panel, on OP-CB's own switches): a
  * category per group with its own switch and a live count, opened to show a switch per
  * object type inside it and, under a few types, a child that narrows or adds to it. Every
  * switch writes the same hidden list the rail always used (layer-tree.ts), so the map, the

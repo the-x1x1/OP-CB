@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testing } from '@worldview/provider-sdk';
+import { testing } from '@opcb/provider-sdk';
 import { AdsbLolProvider, coverageNote } from './index.js';
 
 const NOW = Date.parse('2026-09-21T08:00:00.000Z');

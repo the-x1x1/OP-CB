@@ -24,7 +24,7 @@ merged, tagged or published without the operator. Status words are defined in
 - `scripts/package.mjs`: target from the table instead of a hard-coded `--win`; the signing-tool
   seed and the locked-exe probe stay Windows-only; build-first, emptied output and
   `--publish never` unchanged.
-- `electron-builder.yml`: `linux` (deb x64, `executableName: worldview`, icon, category,
+- `electron-builder.yml`: `linux` (deb x64, `executableName: opcb`, icon, category,
   desktop entry, `syncDesktopName`) and the `deb` artifact name; validated against
   electron-builder 26.15.3's `scheme.json`. `package.json` `desktopName` and `homepage` (fpm
   refuses to build a `.deb` without one).
@@ -80,8 +80,8 @@ merged, tagged or published without the operator. Status words are defined in
 
 ## M2 — data vaults (done in the container)
 
-- `packages/offline/src/vault.ts` (new): a vault is a folder WorldView marked with
-  `.worldview-vault.json` (128-bit random id) when the operator added it. `probeVault` reads only
+- `packages/offline/src/vault.ts` (new): a vault is a folder OP-CB marked with
+  `.opcb-vault.json` (128-bit random id) when the operator added it. `probeVault` reads only
   (stat, the marker, statfs) plus an optional write probe that runs only after the marker proved
   it is the right drive; `initVault` never creates the folder; `VaultMonitor` re-checks every
   30 s, write-probes at most every 10 min or on a change, and reports state changes only.
@@ -148,7 +148,7 @@ merged, tagged or published without the operator. Status words are defined in
 ## M6 — done in the container
 
 - ADR-014: a separate, versioned, GET-only API — not the renderer's IPC — over
-  `$XDG_RUNTIME_DIR/worldview/api.sock` (folder 0700, socket 0600, never a network port), Linux
+  `$XDG_RUNTIME_DIR/opcb/api.sock` (folder 0700, socket 0600, never a network port), Linux
   only, off until turned on in Settings → Local API; own position a second permission.
 - Data policy enforced in the server: only objects whose every source allows export; the
   Meshtastic mesh never; tracks only where history is allowed too; vault paths never.
@@ -191,7 +191,7 @@ data source, pack size per region, and whether contours are generated live or at
   sandbox-preserving portable build exists (a custom launcher, or a tarball run from an
   installed AppArmor profile); worth revisiting if another distribution matters.
 - Linux builds are CI artifacts only: no draft release, nothing uploaded to a release.
-- On Linux WORLDVIEW passes `--password-store=gnome-libsecret` except on KDE (a user's own
+- On Linux OP-CB passes `--password-store=gnome-libsecret` except on KDE (a user's own
   `--password-store` wins).
 - No MIME/file associations until something opens by double-click.
 - No GPU command-line switches; behaviour on the 740M is measured before anything is forced.
@@ -207,6 +207,6 @@ data source, pack size per region, and whether contours are generated live or at
 
 - Publishing Linux assets on a release, and whether Linux builds should notify of updates
   (unsigned builds only notify; with no Linux assets published the check reports none).
-- The user-data folder name (`@worldview/desktop`) on both platforms.
+- ~~The user-data folder name on both platforms~~ — `OP-CB` since 0.7.2 (moved on first start).
 - The two pre-existing `connector:test --all` failures (VERIFICATION.md §M0) — fix the example
   fixtures or the expectation; neither is part of the Windows gate or CI today.

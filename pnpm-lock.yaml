@@ -63,43 +63,43 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.0.0
         version: 5.2.0(vite@8.3.5(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
-      '@worldview/config':
+      '@opcb/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@worldview/diagnostics':
+      '@opcb/diagnostics':
         specifier: workspace:*
         version: link:../../packages/diagnostics
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../../packages/ipc-contract
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/render-cesium':
+      '@opcb/render-cesium':
         specifier: workspace:*
         version: link:../../packages/render-cesium
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../../packages/render-core
-      '@worldview/render-maplibre':
+      '@opcb/render-maplibre':
         specifier: workspace:*
         version: link:../../packages/render-maplibre
-      '@worldview/runtime':
+      '@opcb/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../../packages/source-health
-      '@worldview/ui':
+      '@opcb/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@worldview/updater':
+      '@opcb/updater':
         specifier: workspace:*
         version: link:../../packages/updater
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
       cesium:
@@ -135,88 +135,88 @@ importers:
 
   packages/camera-gateway:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/config:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/connector-runtime:
     dependencies:
-      '@worldview/connector-sdk':
+      '@opcb/connector-sdk':
         specifier: workspace:*
         version: link:../connector-sdk
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/connector-sdk:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/core:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/diagnostics:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/event-engine:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/query-engine':
+      '@opcb/query-engine':
         specifier: workspace:*
         version: link:../query-engine
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../state-engine
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
@@ -225,109 +225,109 @@ importers:
       '@duckdb/node-api':
         specifier: 1.4.5-r.1
         version: 1.4.5-r.1
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/identity':
+      '@opcb/identity':
         specifier: workspace:*
         version: link:../identity
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/provider-runtime':
+      '@opcb/provider-runtime':
         specifier: workspace:*
         version: link:../provider-runtime
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../state-engine
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/hot-spatial-index:
     dependencies:
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/identity:
     dependencies:
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/ipc-contract:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../render-core
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../state-engine
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/offline:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/history-store':
+      '@opcb/history-store':
         specifier: workspace:*
         version: link:../history-store
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/provider-runtime:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/provider-sdk:
     dependencies:
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/query-engine:
     dependencies:
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../state-engine
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
@@ -336,34 +336,34 @@ importers:
       '@cesium/engine':
         specifier: ^26.3.0
         version: 26.3.0
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../render-core
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/render-core:
     dependencies:
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/render-dense:
     dependencies:
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../render-core
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/render-maplibre:
     dependencies:
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../render-core
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
       maplibre-gl:
@@ -375,103 +375,103 @@ importers:
 
   packages/runtime:
     dependencies:
-      '@worldview/camera-gateway':
+      '@opcb/camera-gateway':
         specifier: workspace:*
         version: link:../camera-gateway
-      '@worldview/config':
+      '@opcb/config':
         specifier: workspace:*
         version: link:../config
-      '@worldview/connector-runtime':
+      '@opcb/connector-runtime':
         specifier: workspace:*
         version: link:../connector-runtime
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/diagnostics':
+      '@opcb/diagnostics':
         specifier: workspace:*
         version: link:../diagnostics
-      '@worldview/event-engine':
+      '@opcb/event-engine':
         specifier: workspace:*
         version: link:../event-engine
-      '@worldview/history-store':
+      '@opcb/history-store':
         specifier: workspace:*
         version: link:../history-store
-      '@worldview/identity':
+      '@opcb/identity':
         specifier: workspace:*
         version: link:../identity
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
-      '@worldview/offline':
+      '@opcb/offline':
         specifier: workspace:*
         version: link:../offline
-      '@worldview/provider-runtime':
+      '@opcb/provider-runtime':
         specifier: workspace:*
         version: link:../provider-runtime
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/provider-usgs':
+      '@opcb/provider-usgs':
         specifier: workspace:*
         version: link:../../providers/usgs
-      '@worldview/providers':
+      '@opcb/providers':
         specifier: workspace:*
         version: link:../../providers/registry
-      '@worldview/query-engine':
+      '@opcb/query-engine':
         specifier: workspace:*
         version: link:../query-engine
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../render-core
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../state-engine
-      '@worldview/updater':
+      '@opcb/updater':
         specifier: workspace:*
         version: link:../updater
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/source-health:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/state-engine:
     dependencies:
-      '@worldview/hot-spatial-index':
+      '@opcb/hot-spatial-index':
         specifier: workspace:*
         version: link:../hot-spatial-index
-      '@worldview/identity':
+      '@opcb/identity':
         specifier: workspace:*
         version: link:../identity
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/telemetry:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
 
   packages/ui:
     dependencies:
-      '@worldview/source-health':
+      '@opcb/source-health':
         specifier: workspace:*
         version: link:../source-health
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../world-model
       react:
@@ -490,10 +490,10 @@ importers:
 
   packages/updater:
     dependencies:
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../core
-      '@worldview/ipc-contract':
+      '@opcb/ipc-contract':
         specifier: workspace:*
         version: link:../ipc-contract
       electron-updater:
@@ -504,55 +504,55 @@ importers:
 
   providers/adsb-remote:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/ais:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/ais-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/cameras-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/cctv-public:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/celestrak:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
     optionalDependencies:
@@ -562,190 +562,190 @@ importers:
 
   providers/firms:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/infrastructure:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/meshtastic-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/nhc:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/nmea2000-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/purpleair-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/readsb-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/registry:
     dependencies:
-      '@worldview/connector-runtime':
+      '@opcb/connector-runtime':
         specifier: workspace:*
         version: link:../../packages/connector-runtime
-      '@worldview/connector-sdk':
+      '@opcb/connector-sdk':
         specifier: workspace:*
         version: link:../../packages/connector-sdk
-      '@worldview/provider-adsb-remote':
+      '@opcb/provider-adsb-remote':
         specifier: workspace:*
         version: link:../adsb-remote
-      '@worldview/provider-ais':
+      '@opcb/provider-ais':
         specifier: workspace:*
         version: link:../ais
-      '@worldview/provider-ais-local':
+      '@opcb/provider-ais-local':
         specifier: workspace:*
         version: link:../ais-local
-      '@worldview/provider-cameras-local':
+      '@opcb/provider-cameras-local':
         specifier: workspace:*
         version: link:../cameras-local
-      '@worldview/provider-cctv-public':
+      '@opcb/provider-cctv-public':
         specifier: workspace:*
         version: link:../cctv-public
-      '@worldview/provider-celestrak':
+      '@opcb/provider-celestrak':
         specifier: workspace:*
         version: link:../celestrak
-      '@worldview/provider-firms':
+      '@opcb/provider-firms':
         specifier: workspace:*
         version: link:../firms
-      '@worldview/provider-infrastructure':
+      '@opcb/provider-infrastructure':
         specifier: workspace:*
         version: link:../infrastructure
-      '@worldview/provider-meshtastic-local':
+      '@opcb/provider-meshtastic-local':
         specifier: workspace:*
         version: link:../meshtastic-local
-      '@worldview/provider-nhc':
+      '@opcb/provider-nhc':
         specifier: workspace:*
         version: link:../nhc
-      '@worldview/provider-nmea2000-local':
+      '@opcb/provider-nmea2000-local':
         specifier: workspace:*
         version: link:../nmea2000-local
-      '@worldview/provider-purpleair-local':
+      '@opcb/provider-purpleair-local':
         specifier: workspace:*
         version: link:../purpleair-local
-      '@worldview/provider-readsb-local':
+      '@opcb/provider-readsb-local':
         specifier: workspace:*
         version: link:../readsb-local
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/provider-usgs':
+      '@opcb/provider-usgs':
         specifier: workspace:*
         version: link:../usgs
-      '@worldview/provider-weather':
+      '@opcb/provider-weather':
         specifier: workspace:*
         version: link:../weather
-      '@worldview/provider-weatherlink-local':
+      '@opcb/provider-weatherlink-local':
         specifier: workspace:*
         version: link:../weatherlink-local
 
   providers/usgs:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/weather:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   providers/weatherlink-local:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   tools/basemap:
     dependencies:
-      '@worldview/offline':
+      '@opcb/offline':
         specifier: workspace:*
         version: link:../../packages/offline
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   tools/benchmark:
     dependencies:
-      '@worldview/render-core':
+      '@opcb/render-core':
         specifier: workspace:*
         version: link:../../packages/render-core
-      '@worldview/render-dense':
+      '@opcb/render-dense':
         specifier: workspace:*
         version: link:../../packages/render-dense
 
   tools/connector-validator:
     dependencies:
-      '@worldview/connector-runtime':
+      '@opcb/connector-runtime':
         specifier: workspace:*
         version: link:../../packages/connector-runtime
-      '@worldview/connector-sdk':
+      '@opcb/connector-sdk':
         specifier: workspace:*
         version: link:../../packages/connector-sdk
-      '@worldview/core':
+      '@opcb/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@worldview/provider-runtime':
+      '@opcb/provider-runtime':
         specifier: workspace:*
         version: link:../../packages/provider-runtime
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
@@ -755,13 +755,13 @@ importers:
 
   tools/perf-budget:
     dependencies:
-      '@worldview/history-store':
+      '@opcb/history-store':
         specifier: workspace:*
         version: link:../../packages/history-store
-      '@worldview/offline':
+      '@opcb/offline':
         specifier: workspace:*
         version: link:../../packages/offline
-      '@worldview/render-dense':
+      '@opcb/render-dense':
         specifier: workspace:*
         version: link:../../packages/render-dense
 
@@ -769,28 +769,28 @@ importers:
 
   tools/provider-scaffold:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/tool-license-audit':
+      '@opcb/tool-license-audit':
         specifier: workspace:*
         version: link:../license-audit
-      '@worldview/tool-provider-validator':
+      '@opcb/tool-provider-validator':
         specifier: workspace:*
         version: link:../provider-validator
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
   tools/provider-validator:
     dependencies:
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/state-engine':
+      '@opcb/state-engine':
         specifier: workspace:*
         version: link:../../packages/state-engine
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 
@@ -798,16 +798,16 @@ importers:
 
   tools/worldpack:
     dependencies:
-      '@worldview/history-store':
+      '@opcb/history-store':
         specifier: workspace:*
         version: link:../../packages/history-store
-      '@worldview/offline':
+      '@opcb/offline':
         specifier: workspace:*
         version: link:../../packages/offline
-      '@worldview/provider-sdk':
+      '@opcb/provider-sdk':
         specifier: workspace:*
         version: link:../../packages/provider-sdk
-      '@worldview/world-model':
+      '@opcb/world-model':
         specifier: workspace:*
         version: link:../../packages/world-model
 

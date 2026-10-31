@@ -1,4 +1,4 @@
-import { s, type Schema } from '@worldview/world-model';
+import { s, type Schema } from '@opcb/world-model';
 
 /**
  * A telemetry descriptor (ADR-003 amendment 2026-09-23, for phase `telemetry`): which numeric

@@ -1,4 +1,4 @@
-import { haversineMeters, isValidBounds, normalizeLongitude, type GeoBounds } from '@worldview/world-model';
+import { haversineMeters, isValidBounds, normalizeLongitude, type GeoBounds } from '@opcb/world-model';
 import { ADSB_LOL_MAX_RADIUS_NM } from './manifest.js';
 
 /**

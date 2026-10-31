@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import type { Observation } from '@worldview/world-model';
-import type { SuiteFixtures } from '@worldview/connector-runtime';
+import type { Observation } from '@opcb/world-model';
+import type { SuiteFixtures } from '@opcb/connector-runtime';
 
 /**
  * A definition's test sidecar — `<definition>.test.json` beside the definition — names the

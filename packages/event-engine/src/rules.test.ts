@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import type { ProviderHealth } from '@worldview/provider-sdk';
-import type { WorldGeometry } from '@worldview/world-model';
+import type { ProviderHealth } from '@opcb/provider-sdk';
+import type { WorldGeometry } from '@opcb/world-model';
 import { earthquakeRule } from './rules/earthquake.js';
 import { wildfireClusterRule, clusterSeverity, clusterGrowth, hullAreaKm2 } from './rules/wildfire-cluster.js';
 import { weatherAlertRule } from './rules/weather-alert.js';

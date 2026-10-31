@@ -48,7 +48,7 @@ export interface TestPackOptions {
 export const TEST_POLICY: WorldPackSourcePolicy = {
   providerId: 'worldview-seed-places',
   license: 'MIT',
-  attribution: 'Seed places: WORLDVIEW project (MIT)',
+  attribution: 'Seed places: OP-CB project (MIT)',
   offlinePackAllowed: true,
   redistributionAllowed: true,
 };
@@ -120,7 +120,7 @@ export function buildTestPack(opts: TestPackOptions = {}): { bytes: Buffer; mani
     files.push({
       path: 'licenses/NOTICES.md',
       kind: 'notices',
-      data: Buffer.from('# Data notices\n\nSeed places: WORLDVIEW project (MIT)\n'),
+      data: Buffer.from('# Data notices\n\nSeed places: OP-CB project (MIT)\n'),
     });
   const contents: WorldPackContent[] = files.map((f) => ({
     path: f.path,
