@@ -42,7 +42,8 @@ public-domain emergency references, and data on an external drive (CHANGELOG); r
 the operator to test, not yet checked on the laptop. 0.7.0 (2026-10-30) renames the app to OP-CB — Operation
 Civilization Backup, with the operator's logo, icon and a new look (CHANGELOG). 0.7.1 (2026-10-30) is security and
 maintenance: Electron 44.10 and patched dependencies, CI green again. 0.7.2 (2026-10-30) renames
-everything to OP-CB, the application id included, and moves the earlier data on first start.
+everything to OP-CB, the application id included, and moves the earlier data on first start. 0.7.3 (2026-10-30) fixes the
+whole-planet map download's final check.
 
 The acceleration directive: a source is a JSON definition, the code that runs it is a
 connector written once. Landed on `develop` from `feature/connector-architecture`:

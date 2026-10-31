@@ -5,6 +5,20 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.3] — 2026-10-30
+
+A fix for the whole-planet map download. Checked in the build container (full test suite with
+a planet laid out as Protomaps builds it); not yet a real 140 GB download.
+
+### Fixed
+
+- **A finished whole-planet download no longer fails with "the file size does not match its
+  header".** Protomaps' planet builds put their leaf directories after the tile data, which the
+  PMTiles specification allows and the check after downloading did not; it now accepts the
+  sections in any order, each inside the file. The failure also deleted the downloaded file.
+- A complete planet download whose bytes match the build list's MD5 is kept if a later check
+  fails; the next Download of the same build checks it again without fetching it.
+
 ## [0.7.2] — 2026-10-30
 
 Every name is OP-CB now, the hidden application id included: the program, its downloads,
