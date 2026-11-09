@@ -35,6 +35,11 @@ Versioning: [semantic versioning](https://semver.org/).
   Books the server lists without a full-text index (`_ftindex:no`) are no longer offered for
   searching, since the server cannot search them.
 
+- The Kiwix catalogue's results say what each edition holds — "full, with pictures",
+  "full text, no pictures", "introductions only" — where they showed openZIM's codes (`maxi`,
+  `nopic`, `mini`) beside three books all titled "Wikipedia"; and when more books match than one
+  page holds (50 of 65 for "wikipedia" in English), the panel says so.
+
 ### Added
 
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's

@@ -3,6 +3,7 @@ import type { CatalogAnswer, CatalogEntry, LibraryFindAnswer } from '@opcb/ipc-c
 import { Button } from '@opcb/ui';
 import { useCC } from './use-cc.js';
 import { bytesText, etaText } from './map-download-panel.js';
+import { catalogCountText, flavourText } from './catalog-text.js';
 
 /**
  * The built-in library (2026-10-30): ZIM files OP-CB opens itself, the public-domain
@@ -273,6 +274,9 @@ export function KiwixCatalog() {
       </div>
       {offline ? <p className="wv-cc-muted">The catalogue and downloads need Online mode.</p> : null}
       {answer && !answer.ok ? <p className="wv-cc-problem">{answer.message}</p> : null}
+      {answer?.ok && catalogCountText(sorted.length, answer.total) ? (
+        <p className="wv-cc-muted">{catalogCountText(sorted.length, answer.total)}</p>
+      ) : null}
       {answer?.ok ? (
         sorted.length ? (
           <ul className="wv-cc-list">
@@ -281,7 +285,7 @@ export function KiwixCatalog() {
                 <div>
                   <strong>{e.title}</strong>
                   <span className="wv-cc-muted">
-                    {e.flavour ? ` · ${e.flavour}` : ''}
+                    {flavourText(e.flavour) ? ` · ${flavourText(e.flavour)}` : ''}
                     {e.sizeBytes ? ` · ${bytesText(e.sizeBytes)}` : ''}
                     {e.articleCount ? ` · ${e.articleCount.toLocaleString()} pages` : ''}
                     {e.issued ? ` · ${e.issued}` : ''}
