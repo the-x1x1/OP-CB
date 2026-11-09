@@ -5,6 +5,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.4] — 2026-11-08
+
+The first screen test's findings fixed, every keyless source read live, and an independent
+review of the changes. Checked in the build container (full test suite, typecheck, licence and
+boundary checks) and, for the services, against their live answers from a browser on the
+operator's network; not yet run as an installed app on a screen.
+
 ### Fixed
 
 - **The Kiwix catalogue search returns books again.** Every search came back "Nothing in the

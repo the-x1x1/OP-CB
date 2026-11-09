@@ -1,4 +1,4 @@
-# Known limitations — 0.7.3
+# Known limitations — 0.7.4
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -351,7 +351,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
-## Unreleased (feature/field-fixes)
+## 0.7.4
 
 - The Kiwix catalogue, its Metalink files, kiwix-serve's search, KartaView's answer and the six
   reference addresses were read live on 2026-11-08 from a browser on the operator's network;
