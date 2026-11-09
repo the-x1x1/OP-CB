@@ -777,7 +777,7 @@
         "termsUrl": "https://tfl.gov.uk/info-for/open-data-users/"
       },
       "commercialReview": "approved",
-      "notes": "Optional TFL_APP_KEY raises rate limits; keyless works. TfL's terms permit commercial use with the exact attribution string; TfL roundel/logo may not be used. Verify the current terms text at release time (page could not be fetched in this session)."
+      "notes": "Optional TFL_APP_KEY raises rate limits; keyless works. TfL's terms permit commercial use with the exact attribution string; TfL roundel/logo may not be used. Verify the current terms text at release time (page could not be fetched in this session). 2026-11-08: tfl.gov.uk answered the operator's browser with a bot check, left unanswered, so the terms are still unread first-hand; the API portal (https://api-portal.tfl.gov.uk/) says the open data is for developers to use in their own software and services provided they adhere to the transport data terms and conditions, which it links at https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service."
     },
     {
       "providerId": "ontario-511",
