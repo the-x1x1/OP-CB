@@ -1445,7 +1445,7 @@
         "attributionText": "Transpordiamet / Tarktee — tarktee.transpordiamet.ee (courtesy)"
       },
       "commercialReview": "manual-review-required",
-      "notes": "Keyless DATEX2 endpoints. Frame URLs rotate per capture. Default-off pending confirmation (the Estonian open data portal may list this feed under CC BY 4.0 — check avaandmed.eesti.ee)."
+      "notes": "Keyless DATEX2 endpoints. Frame URLs rotate per capture. Default-off pending confirmation (the Estonian open data portal may list this feed under CC BY 4.0 — check avaandmed.eesti.ee). Read 2026-11-08 on Estonia's open-data portal (andmed.eesti.ee, formerly avaandmed.eesti.ee): 'Teekaamerate pildid' (road camera images, the newest picture's URL per camera) and 'Teekaamerate asukohad' (camera locations), publisher Transpordiamet, access PUBLIC, licence CC_BY, DATEX II 2.3, updated every 10 minutes. Their stated terms are the Tark Tee DATEX II gateway's (https://tarktee.mnt.ee/#/en/terms): using the gateway needs registration and an API key that Transpordiamet approves (organisation name, contact, purpose); referring or linking to the service and to Transpordiamet is mandatory and must not misrepresent them; terms may change unilaterally. The keyless endpoints above are not the registered gateway the portal names. Not built; no pack."
     },
     {
       "providerId": "warendorf-webcam",
