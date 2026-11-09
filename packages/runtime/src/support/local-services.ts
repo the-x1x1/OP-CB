@@ -118,12 +118,20 @@ export class LocalServices {
   /**
    * A full-text search of one book in the operator's kiwix-serve (`/search?…&format=xml`).
    * The hits' links are paths on that server, opened in the browser through `services.open`.
+   *
+   * The book is named by its catalogue id (`books.id`, the `urn:uuid:` of its OPDS entry)
+   * when `book` is one; a real kiwix-serve (browse.library.kiwix.org, read 2026-11-08) takes
+   * `books.name` as the book's content name (`wikipedia_en_chemistry_mini_2026-10`), not the
+   * `<name>` its catalogue lists (`wikipedia_en_chemistry`), and answers "No such book" to
+   * that — so the catalogue's name, which the first version sent, finds nothing on a real
+   * server. Anything that is not an id still goes as `books.name`.
    */
   async librarySearch(book: string, pattern: string, signal?: AbortSignal): Promise<LibrarySearchAnswer> {
     const origin = serviceOrigin(this.deps.settings(), 'kiwix');
+    const byId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(book);
     const q = new URLSearchParams({
       pattern: pattern.slice(0, 200),
-      'books.name': book,
+      [byId ? 'books.id' : 'books.name']: book,
       format: 'xml',
       pageLength: '20',
     });
@@ -133,7 +141,7 @@ export class LocalServices {
     } catch (err) {
       const message =
         err instanceof HttpStatusError
-          ? `the library answered ${err.status} (is "${book}" one of its books?)`
+          ? `the library answered ${err.status} (is that book still in its library?)`
           : err instanceof NotThisService
             ? `the answer was not a library search: ${err.message}`
             : 'the library server did not answer on its port';

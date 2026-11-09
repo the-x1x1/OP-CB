@@ -28,6 +28,11 @@ Versioning: [semantic versioning](https://semver.org/).
   (`release:assert-version`, run by every build) reads the zip's entry list and fails when the
   exe is not at its root or the data folder is missing.
 
+- **Searching a book in a local kiwix-serve finds pages.** It named the book to the server by
+  the catalogue's `name` (`wikipedia_en_chemistry`), which a real kiwix-serve does not know as a
+  book ("No such book", read on browse.library.kiwix.org 2026-11-08); it now names it by its
+  catalogue id, which the server answers to, and the walkthrough's check says the book's title.
+
 ### Added
 
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's

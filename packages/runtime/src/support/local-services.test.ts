@@ -208,6 +208,10 @@ test('library search: hits with their pages; a link off the server is dropped', 
   assert.equal(answer.ok, true);
   assert.equal(query?.get('format'), 'xml');
   assert.equal(query?.get('books.name'), 'wikipedia_en_ray_charles');
+  // A catalogue id names the book by `books.id`: what a real kiwix-serve answers to (2026-11-08).
+  await services.librarySearch('7de7a39a-efde-e369-d2d4-6c6e322a9313', 'volcano');
+  assert.equal(query?.get('books.id'), '7de7a39a-efde-e369-d2d4-6c6e322a9313');
+  assert.equal(query?.get('books.name'), null);
   assert.deepEqual(answer.hits, [
     {
       title: 'Ray Charles',

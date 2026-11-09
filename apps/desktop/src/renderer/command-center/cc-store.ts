@@ -171,8 +171,19 @@ export class CommandCenterStore {
   async librarySearch(book: string, pattern: string): Promise<LibrarySearchAnswer> {
     const offline = this.isOffline();
     const answer = await this.client.request('library.search', { book, pattern });
+    // `book` is the catalogue id the server is asked by; the walkthrough says the book's title.
+    const title = this.get()
+      .services?.find((x) => x.id === 'kiwix')
+      ?.books?.find((b) => b.id === book)?.title;
     this.set({
-      lastLibrarySearch: { offline, text: pattern, count: answer.hits.length, at: this.now(), book, answer },
+      lastLibrarySearch: {
+        offline,
+        text: pattern,
+        count: answer.hits.length,
+        at: this.now(),
+        book: title ?? book,
+        answer,
+      },
     });
     return answer;
   }

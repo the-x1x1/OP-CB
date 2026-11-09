@@ -176,7 +176,9 @@ export function LibrarySearch() {
   const [book, setBook] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const chosen = book || books.find((b) => b.name)?.name || '';
+  // Books are named to the server by their catalogue id: a real kiwix-serve does not know the
+  // catalogue's `name` as a book name (local-services.ts librarySearch).
+  const chosen = book || books[0]?.id || '';
   const last = cc.lastLibrarySearch;
   if (!books.length) return <p className="wv-cc-muted">No library books found yet.</p>;
   const submit = async (e: FormEvent) => {
@@ -192,14 +194,12 @@ export function LibrarySearch() {
   return (
     <form className="wv-cc-inline" onSubmit={(e) => void submit(e)}>
       <select className="wv-input" value={chosen} onChange={(e) => setBook(e.target.value)} aria-label="Book">
-        {books
-          .filter((b) => b.name)
-          .map((b) => (
-            <option key={b.id} value={b.name}>
-              {b.title}
-              {b.language ? ` (${b.language})` : ''}
-            </option>
-          ))}
+        {books.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.title}
+            {b.language ? ` (${b.language})` : ''}
+          </option>
+        ))}
       </select>
       <input
         className="wv-input"
