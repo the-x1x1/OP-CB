@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { assertReleaseVersion, expectedArtifacts } from './assert-version.js';
+import { storedZip } from './stored-zip.js';
 
 const V = '0.1.0-rc.5';
 const COMMIT = 'a'.repeat(40);
@@ -16,6 +17,8 @@ function release(
     reportRelease?: string;
     reportCommit?: string;
     latest?: string;
+    /** What the portable zip holds; the real layout when not given. */
+    zipEntries?: string[];
   } = {},
 ) {
   const root = mkdtempSync(path.join(tmpdir(), 'wv-release-'));
@@ -28,6 +31,13 @@ function release(
   const out = (f: string) => path.join(root, 'artifacts', 'release', f);
   for (const f of [want.installer, want.blockmap, want.portable, ...(opts.extra ?? [])])
     writeFileSync(f.endsWith('.sbom.json') ? out(f) : rel(f), 'x');
+  // The portable zip as packaged: the exe at the root, the data folder's note beside it.
+  writeFileSync(
+    rel(want.portable),
+    storedZip(
+      (opts.zipEntries ?? ['OP-CB.exe', 'resources/app.asar', 'OP-CB-data/READ-ME.txt']).map((name) => ({ name })),
+    ),
+  );
   writeFileSync(rel('latest.yml'), opts.latest ?? `version: ${v}\npath: ${want.installer}\nsha512: x\n`);
   writeFileSync(
     out(want.sbom),
@@ -123,5 +133,43 @@ test('release:assert-version fails when nothing was packaged, or the report was 
     assert.ok(r.problems.includes('missing artifacts/release/verification-report.json'));
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('release:assert-version fails when the portable zip is not portable as unzipped', () => {
+  const noData = release({ zipEntries: ['OP-CB.exe', 'resources/app.asar'] });
+  try {
+    const r = assertReleaseVersion({ root: noData, tag: `v${V}`, commit: COMMIT });
+    assert.equal(r.ok, false);
+    assert.ok(
+      r.problems.some((p) => /OP-CB-data\/READ-ME\.txt is not in the zip/.test(p)),
+      r.problems.join('\n'),
+    );
+  } finally {
+    rmSync(noData, { recursive: true, force: true });
+  }
+  const wrapped = release({ zipEntries: ['win-unpacked/OP-CB.exe', 'win-unpacked/OP-CB-data/READ-ME.txt'] });
+  try {
+    const r = assertReleaseVersion({ root: wrapped, tag: `v${V}`, commit: COMMIT });
+    assert.ok(
+      r.problems.some((p) => /not at the root of the zip/.test(p)),
+      r.problems.join('\n'),
+    );
+  } finally {
+    rmSync(wrapped, { recursive: true, force: true });
+  }
+  const notZip = mkdtempSync(path.join(tmpdir(), 'wv-release-'));
+  try {
+    // The fixture writer's plain 'x' file: not a zip.
+    const root = release();
+    writeFileSync(path.join(root, 'apps', 'desktop', 'release', expectedArtifacts(V).portable), 'x');
+    const r = assertReleaseVersion({ root, tag: `v${V}`, commit: COMMIT });
+    assert.ok(
+      r.problems.some((p) => /could not read its entries/.test(p)),
+      r.problems.join('\n'),
+    );
+    rmSync(root, { recursive: true, force: true });
+  } finally {
+    rmSync(notZip, { recursive: true, force: true });
   }
 });

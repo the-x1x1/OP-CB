@@ -24,7 +24,9 @@ Versioning: [semantic versioning](https://semver.org/).
   `OP-CB.exe` (with a short note inside), so the copy keeps its data there from the first start
   instead of using the computer's own OP-CB data — which also let it start beside an installed
   OP-CB, where before it exited at once (one data folder, one instance). Unzipped over a
-  WorldView-era portable copy, the old `WorldView-data` moves into it.
+  WorldView-era portable copy, the old `WorldView-data` moves into it. The release gate
+  (`release:assert-version`, run by every build) reads the zip's entry list and fails when the
+  exe is not at its root or the data folder is missing.
 
 ### Added
 
