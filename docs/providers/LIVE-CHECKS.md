@@ -68,8 +68,7 @@ frame):
 | EUMETSAT: Meteosat 0° and IODC IR 10.8                                     | the WMTS layer and `EPSG:3857 - 512` set present; the WMS time dimension (`timeFrom`) current, 15-minute steps                                                                                                                                                                                                                                     |
 
 Not checked here: Home Assistant (the operator's own), the camera packs that need the operator's key (Ontario, Trafikverket), Taiwan's
-freeway list (`tisvcloud.freeway.gov.tw` did not load from the operator's network that day), and
-the transit sources.
+freeway list (`tisvcloud.freeway.gov.tw` did not load from the operator's network that day), and the GTFS-realtime transit feeds, which have licence records in `config/licenses/providers.json` but no reader in the app yet.
 
 Also read live the same day and built against: the Kiwix catalogue and Metalink files, kiwix-serve's
 search (`books.id`), KartaView's photo search, the six emergency references, and Protomaps' build
