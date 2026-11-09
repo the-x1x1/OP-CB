@@ -35,6 +35,7 @@ fixture's.
 | `adsb-lol` (`/v2/mil`)                                                          | 91 aircraft                                                   | every key present in some aircraft; `alt_baro` a number or `"ground"` as before                                                                |
 | `digitraffic-ais` (locations, vessels)                                          | —                                                             | keys identical to the fixtures                                                                                                                 |
 | `celestrak` (GP JSON)                                                           | —                                                             | keys identical to the fixture                                                                                                                  |
+| `celestrak` SATCAT (`records.php`)                                              | 4 records                                                     | every documented field; numbers as numbers, empties `""`, missing RCS `null`; an unknown number answers 200 with plain text, read as no record |
 | `swpc-kp-index`                                                                 | —                                                             | now a list of objects (`{time_tag, Kp, a_running, station_count}`) rather than rows under a header row; `kp-index.ts` already reads both       |
 
 `ndbc-observations` (whitespace-separated text): the header and units lines identical to the

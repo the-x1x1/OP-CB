@@ -15,9 +15,12 @@ import type { JsonValue } from '@opcb/world-model';
  * ORBIT_CENTER, ORBIT_TYPE.
  *
  * The parser is defensive about types (a number may come as a number or a numeric string;
- * an empty value as null, "" or absent), because the live response could not be fetched
- * from the environment this was written in; the fixtures in satcat.test.ts are hand-written
- * in the documented shape and labelled as such.
+ * an empty value as null, "" or absent). Written before the live response could be read; read
+ * on 2026-11-08 (the ISS, Vanguard 1, a decayed debris piece, the first rocket body): a
+ * one-element array, numbers as numbers, empty codes and dates as "", a missing RCS as null,
+ * every documented field present; a number with no record is answered 200 with the text "No
+ * SATCAT records found", which the provider reads as no record. The fixtures in
+ * satcat.test.ts stay hand-written (CelesTrak states no licence for copying its records).
  */
 export const SATCAT_RECORDS_URL = 'https://celestrak.org/satcat/records.php';
 

@@ -304,10 +304,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   satellite in sunlight while the Sun is 6° or more below the horizon — with the Earth's
   shadow taken as a cylinder (no penumbra), to ten seconds at each end; it says nothing about
   cloud, the Moon or how bright the satellite is.
-- The SATCAT record reader was written from CelesTrak's format documentation; the live
-  query endpoint could not be read from the build environment, so the first real answers
-  are to be checked on a machine with network access. Its code lists (owners, launch sites)
-  are a snapshot of September 2026; a newer code shows as the code.
+- The SATCAT record reader was written from CelesTrak's format documentation and checked
+  against live answers on 2026-11-08 (same fields and types). Its code lists (owners, launch
+  sites) are a snapshot of September 2026; a newer code shows as the code.
 - A ship's destination is shown as the text it broadcasts. No line is drawn to the port: the
   text is free-form ("NL RTM", "ROTTERDAM", "FOR ORDERS"), and without a bundled, openly
   licensed port list whose positions could be checked here it cannot be resolved without
