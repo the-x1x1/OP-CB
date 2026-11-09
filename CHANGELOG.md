@@ -75,8 +75,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 - The Kiwix server's default port in OP-CB (and in the Knowledge walkthrough's `kiwix-serve`
   line) is **8090**, not 8080: 8080 is Kolibri's default and often readsb's web page, so the
-  three collided (first screen test, 2026-10-30). A kiwix-serve already running on 8080 is
-  found again by setting its port under Resources → Local services.
+  three collided (first screen test, 2026-10-30). A kiwix-serve still running on 8080 is found
+  there while no port of your own is set, searched there, and its status says to set the port.
 
 - CI runs on the current actions majors (checkout v7, setup-node v7, upload-artifact v7,
   pnpm/action-setup v6, action-gh-release v3), all on the Node 24 runtime; the v4/v2 ones ran on

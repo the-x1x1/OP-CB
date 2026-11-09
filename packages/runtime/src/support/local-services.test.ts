@@ -173,6 +173,32 @@ test('local services: nothing on the port, something else on it, and an error ar
   assert.equal((await both.services.status('kolibri')).state, 'other');
 });
 
+test('local services: a kiwix-serve still on 8080, the port used before, is found there and searched there', async () => {
+  const { services, asked } = harness({
+    '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
+    '127.0.0.1:8080/search': () => new Response('<rss><channel></channel></rss>'),
+  });
+  const kiwix = await services.status('kiwix');
+  assert.equal(kiwix.state, 'running');
+  assert.equal(kiwix.endpoint, 'http://127.0.0.1:8080');
+  assert.match(kiwix.detail ?? '', /found on port 8080/);
+  const search = await services.librarySearch('6f1d19d0-633f-087b-fb55-7ac324ff9baf', 'ray');
+  assert.equal(search.ok, true);
+  assert.ok(asked.includes('GET 127.0.0.1:8080/search'));
+  // A port the operator set is the only one asked.
+  const own = harness(
+    { '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG) },
+    {
+      services: { ports: { kiwix: 8095 } },
+    },
+  );
+  assert.equal((await own.services.status('kiwix')).state, 'not-found');
+  assert.ok(!own.asked.some((a) => a.includes(':8080')));
+  // Kolibri on 8080 is not kiwix-serve: nothing found, as before.
+  const kolibri = harness({ '127.0.0.1:8080/api/public/info/': () => json(KOLIBRI_INFO) });
+  assert.equal((await kolibri.services.status('kiwix')).state, 'not-found');
+});
+
 test('ai test: the model answers alone, labelled not grounded, with its speed', async () => {
   let sent: unknown;
   const { services } = harness({

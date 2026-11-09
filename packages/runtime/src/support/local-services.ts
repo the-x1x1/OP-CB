@@ -56,13 +56,30 @@ export function serviceOrigin(settings: AppSettings, id: LocalServiceId): string
   return `http://127.0.0.1:${servicePort(settings, id)}`;
 }
 
+/**
+ * Where OP-CB looked for kiwix-serve before 0.7.4 (and the port its walkthrough started it on).
+ * With no port of the operator's own set, a kiwix-serve still there is found and used, and the
+ * status says so, rather than the move to 8090 silently losing it (review, 2026-11-08).
+ */
+export const KIWIX_EARLIER_PORT = 8080;
+
 class NotThisService extends Error {}
 
 /** What a probe adds to the status when the service answered as itself. */
 type Found = Omit<LocalServiceStatus, 'id' | 'name' | 'endpoint' | 'checkedAt'>;
 
 export class LocalServices {
+  /** Set while kiwix-serve answers on the earlier port instead of the usual one. */
+  private kiwixEarlier: string | undefined;
+
   constructor(private readonly deps: LocalServicesDeps) {}
+
+  /** The kiwix-serve to ask: the operator's port, or the usual one, or the earlier one it was found on. */
+  private kiwixOrigin(): string {
+    const settings = this.deps.settings();
+    if (settings.services?.ports?.kiwix !== undefined) return serviceOrigin(settings, 'kiwix');
+    return this.kiwixEarlier ?? serviceOrigin(settings, 'kiwix');
+  }
 
   /** Every known service, asked now, side by side. */
   async statusAll(signal?: AbortSignal): Promise<LocalServiceStatus[]> {
@@ -70,7 +87,26 @@ export class LocalServices {
   }
 
   async status(id: LocalServiceId, signal?: AbortSignal): Promise<LocalServiceStatus> {
-    const endpoint = serviceOrigin(this.deps.settings(), id);
+    const answer = await this.statusAt(id, serviceOrigin(this.deps.settings(), id), signal);
+    if (id !== 'kiwix' || this.deps.settings().services?.ports?.kiwix !== undefined) return answer;
+    if (answer.state !== 'not-found') {
+      this.kiwixEarlier = undefined;
+      return answer;
+    }
+    const earlier = `http://127.0.0.1:${KIWIX_EARLIER_PORT}`;
+    const there = await this.statusAt(id, earlier, signal);
+    if (there.state !== 'running') {
+      this.kiwixEarlier = undefined;
+      return answer;
+    }
+    this.kiwixEarlier = earlier;
+    return {
+      ...there,
+      detail: `${there.detail ?? ''} — found on port ${KIWIX_EARLIER_PORT}, where it was looked for before; set that port under Resources → Local services to keep it there`,
+    };
+  }
+
+  private async statusAt(id: LocalServiceId, endpoint: string, signal?: AbortSignal): Promise<LocalServiceStatus> {
     const base = { id, name: NAMES[id], endpoint, checkedAt: new Date(this.deps.now()).toISOString() };
     try {
       switch (id) {
@@ -127,7 +163,7 @@ export class LocalServices {
    * server. Anything that is not an id still goes as `books.name`.
    */
   async librarySearch(book: string, pattern: string, signal?: AbortSignal): Promise<LibrarySearchAnswer> {
-    const origin = serviceOrigin(this.deps.settings(), 'kiwix');
+    const origin = this.kiwixOrigin();
     const byId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(book);
     const q = new URLSearchParams({
       pattern: pattern.slice(0, 200),
