@@ -70,6 +70,6 @@ frame):
 Not checked here: Home Assistant (the operator's own), the camera packs that need the operator's key (Ontario, Trafikverket), Taiwan's
 freeway list (`tisvcloud.freeway.gov.tw` did not load from the operator's network that day), and the GTFS-realtime transit feeds, which have licence records in `config/licenses/providers.json` but no reader in the app yet.
 
-Also read live the same day and built against: the Kiwix catalogue and Metalink files, kiwix-serve's
+Also read live the same day and built against: the Kiwix catalogue and Metalink files (and a mirror: HEAD gives the exact size, ranges resume with 206 and the right `Content-Range`, the file starts with the ZIM magic), kiwix-serve's
 search (`books.id`), KartaView's photo search, the six emergency references, and Protomaps' build
 index (see CHANGELOG, Unreleased).

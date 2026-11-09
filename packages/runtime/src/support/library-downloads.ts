@@ -455,7 +455,12 @@ export class LibraryDownloads {
     }
   }
 
-  /** Without a Metalink file: the size a server gives for the file (a HEAD, redirects followed). */
+  /**
+   * Without a Metalink file: the size a server gives for the file (a HEAD, redirects followed).
+   * lb.download.kiwix.org answers with a redirect to a mirror; a mirror's HEAD gives the exact
+   * size and its ranges resume with 206 (ftp.nluug.nl, 2026-11-08: 1,192,567,339 bytes, as the
+   * Metalink said).
+   */
   private async exactSize(
     urls: string[],
     catalogBytes: number | undefined,
