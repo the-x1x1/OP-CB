@@ -111,8 +111,9 @@ export const LOCAL_SERVICE_IDS: readonly LocalServiceId[] = Object.freeze(['olla
 export const DEFAULT_SERVICE_PORTS: Readonly<Record<LocalServiceId, number>> = Object.freeze({
   ollama: 11434,
   // kiwix-serve listens on 80 unless told otherwise (kiwix-serve.rst); 80 needs privileges on
-  // Linux, so its own examples use 8080, and so does OP-CB's walkthrough.
-  kiwix: 8080,
+  // Linux, so its own examples use 8080 — which is Kolibri's default and readsb's usual web
+  // port too (the first screen test, 2026-10-30). OP-CB's walkthrough starts it on 8090 instead.
+  kiwix: 8090,
   kolibri: 8080,
 });
 

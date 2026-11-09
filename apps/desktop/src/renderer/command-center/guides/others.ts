@@ -170,7 +170,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
       id: 'server',
       title: 'Optional: kiwix-serve for full-text search',
       body: [
-        'OP-CB finds pages by title. For searching inside the text of every page, or for files in the older xz format, run kiwix-serve on this computer: kiwix-serve --address=127.0.0.1 --port=8080 /path/to/your/*.zim — OP-CB finds it and searches it too (Knowledge → Kiwix server). Skip this step if you do not need it.',
+        'OP-CB finds pages by title. For searching inside the text of every page, or for files in the older xz format, run kiwix-serve on this computer: kiwix-serve --address=127.0.0.1 --port=8090 /path/to/your/*.zim — OP-CB finds it and searches it too (Knowledge → Kiwix server). Port 8090 because 8080 is taken by Kolibri and often by readsb; another port goes under Resources → Local services. Skip this step if you do not need it.',
       ],
       actions: ['services.refresh'],
       check: 'library.running',
@@ -202,7 +202,7 @@ export const LEARNING_GUIDE: GuideDefinition = {
       title: 'Install Kolibri',
       body: [
         'Install Kolibri for your system from learningequality.org, start it, and finish its setup in the browser. Import channels while online (or from a drive that has them).',
-        "Kolibri usually listens on port 8080, the same as the guide's Kiwix example: give one of them another port, and set Kolibri's here under Resources → Local services.",
+        "Kolibri usually listens on port 8080 (OP-CB's Kiwix example uses 8090, so the two do not clash). If you run readsb's web page on 8080 as well, give Kolibri another port and set it here under Resources → Local services.",
       ],
       needsInternet: 'Installing Kolibri and importing channels from the internet need it. Using them does not.',
       links: [{ label: 'Kolibri downloads', url: 'https://learningequality.org/download/' }],

@@ -27,6 +27,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- The Kiwix server's default port in OP-CB (and in the Knowledge walkthrough's `kiwix-serve`
+  line) is **8090**, not 8080: 8080 is Kolibri's default and often readsb's web page, so the
+  three collided (first screen test, 2026-10-30). A kiwix-serve already running on 8080 is
+  found again by setting its port under Resources → Local services.
+
 - The Army's **first aid** reference is now **ATP 4-02.11 Casualty Response, Tactical Combat
   Casualty Care, and First Aid (23 March 2026)**, which replaced TC 4-02.1 and, before it, the
   FM 4-25.11 of 2002 that was listed. A downloaded FM 4-25.11 stays in the references folder

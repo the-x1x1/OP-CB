@@ -128,7 +128,7 @@ test('local services: each found running on its loopback port, with what it list
     {
       '127.0.0.1:11434/api/version': () => json({ version: '0.5.1' }),
       '127.0.0.1:11434/api/tags': () => json(OLLAMA_TAGS),
-      '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
+      '127.0.0.1:8090/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
       '127.0.0.1:8081/api/public/info/': () => json(KOLIBRI_INFO),
     },
     { services: { ports: { kolibri: 8081 } } },
@@ -161,14 +161,14 @@ test('local services: each found running on its loopback port, with what it list
 test('local services: nothing on the port, something else on it, and an error are told apart', async () => {
   const { services } = harness({
     '127.0.0.1:11434/api/version': () => new Response('<html>a router page</html>'),
-    '127.0.0.1:8080/catalog/v2/entries': () => new Response('nope', { status: 500 }),
+    '127.0.0.1:8090/catalog/v2/entries': () => new Response('nope', { status: 500 }),
   });
   const [ollama, kiwix, kolibri] = await services.statusAll();
   assert.equal(ollama!.state, 'other');
   assert.equal(kiwix!.state, 'error');
   assert.equal(kiwix!.detail, 'answered 500');
   assert.equal(kolibri!.state, 'not-found');
-  // Kolibri's port is kiwix's by default: the kiwix server's catalogue is not Kolibri.
+  // Something that is not Kolibri on Kolibri's port (readsb's web page, say) is told apart.
   const both = harness({ '127.0.0.1:8080/api/public/info/': () => json({ application: 'other' }) });
   assert.equal((await both.services.status('kolibri')).state, 'other');
 });
@@ -199,7 +199,7 @@ test('ai test: the model answers alone, labelled not grounded, with its speed', 
 test('library search: hits with their pages; a link off the server is dropped', async () => {
   let query: URLSearchParams | undefined;
   const { services } = harness({
-    '127.0.0.1:8080/search': (u) => {
+    '127.0.0.1:8090/search': (u) => {
       query = u.searchParams;
       return new Response(KIWIX_SEARCH);
     },
