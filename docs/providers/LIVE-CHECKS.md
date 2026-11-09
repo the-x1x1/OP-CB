@@ -74,3 +74,15 @@ freeway list (`tisvcloud.freeway.gov.tw` did not load from the operator's networ
 Also read live the same day and built against: the Kiwix catalogue and Metalink files (and a mirror: HEAD gives the exact size, ranges resume with 206 and the right `Content-Range`, the file starts with the ZIM magic), kiwix-serve's
 search (`books.id`), KartaView's photo search, the six emergency references, and Protomaps' build
 index (see CHANGELOG, Unreleased).
+
+## 2026-11-09 (UTC)
+
+Digitraffic's AIS service (`digitraffic-ais`), read from the operator's browser with the
+`Digitraffic-User: opcb` header: 651 positions in five minutes and 691 static rows in an hour.
+The position keys are the fixtures' exactly; the static rows use only the REST spelling
+(`referencePointA`…`D`, `shipType`), which the fixtures carry beside the MQTT spelling the reader
+also accepts. Five positions and the four static rows for those
+ships were kept unchanged as `fixtures/digitraffic-ais/recorded/`, which the provider's tests now
+read; the live answer carries values the invented fixtures did not, such as a static row whose
+IMO, ship type, reference points and ETA are all "not available", and the provider reads them as
+such.

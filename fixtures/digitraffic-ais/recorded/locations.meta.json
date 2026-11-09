@@ -1,0 +1,13 @@
+{
+  "providerId": "digitraffic-ais",
+  "recordedAt": "2026-11-09T04:35Z",
+  "url": "https://meri.digitraffic.fi/api/ais/v1/locations?from=<five minutes before the request>",
+  "status": 200,
+  "bytes": 2298,
+  "sha256": "ef0c6ba269257161d2fb476d1c645e9db3b643c794db919592f8bb5cd314aa38",
+  "contentType": "application/json;charset=UTF-8",
+  "attribution": "Ships (Baltic): Source: Fintraffic / digitraffic.fi, license CC 4.0 BY",
+  "license": "CC-BY-4.0",
+  "selection": "5 of the 651 features in the answer, copied unchanged: a ship under way, one at anchor with a rate of turn, one with heading 511 and rate of turn -128 (not available), one moored, and one with no static-data row in the vessels answer.",
+  "note": "Read through the operator's browser (Digitraffic-User: opcb) because the build machine cannot reach the API; the selection is the whole answer cut down, nothing edited. Committing it is allowed only because the provider data policy permits raw retention and redistribution."
+}
