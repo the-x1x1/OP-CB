@@ -37,8 +37,11 @@ fixture's.
 | `celestrak` (GP JSON)                                                           | —                                                             | keys identical to the fixture                                                                                                                  |
 | `swpc-kp-index`                                                                 | —                                                             | now a list of objects (`{time_tag, Kp, a_running, station_count}`) rather than rows under a header row; `kp-index.ts` already reads both       |
 
-Not checked here: `ndbc-observations` (text), the WMS/WMTS imagery layers (capabilities, not
-records), Home Assistant (the operator's own), and the camera and transit sources.
+`ndbc-observations` (whitespace-separated text): the header and units lines identical to the
+fixture's, 810 stations, every row the 22 columns the definition names.
+
+Not checked here: the WMS/WMTS imagery layers (capabilities, not records), Home Assistant (the
+operator's own), and the camera and transit sources.
 
 Also read live the same day and built against: the Kiwix catalogue and Metalink files, kiwix-serve's
 search (`books.id`), KartaView's photo search, the six emergency references, and Protomaps' build
