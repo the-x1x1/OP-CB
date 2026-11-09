@@ -47,7 +47,13 @@ import { registerAppScheme, serveRenderer } from './app-protocol.js';
 import { PACK_BASEMAP_ROUTE, packBasemapResponse } from './pack-basemap.js';
 import { buildInfo } from './build-info.js';
 import { CredentialStore, CredentialStoreError, linuxPasswordStore } from './credential-store.js';
-import { IDENTIFIED_TILE_URLS, appUserAgent, identifiedTileHeaders, mergeSecurityHeaders } from './csp.js';
+import {
+  IDENTIFIED_TILE_URLS,
+  appUserAgent,
+  downloadUserAgent,
+  identifiedTileHeaders,
+  mergeSecurityHeaders,
+} from './csp.js';
 import { buildExternalHostAllowlist, checkExternalUrl, type ExternalHostAllowlist } from './external-links.js';
 import { IpcRouter, type IpcInvokeEventLike } from './ipc-router.js';
 import { createRuntime } from './runtime-factory.js';
@@ -357,9 +363,15 @@ async function bootstrap(): Promise<void> {
     host: electronHostBridge(),
     network: { isOnline: online },
     fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline, approvedHosts),
-    // Library downloads go through Chromium's network stack (`net.fetch`): cdc.gov and
-    // irp.fas.org refuse Node's fetch (403, a challenge page) and answer a browser (2026-11-08).
-    downloadFetchImpl: netFetch,
+    // Library downloads go through Chromium's network stack (`net.fetch`), with the browser
+    // User-Agent of this build (csp.ts downloadUserAgent): cdc.gov and irp.fas.org refuse
+    // Node's fetch (403, a challenge page) and answer a browser (2026-11-08).
+    downloadFetchImpl: (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (!headers.has('user-agent'))
+        headers.set('user-agent', downloadUserAgent(app.userAgentFallback, app.getVersion()));
+      return netFetch(input, { ...init, headers });
+    },
     // DuckDB/Parquet unless the operator chose NDJSON (Settings → History); NDJSON-era files
     // are read beside the Parquet ones, nothing converted or deleted (2026-10-05).
     historyBackend: settings.get().history.backend ?? 'duckdb-parquet',

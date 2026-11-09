@@ -15,7 +15,8 @@ Versioning: [semantic versioning](https://semver.org/).
   file, or from the server when there is none, and the catalogue's rounded figure only has to fit.
 - **The emergency references download.** cdc.gov answered 403 and irp.fas.org a browser-check
   page to the plain fetch the downloads used; they now go through the same network stack as the
-  app's windows, which those sites answer like a browser. The two Army manuals come from the
+  app's windows, with this build's browser user agent (the app named in it), which those sites
+  answer like a browser. The two Army manuals come from the
   Army Publishing Directorate first (irp.fas.org stays as the survival manual's fallback), and
   FEMA's guide from the address ready.gov keeps it at now.
 

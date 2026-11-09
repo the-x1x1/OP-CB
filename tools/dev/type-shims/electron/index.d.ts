@@ -55,6 +55,7 @@ export interface App {
   getPath(name: PathName): string;
   setPath(name: PathName, path: string): void;
   getVersion(): string;
+  userAgentFallback: string;
   getName(): string;
   getAppPath(): string;
   getAppMetrics(): Array<{ pid: number; type: string; memory: { workingSetSize: number; peakWorkingSetSize: number } }>;
