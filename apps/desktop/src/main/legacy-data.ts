@@ -8,7 +8,8 @@ import path from 'node:path';
  * application id makes the installed program a new one, and its data folder a new folder, so a
  * start of OP-CB carries what the old program left behind:
  *
- *  1. **A portable folder.** `WorldView-data` beside the executable is renamed `OP-CB-data`.
+ *  1. **A portable folder.** `WorldView-data` beside the executable is renamed `OP-CB-data` (or,
+ *     when the shipped `OP-CB-data` with only its note is already there, moved into it).
  *     A portable copy never touches the computer's own data folder (step 2 is skipped).
  *  2. **The usual folder.** `<appData>/@worldview/desktop` (Windows `%APPDATA%`, Linux
  *     `~/.config`) is *moved* — renamed on the same drive, nothing copied — into
@@ -141,9 +142,15 @@ export function migrateLegacyData(opts: {
   if (!opts.dev) {
     const oldPortable = path.join(opts.exeDir, LEGACY_PORTABLE_DIR_NAME);
     const newPortable = path.join(opts.exeDir, 'OP-CB-data');
-    if (isDir(f, oldPortable) && !f.existsSync(newPortable)) {
+    // The portable zip ships an `OP-CB-data` folder holding only a note (scripts/package.mjs,
+    // 2026-11-08): unzipped over a WorldView-era portable copy it is there already, empty of
+    // data, and the old folder's contents move into it instead.
+    if (
+      isDir(f, oldPortable) &&
+      (!f.existsSync(newPortable) || (isDir(f, newPortable) && !holdsOwnData(f, newPortable)))
+    ) {
       try {
-        f.renameSync(oldPortable, newPortable);
+        moveEntries(f, oldPortable, newPortable);
         result.moved.push(`${oldPortable} → ${newPortable}`);
       } catch (err) {
         if (BUSY_CODES.has(errCode(err) ?? '')) result.busy = oldPortable;

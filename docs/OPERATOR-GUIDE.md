@@ -156,11 +156,13 @@ stored keys and logs — and the room left there. Two ways to put it all on an e
   installed packs stay in the old folder — download maps again with **Save to** that drive.
   If the drive is not plugged in at the next start, OP-CB says so and offers this
   computer's own data instead; it never writes into an empty mount point.
-- **Portable** (Windows): unzip `OP-CB-Portable-<version>.zip` onto the drive and make an
-  empty folder named `OP-CB-data` beside `OP-CB.exe`. That copy keeps everything in that
-  folder and runs from the drive on any Windows computer. It is told about updates rather than
-  updating itself (download the new portable zip). On Linux the `.deb` installs into `/opt`;
-  move the data instead.
+- **Portable** (Windows): unzip `OP-CB-Portable-<version>.zip` onto the drive. The zip holds a
+  folder named `OP-CB-data` beside `OP-CB.exe`; while it is there, that copy keeps everything in
+  it and runs from the drive on any Windows computer, without touching the computer's own
+  OP-CB data (and alongside an installed OP-CB). Remove the folder to share the computer's
+  data instead. A portable copy is told about updates rather than updating itself (unzip the
+  new portable zip over the old one; `OP-CB-data` is kept). On Linux the `.deb` installs into
+  `/opt`; move the data instead.
 
 Stored keys are encrypted by the operating system for one user on one computer: on another
 computer they are asked for again.

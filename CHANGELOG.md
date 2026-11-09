@@ -19,6 +19,12 @@ Versioning: [semantic versioning](https://semver.org/).
   Army Publishing Directorate first (irp.fas.org stays as the survival manual's fallback), and
   FEMA's guide from the address ready.gov keeps it at now.
 
+- **The portable zip is portable as unzipped.** It now holds an `OP-CB-data` folder beside
+  `OP-CB.exe` (with a short note inside), so the copy keeps its data there from the first start
+  instead of using the computer's own OP-CB data — which also let it start beside an installed
+  OP-CB, where before it exited at once (one data folder, one instance). Unzipped over a
+  WorldView-era portable copy, the old `WorldView-data` moves into it.
+
 ### Changed
 
 - The Army's **first aid** reference is now **ATP 4-02.11 Casualty Response, Tactical Combat
