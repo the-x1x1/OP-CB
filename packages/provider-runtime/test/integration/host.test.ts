@@ -1117,6 +1117,70 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   await host.dispose();
 });
 
+test('a source that polls and subscribes still retries a failed subscription, and a cancelled poll leaves it alone', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1_000_000 });
+  const clock = { now: () => Date.now() };
+  const usgs = createProvider();
+  const host = new ProviderHost({
+    clock: clock as never,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [new RingBufferSink()] }),
+    fetchImpl: fakeFetch(() => new Response('{}')),
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock as never, allowed),
+    settingsStore: () => new testing.MemorySettings({}),
+  });
+  let subscribes = 0;
+  let polls = 0;
+  const signals: AbortSignal[] = [];
+  host.register({
+    manifest: {
+      ...usgs.manifest,
+      id: 'both',
+      enabledByDefault: true,
+      refreshPolicy: { ...usgs.manifest.refreshPolicy, intervalMs: 3_600_000 },
+    },
+    initialize: async () => {},
+    start: async () => {},
+    stop: async () => {},
+    query: async () => {
+      polls++;
+      return [];
+    },
+    subscribe: async ({ signal }) => {
+      subscribes++;
+      if (subscribes === 1) throw new ProviderError('OFFLINE', 'socket refused');
+      signals.push(signal);
+      return () => undefined;
+    },
+    health: async () => ({
+      providerId: 'both',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+  });
+  const flush = async () => {
+    for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
+  };
+  await host.start();
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(subscribes, 1);
+  assert.equal(polls, 1, 'the first poll ran, and scheduled the next an hour away');
+  // The retry is 5 s with ±20 % jitter: well inside 10 s, well before the next poll.
+  t.mock.timers.tick(10_000);
+  await flush();
+  assert.equal(subscribes, 2, 'the poll schedule did not swallow the subscription retry');
+  assert.equal(signals[0]?.aborted, false);
+  host.setOnline(false); // cancels the poll; the subscription is not the poll's to abort
+  await flush();
+  assert.equal(signals[0]?.aborted, false, 'going offline cancelled the poll, not the open subscription');
+  await host.dispose();
+  assert.equal(signals[0]?.aborted, true, 'stopping the source closes it');
+});
+
 test('a source waiting for the operator reads NEEDS_SETUP, is not retried or logged as failing, and polls again when its settings change', async () => {
   const clock = new testing.VirtualClock();
   const settings = new testing.MemorySettings({});

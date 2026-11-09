@@ -49,6 +49,11 @@ Versioning: [semantic versioning](https://semver.org/).
   the picture's bend (1.5 % at the corners), where they used to land on the unbent picture a
   few pixels away.
 
+- A source that both polls and listens (a Traccar server, say) retries its live connection
+  after a failure again: the next poll's schedule used to clear the retry, so the connection
+  stayed down until the source was restarted. Going offline cancelled the poll and, with it,
+  an open connection's abort signal; it now leaves the connection alone.
+
 ### Added
 
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's
