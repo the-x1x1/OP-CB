@@ -2845,7 +2845,30 @@
         "termsUrl": "https://panoramax.fr/"
       },
       "commercialReview": "approved",
-      "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) and KartaView (field shape not yet confirmed from a live answer) are not asked."
+      "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) is not asked; KartaView is asked only when Panoramax has nothing within reach (its own record below)."
+    },
+    {
+      "providerId": "kartaview",
+      "name": "KartaView — open street-level imagery (api.kartaview.org 2.0 photo search)",
+      "sourceUrl": "https://api.kartaview.org/2.0/photo/?lat=<lat>&lng=<lon>&radius=<m>",
+      "termsUrl": "https://kartaview.org/terms",
+      "license": "CC BY-SA 4.0 for the street images (kartaview.org/terms, section Open Source License: street images made available on KartaView licensed under Creative Commons Attribution-ShareAlike 4.0 International; read 2026-11-08). No key, no registration.",
+      "category": "imagery",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": false,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": false,
+        "commercialUseAllowed": true,
+        "attributionRequired": true,
+        "attributionText": "Street-level pictures: KartaView contributors, CC BY-SA 4.0",
+        "termsUrl": "https://kartaview.org/terms"
+      },
+      "commercialReview": "approved",
+      "notes": "Not a provider (2026-11-08): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here and Panoramax has nothing within reach (or no answer), one request a second, answers cached an hour in memory. Pictures are shown live from KartaView's CDN or storage servers with the licence and, when the answer names one, the author, and are never kept, packed or exported (ShareAlike). The answer shape (result.data[]: lat/lng/heading strings, shotDate, fileurlTh, imageThUrl, sequenceId/sequenceIndex, visibility, status; radius 1-500 m) was read live on 2026-11-08."
     },
     {
       "providerId": "kiwix-library",

@@ -443,8 +443,10 @@ read are named in a notice rather than half read.
 **Street view** on the card asks Panoramax — the open, federated street-level imagery project,
 no key — for pictures within 150 m, on that press only, and shows the nearest with when it was
 taken, how far and which way it looks, its author and its own licence (mostly CC BY-SA 4.0); a
-click opens it on Panoramax, Previous and Next step through the rest. Pictures are shown live
-and never kept. Off with online lookups (Settings → Search) and offline.
+click opens it on Panoramax, Previous and Next step through the rest. Where Panoramax has
+nothing within reach, KartaView (Grab's open street-level imagery, CC BY-SA 4.0, no key) is
+asked next, and its pictures are shown the same way. Pictures are shown live and never kept.
+Off with online lookups (Settings → Search) and offline.
 
 ## The sky overhead
 

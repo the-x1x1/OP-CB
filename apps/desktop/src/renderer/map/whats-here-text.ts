@@ -210,7 +210,7 @@ export function cardPlacement(
 export function streetLevelText(answer: StreetLevelAnswer, index = 0): string {
   const pic = answer.pictures[index];
   if (!pic) {
-    if (answer.status === 'ok') return 'No street-level pictures within 150 m on Panoramax.';
+    if (answer.status === 'ok') return 'No street-level pictures within 150 m on Panoramax or KartaView.';
     return answer.message ?? 'No street-level pictures.';
   }
   const when = pic.takenAt ? `Taken ${pic.takenAt.slice(0, 10)}, ` : '';

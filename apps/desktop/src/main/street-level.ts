@@ -12,6 +12,17 @@ import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@opcb/ipc
  * its own instance and never kept, cached into a pack or exported (ShareAlike would then apply
  * to the copy). Mapillary needs a token and Google a key: neither is asked.
  *
+ * KartaView (kartaview.org, Grab's open street-level imagery, formerly OpenStreetCam) is asked
+ * only when Panoramax has nothing within reach or does not answer: its `2.0/photo` API needs
+ * no key, its street images are CC BY-SA 4.0 (kartaview.org/terms, "Open Source License", read
+ * 2026-11-08), and it covers places Panoramax does not (Honolulu, say). Its answer shape was
+ * read live the same day: `result.data[]` with `lat`/`lng`/`heading` as strings, `shotDate`
+ * "YYYY-MM-DD HH:MM:SS.000", `fileurlTh` on storage<n>.openstreetcam.org, `imageThUrl` on
+ * cdn.kartaview.org, `sequenceId`/`sequenceIndex` (its page), `visibility`, `status`; `radius`
+ * is metres, 1–500; an error is HTTP 400 `{code, reason, message}`. The same rules apply:
+ * shown live, never kept, one request a second (a press costs a second request only when the
+ * first found nothing).
+ *
  *  - Never while the map moves: only when the card is open and the operator asks.
  *  - At most one request a second, for the whole application; more than a couple waiting is
  *    refused as `busy` rather than piled up.
@@ -27,6 +38,13 @@ import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@opcb/ipc
  */
 export const PANORAMAX_HOST = 'api.panoramax.xyz';
 export const PANORAMAX_ATTRIBUTION = 'Street-level pictures: Panoramax contributors, each under its own licence';
+export const KARTAVIEW_HOST = 'api.kartaview.org';
+export const KARTAVIEW_PAGE_HOST = 'kartaview.org';
+export const KARTAVIEW_ATTRIBUTION = 'Street-level pictures: KartaView contributors, CC BY-SA 4.0';
+const KARTAVIEW_LICENSE = 'CC-BY-SA-4.0';
+/** The hosts a KartaView thumbnail may be shown from (its CDN, and its storage servers). */
+const KARTAVIEW_PICTURE_HOST = /^(cdn\.kartaview\.org|storage\d{1,3}\.openstreetcam\.org)$/;
+const KARTAVIEW_MAX_RADIUS_M = 500;
 
 export const MIN_GAP_MS = 1_100;
 const TIMEOUT_MS = 10_000;
@@ -60,6 +78,16 @@ export function panoramaxUrl(position: GeoPosition, radiusM: number, limit: numb
   u.searchParams.set('place_position', `${position.longitude.toFixed(6)},${position.latitude.toFixed(6)}`);
   u.searchParams.set('place_distance', `0-${Math.round(radiusM)}`);
   u.searchParams.set('limit', String(limit));
+  return u.href;
+}
+
+/** The KartaView search URL for a point: `radius` in metres, at most 500. */
+export function kartaviewUrl(position: GeoPosition, radiusM: number, limit: number): string {
+  const u = new URL(`https://${KARTAVIEW_HOST}/2.0/photo/`);
+  u.searchParams.set('lat', position.latitude.toFixed(6));
+  u.searchParams.set('lng', position.longitude.toFixed(6));
+  u.searchParams.set('radius', String(Math.max(1, Math.min(KARTAVIEW_MAX_RADIUS_M, Math.round(radiusM)))));
+  u.searchParams.set('itemsPerPage', String(limit));
   return u.href;
 }
 
@@ -173,6 +201,78 @@ export function readPanoramax(
   return out.slice(0, limit);
 }
 
+function num(v: unknown): number | undefined {
+  const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function kartaviewThumb(v: unknown): string | undefined {
+  if (typeof v !== 'string' || v.length > 1024) return undefined;
+  try {
+    const u = new URL(v);
+    if (u.protocol !== 'https:' || u.username || u.password) return undefined;
+    return KARTAVIEW_PICTURE_HOST.test(u.hostname.toLowerCase()) ? u.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * The pictures in KartaView's answer, nearest first: public, active ones with a place and a
+ * thumbnail on KartaView's own hosts; the rest left out. `distance` in the answer is not used
+ * (it was 0.00 for pictures 150 m away); the distance is computed here. Exported for the tests.
+ */
+export function readKartaView(body: unknown, at: GeoPosition, limit: number): StreetLevelPicture[] {
+  const data = (body as { result?: { data?: unknown } } | null)?.result?.data;
+  if (!Array.isArray(data)) return [];
+  const out: StreetLevelPicture[] = [];
+  for (const d of data.slice(0, 50)) {
+    const r = d as Record<string, unknown> | null;
+    if (!r || typeof r['id'] !== 'string' || !/^\d{1,20}$/.test(r['id'])) continue;
+    if (r['visibility'] !== 'public' || r['status'] !== 'active') continue;
+    const lat = num(r['lat']);
+    const lon = num(r['lng']);
+    if (lat === undefined || lon === undefined || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
+    const thumbUrl = kartaviewThumb(r['imageThUrl']) ?? kartaviewThumb(r['fileurlTh']);
+    if (!thumbUrl) continue;
+    const seq = typeof r['sequenceId'] === 'string' && /^\d{1,20}$/.test(r['sequenceId']) ? r['sequenceId'] : undefined;
+    const idx =
+      typeof r['sequenceIndex'] === 'string' && /^\d{1,10}$/.test(r['sequenceIndex']) ? r['sequenceIndex'] : undefined;
+    const position = { latitude: lat, longitude: lon };
+    const picture: StreetLevelPicture = {
+      id: r['id'],
+      position,
+      distanceM: Math.round(haversineM(at, position)),
+      thumbUrl,
+      pageUrl: seq && idx ? `https://${KARTAVIEW_PAGE_HOST}/details/${seq}/${idx}` : `https://${KARTAVIEW_PAGE_HOST}/`,
+      license: KARTAVIEW_LICENSE,
+      service: 'kartaview',
+    };
+    const heading = num(r['heading']);
+    if (heading !== undefined) picture.headingDeg = ((heading % 360) + 360) % 360;
+    // "2019-05-29 04:31:28.000". Read as UTC: a 2026 record's shotDate equalled its dateAdded
+    // (UTC), while 2016 ones ran an hour ahead of it (the camera's local time back then). The
+    // card shows the day only, so the hour's zone is not shown.
+    const shot =
+      typeof r['shotDate'] === 'string' ? /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})/.exec(r['shotDate']) : null;
+    if (shot) {
+      const taken = Date.parse(`${shot[1]}T${shot[2]}Z`);
+      if (Number.isFinite(taken)) picture.takenAt = new Date(taken).toISOString();
+    }
+    const user = r['user'];
+    const author =
+      typeof user === 'string'
+        ? user
+        : typeof (user as { username?: unknown })?.username === 'string'
+          ? (user as { username: string }).username
+          : undefined;
+    if (author) picture.author = author.slice(0, 80);
+    out.push(picture);
+  }
+  out.sort((a, b) => a.distanceM - b.distanceM);
+  return out.slice(0, limit);
+}
+
 class Turnstile {
   private next = 0;
   private waiting = 0;
@@ -273,15 +373,27 @@ export class StreetLevel {
     limit: number,
     signal?: AbortSignal,
   ): Promise<StreetLevelAnswer> {
+    // The request is shared by every caller asking the same point (`inflight`), so one
+    // caller's signal must not end it for the others: only the timeout aborts it.
+    void signal;
+    const first = await this.askPanoramax(position, radiusM, limit);
+    if (first.status === 'ok' && first.pictures.length) return first;
+    if (first.status === 'busy') return first;
+    // Nothing on Panoramax within reach (or no answer): KartaView, under the same gap.
+    const second = await this.askKartaView(position, radiusM, limit);
+    if (second.status === 'ok' && second.pictures.length) return second;
+    if (first.status === 'ok') return first;
+    if (second.status === 'ok') return second;
+    return first;
+  }
+
+  private async askPanoramax(position: GeoPosition, radiusM: number, limit: number): Promise<StreetLevelAnswer> {
     if (!(await this.turn.enter())) {
       this.stats.refused++;
       return { status: 'busy', pictures: [], attribution: '', message: 'Asked too often; try again in a moment.' };
     }
     this.stats.sent++;
     await this.refreshInstances();
-    // The request is shared by every caller asking the same point (`inflight`), so one
-    // caller's signal must not end it for the others: only the timeout aborts it.
-    void signal;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
@@ -302,6 +414,38 @@ export class StreetLevel {
         pictures: [],
         attribution: '',
         message: `Panoramax did not answer (${why.slice(0, 80)}).`,
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  private async askKartaView(position: GeoPosition, radiusM: number, limit: number): Promise<StreetLevelAnswer> {
+    if (!(await this.turn.enter())) {
+      this.stats.refused++;
+      return { status: 'busy', pictures: [], attribution: '', message: 'Asked too often; try again in a moment.' };
+    }
+    this.stats.sent++;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const res = await this.opts.fetchImpl(kartaviewUrl(position, radiusM, limit), {
+        headers: { accept: 'application/json', 'user-agent': this.opts.userAgent },
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (text.length > MAX_BODY_BYTES) throw new Error('answer larger than expected');
+      const pictures = readKartaView(JSON.parse(text) as unknown, position, limit);
+      return { status: 'ok', pictures, attribution: KARTAVIEW_ATTRIBUTION };
+    } catch (err) {
+      this.stats.failed++;
+      const why = err instanceof Error ? err.message : String(err);
+      return {
+        status: 'unavailable',
+        pictures: [],
+        attribution: '',
+        message: `KartaView did not answer (${why.slice(0, 80)}).`,
       };
     } finally {
       clearTimeout(timer);

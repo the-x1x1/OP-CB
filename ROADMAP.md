@@ -434,9 +434,9 @@ each to be built on `feature/roadmap-3`:
 - [x] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
       (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown; on
       feature/roadmap-3, Street view in What's here); live only, never cached into packs
-      (ShareAlike). KartaView answers without a key too but no live answer with a record was
-      seen from the container, so its field names are unconfirmed and it waits. Mapillary needs
-      a token and Google a key: not those.
+      (ShareAlike). KartaView (CC BY-SA 4.0 by its terms) is asked when Panoramax has nothing
+      within reach — its answer shape was read live on 2026-11-08 (on feature/field-fixes).
+      Mapillary needs a token and Google a key: not those.
 - [x] **An MCP server** for AI clients on this machine (Formicaria's tools among them): local,
       off by default, read-only over what the local API already serves (ADR-014).
 - [x] **The planetary K index** in the Sky tab, as an exception to the provider path (ADR-003):

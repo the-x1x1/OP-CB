@@ -174,7 +174,7 @@ test("what's here: the street-level line says when, how far and which way, or wh
   );
   assert.equal(
     streetLevelText({ status: 'ok', pictures: [], attribution: 'x' }),
-    'No street-level pictures within 150 m on Panoramax.',
+    'No street-level pictures within 150 m on Panoramax or KartaView.',
   );
   assert.equal(
     streetLevelText({

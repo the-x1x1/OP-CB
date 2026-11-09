@@ -281,6 +281,7 @@ function StreetPictures({ answer }: { answer: StreetLevelAnswer }) {
   const [shown, setShown] = useState(0);
   const text = streetLevelText(answer);
   const pic = answer.pictures[shown];
+  const serviceName = pic?.service === 'kartaview' ? 'KartaView' : 'Panoramax';
   if (!pic)
     return (
       <p className="wv-ctx-muted wv-whats-here__street" role="status">
@@ -292,7 +293,7 @@ function StreetPictures({ answer }: { answer: StreetLevelAnswer }) {
       <button
         type="button"
         className="wv-whats-here__photo"
-        title="Open on Panoramax"
+        title={`Open on ${serviceName}`}
         onClick={() => void actions.openExternal(pic.pageUrl)}
       >
         <img src={pic.thumbUrl} alt={`Street-level picture ${pic.distanceM} m from here`} loading="lazy" />
@@ -301,7 +302,7 @@ function StreetPictures({ answer }: { answer: StreetLevelAnswer }) {
         <span>{text}</span>
         <span className="wv-ctx-muted">
           {pic.author ? `${pic.author} · ` : ''}
-          {pic.license} · Panoramax
+          {pic.license} · {serviceName}
         </span>
         {answer.pictures.length > 1 ? (
           <span className="wv-whats-here__street-nav">

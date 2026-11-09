@@ -456,8 +456,9 @@ async function bootstrap(): Promise<void> {
     first: () => settings.get().search?.service ?? 'nominatim',
   });
 
-  // Street-level pictures (street-level.ts): Panoramax, one request a second, on the operator's
-  // ask from What's here only, under the same online-lookup switch as place search.
+  // Street-level pictures (street-level.ts): Panoramax, then KartaView when that has nothing;
+  // one request a second, on the operator's ask from What's here only, under the same
+  // online-lookup switch as place search.
   const streetLevel = new StreetLevel({
     fetchImpl: netFetch,
     userAgent: appUserAgent(app.getVersion()),
