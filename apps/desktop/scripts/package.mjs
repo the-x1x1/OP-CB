@@ -331,19 +331,8 @@ function addPortableDataFolder() {
     console.error(`[package] 7za could not add ${PORTABLE_DIR_NAME} to ${zips[0]} (exit ${run.status ?? 'signal'})`);
     process.exit(1);
   }
-  const list = spawnSync(sevenZip, ['l', '-ba', '-slt', zip], { encoding: 'utf8' });
-  const paths = (list.stdout ?? '')
-    .split(/\r?\n/)
-    .filter((l) => l.startsWith('Path = '))
-    .map((l) => l.slice(7));
-  const hasNote = paths.some((p) => p.replace(/\\/g, '/') === `${PORTABLE_DIR_NAME}/READ-ME.txt`);
-  const hasExe = paths.includes('OP-CB.exe');
-  if (!hasNote || !hasExe) {
-    console.error(
-      `[package] the portable zip is not laid out as expected (exe at root: ${hasExe}, data folder: ${hasNote})`,
-    );
-    process.exit(1);
-  }
+  // The layout (the exe at the root, this folder beside it) is checked by
+  // `pnpm release:assert-version`, which reads the zip's own directory (tools/release/src/zip-names.ts).
   console.log(`[package] added ${PORTABLE_DIR_NAME}/ to ${zips[0]}`);
 }
 if (result.status === 0 && TARGET.platform === 'win32') addPortableDataFolder();
