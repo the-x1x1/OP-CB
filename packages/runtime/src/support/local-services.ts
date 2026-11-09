@@ -309,11 +309,19 @@ export function readKiwixCatalog(text: string): NonNullable<LocalServiceStatus['
     // The book's own <name> comes before <author><name>: read only what precedes the author.
     const name = tag(block.split('<author>')[0]!, 'name');
     const language = tag(block, 'language');
+    // `_ftindex:no` in <tags>: no full-text index, so the server cannot search the book (live, 2026-11-08).
+    const tags = tag(block, 'tags') ?? '';
+    const fullText = /(^|;)_ftindex:no(;|$)/.test(tags)
+      ? false
+      : /(^|;)_ftindex:yes(;|$)/.test(tags)
+        ? true
+        : undefined;
     out.push({
       id,
       title,
       ...(name && name.length <= 200 ? { name } : {}),
       ...(language && language.length <= 32 ? { language } : {}),
+      ...(fullText !== undefined ? { fullText } : {}),
     });
   }
   return out;

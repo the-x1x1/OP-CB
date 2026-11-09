@@ -137,7 +137,14 @@ export interface LocalServiceStatus {
   /** Ollama: the models it has, as it lists them. */
   models?: Array<{ name: string; sizeBytes?: number; parameterSize?: string; family?: string }>;
   /** kiwix-serve: the books in its library, as its catalogue lists them. */
-  books?: Array<{ id: string; title: string; name?: string; language?: string }>;
+  books?: Array<{
+    id: string;
+    title: string;
+    name?: string;
+    language?: string;
+    /** (additive, 2026-11-08) False when the book has no full-text index (`_ftindex:no`): kiwix-serve cannot search it. */
+    fullText?: boolean;
+  }>;
   checkedAt: string;
 }
 

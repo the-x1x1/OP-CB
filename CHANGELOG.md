@@ -32,6 +32,8 @@ Versioning: [semantic versioning](https://semver.org/).
   the catalogue's `name` (`wikipedia_en_chemistry`), which a real kiwix-serve does not know as a
   book ("No such book", read on browse.library.kiwix.org 2026-11-08); it now names it by its
   catalogue id, which the server answers to, and the walkthrough's check says the book's title.
+  Books the server lists without a full-text index (`_ftindex:no`) are no longer offered for
+  searching, since the server cannot search them.
 
 ### Added
 

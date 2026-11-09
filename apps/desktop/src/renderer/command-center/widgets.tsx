@@ -172,7 +172,9 @@ export function LibraryFind() {
 
 export function LibrarySearch() {
   const [cc, store] = useCC();
-  const books = cc.services?.find((s) => s.id === 'kiwix')?.books ?? [];
+  const listed = cc.services?.find((s) => s.id === 'kiwix')?.books ?? [];
+  // Books without a full-text index cannot be searched by kiwix-serve; they are not offered.
+  const books = listed.filter((b) => b.fullText !== false);
   const [book, setBook] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -180,7 +182,14 @@ export function LibrarySearch() {
   // catalogue's `name` as a book name (local-services.ts librarySearch).
   const chosen = book || books[0]?.id || '';
   const last = cc.lastLibrarySearch;
-  if (!books.length) return <p className="wv-cc-muted">No library books found yet.</p>;
+  if (!listed.length) return <p className="wv-cc-muted">No library books found yet.</p>;
+  if (!books.length)
+    return (
+      <p className="wv-cc-muted">
+        None of the server&apos;s {listed.length} book{listed.length === 1 ? '' : 's'} has a full-text index, so none
+        can be searched here; OP-CB&apos;s own reader still finds pages by title.
+      </p>
+    );
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!chosen || !text.trim()) return;

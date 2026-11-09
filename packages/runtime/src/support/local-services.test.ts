@@ -222,6 +222,25 @@ test('library search: hits with their pages; a link off the server is dropped', 
   ]);
 });
 
+test('library catalogue: a book without a full-text index is marked, as the live server tags it', () => {
+  const entry = (id: string, tags: string) =>
+    `<entry><id>urn:uuid:${id}</id><title>T ${id}</title><language>eng</language><name>n${id}</name><tags>${tags}</tags><author><name>A</name></author></entry>`;
+  const feed = `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">${[
+    // As browse.library.kiwix.org served them on 2026-11-08.
+    entry('1', '_ftindex:no;_pictures:yes;_videos:yes;_details:yes'),
+    entry('2', 'wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:no;_ftindex:yes'),
+    entry('3', 'medicine'),
+  ].join('')}</feed>`;
+  assert.deepEqual(
+    readKiwixCatalog(feed).map((b) => [b.id, b.fullText]),
+    [
+      ['1', false],
+      ['2', true],
+      ['3', undefined],
+    ],
+  );
+});
+
 test('readers refuse what is not the service', () => {
   assert.throws(() => readKiwixCatalog('<html></html>'));
   assert.throws(() => readKiwixSearch('<feed></feed>'));
