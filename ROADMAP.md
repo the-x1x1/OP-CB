@@ -367,28 +367,19 @@ Engineering with no licence or key, in the order they are to be built:
 - [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the
       selection; after the 2D profile, since it costs frames.
 
-Each needs a decision of the operator's first:
+Decided on 2026-10-20 (see "The operator's decisions" below) and since built or in hand:
+**Wind on the globe** (NOAA ERDDAP, keyless; waits on one saved answer), **Street-level
+imagery** (Panoramax, then KartaView; Mapillary and Google not asked), **Links to a view**
+(`opcb://`), **An MCP server over the local API** (shipped), **the planetary K index in the
+Sky tab** (a Sky-tab-only request in the runtime, ADR-003 amendment; shipped).
 
-- **Wind on the globe** (GEV `0251c74`: GFS and ECMWF IFS as animated particles and a reading at
-  the centre): which source — NOAA GFS needs a GRIB2 decoder (a dependency) or a re-served grid;
-  Open-Meteo's record is conditional.
-- **Street-level imagery** (GEV: Mapillary, KartaView, Panoramax, Google Street View): Mapillary
-  needs a key; KartaView is CC BY-SA; Panoramax instances set their own licences; Google is
-  excluded.
-- **Links to a view** (GEV `fe69f22`): a `opcb://` link that opens the app at a place with
-  given layers — registering a protocol handler is an installer and OS change.
-- **An MCP server over the local API** (GEV's tool catalog and `/mcp`): AI clients reading what
-  the app holds; extends ADR-014 and what leaves the app.
+Each of these still needs a decision of the operator's first:
+
 - **Recent imagery for a box** (GEV `#716`): the STAC example for Sentinel-2 on Earth Search, shipped
   and offered from What's here; Copernicus terms to record.
 - **More camera, transit and bike-share regions** (GEV: Toronto, WSDOT, King County, NYC DOT,
   Catalonia, Lithuania, Norway; TTC and Ontario transit; Kona & Hilo, Norway and Brazil bike
   share): each source's licence.
-- **The planetary K index in the Sky tab** (OSIRIS; SWPC, public domain): Kp is one reading
-  for the whole Earth, and the world model's objects all have a position or a shape. Either a
-  kind of reading without a place (a world-model change, ADR) or a Sky-tab-only request that
-  fetches it in the runtime outside the provider path (an exception to ADR-003). Which, if
-  either.
 - **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
   licence review; the recon tools stay under 1.10.0 below.
 
