@@ -451,9 +451,10 @@ export class TraccarProvider extends PollingProvider {
       await this.connect(session);
     } catch (err) {
       const pe = err instanceof ProviderError ? err : new ProviderError('NETWORK', String(err));
-      // Offline at start, or a server that is down, is tried again here: the host's own retry
-      // of a failed subscription shares its timer with the poll and would be lost to the next
-      // poll. Anything else (a refused token or host, a socket the host cannot open) is not.
+      // Offline at start, or a server that is down, is tried again here, on the connector's own
+      // back-off (the host's retry of a failed subscription lost its timer to the next poll until
+      // 2026-11-08; it keeps its own now). Anything else (a refused token or host, a socket the
+      // host cannot open) is not.
       if (!SOCKET_RETRY_CODES.has(pe.code)) {
         this.closeSession(session);
         throw pe;
