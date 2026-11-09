@@ -361,6 +361,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - Street view asks KartaView only when Panoramax has nothing within 150 m.
 - The portable zip's `OP-CB-data` folder is added after electron-builder by the packaging
   script; the release gate checks it is there, and the first build that runs it is the next.
+- A portable copy of 0.7.2 or 0.7.3 kept its data in the computer's `%APPDATA%\OP-CB`. The new
+  zip unzipped over it starts portable with empty data; nothing is moved or lost, and removing
+  the new `OP-CB-data` folder goes back to the computer's data. OP-CB does not offer to copy it
+  across.
 - True colour (Suomi NPP) shows 2 November 2026: NASA GIBS has no newer day for it (seen
   2026-11-08), while the NOAA-20 true colour is current. The Map bar says so ("True colour ·
   Suomi NPP · from 2 Nov"), as it does for any followed picture more than two days old.
