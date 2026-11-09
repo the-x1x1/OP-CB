@@ -10,7 +10,8 @@ export function zipEntryNames(file: string, maxEntries = 100_000): string[] {
   const fd = openSync(file, 'r');
   try {
     const size = fstatSync(fd).size;
-    const tailLen = Math.min(size, 65_536 + 22);
+    // The record (22 bytes and a comment of up to 64 KiB) and, before it, a zip64 locator (20).
+    const tailLen = Math.min(size, 65_535 + 22 + 20);
     const tail = Buffer.alloc(tailLen);
     readSync(fd, tail, 0, tailLen, size - tailLen);
     let eocd = -1;
@@ -24,10 +25,14 @@ export function zipEntryNames(file: string, maxEntries = 100_000): string[] {
     let entries = tail.readUInt16LE(eocd + 10);
     let dirSize = tail.readUInt32LE(eocd + 12);
     let dirOffset = tail.readUInt32LE(eocd + 16);
-    if (entries === 0xffff || dirSize === 0xffffffff || dirOffset === 0xffffffff) {
+    const loc = eocd - 20;
+    const hasLocator = loc >= 0 && tail.readUInt32LE(loc) === 0x07064b50;
+    const sizesSentinel = dirSize === 0xffffffff || dirOffset === 0xffffffff;
+    // 65,535 entries is also a plain zip's real count; only a locator (or a size it cannot hold)
+    // makes it zip64.
+    if (hasLocator || sizesSentinel) {
       // zip64: the locator sits just before the record and names the zip64 record.
-      const loc = eocd - 20;
-      if (loc < 0 || tail.readUInt32LE(loc) !== 0x07064b50) throw new Error('zip64 archive without its locator');
+      if (!hasLocator) throw new Error('zip64 archive without its locator');
       const z64At = Number(tail.readBigUInt64LE(loc + 8));
       const z64 = Buffer.alloc(56);
       readSync(fd, z64, 0, 56, z64At);

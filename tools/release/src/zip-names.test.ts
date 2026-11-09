@@ -46,3 +46,17 @@ test('zip names: the portable zip must hold the exe at its root and the data fol
   ]);
   assert.match(portableZipProblems([])[0]!, /not in the zip \(0 entries\)/);
 });
+
+test('zip names: a plain zip of exactly 65,535 entries is read as one, not taken for zip64', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'opcb-zip-'));
+  try {
+    const file = path.join(dir, 'many.zip');
+    const files = Array.from({ length: 0xffff }, (_, i) => ({ name: `f${i}` }));
+    writeFileSync(file, storedZip(files));
+    const names = zipEntryNames(file);
+    assert.equal(names.length, 0xffff);
+    assert.equal(names.at(-1), 'f65534');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
