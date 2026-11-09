@@ -41,6 +41,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { appDir, workspaceRoot } from './renderer-assets.mjs';
 import { packageTargetFor } from './platform.mjs';
+import { appendStoredEntries } from './zip-append.mjs';
 
 /** The data folder's name beside the exe; must match main/data-location.ts PORTABLE_DIR_NAME. */
 const PORTABLE_DIR_NAME = 'OP-CB-data';
@@ -294,41 +295,32 @@ function addPortableDataFolder() {
     process.exit(1);
   }
   const zip = path.join(releaseDir, zips[0]);
-  const sevenZip = find7za();
-  if (!sevenZip) {
-    console.error('[package] could not find 7za.exe to add OP-CB-data to the portable zip');
-    process.exit(1);
-  }
-  const staging = path.join(tmpdir(), `opcb-portable-${process.pid}`);
-  const dataDir = path.join(staging, PORTABLE_DIR_NAME);
-  rmSync(staging, { recursive: true, force: true });
-  mkdirSync(dataDir, { recursive: true });
-  writeFileSync(
-    path.join(dataDir, 'READ-ME.txt'),
-    [
-      'This folder makes this copy of OP-CB portable.',
-      '',
-      `While a folder named ${PORTABLE_DIR_NAME} sits beside OP-CB.exe, everything OP-CB writes —`,
-      'settings, history, saved places, downloaded maps and books, the inventory, stored keys and',
-      'logs — lives in here and travels with the drive. Nothing is written to the computer.',
-      '',
-      'Keys stored here are encrypted by the operating system for one user on one computer: on',
-      'another computer they are asked for again.',
-      '',
-      "To make this copy use the computer's own OP-CB data instead, close OP-CB and remove this",
-      'folder (move it first if it holds anything you want to keep).',
-      '',
-    ].join('\r\n'),
-  );
-  // `a` with the folder name, from the staging folder, stores it as `OP-CB-data/READ-ME.txt`
-  // at the root of the archive — beside OP-CB.exe, which electron-builder puts at the root.
-  const run = spawnSync(sevenZip, ['a', '-bd', '-y', '-tzip', zip, PORTABLE_DIR_NAME], {
-    cwd: staging,
-    stdio: 'inherit',
-  });
-  rmSync(staging, { recursive: true, force: true });
-  if (run.status !== 0) {
-    console.error(`[package] 7za could not add ${PORTABLE_DIR_NAME} to ${zips[0]} (exit ${run.status ?? 'signal'})`);
+  const note = [
+    'This folder makes this copy of OP-CB portable.',
+    '',
+    `While a folder named ${PORTABLE_DIR_NAME} sits beside OP-CB.exe, everything OP-CB writes —`,
+    'settings, history, saved places, downloaded maps and books, the inventory, stored keys and',
+    'logs — lives in here and travels with the drive. Nothing is written to the computer.',
+    '',
+    'Keys stored here are encrypted by the operating system for one user on one computer: on',
+    'another computer they are asked for again.',
+    '',
+    "To make this copy use the computer's own OP-CB data instead, close OP-CB and remove this",
+    'folder (move it first if it holds anything you want to keep).',
+    '',
+  ].join('\r\n');
+  // Added by Node itself (scripts/zip-append.mjs), at the root of the archive beside OP-CB.exe,
+  // which electron-builder puts at the root. 7za is not used: the build machine has none that
+  // package.mjs can find, which failed the first 0.7.4 build.
+  try {
+    appendStoredEntries(zip, [
+      { name: `${PORTABLE_DIR_NAME}/` },
+      { name: `${PORTABLE_DIR_NAME}/READ-ME.txt`, data: note },
+    ]);
+  } catch (err) {
+    console.error(
+      `[package] could not add ${PORTABLE_DIR_NAME} to ${zips[0]}: ${err instanceof Error ? err.message : err}`,
+    );
     process.exit(1);
   }
   // The layout (the exe at the root, this folder beside it) is checked by
