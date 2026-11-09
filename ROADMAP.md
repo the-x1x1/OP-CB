@@ -142,8 +142,8 @@ Decisions only the operator can make:
 
 - [ ] `offline-basemaps` B1: the licence record for a pack's basemap. Decided 2026-10-20: a
       licence-free one (below, "The operator's decisions, 2026-10-20").
-- [ ] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
-      Decided 2026-10-20: they may show, with an easy way to add them (below).
+- [x] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
+      Decided 2026-10-20: they may show, with an easy way to add them (below; built).
 - [x] The user-data folder: `%APPDATA%\OP-CB\` as built (decided 2026-10-20;
       the docs now say so).
 - [ ] Legal sign-off on the conditional and manual-review providers (LR-01…LR-19) and
@@ -157,8 +157,8 @@ Engineering:
 - [x] `offline-basemaps` B4: a Martin source as a 2D basemap (Settings → Rendering). A LAN
       server over plain http stays undrawn unless the operator decides to widen the CSP.
 - [x] `home-assistant` request 2 (`connector:test --live --setting key=value`).
-- [ ] `home-assistant` request 1 (`ws://` to loopback or the trusted host for local
-      sources). Decided 2026-10-20: Home Assistant may connect with `ws://` (below).
+- [x] `home-assistant` request 1 (`ws://` to loopback or the trusted host for local
+      sources). Decided 2026-10-20: Home Assistant may connect with `ws://` (below; built).
 - [x] The refactor pass (docs/roadmap/INTEGRATION.md): items 1–4 on `feature/refactor`; the
       Windows gate on every build; `connector:test --live` for all 25 bundled definitions
       on 2026-10-04, all LIVE.
@@ -443,7 +443,9 @@ each to be built on `feature/roadmap-3`:
       domain) at low zoom as now. Nothing public-domain is detailed enough past zoom 6–8, and the
       2D styles draw the Protomaps schema, so this is a record and a documented recipe (B1), not
       new code: write the licence record for a pack's basemap into the pack's manifest at build
-      time and show it in Settings → Offline packs. Waits on a Protomaps build (about 139 GB, kept
+      time and show it in Settings → Offline packs (both done: the builder records each source's
+      licence and credit, and Settings shows the credits under each pack, on
+      feature/field-fixes). Waits on a Protomaps build (about 139 GB, kept
       seven days) being cut on a machine with the room. The in-app downloader (0.6.0+) does the
       cut itself; a world shipped inside the installer measures z5 15 MB, z6 45 MB, z7 190 MB
       against the 2026-11-08 build (docs/architecture/COMMAND-CENTER.md §8) — the operator's
