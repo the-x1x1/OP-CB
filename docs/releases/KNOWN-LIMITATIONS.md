@@ -366,6 +366,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   shown only when KartaView's answer names one (most do not).
 - The portable zip's `OP-CB-data` folder is added after electron-builder by the packaging
   script; the release gate checks it is there, and the first build that runs it is the next.
+- Finnish road cameras (Fintraffic) show no municipality or province: the station list stopped
+  carrying them (seen 2026-11-08); the cameras and their pictures are unaffected.
 - Wind on the globe waits on one saved answer from NOAA's ERDDAP (the shape of its JSON grid),
   which could not be fetched from where this was built.
 

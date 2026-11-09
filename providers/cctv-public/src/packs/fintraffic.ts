@@ -96,6 +96,8 @@ export function normalizeFintraffic(payload: unknown, opts: PackNormalizeOptions
         ? Math.min(1400, coords[2])
         : undefined;
     const name = stationName(p.name, stationId);
+    // The live list stopped carrying `municipality` and `province` (none of 815 stations,
+    // 2026-11-08): the place line is then left out rather than guessed from the name.
     const region =
       typeof p.municipality === 'string' && p.municipality.trim()
         ? p.municipality.trim().slice(0, 80)
