@@ -487,6 +487,12 @@ export interface WorldPackSummary {
    * with a message saying so — kept, never forgotten or deleted.
    */
   vault?: { id: string; label: string };
+  /**
+   * (additive, 2026-11-08) Where the pack's data comes from, as its manifest records it at build
+   * time: each provider's credit and licence (config/licenses/providers.json). Settings shows the
+   * credits under the pack. Absent from older hosts and from a pack whose manifest is unreadable.
+   */
+  sources?: Array<{ providerId: string; license: string; attribution: string }>;
 }
 
 /**

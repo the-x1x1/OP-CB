@@ -57,6 +57,10 @@ Versioning: [semantic versioning](https://semver.org/).
   kept, the contributor named — and a press costs a second request only when the first found
   nothing. Its answer shape was read live on 2026-11-08 (it had been waiting on that).
 
+- **Settings → Offline packs credits each pack's sources**: the credit its manifest recorded for
+  every provider at build time (a basemap cut from a Protomaps build: "© OpenStreetMap
+  contributors (ODbL)"), and each licence in full on hover. Packs from older hosts show no line.
+
 ### Changed
 
 - The Kiwix server's default port in OP-CB (and in the Knowledge walkthrough's `kiwix-serve`

@@ -2021,6 +2021,11 @@
   font-size: var(--wv-text-xs);
 }
 
+/* The pack's credits: their own full-width line, under size and age. */
+.wv-settings__pack-credits {
+  grid-column: 1 / -1;
+}
+
 /* Who signed a pack: a line under it, full width; the trust form opens in place. */
 .wv-pack-signature {
   grid-column: 1 / -1;

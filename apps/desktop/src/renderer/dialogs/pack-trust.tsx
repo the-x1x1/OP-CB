@@ -59,6 +59,32 @@ export function packFreshness(
   return { text: parts.join(' · '), tone: 'muted' };
 }
 
+/**
+ * The credits a pack's data carries, from its manifest: one line of each source's credit (the
+ * same text shown beside live data), and each licence in full for the hover text. A basemap
+ * cut from a Protomaps build credits OpenStreetMap here (ODbL), as the map does when it draws it.
+ */
+export function packCredits(pack: Pick<WorldPackSummary, 'sources'>): { text: string; title: string } | undefined {
+  const sources = pack.sources ?? [];
+  if (!sources.length) return undefined;
+  const credits: string[] = [];
+  for (const s of sources) if (s.attribution && !credits.includes(s.attribution)) credits.push(s.attribution);
+  if (!credits.length) return undefined;
+  return {
+    text: `Credits: ${credits.join('; ')}`,
+    title: sources.map((s) => `${s.providerId}: ${s.license}`).join('\n'),
+  };
+}
+
+export function PackCredits({ pack }: { pack: WorldPackSummary }) {
+  const c = packCredits(pack);
+  return c ? (
+    <p className="wv-ctx-muted wv-settings__pack-meta wv-settings__pack-credits" title={c.title}>
+      {c.text}
+    </p>
+  ) : null;
+}
+
 export function PackFreshness({ pack, nowMs }: { pack: WorldPackSummary; nowMs: number }) {
   const f = packFreshness(pack, nowMs);
   return f ? <span className={`wv-pack-freshness wv-pack-freshness--${f.tone}`}>{f.text}</span> : null;

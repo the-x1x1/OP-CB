@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatKeyId, installLine, packFreshness, signatureText } from './pack-trust.js';
+import { formatKeyId, installLine, packCredits, packFreshness, signatureText } from './pack-trust.js';
 
 test('a pack’s signature line says who signed it — and says so plainly when nobody the operator knows did', () => {
   assert.equal(formatKeyId('68d5ac8c8ed996b4'), '68d5 ac8c 8ed9 96b4');
@@ -42,4 +42,36 @@ test('a pack says how old it is and whether its publisher still stands by it', (
   const old = packFreshness({ createdAt: '2025-09-01T00:00:00Z', expiresAt: '2026-09-01T00:00:00Z' }, now);
   assert.equal(old?.tone, 'bad');
   assert.match(old?.text ?? '', /out of date since/);
+});
+
+test('a pack names where its data comes from: each credit once, every licence on hover', () => {
+  assert.equal(packCredits({}), undefined, 'an older host sends no sources');
+  assert.equal(packCredits({ sources: [] }), undefined);
+  const c = packCredits({
+    sources: [
+      {
+        providerId: 'protomaps-builds',
+        license: 'Data: ODbL 1.0 (© OpenStreetMap contributors)',
+        attribution: 'Protomaps · © OpenStreetMap contributors (ODbL)',
+      },
+      {
+        providerId: 'worldview-seed-places',
+        license: 'MIT',
+        attribution: 'Seed places and airports: OP-CB project (MIT)',
+      },
+      {
+        providerId: 'worldview-seed-airports',
+        license: 'MIT',
+        attribution: 'Seed places and airports: OP-CB project (MIT)',
+      },
+    ],
+  });
+  assert.equal(
+    c?.text,
+    'Credits: Protomaps · © OpenStreetMap contributors (ODbL); Seed places and airports: OP-CB project (MIT)',
+  );
+  assert.equal(
+    c?.title,
+    'protomaps-builds: Data: ODbL 1.0 (© OpenStreetMap contributors)\nworldview-seed-places: MIT\nworldview-seed-airports: MIT',
+  );
 });
