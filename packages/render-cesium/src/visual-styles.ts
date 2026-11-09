@@ -95,16 +95,42 @@ void main() {
 `;
 
 /**
+ * The CRT style's bend: the pixel at a centred position `s` (−1…1 across each side) shows the
+ * scene at `s · (1 + CRT_BEND · |s|²)`. Shared by the shader and by {@link crtScenePoint}, which
+ * puts a click where the picture under it was drawn from.
+ */
+export const CRT_BEND = 0.015;
+
+/**
+ * Where in the scene a point on the CRT-styled screen shows: the same bend the shader applies,
+ * in the canvas's CSS pixels. Undefined past the bent edge, where the screen is black and there
+ * is nothing to pick. The middle of the view is where it was.
+ */
+export function crtScenePoint(
+  screen: { x: number; y: number },
+  size: { width: number; height: number },
+): { x: number; y: number } | undefined {
+  if (!(size.width > 0) || !(size.height > 0)) return screen;
+  const cx = (screen.x / size.width) * 2 - 1;
+  const cy = (screen.y / size.height) * 2 - 1;
+  const k = 1 + CRT_BEND * (cx * cx + cy * cy);
+  const x = ((cx * k + 1) / 2) * size.width;
+  const y = ((cy * k + 1) / 2) * size.height;
+  if (x < 0 || x > size.width || y < 0 || y > size.height) return undefined;
+  return { x, y };
+}
+
+/**
  * A CRT monitor: gentle barrel distortion (black past the bent edge), the three colour
  * channels read a little apart towards the edges as a misconverged tube does, an aperture
  * grille of red, green and blue columns, a dark line every other row, and darker corners.
- * The bend is kept small — 1.5 % at the corners — because clicks still land where the
- * undistorted picture would be. Three texture reads.
+ * The bend is small — 1.5 % at the corners — and clicks follow it (`crtScenePoint`). Three
+ * texture reads.
  */
 const CRT = /* glsl */ `${HEADER}
 void main() {
   vec2 centred = v_textureCoordinates * 2.0 - 1.0;
-  centred *= 1.0 + 0.015 * dot(centred, centred);
+  centred *= 1.0 + ${CRT_BEND.toFixed(3)} * dot(centred, centred);
   vec2 uv = centred * 0.5 + 0.5;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
     out_FragColor = vec4(0.0, 0.0, 0.0, 1.0);

@@ -44,6 +44,11 @@ Versioning: [semantic versioning](https://semver.org/).
   colour · Suomi NPP · from 2 Nov"): NASA stopped Suomi NPP's true colour on 2 November 2026
   and the bar went on offering it as today's picture.
 
+- With the CRT style on the globe, a click near the edge of the view selects the marker drawn
+  under the pointer: clicks, the right-click menu, hover and the pointer's position now follow
+  the picture's bend (1.5 % at the corners), where they used to land on the unbent picture a
+  few pixels away.
+
 ### Added
 
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's
