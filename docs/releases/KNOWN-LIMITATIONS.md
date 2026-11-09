@@ -4,9 +4,6 @@ Each line is a limitation a user or operator can run into. Classification follow
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
 `REMOTE_ACCESS_REQUIRED`, `LICENSE_REVIEW_REQUIRED`.
 
-- With the CRT visual style on the globe the picture is bent slightly (1.5 % at the
-  corners), but clicks are still placed on the unbent picture, so near the edges of the view
-  a click can land a few pixels from the marker drawn under it.
 - In 2D the visual styles are drawn by the browser over the map canvas, so a screenshot
   exported from the 2D map shows the map without the style; on the globe the style is part
   of the picture and is exported with it. The 2D CRT style has no barrel distortion.
@@ -307,10 +304,9 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   satellite in sunlight while the Sun is 6° or more below the horizon — with the Earth's
   shadow taken as a cylinder (no penumbra), to ten seconds at each end; it says nothing about
   cloud, the Moon or how bright the satellite is.
-- The SATCAT record reader was written from CelesTrak's format documentation; the live
-  query endpoint could not be read from the build environment, so the first real answers
-  are to be checked on a machine with network access. Its code lists (owners, launch sites)
-  are a snapshot of September 2026; a newer code shows as the code.
+- The SATCAT record reader was written from CelesTrak's format documentation and checked
+  against live answers on 2026-11-08 (same fields and types). Its code lists (owners, launch
+  sites) are a snapshot of September 2026; a newer code shows as the code.
 - A ship's destination is shown as the text it broadcasts. No line is drawn to the port: the
   text is free-form ("NL RTM", "ROTTERDAM", "FOR ORDERS"), and without a bundled, openly
   licensed port list whose positions could be checked here it cannot be resolved without
@@ -355,9 +351,32 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
 
+## Unreleased (feature/field-fixes)
+
+- The Kiwix catalogue, its Metalink files, kiwix-serve's search, KartaView's answer and the six
+  reference addresses were read live on 2026-11-08 from a browser on the operator's network;
+  the app's own requests (Electron's network stack, the build's browser user agent) have not
+  yet been seen to get the same answers. If cdc.gov or irp.fas.org still refuse the app, that
+  reference says so and the Army's own copy or the next address is tried.
+- Street view asks KartaView only when Panoramax has nothing within 150 m.
+- The portable zip's `OP-CB-data` folder is added after electron-builder by the packaging
+  script; the release gate checks it is there, and the first build that runs it is the next.
+- A portable copy of 0.7.2 or 0.7.3 kept its data in the computer's `%APPDATA%\OP-CB`. The new
+  zip unzipped over it starts portable with empty data; nothing is moved or lost, and removing
+  the new `OP-CB-data` folder goes back to the computer's data. OP-CB does not offer to copy it
+  across.
+- True colour (Suomi NPP) shows 2 November 2026: NASA GIBS has no newer day for it (seen
+  2026-11-08), while the NOAA-20 true colour is current. The Map bar says so ("True colour ·
+  Suomi NPP · from 2 Nov"), as it does for any followed picture more than two days old.
+- Finnish road cameras (Fintraffic) show no municipality or province: the station list stopped
+  carrying them (seen 2026-11-08); the cameras and their pictures are unaffected.
+- Wind on the globe waits on one saved answer from NOAA's ERDDAP (the shape of its JSON grid),
+  which could not be fetched from where this was built.
+
 ## 0.7.3
 
-- The whole-planet fix was checked against a synthetic archive in Protomaps' layout, not yet
+- The whole-planet fix was checked against a synthetic archive in Protomaps' layout and against
+  the real planet build's header (2026-11-08: its sections end at the file's size), not yet
   against a real planet download. A kept download is checked again only while its build is the
   newest Protomaps build (they are daily); after that a new download starts.
 
@@ -376,13 +395,17 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - Identifiers inside data already on disk keep their old spelling and are never shown: pack
   signature and format tags, the seed and reference sources' ids, and the source id of derived
   events in history.
-- The data move was checked in the build container with real folders, not yet on Windows with
-  the earlier program installed.
+- The data move was checked in the build container with real folders, then on Windows on
+  2026-11-01 (WorldView 0.2.2 uninstalled, OP-CB 0.7.3 installed: its data moved from
+  `@worldview\desktop` to `OP-CB` and its log carried on). Not yet with the earlier program
+  still running, nor from a portable copy.
 
 ## 0.7.1
 
-- Electron and the dependency updates were checked by CI (all 15 checks) and the release build,
-  not yet in the installed app on a screen.
+- Electron and the dependency updates were checked by CI (all 15 checks) and the release build;
+  the portable copy was first seen on a screen on 2026-10-30, and the screen test's findings
+  (catalogue search, five references, portable data, a port clash) are fixed on
+  feature/field-fixes.
 
 ## 0.7.0
 
@@ -398,14 +421,14 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   and full-text search, need kiwix-serve. It was tested against the openZIM test files (a 2024
   Kiwix Wikipedia selection among them) in the container, not yet in the packaged app or with a
   100 GB Wikipedia. The Kiwix catalogue's answer and the Metalink files were written from
-  libkiwix's own tests and RFC 5854: library.kiwix.org could not be reached from where this was
-  built, so the first real catalogue search and download are the live check. Pages open with
+  libkiwix's own tests and RFC 5854; on a real screen (2026-10-30) every catalogue search came
+  back empty, because the live catalogue's downloads are on `lb.download.kiwix.org` and its
+  sizes are rounded up to a KiB — read live and fixed on feature/field-fixes. Pages open with
   page scripts off: a book that needs JavaScript (some interactive ones) shows its text only.
 - The emergency references are fetched from their publishers when you press Download, never
-  bundled. Four of the six addresses were opened on 2026-10-30; FEMA's own address refused the
-  checking tool (a State of New Jersey copy of the same guide is the fallback) and one CDC
-  fallback was not opened. If a publisher moves a file, that reference says so and the others
-  still download.
+  bundled. On a real screen (2026-10-30) five of six failed: cdc.gov answered 403 and irp.fas.org
+  a browser check to the app's plain fetch (fixed on feature/field-fixes). If a publisher moves
+  a file, that reference says so and the others still download.
 - The whole-planet map download continues only with the same day's Protomaps build; builds are
   kept about two months. Nothing has been downloaded from Protomaps for real yet.
 - Keeping the data on an external drive (moved or portable) is tested in the container with
@@ -419,10 +442,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   final test is the proof on real equipment. `HARDWARE_REQUIRED`
 - Offline mode stops OP-CB's own requests only; services you run beside it (Ollama, a
   library server) are not stopped from reaching the internet by it.
-- Map downloads were tested against a fake build server and the PMTiles sample archive, not
-  yet against Protomaps' real builds. Only one map pack is drawn at a time (the newest); an
-  area download includes the world at lower detail for that reason. No world map is shipped
-  inside the installer yet.
+- Map downloads were tested against a fake build server and the PMTiles sample archive. The
+  operator's real whole-planet download (2026-10-30) found the check that 0.7.3 fixed, not yet
+  proven on a second real download; the real build's index was read by byte ranges on
+  2026-11-08. Only one map pack is drawn at a time (the newest); an area download
+  includes the world at lower detail for that reason. No world map is shipped inside the
+  installer yet (a world to zoom 5 measures 15 MB, to zoom 6 45 MB).
 - The Command Center is dark only, like the rest of OP-CB.
 - Library pages open in your browser, one book is searched at a time, and "Ask with your
   library" gives the model search excerpts rather than whole articles.

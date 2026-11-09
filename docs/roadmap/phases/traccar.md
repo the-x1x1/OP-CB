@@ -130,6 +130,10 @@ New requests from this phase (none blocks it):
    the host would fix it for everyone. Also: the host reports one socket failure as
    `onError` then `onClose`, which `websocket-json` (frozen) treats as two drops, doubling
    its back-off — the same guard as here (one drop per connection) would fix it there.
+   **First half landed** (feature/field-fixes, 2026-11-08): the host keeps a subscription's retry
+   timer and abort controller apart from the poll's (`subTimer`, `subAbort`), so the retry
+   survives the next poll and a cancelled poll no longer aborts an open subscription
+   (`host.test.ts`). The `websocket-json` double drop is still open.
 4. **ADR-003 (socket auth):** a refused WebSocket upgrade (HTTP 401/403) reaches the
    provider as an error and a close, so a socket that refuses the token cannot be told
    from a dropped one: it shows DEGRADED/OFFLINE and is redialled. Passing the upgrade's

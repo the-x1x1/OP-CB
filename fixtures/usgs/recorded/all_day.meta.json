@@ -1,0 +1,13 @@
+{
+  "providerId": "usgs-earthquakes",
+  "recordedAt": "2026-11-09T04:44Z",
+  "url": "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson",
+  "status": 200,
+  "bytes": 5641,
+  "sha256": "2eb61ac3ba57aee5d83b86fd220303e1cadc2a8f910d25eab06dcd77fab72352",
+  "contentType": "application/json; charset=utf-8",
+  "attribution": "Data courtesy of the U.S. Geological Survey",
+  "license": "US-PD",
+  "selection": "5 of the 192 features in the answer, copied unchanged; metadata and bbox are the whole answer's (count 192). Chosen for: a reviewed M6.4 with a PAGER alert and ShakeMap intensity, a reviewed event with felt reports and a second network id, an automatic event above sea level (depth -0.23 km), an automatic Nevada event, and a body-wave (mb) magnitude.",
+  "note": "Read through the operator's browser because the build machine cannot reach the feed. Committing it is allowed only because the provider data policy permits raw retention and redistribution (USGS: US public domain)."
+}

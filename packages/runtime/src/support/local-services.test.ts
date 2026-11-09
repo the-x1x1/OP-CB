@@ -128,7 +128,7 @@ test('local services: each found running on its loopback port, with what it list
     {
       '127.0.0.1:11434/api/version': () => json({ version: '0.5.1' }),
       '127.0.0.1:11434/api/tags': () => json(OLLAMA_TAGS),
-      '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
+      '127.0.0.1:8090/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
       '127.0.0.1:8081/api/public/info/': () => json(KOLIBRI_INFO),
     },
     { services: { ports: { kolibri: 8081 } } },
@@ -161,16 +161,42 @@ test('local services: each found running on its loopback port, with what it list
 test('local services: nothing on the port, something else on it, and an error are told apart', async () => {
   const { services } = harness({
     '127.0.0.1:11434/api/version': () => new Response('<html>a router page</html>'),
-    '127.0.0.1:8080/catalog/v2/entries': () => new Response('nope', { status: 500 }),
+    '127.0.0.1:8090/catalog/v2/entries': () => new Response('nope', { status: 500 }),
   });
   const [ollama, kiwix, kolibri] = await services.statusAll();
   assert.equal(ollama!.state, 'other');
   assert.equal(kiwix!.state, 'error');
   assert.equal(kiwix!.detail, 'answered 500');
   assert.equal(kolibri!.state, 'not-found');
-  // Kolibri's port is kiwix's by default: the kiwix server's catalogue is not Kolibri.
+  // Something that is not Kolibri on Kolibri's port (readsb's web page, say) is told apart.
   const both = harness({ '127.0.0.1:8080/api/public/info/': () => json({ application: 'other' }) });
   assert.equal((await both.services.status('kolibri')).state, 'other');
+});
+
+test('local services: a kiwix-serve still on 8080, the port used before, is found there and searched there', async () => {
+  const { services, asked } = harness({
+    '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG),
+    '127.0.0.1:8080/search': () => new Response('<rss><channel></channel></rss>'),
+  });
+  const kiwix = await services.status('kiwix');
+  assert.equal(kiwix.state, 'running');
+  assert.equal(kiwix.endpoint, 'http://127.0.0.1:8080');
+  assert.match(kiwix.detail ?? '', /found on port 8080/);
+  const search = await services.librarySearch('6f1d19d0-633f-087b-fb55-7ac324ff9baf', 'ray');
+  assert.equal(search.ok, true);
+  assert.ok(asked.includes('GET 127.0.0.1:8080/search'));
+  // A port the operator set is the only one asked.
+  const own = harness(
+    { '127.0.0.1:8080/catalog/v2/entries': () => new Response(KIWIX_CATALOG) },
+    {
+      services: { ports: { kiwix: 8095 } },
+    },
+  );
+  assert.equal((await own.services.status('kiwix')).state, 'not-found');
+  assert.ok(!own.asked.some((a) => a.includes(':8080')));
+  // Kolibri on 8080 is not kiwix-serve: nothing found, as before.
+  const kolibri = harness({ '127.0.0.1:8080/api/public/info/': () => json(KOLIBRI_INFO) });
+  assert.equal((await kolibri.services.status('kiwix')).state, 'not-found');
 });
 
 test('ai test: the model answers alone, labelled not grounded, with its speed', async () => {
@@ -199,7 +225,7 @@ test('ai test: the model answers alone, labelled not grounded, with its speed', 
 test('library search: hits with their pages; a link off the server is dropped', async () => {
   let query: URLSearchParams | undefined;
   const { services } = harness({
-    '127.0.0.1:8080/search': (u) => {
+    '127.0.0.1:8090/search': (u) => {
       query = u.searchParams;
       return new Response(KIWIX_SEARCH);
     },
@@ -208,6 +234,10 @@ test('library search: hits with their pages; a link off the server is dropped', 
   assert.equal(answer.ok, true);
   assert.equal(query?.get('format'), 'xml');
   assert.equal(query?.get('books.name'), 'wikipedia_en_ray_charles');
+  // A catalogue id names the book by `books.id`: what a real kiwix-serve answers to (2026-11-08).
+  await services.librarySearch('7de7a39a-efde-e369-d2d4-6c6e322a9313', 'volcano');
+  assert.equal(query?.get('books.id'), '7de7a39a-efde-e369-d2d4-6c6e322a9313');
+  assert.equal(query?.get('books.name'), null);
   assert.deepEqual(answer.hits, [
     {
       title: 'Ray Charles',
@@ -216,6 +246,25 @@ test('library search: hits with their pages; a link off the server is dropped', 
       book: 'Ray Charles',
     },
   ]);
+});
+
+test('library catalogue: a book without a full-text index is marked, as the live server tags it', () => {
+  const entry = (id: string, tags: string) =>
+    `<entry><id>urn:uuid:${id}</id><title>T ${id}</title><language>eng</language><name>n${id}</name><tags>${tags}</tags><author><name>A</name></author></entry>`;
+  const feed = `<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">${[
+    // As browse.library.kiwix.org served them on 2026-11-08.
+    entry('1', '_ftindex:no;_pictures:yes;_videos:yes;_details:yes'),
+    entry('2', 'wikipedia;_category:wikipedia;_pictures:no;_videos:no;_details:no;_ftindex:yes'),
+    entry('3', 'medicine'),
+  ].join('')}</feed>`;
+  assert.deepEqual(
+    readKiwixCatalog(feed).map((b) => [b.id, b.fullText]),
+    [
+      ['1', false],
+      ['2', true],
+      ['3', undefined],
+    ],
+  );
 });
 
 test('readers refuse what is not the service', () => {

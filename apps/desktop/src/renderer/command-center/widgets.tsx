@@ -172,13 +172,24 @@ export function LibraryFind() {
 
 export function LibrarySearch() {
   const [cc, store] = useCC();
-  const books = cc.services?.find((s) => s.id === 'kiwix')?.books ?? [];
+  const listed = cc.services?.find((s) => s.id === 'kiwix')?.books ?? [];
+  // Books without a full-text index cannot be searched by kiwix-serve; they are not offered.
+  const books = listed.filter((b) => b.fullText !== false);
   const [book, setBook] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const chosen = book || books.find((b) => b.name)?.name || '';
+  // Books are named to the server by their catalogue id: a real kiwix-serve does not know the
+  // catalogue's `name` as a book name (local-services.ts librarySearch).
+  const chosen = book || books[0]?.id || '';
   const last = cc.lastLibrarySearch;
-  if (!books.length) return <p className="wv-cc-muted">No library books found yet.</p>;
+  if (!listed.length) return <p className="wv-cc-muted">No library books found yet.</p>;
+  if (!books.length)
+    return (
+      <p className="wv-cc-muted">
+        None of the server&apos;s {listed.length} book{listed.length === 1 ? '' : 's'} has a full-text index, so none
+        can be searched here; OP-CB&apos;s own reader still finds pages by title.
+      </p>
+    );
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!chosen || !text.trim()) return;
@@ -192,14 +203,12 @@ export function LibrarySearch() {
   return (
     <form className="wv-cc-inline" onSubmit={(e) => void submit(e)}>
       <select className="wv-input" value={chosen} onChange={(e) => setBook(e.target.value)} aria-label="Book">
-        {books
-          .filter((b) => b.name)
-          .map((b) => (
-            <option key={b.id} value={b.name}>
-              {b.title}
-              {b.language ? ` (${b.language})` : ''}
-            </option>
-          ))}
+        {books.map((b) => (
+          <option key={b.id} value={b.id}>
+            {b.title}
+            {b.language ? ` (${b.language})` : ''}
+          </option>
+        ))}
       </select>
       <input
         className="wv-input"

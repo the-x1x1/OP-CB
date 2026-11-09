@@ -112,6 +112,43 @@ test('fintraffic normalizer builds frame URLs from validated preset ids, never f
   assert.equal(normalizeFintraffic({ type: 'FeatureCollection', features: 'nope' }, opts).malformed, true);
 });
 
+test('fintraffic: a station as the live list gives it now (no municipality or province) still lists its views, with no region invented', () => {
+  // api read 2026-11-08: 815 stations, none with `municipality`, `province` or `cameraType`.
+  const live = {
+    type: 'FeatureCollection',
+    dataUpdatedTime: '2026-11-09T03:25:44Z',
+    features: [
+      {
+        type: 'Feature',
+        id: 'C01503',
+        geometry: { type: 'Point', coordinates: [23.94, 60.05, 0] },
+        properties: {
+          id: 'C01503',
+          name: 'kt51_Inkoo',
+          collectionStatus: 'GATHERING',
+          dataUpdatedTime: '2026-11-09T03:25:44Z',
+          presets: [
+            { id: 'C0150301', inCollection: true },
+            { id: 'C0150302', inCollection: true },
+            { id: 'C0150309', inCollection: true },
+          ],
+          state: null,
+        },
+      },
+    ],
+  };
+  const r = normalizeFintraffic(live, opts);
+  assert.ok(!r.malformed);
+  assert.equal(r.drafts.length, 3);
+  assert.equal(r.rejected.length, 0);
+  assert.equal(
+    r.drafts[0]!.payload['region'],
+    undefined,
+    'the name is not parsed for a place: its parts are roads, villages and streets',
+  );
+  assert.equal(r.drafts[0]!.payload['name'], 'kt51 Inkoo (view 01)');
+});
+
 test('nsw normalizer rejects off-host, non-https and credentialed frame URLs', () => {
   const feature = (href: string, id = 'x1') => ({
     type: 'Feature',

@@ -14,6 +14,7 @@ import {
   IDENTIFIED_TILE_URLS,
   buildCsp,
   buildCspDirectives,
+  downloadUserAgent,
   identifiedTileHeaders,
   mergeSecurityHeaders,
 } from './csp.js';
@@ -298,6 +299,21 @@ test('tiles: OpenStreetMap tile requests name the application, as the OSMF tile 
   assert.equal(out['User-Agent'], 'OP-CB/0.1.8 (+https://github.com/the-x1x1/OP-CB)');
   assert.equal(out['user-agent'], undefined, 'the browser string is replaced, not sent twice');
   assert.equal(out.Accept, 'image/avif,image/webp');
+});
+
+test('library downloads: the browser User-Agent of this build, the app named, the Electron token dropped', () => {
+  const fallback =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) OP-CB/0.7.3 Chrome/142.0.0.0 Electron/44.10.0 Safari/537.36';
+  assert.equal(
+    downloadUserAgent(fallback, '0.7.3'),
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) OP-CB/0.7.3 Chrome/142.0.0.0 Safari/537.36',
+  );
+  // A fallback without the app's name gets it; one that is not Chromium's string at all is not used.
+  assert.equal(
+    downloadUserAgent('Mozilla/5.0 (X11; Linux x86_64) Chrome/142.0.0.0 Electron/44.10.0 Safari/537.36', '0.7.4'),
+    'Mozilla/5.0 (X11; Linux x86_64) Chrome/142.0.0.0 Safari/537.36 OP-CB/0.7.4',
+  );
+  assert.equal(downloadUserAgent('', '0.7.4'), 'OP-CB/0.7.4 (+https://github.com/the-x1x1/OP-CB)');
 });
 
 test('openExternal allowlist: the 3D models’ credit links in Data & attribution can be opened', async () => {

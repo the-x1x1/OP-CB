@@ -4,7 +4,7 @@ import { ManualScheduler, VISUAL_STYLE_IDS, type CameraModeState, type RenderFea
 import { ALWAYS_VISIBLE } from './horizon.js';
 import { CesiumWorldRenderer } from './renderer.js';
 import { createFakeCesium, fakeCanvasFactory } from './testing/fake-cesium.js';
-import { VISUAL_STYLE_SHADERS } from './visual-styles.js';
+import { CRT_BEND, VISUAL_STYLE_SHADERS, crtScenePoint } from './visual-styles.js';
 import { featurePosition, followRange, orbitPitch } from './camera-modes.js';
 
 const DEG = Math.PI / 180;
@@ -104,6 +104,40 @@ test('visual styles: one stage in the scene at a time, each added and removed ex
   renderer.setVisualStyle('noir');
   renderer.dispose();
   assert.equal(stages.stages.length, 0, 'disposing takes the stage out');
+});
+
+test('crt: a click lands where the bent picture under it was drawn from, as the shader bends it', async () => {
+  const size = { width: 1024, height: 768 };
+  assert.deepEqual(crtScenePoint({ x: 512, y: 384 }, size), { x: 512, y: 384 }, 'the middle does not move');
+  // A corner: centred (−1, −1), |s|² = 2, so the scene point is 3 % further out — past the edge.
+  assert.equal(crtScenePoint({ x: 0, y: 0 }, size), undefined, 'the black past the bent edge picks nothing');
+  // Near the right edge, half way down: centred x 0.9 → 0.9 × (1 + 0.015 × 0.81).
+  const p = crtScenePoint({ x: 0.95 * 1024, y: 384 }, size)!;
+  assert.ok(Math.abs(p.x - ((0.9 * (1 + CRT_BEND * 0.81) + 1) / 2) * 1024) < 1e-9);
+  assert.equal(p.y, 384);
+  assert.match(
+    VISUAL_STYLE_SHADERS.crt!,
+    new RegExp(`1\\.0 \\+ ${CRT_BEND.toFixed(3).replace('.', '\\.')} \\* dot`),
+    'the shader bends by the same amount',
+  );
+
+  const { renderer, viewer, cesium } = await mounted();
+  renderer.update({ upsert: [aircraft('obj:a')], remove: [] });
+  const picks: Array<{ screen: { x: number; y: number } } | null> = [];
+  renderer.on('pick', (r) => picks.push(r as { screen: { x: number; y: number } } | null));
+  viewer.scene.pickResult = { id: 'obj:a' };
+  const handler = cesium.handlers[0]!;
+  handler.fire(cesium.ScreenSpaceEventType.LEFT_CLICK, { position: { x: 0.95 * 1024, y: 384 } });
+  assert.deepEqual(viewer.scene.pickedAt.at(-1), { x: 0.95 * 1024, y: 384 }, 'standard: picked where clicked');
+  renderer.setVisualStyle('crt');
+  handler.fire(cesium.ScreenSpaceEventType.LEFT_CLICK, { position: { x: 0.95 * 1024, y: 384 } });
+  assert.ok(Math.abs(viewer.scene.pickedAt.at(-1)!.x - p.x) < 1e-9, 'crt: picked where the picture there came from');
+  assert.deepEqual(picks.at(-1)?.screen, { x: 0.95 * 1024, y: 384 }, 'the card still opens where the pointer was');
+  const before = viewer.scene.pickedAt.length;
+  handler.fire(cesium.ScreenSpaceEventType.LEFT_CLICK, { position: { x: 1, y: 1 } });
+  assert.equal(viewer.scene.pickedAt.length, before, 'a click on the black corner asks the scene nothing');
+  assert.equal(picks.at(-1), null);
+  renderer.dispose();
 });
 
 // ── day and night ────────────────────────────────────────────────────────────

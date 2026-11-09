@@ -395,11 +395,14 @@ export class FakeScene implements SceneLike {
   renderRequests = 0;
   /** Test hook: what `pick()` returns at any position. */
   pickResult: unknown = undefined;
+  /** Test hook: where `pick()` was asked, in order. */
+  readonly pickedAt: Array<{ x: number; y: number }> = [];
   groundPrimitiveSupport = true;
   requestRender(): void {
     this.renderRequests++;
   }
-  pick(): { id?: unknown; primitive?: unknown } | undefined {
+  pick(windowPosition?: Cartesian2Like): { id?: unknown; primitive?: unknown } | undefined {
+    if (windowPosition) this.pickedAt.push({ x: windowPosition.x, y: windowPosition.y });
     return this.pickResult as { id?: unknown } | undefined;
   }
   pickPosition(): Cartesian3Like | undefined {

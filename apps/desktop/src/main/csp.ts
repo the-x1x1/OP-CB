@@ -106,6 +106,20 @@ export function appUserAgent(version: string): string {
   return `OP-CB/${version} (+https://github.com/the-x1x1/OP-CB)`;
 }
 
+/**
+ * The User-Agent for downloads into the library (Kiwix books, the emergency references):
+ * Chromium's own string for this build with the app named in it, minus the `Electron/x`
+ * token. cdc.gov answered 403 and irp.fas.org a browser check to a plain Node fetch
+ * (2026-10-30); both answer a browser with the document. `fallback` is Electron's
+ * `app.userAgentFallback`, e.g. "Mozilla/5.0 (Windows NT 10.0; Win64; x64) OP-CB/0.7.3
+ * Chrome/142.0.0.0 Electron/44.10.0 Safari/537.36" — the app's name stays, as the site sees who asks.
+ */
+export function downloadUserAgent(fallback: string, version: string): string {
+  const stripped = fallback.replace(/\s*\bElectron\/\S+/, '').trim();
+  if (!/\bChrome\//.test(stripped)) return appUserAgent(version);
+  return /\bOP-CB\//.test(stripped) ? stripped : `${stripped} OP-CB/${version}`;
+}
+
 /** Request headers for a tile request to one of IDENTIFIED_TILE_URLS: the app's own User-Agent. */
 export function identifiedTileHeaders(headers: Record<string, string>, version: string): Record<string, string> {
   const out: Record<string, string> = {};

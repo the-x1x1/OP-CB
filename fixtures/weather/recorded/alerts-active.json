@@ -1,0 +1,228 @@
+{
+  "@context": [
+    "https://geojson.org/geojson-ld/geojson-context.jsonld",
+    {
+      "@version": "1.1",
+      "wx": "https://api.weather.gov/ontology#",
+      "@vocab": "https://api.weather.gov/ontology#"
+    }
+  ],
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.7678805471a91ed0e23873125a2b98f0b41caa49.001.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-100.79, 30.29],
+            [-100.22, 30.29],
+            [-99.85, 30.29],
+            [-100.12, 29.93],
+            [-100.32, 29.64],
+            [-100.34, 29.59],
+            [-100.38, 29.53],
+            [-100.42, 29.52],
+            [-100.49, 29.51],
+            [-100.9, 29.52],
+            [-101.15, 29.72],
+            [-100.79, 30.29]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.7678805471a91ed0e23873125a2b98f0b41caa49.001.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.7678805471a91ed0e23873125a2b98f0b41caa49.001.1",
+        "areaDesc": "Edwards, TX; Kinney, TX; Val Verde, TX",
+        "geocode": {
+          "SAME": ["048137", "048271", "048465"],
+          "UGC": ["TXC137", "TXC271", "TXC465"]
+        },
+        "affectedZones": [
+          "https://api.weather.gov/zones/county/TXC137",
+          "https://api.weather.gov/zones/county/TXC271",
+          "https://api.weather.gov/zones/county/TXC465"
+        ],
+        "references": [
+          {
+            "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.01008b96dac39f7a04ddcc53eb85874a9b3b68cb.001.1",
+            "identifier": "urn:oid:2.49.0.1.840.0.01008b96dac39f7a04ddcc53eb85874a9b3b68cb.001.1",
+            "sender": "w-nws.webmaster@noaa.gov",
+            "sent": "2026-11-08T13:23:00-06:00"
+          },
+          {
+            "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.14cb88d7f5d4dc20f4b2849f6feee863d74dc2d7.002.1",
+            "identifier": "urn:oid:2.49.0.1.840.0.14cb88d7f5d4dc20f4b2849f6feee863d74dc2d7.002.1",
+            "sender": "w-nws.webmaster@noaa.gov",
+            "sent": "2026-11-08T17:13:00-06:00"
+          }
+        ],
+        "sent": "2026-11-08T19:46:00-06:00",
+        "effective": "2026-11-08T19:46:00-06:00",
+        "onset": "2026-11-08T19:46:00-06:00",
+        "expires": "2026-11-09T00:00:00-06:00",
+        "ends": "2026-11-09T00:00:00-06:00",
+        "status": "Actual",
+        "messageType": "Update",
+        "category": "Met",
+        "severity": "Severe",
+        "certainty": "Likely",
+        "urgency": "Immediate",
+        "event": "Flash Flood Warning",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Austin/San Antonio TX",
+        "headline": "Flash Flood Warning issued November 8 at 7:46PM CST until November 9 at 12:00AM CST by NWS Austin/San Antonio TX",
+        "description": "FFWEWX\n\nThe National Weather Service in Austin/San Antonio has extended the\n\n* Flash Flood Warning for...\nEdwards County in south central Texas...\nNorthwestern Kinney County in south central Texas...\nNortheastern Val Verde County in south central Texas...\n\n* Until midnight CST.\n\n* At 746 PM CST, emergency management and TxDot reports flooding\nacross the warned area with several roads flooded and closed,\nincluding near US highway 377, SH 55 and CR 450. A water rescue was\nreported this evening in the Newby Hills subdivision along CR 450.\nAreas near Kickapoo Cavern State Park and Devils River Natural Area\n- Del Norte have flooding as well. Between 2 and 5 inches of rain\nhave fallen over the past 24 to 36 hours. Additional rainfall\namounts up to 1 inch are possible in the warned area.\n\nHAZARD...Life threatening flash flooding. Heavy rain producing\nflash flooding.\n\nSOURCE...Emergency management reported.\n\nIMPACT...Life threatening flash flooding of creeks and streams,\nurban areas, highways, streets and underpasses.\n\n* Some locations that will experience flash flooding include...\nRocksprings, Loma Alta, Carta Valley, Vinegarone, Kickapoo Cavern\nState Park, Devils River State Nat Area Del Norte, Devil's Sinkhole\nState Natural Area, Devils River State Nat Area Big Satan, Devils\nShores and Pafford Crossing.",
+        "instruction": "Turn around, don't drown when encountering flooded roads. Most flood\ndeaths occur in vehicles.\n\nIn hilly terrain there are hundreds of low water crossings which are\npotentially dangerous in heavy rain. Do not attempt to cross flooded\nroads. Find an alternate route.\n\nFlooding is occurring or is imminent. It is important to know where\nyou are relative to streams, rivers, or creeks which can become\nkillers in heavy rains. Campers and hikers should avoid streams or\ncreeks.",
+        "response": "Avoid",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": ["FFWEWX"],
+          "WMOidentifier": ["WGUS54 KEWX 090146"],
+          "flashFloodDetection": ["OBSERVED"],
+          "flashFloodDamageThreat": ["CONSIDERABLE"],
+          "BLOCKCHANNEL": ["EAS", "NWEM"],
+          "EAS-ORG": ["WXR"],
+          "VTEC": ["/O.EXT.KEWX.FF.W.0108.000000T0000Z-261109T0600Z/"],
+          "eventEndingTime": ["2026-11-09T00:00:00-06:00"],
+          "WEAHandling": ["Imminent Threat"],
+          "CMAMtext": ["NWS: FLASH FLOOD WARNING this area til 12:00 AM CST. Avoid flooded areas."],
+          "CMAMlongtext": [
+            "National Weather Service: A FLASH FLOOD WARNING is in effect for this area until 12:00 AM CST. This is a dangerous and life-threatening situation. Do not attempt to travel unless you are fleeing an area subject to flooding or under an evacuation order."
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": ["FFW"],
+          "NationalWeatherService": ["FFW"]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.e6dfd683d7d761801c46f34fe85b86646da3982b.001.1",
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-98.19, 27.31],
+            [-98.07, 27.31],
+            [-98.07, 27.25],
+            [-97.99, 27.25],
+            [-97.99, 27.17],
+            [-98.18, 27.22],
+            [-98.19, 27.31]
+          ]
+        ]
+      },
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.e6dfd683d7d761801c46f34fe85b86646da3982b.001.1",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.e6dfd683d7d761801c46f34fe85b86646da3982b.001.1",
+        "areaDesc": "Brooks, TX",
+        "geocode": {
+          "SAME": ["048047"],
+          "UGC": ["TXC047"]
+        },
+        "affectedZones": ["https://api.weather.gov/zones/county/TXC047"],
+        "references": [],
+        "sent": "2026-11-08T20:26:00-06:00",
+        "effective": "2026-11-08T20:26:00-06:00",
+        "onset": "2026-11-08T20:26:00-06:00",
+        "expires": "2026-11-09T08:30:00-06:00",
+        "ends": null,
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Minor",
+        "certainty": "Observed",
+        "urgency": "Expected",
+        "event": "Flood Advisory",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Brownsville TX",
+        "headline": "Flood Advisory issued November 8 at 8:26PM CST by NWS Brownsville TX",
+        "description": "...The Flood Advisory continues for the following rivers in Texas...\n\nLos Olmos Creek Near Falfurrias affecting Brooks County.\n\nFor the Los Olmos Creek...including Falfurrias...elevated river\nlevels are forecast.\n\n* WHAT...Flooding caused by excessive rainfall continues.\n\n* WHERE...Los Olmos Creek near Falfurrias.\n\n* WHEN...Until further notice.\n\n* IMPACTS...At 10.0 feet, Flow escapes from the Los Olmos drainage\ninto the Palo Blanco drainage area\n\n* ADDITIONAL DETAILS...\n- At 7:15 PM CST Sunday the stage was 1.6 feet.\n- Bankfull stage is 5.0 feet.\n- Forecast...The river is expected to rise to a crest of 10.5 feet\nTuesday morning.\n- Action stage is 5.0 feet.\n- Flood stage is 11.0 feet.\n- http://www.weather.gov/safety/flood",
+        "instruction": "If you are in the advisory area, remain alert to possible flooding or\nthe possibility of the advisory being upgraded to a warning.\n\nPlease report observed flooding to local emergency services or law\nenforcement and request they pass this information to the National\nWeather Service when you can do so safely.\n\nStay tuned to further developments by listening to your local radio,\ntelevision, or NOAA Weather Radio for further information.\n\nAdditional information is available at www.weather.gov.\n\nThe next statement will be issued Monday morning at 830 AM CST.",
+        "response": "Avoid",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": ["FLSBRO"],
+          "WMOidentifier": ["WGUS84 KBRO 090226"],
+          "NWSheadline": ["FLOOD ADVISORY REMAINS IN EFFECT UNTIL FURTHER NOTICE"],
+          "BLOCKCHANNEL": ["EAS", "NWEM", "CMAS"],
+          "VTEC": ["/O.CON.KBRO.FL.Y.0001.000000T0000Z-000000T0000Z/"],
+          "expiredReferences": [
+            "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a9c7a6d2aa6f6ccaf098e6db729e235553c7a2eb.001.1,2026-11-08T08:12:00-06:00"
+          ]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": ["NWS"],
+          "NationalWeatherService": ["FLY"]
+        }
+      }
+    },
+    {
+      "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d3ddf531bc9978f4bfbc92ba35d4b4ec21185a07.004.2",
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.d3ddf531bc9978f4bfbc92ba35d4b4ec21185a07.004.2",
+        "@type": "wx:Alert",
+        "id": "urn:oid:2.49.0.1.840.0.d3ddf531bc9978f4bfbc92ba35d4b4ec21185a07.004.2",
+        "areaDesc": "Coastal waters from Cape Mendocino to Pt. Arena CA out 10 nm",
+        "geocode": {
+          "SAME": ["057455"],
+          "UGC": ["PZZ455"]
+        },
+        "affectedZones": ["https://api.weather.gov/zones/forecast/PZZ455"],
+        "references": [],
+        "sent": "2026-11-08T20:35:00-08:00",
+        "effective": "2026-11-08T20:35:00-08:00",
+        "onset": "2026-11-08T21:00:00-08:00",
+        "expires": "2026-11-09T04:45:00-08:00",
+        "ends": "2026-11-09T21:00:00-08:00",
+        "status": "Actual",
+        "messageType": "Alert",
+        "category": "Met",
+        "severity": "Minor",
+        "certainty": "Likely",
+        "urgency": "Expected",
+        "event": "Small Craft Advisory",
+        "sender": "w-nws.webmaster@noaa.gov",
+        "senderName": "NWS Eureka CA",
+        "headline": "Small Craft Advisory issued November 8 at 8:35PM PST until November 9 at 9:00PM PST by NWS Eureka CA",
+        "description": "* WHAT...Seas 11 to 16 feet expected.\n\n* WHERE...Coastal waters from Cape Mendocino to Pt. Arena CA out\n10 nm.\n\n* WHEN...Until 9 PM PST Monday.\n\n* IMPACTS...Conditions will be hazardous to small craft.",
+        "instruction": "Inexperienced mariners, especially those operating smaller\nvessels, should avoid navigating in hazardous conditions.",
+        "response": "Avoid",
+        "note": null,
+        "parameters": {
+          "AWIPSidentifier": ["MWWEKA"],
+          "WMOidentifier": ["WHUS76 KEKA 090435"],
+          "NWSheadline": ["SMALL CRAFT ADVISORY IN EFFECT UNTIL 9 PM PST MONDAY"],
+          "BLOCKCHANNEL": ["EAS", "NWEM", "CMAS"],
+          "VTEC": ["/O.NEW.KEKA.SC.Y.0102.261109T0500Z-261110T0500Z/"],
+          "eventEndingTime": ["2026-11-09T21:00:00-08:00"]
+        },
+        "scope": "Public",
+        "code": "IPAWSv1.0",
+        "language": "en-US",
+        "web": "http://www.weather.gov",
+        "eventCode": {
+          "SAME": ["NWS"],
+          "NationalWeatherService": ["SCY"]
+        }
+      }
+    }
+  ],
+  "title": "Current watches, warnings, and advisories",
+  "updated": "2026-11-09T04:45:04+00:00"
+}

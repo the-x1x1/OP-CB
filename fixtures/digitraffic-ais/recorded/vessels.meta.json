@@ -1,0 +1,13 @@
+{
+  "providerId": "digitraffic-ais",
+  "recordedAt": "2026-11-09T04:35Z",
+  "url": "https://meri.digitraffic.fi/api/ais/v1/vessels?from=<an hour before the request>",
+  "status": 200,
+  "bytes": 1369,
+  "sha256": "a6c3d0ec3cb177bdd77621ccfafda45dff5200b45f61cf91b3843d7230d91fc2",
+  "contentType": "application/json;charset=UTF-8",
+  "attribution": "Ships (Baltic): Source: Fintraffic / digitraffic.fi, license CC 4.0 BY",
+  "license": "CC-BY-4.0",
+  "selection": "The 4 rows, of 691 in the answer, for the ships in locations.json, copied unchanged; MERIKUOKKA's row carries the not-available values (IMO 0, ship type 0, reference points 0, ETA 1596, empty destination).",
+  "note": "Read through the operator's browser (Digitraffic-User: opcb) because the build machine cannot reach the API; the selection is the whole answer cut down, nothing edited. Committing it is allowed only because the provider data policy permits raw retention and redistribution."
+}

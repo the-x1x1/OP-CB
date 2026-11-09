@@ -36,6 +36,8 @@ export interface RuntimeDeps {
   historyBackend?: 'duckdb-parquet' | 'ndjson';
   /** The fetch the runtime's network layer uses (main passes one that honours Work offline). */
   fetchImpl?: typeof fetch;
+  /** The fetch for downloads into the library: main passes Electron's `net.fetch`, gated the same way. */
+  downloadFetchImpl?: typeof fetch;
   /** Sources with tiles in the disk tile cache (tile-cache.ts), for the offline basemap list. */
   cachedTileSources?: () => Promise<readonly string[]>;
   /** Where the renderer reads the installed world pack's basemap (pack-basemap.ts). */
@@ -75,6 +77,7 @@ export function runtimeDepsFor(deps: RuntimeDeps): WorldRuntimeDeps {
     ...(deps.host ? { host: deps.host } : {}),
     ...(deps.network ? { network: deps.network } : {}),
     ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}),
+    ...(deps.downloadFetchImpl ? { downloadFetchImpl: deps.downloadFetchImpl } : {}),
     ...(deps.historyBackend ? { historyBackend: deps.historyBackend } : {}),
     ...(deps.cachedTileSources ? { cachedTileSources: deps.cachedTileSources } : {}),
     ...(deps.offlineBasemapUrl ? { offlineBasemapUrl: deps.offlineBasemapUrl } : {}),

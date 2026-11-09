@@ -49,7 +49,7 @@ import { ALWAYS_VISIBLE, cameraMoved, horizonTest, type HorizonTest, type Vec3 }
 import { REFERENCE_LABEL_ID_PREFIX, ReferenceOverlay3D } from './reference-overlay.js';
 import { motionStepMs } from './layers/motion.js';
 import { ModelLayer } from './layers/models.js';
-import { VisualStyle3D } from './visual-styles.js';
+import { VisualStyle3D, crtScenePoint } from './visual-styles.js';
 import { DayNight3D, type DayNightTimers } from './day-night.js';
 import { CameraModes3D } from './camera-modes.js';
 import type { LabelBox } from './labelDeclutter.js';
@@ -297,7 +297,8 @@ export class CesiumWorldRenderer implements WorldRenderer {
     const handler = new this.cesium.ScreenSpaceEventHandler(viewer.canvas);
     handler.setInputAction((e) => {
       if (!e.position) return;
-      const ground = this.viewer ? this.surfacePosition(e.position) : undefined;
+      const at = this.scenePoint(e.position);
+      const ground = this.viewer && at ? this.surfacePosition(at) : undefined;
       if (ground)
         this.emit('click', {
           position: { latitude: ground.latitude, longitude: ground.longitude },
@@ -308,7 +309,8 @@ export class CesiumWorldRenderer implements WorldRenderer {
     // Cesium sends RIGHT_CLICK only for a press and release in place; a right-drag zooms.
     handler.setInputAction((e) => {
       if (!e.position || !this.viewer) return;
-      const ground = this.surfacePosition(e.position);
+      const at = this.scenePoint(e.position);
+      const ground = at ? this.surfacePosition(at) : undefined;
       if (ground)
         this.emit('contextMenu', {
           position: { latitude: ground.latitude, longitude: ground.longitude },
@@ -729,10 +731,26 @@ export class CesiumWorldRenderer implements WorldRenderer {
   }
 
   // ── picking ────────────────────────────────────────────────────────────────
+  /**
+   * The point of the scene drawn at a point on the screen: itself, or under the CRT style's
+   * bend the point the bent picture there was drawn from (undefined past its black edge).
+   * A pick, the ground under a click and the pointer's readout use it; the `screen` an event
+   * reports stays where the pointer was, for the card that opens there.
+   */
+  private scenePoint(screen: { x: number; y: number }): { x: number; y: number } | undefined {
+    if (this.visualStyleShown !== 'crt') return screen;
+    const canvas = this.viewer?.scene.canvas;
+    const width = canvas?.clientWidth || canvas?.width || 0;
+    const height = canvas?.clientHeight || canvas?.height || 0;
+    return crtScenePoint(screen, { width, height });
+  }
+
   private pickAt(screen: { x: number; y: number }): PickResult | null {
     const v = this.viewer;
     if (!v || !this.layers) return null;
-    const windowPosition = new this.cesium.Cartesian2(screen.x, screen.y);
+    const at = this.scenePoint(screen);
+    if (!at) return null;
+    const windowPosition = new this.cesium.Cartesian2(at.x, at.y);
     const featureId = resolvePickedFeatureId(v.scene.pick(windowPosition));
     // A place name (reference-overlay.ts) is scenery, not something to select.
     if (!featureId || featureId.startsWith(REFERENCE_LABEL_ID_PREFIX)) return null;
@@ -769,7 +787,8 @@ export class CesiumWorldRenderer implements WorldRenderer {
     const v = this.viewer;
     const p = this.pointerAt;
     if (!v) return;
-    const cartesian = p ? v.camera.pickEllipsoid(new this.cesium.Cartesian2(p.x, p.y)) : undefined;
+    const at = p ? this.scenePoint(p) : undefined;
+    const cartesian = at ? v.camera.pickEllipsoid(new this.cesium.Cartesian2(at.x, at.y)) : undefined;
     const carto = cartesian ? this.cesium.Cartographic.fromCartesian(cartesian) : undefined;
     if (!p || !carto) {
       if (this.pointerOnGround) {

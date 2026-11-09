@@ -142,8 +142,8 @@ Decisions only the operator can make:
 
 - [ ] `offline-basemaps` B1: the licence record for a pack's basemap. Decided 2026-10-20: a
       licence-free one (below, "The operator's decisions, 2026-10-20").
-- [ ] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
-      Decided 2026-10-20: they may show, with an easy way to add them (below).
+- [x] `home-assistant`: whether `person` and `device_tracker` entities stay refused (§73).
+      Decided 2026-10-20: they may show, with an easy way to add them (below; built).
 - [x] The user-data folder: `%APPDATA%\OP-CB\` as built (decided 2026-10-20;
       the docs now say so).
 - [ ] Legal sign-off on the conditional and manual-review providers (LR-01…LR-19) and
@@ -157,8 +157,8 @@ Engineering:
 - [x] `offline-basemaps` B4: a Martin source as a 2D basemap (Settings → Rendering). A LAN
       server over plain http stays undrawn unless the operator decides to widen the CSP.
 - [x] `home-assistant` request 2 (`connector:test --live --setting key=value`).
-- [ ] `home-assistant` request 1 (`ws://` to loopback or the trusted host for local
-      sources). Decided 2026-10-20: Home Assistant may connect with `ws://` (below).
+- [x] `home-assistant` request 1 (`ws://` to loopback or the trusted host for local
+      sources). Decided 2026-10-20: Home Assistant may connect with `ws://` (below; built).
 - [x] The refactor pass (docs/roadmap/INTEGRATION.md): items 1–4 on `feature/refactor`; the
       Windows gate on every build; `connector:test --live` for all 25 bundled definitions
       on 2026-10-04, all LIVE.
@@ -367,28 +367,19 @@ Engineering with no licence or key, in the order they are to be built:
 - [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the
       selection; after the 2D profile, since it costs frames.
 
-Each needs a decision of the operator's first:
+Decided on 2026-10-20 (see "The operator's decisions" below) and since built or in hand:
+**Wind on the globe** (NOAA ERDDAP, keyless; waits on one saved answer), **Street-level
+imagery** (Panoramax, then KartaView; Mapillary and Google not asked), **Links to a view**
+(`opcb://`), **An MCP server over the local API** (shipped), **the planetary K index in the
+Sky tab** (a Sky-tab-only request in the runtime, ADR-003 amendment; shipped).
 
-- **Wind on the globe** (GEV `0251c74`: GFS and ECMWF IFS as animated particles and a reading at
-  the centre): which source — NOAA GFS needs a GRIB2 decoder (a dependency) or a re-served grid;
-  Open-Meteo's record is conditional.
-- **Street-level imagery** (GEV: Mapillary, KartaView, Panoramax, Google Street View): Mapillary
-  needs a key; KartaView is CC BY-SA; Panoramax instances set their own licences; Google is
-  excluded.
-- **Links to a view** (GEV `fe69f22`): a `opcb://` link that opens the app at a place with
-  given layers — registering a protocol handler is an installer and OS change.
-- **An MCP server over the local API** (GEV's tool catalog and `/mcp`): AI clients reading what
-  the app holds; extends ADR-014 and what leaves the app.
+Each of these still needs a decision of the operator's first:
+
 - **Recent imagery for a box** (GEV `#716`): the STAC example for Sentinel-2 on Earth Search, shipped
   and offered from What's here; Copernicus terms to record.
 - **More camera, transit and bike-share regions** (GEV: Toronto, WSDOT, King County, NYC DOT,
   Catalonia, Lithuania, Norway; TTC and Ontario transit; Kona & Hilo, Norway and Brazil bike
   share): each source's licence.
-- **The planetary K index in the Sky tab** (OSIRIS; SWPC, public domain): Kp is one reading
-  for the whole Earth, and the world model's objects all have a position or a shape. Either a
-  kind of reading without a place (a world-model change, ADR) or a Sky-tab-only request that
-  fetches it in the runtime outside the provider path (an exception to ADR-003). Which, if
-  either.
 - **OSIRIS's reference data and feeds** (nuclear facilities, conflict events, markets): each a
   licence review; the recon tools stay under 1.10.0 below.
 
@@ -434,9 +425,9 @@ each to be built on `feature/roadmap-3`:
 - [x] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
       (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown; on
       feature/roadmap-3, Street view in What's here); live only, never cached into packs
-      (ShareAlike). KartaView answers without a key too but no live answer with a record was
-      seen from the container, so its field names are unconfirmed and it waits. Mapillary needs
-      a token and Google a key: not those.
+      (ShareAlike). KartaView (CC BY-SA 4.0 by its terms) is asked when Panoramax has nothing
+      within reach — its answer shape was read live on 2026-11-08 (on feature/field-fixes).
+      Mapillary needs a token and Google a key: not those.
 - [x] **An MCP server** for AI clients on this machine (Formicaria's tools among them): local,
       off by default, read-only over what the local API already serves (ADR-014).
 - [x] **The planetary K index** in the Sky tab, as an exception to the provider path (ADR-003):
@@ -452,8 +443,13 @@ each to be built on `feature/roadmap-3`:
       domain) at low zoom as now. Nothing public-domain is detailed enough past zoom 6–8, and the
       2D styles draw the Protomaps schema, so this is a record and a documented recipe (B1), not
       new code: write the licence record for a pack's basemap into the pack's manifest at build
-      time and show it in Settings → Offline packs. Waits on a Protomaps build (about 120 GB, kept
-      seven days) being cut on a machine with the room.
+      time and show it in Settings → Offline packs (both done: the builder records each source's
+      licence and credit, and Settings shows the credits under each pack, on
+      feature/field-fixes). Waits on a Protomaps build (about 139 GB, kept
+      seven days) being cut on a machine with the room. The in-app downloader (0.6.0+) does the
+      cut itself; a world shipped inside the installer measures z5 15 MB, z6 45 MB, z7 190 MB
+      against the 2026-11-08 build (docs/architecture/COMMAND-CENTER.md §8) — the operator's
+      call which, if any, to bundle.
 - Not needed now: the interface in other languages.
 - Still the operator's or legal's: the conditional providers (LR-01…LR-19) and AISStream's
   commercial terms; more camera, transit and bike-share regions (each feed's licence); OSIRIS's

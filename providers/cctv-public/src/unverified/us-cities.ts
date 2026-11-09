@@ -199,9 +199,10 @@ export const iowaPack: CatalogPack = {
 // ── New Zealand ───────────────────────────────────────────────────────────────
 /**
  * NZ Transport Agency Waka Kotahi — the Journey Planner's camera list (GeoJSON, keyless).
- * The Journey Planner says "© NZ Transport Agency Waka Kotahi, all rights reserved"; NZTA
- * publishes much of its data under CC BY 4.0, but no statement covering these images was
- * found, so the pack is here rather than in the default source. Frames live under
+ * The Journey Planner's copyright statement (journeys.nzta.govt.nz/about-this-site, read
+ * 2026-11-08) allows reproduction for personal use only and says that permission does not
+ * extend to photography and imagery; NZTA's open data portal has no camera dataset. So the
+ * pack is here rather than in the default source. Frames live under
  * www.trafficnz.info/camera/.
  */
 export const NZTA_CAMERAS_URL = 'https://www.journeys.nzta.govt.nz/assets/map-data-cache/cameras.json';

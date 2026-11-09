@@ -51,7 +51,7 @@ export function DataLocationCard() {
       <p className="wv-cc-muted">
         Everything OP-CB writes lives here: settings, history, saved places, downloaded maps, the inventory, stored keys
         and logs. To keep all of it on an external SSD, move it there; to carry OP-CB between computers, unzip the
-        portable copy onto the drive and make a folder named <code>OP-CB-data</code> beside <code>OP-CB.exe</code>.
+        portable copy onto the drive: its <code>OP-CB-data</code> folder beside <code>OP-CB.exe</code> holds everything.
         Stored keys are locked to one computer by the operating system and are asked for again on another.
       </p>
       {info.kind !== 'portable' ? (

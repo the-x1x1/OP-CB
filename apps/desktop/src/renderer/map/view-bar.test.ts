@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { RasterOverlay } from '@opcb/world-model';
 import type { ResolvedMapProvider } from '@opcb/render-core';
-import { activeMapChoice, basemapLabel, imageryLabel, mapChoices } from './view-bar.js';
+import { activeMapChoice, basemapLabel, imageryLabel, mapChoices, staleFrameDay } from './view-bar.js';
 import { sourceBasemapId } from '../map-providers.js';
 
 const basemap = (id: string, name: string, modes: Array<'2D' | '3D'>, available = true) =>
@@ -64,4 +64,35 @@ test('the active Map choice: a chosen imagery layer that is published, else the 
 test('labels', () => {
   assert.equal(basemapLabel({ id: 'something-new', name: 'Something New (online)' }), 'Something New');
   assert.equal(imageryLabel({ providerId: 'gibs-viirs-snpp-true-colour', name: 'x' }), 'True colour · Suomi NPP');
+});
+
+test('a followed frame more than two days old is said on the bar, as GIBS left Suomi NPP on 2 November', () => {
+  const now = Date.parse('2026-11-09T04:00:00Z');
+  assert.equal(staleFrameDay('2026-11-02', now), '2 Nov');
+  assert.equal(staleFrameDay('2026-11-08', now), undefined, "yesterday's daily mosaic is the newest there can be");
+  assert.equal(staleFrameDay('2026-11-07', now), undefined, 'a daily frame counts from the end of its day');
+  assert.equal(staleFrameDay('2026-11-06', now), '6 Nov');
+  assert.equal(staleFrameDay('2026-11-08T22:30:00Z', now), undefined, 'IMERG, hours behind as usual');
+  assert.equal(staleFrameDay('2026-11-06T03:59:00Z', now), '6 Nov');
+  assert.equal(staleFrameDay('2025-12-31', now), '31 Dec 2025');
+  assert.equal(
+    staleFrameDay(undefined, now),
+    undefined,
+    'a layer that does not follow frames (Night lights) says nothing',
+  );
+  assert.equal(staleFrameDay('not a time', now), undefined);
+  const choices = mapChoices(
+    [],
+    [
+      overlay('gibs-viirs-snpp-true-colour', 'Corrected Reflectance (True Color)', { frame: '2026-11-02' }),
+      overlay('gibs-viirs-noaa20-true-colour', 'Corrected Reflectance (True Color)', { frame: '2026-11-09' }),
+    ],
+    '3D',
+    now,
+  );
+  assert.deepEqual(
+    choices.map((c) => c.label),
+    ['True colour · Suomi NPP · from 2 Nov', 'True colour · NOAA-20'],
+  );
+  assert.match(choices[0]!.title, /\(2026-11-02\), the newest picture the service has/);
 });

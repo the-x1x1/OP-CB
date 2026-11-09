@@ -96,6 +96,13 @@ export interface WorldRuntimeDeps {
    */
   offlineBasemapUrl?: string;
   fetchImpl?: typeof fetch;
+  /**
+   * The fetch for downloads into the library (Kiwix books, the emergency references). The
+   * desktop passes Electron's `net.fetch`, which asks as the browser does: the first screen test
+   * (2026-10-30) found cdc.gov answering 403 and irp.fas.org a challenge page to Node's fetch,
+   * while the same addresses give a browser the PDF. Absent: `fetchImpl`.
+   */
+  downloadFetchImpl?: typeof fetch;
   /** Child-process spawner for the optional go2rtc sidecar (tests pass a fake; nothing else spawns). */
   spawnImpl?: SpawnFn;
   webSocketImpl?: typeof WebSocket;

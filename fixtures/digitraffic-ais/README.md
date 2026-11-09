@@ -6,11 +6,17 @@
 field names and units from the service's OpenAPI (https://meri.digitraffic.fi/swagger/) and the
 examples on https://www.digitraffic.fi/en/marine-traffic/, both read 2026-09-28.
 
-Nothing here was recorded: the build machine could not read the live API (its robots.txt
-refuses automated readers). MMSIs, names, call signs and IMO numbers are made up; any match with
-a real ship is accidental. Digitraffic's data is CC BY 4.0, so a small recorded sample may be
-added later under `recorded/` with the notice "Source: Fintraffic / digitraffic.fi, license CC
-4.0 BY" — record one on a machine that can reach the API before relying on these shapes.
+The files at this level were not recorded: the build machine could not read the live API (its
+robots.txt refuses automated readers). Their MMSIs, names, call signs and IMO numbers are made
+up; any match with a real ship is accidental.
+
+`recorded/` holds a few rows of the live service, read on 2026-11-09 through the operator's
+browser and copied unchanged (provenance, selection and checksums in the `.meta.json` files):
+five position features and the four static rows for those ships. They are Fintraffic's data —
+Source: Fintraffic / digitraffic.fi, license CC 4.0 BY — and
+`providers/ais/src/digitraffic/recorded.test.ts` reads them with the provider's own reader. The
+live shapes match the invented ones; the recording adds what only the live service shows, such
+as a static row whose IMO, ship type, reference points and ETA are all "not available".
 
 Reference time: 2026-09-28T10:00:00Z (`timestampExternal` values are milliseconds before it).
 

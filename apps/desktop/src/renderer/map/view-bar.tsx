@@ -51,15 +51,40 @@ export function imageryLabel(o: Pick<RasterOverlay, 'providerId' | 'name'>): str
   return o.name.length > 28 ? `${o.name.slice(0, 27)}…` : o.name;
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** A followed frame older than this is said on the bar. */
+const STALE_FRAME_MS = 2 * 24 * 3_600_000;
+
+/**
+ * The day of a followed frame (`frame`, set only for a layer that follows the newest picture)
+ * when it is more than two days old — "2 Nov", or "2 Nov 2025" in another year — else
+ * undefined. A daily frame (a date alone) counts from the end of its day, so yesterday's
+ * mosaic is never stale. NASA GIBS stopped Suomi NPP's true colour at 2026-11-02 (seen
+ * 2026-11-08) while the bar went on calling it true colour with no sign of the date.
+ */
+export function staleFrameDay(frame: string | undefined, nowMs: number): string | undefined {
+  if (!frame) return undefined;
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(frame);
+  const t = Date.parse(dateOnly ? `${frame}T00:00:00Z` : frame);
+  if (!Number.isFinite(t)) return undefined;
+  const asOf = dateOnly ? t + 24 * 3_600_000 : t;
+  if (nowMs - asOf <= STALE_FRAME_MS) return undefined;
+  const d = new Date(t);
+  const sameYear = d.getUTCFullYear() === new Date(nowMs).getUTCFullYear();
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}${sameYear ? '' : ` ${d.getUTCFullYear()}`}`;
+}
+
 /**
  * The Map choices for a mode: the basemaps usable in it, the sources' whole maps, then the
- * imagery layers the running sources publish (one entry per source, whatever its frame).
+ * imagery layers the running sources publish (one entry per source, whatever its frame; a
+ * frame more than two days old is said in the label).
  * Prefixed ids keep the three kinds apart: `basemap:`, `imagery:`.
  */
 export function mapChoices(
   basemaps: readonly ResolvedMapProvider[],
   overlays: readonly RasterOverlay[],
   mode: '2D' | '3D',
+  nowMs: number = Date.now(),
 ): ViewChoice[] {
   const out: ViewChoice[] = [];
   for (const b of basemaps)
@@ -73,10 +98,11 @@ export function mapChoices(
       seen.add(id);
     } else if (isImageryView(o) && !seen.has(o.providerId)) {
       seen.add(o.providerId);
+      const stale = staleFrameDay(o.frame, nowMs);
       out.push({
         id: `imagery:${o.providerId}`,
-        label: imageryLabel(o),
-        title: `${o.name}${o.frame ? ` (${o.frame})` : ''} — over the basemap`,
+        label: stale ? `${imageryLabel(o)} · from ${stale}` : imageryLabel(o),
+        title: `${o.name}${o.frame ? ` (${o.frame})` : ''}${stale ? ', the newest picture the service has' : ''} — over the basemap`,
       });
     }
   }

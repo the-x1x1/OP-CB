@@ -4,7 +4,7 @@ import type { HistoryUsage, TileCacheStatus } from '@opcb/ipc-contract';
 import { basemapChoices, terrainChoices, type MapProviderChoice } from '../map-providers.js';
 import { useActions, useAppState, useClient } from '../store/store.js';
 import { useNow } from '../hooks/use-now.js';
-import { InstallPackButton, PackFreshness, PackPublishers, PackSignature } from './pack-trust.js';
+import { InstallPackButton, PackCredits, PackFreshness, PackPublishers, PackSignature } from './pack-trust.js';
 import { DataVaults } from './data-vaults.js';
 import { VISUAL_STYLE_IDS, type AppSettings, type VisualStyleId } from '@opcb/ipc-contract';
 import { graphicsProfile, resolveGraphicsQuality } from '@opcb/render-core';
@@ -436,6 +436,7 @@ export function SettingsDialog() {
                     {formatAgo(p.installedAt, nowMs)}
                     {p.vault ? ` · on the vault "${p.vault.label}"` : ''} <PackFreshness pack={p} nowMs={nowMs} />
                   </p>
+                  <PackCredits pack={p} />
                   <Button
                     size="sm"
                     variant="ghost"

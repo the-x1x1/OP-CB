@@ -138,6 +138,57 @@ test('legacy data: WorldView-data beside the executable becomes OP-CB-data, and 
   assert.equal(fs.existsSync(newUsual), false);
 });
 
+test('legacy data: WorldView-data moves into the OP-CB-data the portable zip ships when that holds only its note', async () => {
+  const exeDir = await tmp();
+  await fsp.mkdir(path.join(exeDir, LEGACY_PORTABLE_DIR_NAME, 'history'), { recursive: true });
+  await fsp.writeFile(path.join(exeDir, LEGACY_PORTABLE_DIR_NAME, 'settings.json'), '{"a":1}');
+  await fsp.writeFile(path.join(exeDir, LEGACY_PORTABLE_DIR_NAME, 'history', 'h.duckdb'), 'x');
+  await fsp.mkdir(path.join(exeDir, 'OP-CB-data'));
+  await fsp.writeFile(path.join(exeDir, 'OP-CB-data', 'READ-ME.txt'), 'note');
+  const r = migrateLegacyData({ appData: await tmp(), newUsual: path.join(await tmp(), 'OP-CB'), exeDir, dev: false });
+  assert.equal(r.moved.length, 1);
+  assert.equal(r.problems.length, 0);
+  assert.equal(fs.existsSync(path.join(exeDir, LEGACY_PORTABLE_DIR_NAME)), false, 'the old folder is gone');
+  assert.equal(await fsp.readFile(path.join(exeDir, 'OP-CB-data', 'settings.json'), 'utf8'), '{"a":1}');
+  assert.ok(fs.existsSync(path.join(exeDir, 'OP-CB-data', 'history', 'h.duckdb')));
+  assert.ok(fs.existsSync(path.join(exeDir, 'OP-CB-data', 'READ-ME.txt')), 'the note stays');
+  // An OP-CB-data that already holds data is never touched; the old folder stays as it is.
+  const exeDir2 = await tmp();
+  await fsp.mkdir(path.join(exeDir2, LEGACY_PORTABLE_DIR_NAME));
+  await fsp.writeFile(path.join(exeDir2, LEGACY_PORTABLE_DIR_NAME, 'settings.json'), '{"old":1}');
+  await fsp.mkdir(path.join(exeDir2, 'OP-CB-data'));
+  await fsp.writeFile(path.join(exeDir2, 'OP-CB-data', 'settings.json'), '{"new":1}');
+  const r2 = migrateLegacyData({
+    appData: await tmp(),
+    newUsual: path.join(await tmp(), 'OP-CB'),
+    exeDir: exeDir2,
+    dev: false,
+  });
+  assert.equal(r2.moved.length, 0);
+  assert.equal(await fsp.readFile(path.join(exeDir2, 'OP-CB-data', 'settings.json'), 'utf8'), '{"new":1}');
+  assert.ok(fs.existsSync(path.join(exeDir2, LEGACY_PORTABLE_DIR_NAME, 'settings.json')));
+});
+
+test('legacy data: a portable move that stopped part way is finished at the next start, though the new folder already holds some of it', async () => {
+  const exeDir = await tmp();
+  // What a start that stopped after moving `credentials.json` leaves: the old folder already
+  // under its staging name, and OP-CB-data holding the note and the one entry moved.
+  const staging = path.join(exeDir, `${LEGACY_PORTABLE_DIR_NAME}${STAGING_SUFFIX}`);
+  await fsp.mkdir(path.join(staging, 'history'), { recursive: true });
+  await fsp.writeFile(path.join(staging, 'settings.json'), '{"a":1}');
+  await fsp.writeFile(path.join(staging, 'history', 'h.duckdb'), 'x');
+  await fsp.mkdir(path.join(exeDir, 'OP-CB-data'));
+  await fsp.writeFile(path.join(exeDir, 'OP-CB-data', 'READ-ME.txt'), 'note');
+  await fsp.writeFile(path.join(exeDir, 'OP-CB-data', 'credentials.json'), '{"k":1}');
+  const r = migrateLegacyData({ appData: await tmp(), newUsual: path.join(await tmp(), 'OP-CB'), exeDir, dev: false });
+  assert.equal(r.problems.length, 0);
+  assert.equal(r.moved.length, 1);
+  assert.equal(fs.existsSync(staging), false, 'the staging folder is emptied and gone');
+  assert.equal(await fsp.readFile(path.join(exeDir, 'OP-CB-data', 'settings.json'), 'utf8'), '{"a":1}');
+  assert.ok(fs.existsSync(path.join(exeDir, 'OP-CB-data', 'history', 'h.duckdb')));
+  assert.equal(await fsp.readFile(path.join(exeDir, 'OP-CB-data', 'credentials.json'), 'utf8'), '{"k":1}');
+});
+
 test('legacy data: the marker of a folder the data was moved to is renamed, and either name is accepted', async () => {
   const appData = await tmp();
   const old = await oldData(appData);

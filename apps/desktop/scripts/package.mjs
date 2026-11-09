@@ -42,6 +42,9 @@ import path from 'node:path';
 import { appDir, workspaceRoot } from './renderer-assets.mjs';
 import { packageTargetFor } from './platform.mjs';
 
+/** The data folder's name beside the exe; must match main/data-location.ts PORTABLE_DIR_NAME. */
+const PORTABLE_DIR_NAME = 'OP-CB-data';
+
 const require = createRequire(import.meta.url);
 
 const host = packageTargetFor(process.platform, process.arch);
@@ -273,6 +276,66 @@ if (result.error) {
   console.error(`[package] could not start electron-builder: ${result.error.message}`);
   process.exit(1);
 }
+
+/**
+ * The portable zip carries its data folder (2026-11-08). The app runs portable when a folder
+ * named `OP-CB-data` sits beside `OP-CB.exe` (main/data-location.ts); the zip electron-builder
+ * makes holds the exe at its root and no such folder, so the first screen test's portable copy
+ * ran on the computer's own data (and exited at once while the installed copy ran: the two shared
+ * one data folder, so one instance lock). An empty `OP-CB-data/` with a short note goes into the
+ * zip here, after electron-builder, and only into the zip: `extraFiles` would put it into the
+ * installer too, and an installed copy must keep its data in the user's profile.
+ */
+function addPortableDataFolder() {
+  const releaseDir = path.join(appDir, 'release');
+  const zips = existsSync(releaseDir) ? readdirSync(releaseDir).filter((f) => /^OP-CB-Portable-.*\.zip$/.test(f)) : [];
+  if (zips.length !== 1) {
+    console.error(`[package] expected one portable zip in release/, found ${zips.length}: ${zips.join(', ')}`);
+    process.exit(1);
+  }
+  const zip = path.join(releaseDir, zips[0]);
+  const sevenZip = find7za();
+  if (!sevenZip) {
+    console.error('[package] could not find 7za.exe to add OP-CB-data to the portable zip');
+    process.exit(1);
+  }
+  const staging = path.join(tmpdir(), `opcb-portable-${process.pid}`);
+  const dataDir = path.join(staging, PORTABLE_DIR_NAME);
+  rmSync(staging, { recursive: true, force: true });
+  mkdirSync(dataDir, { recursive: true });
+  writeFileSync(
+    path.join(dataDir, 'READ-ME.txt'),
+    [
+      'This folder makes this copy of OP-CB portable.',
+      '',
+      `While a folder named ${PORTABLE_DIR_NAME} sits beside OP-CB.exe, everything OP-CB writes —`,
+      'settings, history, saved places, downloaded maps and books, the inventory, stored keys and',
+      'logs — lives in here and travels with the drive. Nothing is written to the computer.',
+      '',
+      'Keys stored here are encrypted by the operating system for one user on one computer: on',
+      'another computer they are asked for again.',
+      '',
+      "To make this copy use the computer's own OP-CB data instead, close OP-CB and remove this",
+      'folder (move it first if it holds anything you want to keep).',
+      '',
+    ].join('\r\n'),
+  );
+  // `a` with the folder name, from the staging folder, stores it as `OP-CB-data/READ-ME.txt`
+  // at the root of the archive — beside OP-CB.exe, which electron-builder puts at the root.
+  const run = spawnSync(sevenZip, ['a', '-bd', '-y', '-tzip', zip, PORTABLE_DIR_NAME], {
+    cwd: staging,
+    stdio: 'inherit',
+  });
+  rmSync(staging, { recursive: true, force: true });
+  if (run.status !== 0) {
+    console.error(`[package] 7za could not add ${PORTABLE_DIR_NAME} to ${zips[0]} (exit ${run.status ?? 'signal'})`);
+    process.exit(1);
+  }
+  // The layout (the exe at the root, this folder beside it) is checked by
+  // `pnpm release:assert-version`, which reads the zip's own directory (tools/release/src/zip-names.ts).
+  console.log(`[package] added ${PORTABLE_DIR_NAME}/ to ${zips[0]}`);
+}
+if (result.status === 0 && TARGET.platform === 'win32') addPortableDataFolder();
 
 /**
  * On failure, print what is actually in the cache. The directory name the Go `app-builder`

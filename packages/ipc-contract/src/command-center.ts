@@ -111,8 +111,9 @@ export const LOCAL_SERVICE_IDS: readonly LocalServiceId[] = Object.freeze(['olla
 export const DEFAULT_SERVICE_PORTS: Readonly<Record<LocalServiceId, number>> = Object.freeze({
   ollama: 11434,
   // kiwix-serve listens on 80 unless told otherwise (kiwix-serve.rst); 80 needs privileges on
-  // Linux, so its own examples use 8080, and so does OP-CB's walkthrough.
-  kiwix: 8080,
+  // Linux, so its own examples use 8080 — which is Kolibri's default and readsb's usual web
+  // port too (the first screen test, 2026-10-30). OP-CB's walkthrough starts it on 8090 instead.
+  kiwix: 8090,
   kolibri: 8080,
 });
 
@@ -136,7 +137,14 @@ export interface LocalServiceStatus {
   /** Ollama: the models it has, as it lists them. */
   models?: Array<{ name: string; sizeBytes?: number; parameterSize?: string; family?: string }>;
   /** kiwix-serve: the books in its library, as its catalogue lists them. */
-  books?: Array<{ id: string; title: string; name?: string; language?: string }>;
+  books?: Array<{
+    id: string;
+    title: string;
+    name?: string;
+    language?: string;
+    /** (additive, 2026-11-08) False when the book has no full-text index (`_ftindex:no`): kiwix-serve cannot search it. */
+    fullText?: boolean;
+  }>;
   checkedAt: string;
 }
 
@@ -647,14 +655,18 @@ export function readLibraryDownloadRequest(v: unknown): LibraryDownloadRequest |
  * (17 U.S.C. § 105); the two Army manuals also carry "Approved for public release; distribution
  * is unlimited."
  *
- * Every address below was opened on 2026-10-30 and answered with the document named, except
- * where "not opened" is noted (found in a search result; the next address is the fallback).
+ * Every address below was opened on 2026-11-08 from a browser on the operator's network and
+ * answered with the document named (size and SHA-256 noted where read), except where "not
+ * opened" is noted. The first screen test (2026-10-30) found cdc.gov answering 403 and
+ * irp.fas.org a challenge page to a plain Node fetch; the downloads now go through Chromium's
+ * network stack (deps.ts `downloadFetchImpl`), which these sites answer like a browser.
  * Nothing is bundled: the bytes come from these addresses on the operator's computer, each
  * checked to be a PDF, and its SHA-256 recorded when it arrives.
  *
- * The Army manuals are fetched from the Federation of American Scientists' document archive,
- * which keeps copies of public-release military publications; the Army's own library does not
- * list superseded or older public-release manuals.
+ * The Army manuals come from the Army Publishing Directorate itself (armypubs.army.mil), with
+ * the Federation of American Scientists' archive as the fallback for the survival manual.
+ * FM 4-25.11 First Aid (2002) was superseded by TC 4-02.1 (2016) and that by ATP 4-02.11
+ * (23 March 2026), which is what the Army publishes now; the 2002 manual is no longer listed.
  */
 export const PUBLIC_DOMAIN_US = 'U.S. Government work — public domain (17 U.S.C. § 105)';
 
@@ -666,9 +678,10 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Every hazard: plans, kits, shelter, evacuation, recovery',
     licence: PUBLIC_DOMAIN_US,
     urls: [
-      // From a search result; not opened (the site refused the reading tool).
+      // Where ready.gov keeps it now (4,233,522 bytes, PDF 1.6); the 2021-03 address redirects here.
+      'https://www.ready.gov/sites/default/files/2021-11/are-you-ready-guide.pdf',
       'https://www.ready.gov/sites/default/files/2021-03/are-you-ready-guide.pdf',
-      // A State of New Jersey copy of the FEMA guide; opened.
+      // A State of New Jersey copy of the FEMA guide; the one that arrived in the 2026-10-30 screen test.
       'https://www.nj.gov/njoem/pdf/areyouready.pdf',
     ],
   },
@@ -679,16 +692,24 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Water, fire, shelter, food, navigation, signalling, first aid in the field',
     edition: 'September 2018',
     licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
-    urls: ['https://irp.fas.org/doddir/army/atp3-50-21.pdf'],
+    urls: [
+      // Army Publishing Directorate record PUB_ID 1005316 (23,772,309 bytes,
+      // sha256 440035273e6e2ddab5f6ba8b79a4b0d5c901f3804538998381b343092512a813).
+      'https://armypubs.army.mil/epubs/DR_pubs/DR_a/pdf/web/ARN12086_ATP%203-50x21%20FINAL%20WEB%202.pdf',
+      // FAS copy (23,749,774 bytes); behind a browser check that a plain fetch does not pass.
+      'https://irp.fas.org/doddir/army/atp3-50-21.pdf',
+    ],
   },
   {
-    id: 'army-fm-4-25-11',
-    title: 'FM 4-25.11 First Aid',
+    id: 'army-atp-4-02-11',
+    title: 'ATP 4-02.11 Casualty Response, Tactical Combat Casualty Care, and First Aid',
     publisher: 'U.S. Army',
-    topic: 'Bleeding, fractures, burns, shock, breathing, heat and cold injuries',
-    edition: '23 December 2002',
+    topic: 'Bleeding, airway, breathing, burns, fractures, shock, heat and cold injuries, moving a casualty',
+    edition: '23 March 2026',
     licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
-    urls: ['https://irp.fas.org/doddir/milmed/first.pdf'],
+    // Army Publishing Directorate record PUB_ID 1032717 (12,665,561 bytes,
+    // sha256 a4a0650f5bb14c1c7163b9b1e9f08bcc012fb3fe49ea4432f0ccaffb9af86542).
+    urls: ['https://armypubs.army.mil/epubs/DR_pubs/DR_a/ARN46159-ATP_4-02.11-000-WEB-1.pdf'],
   },
   {
     id: 'cdc-practical-skills',
@@ -696,6 +717,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     publisher: 'CDC',
     topic: 'CPR, choking, seizures, safe water, wound care, generators',
     licence: PUBLIC_DOMAIN_US,
+    // CDC Stacks (294,644 bytes, PDF 1.6).
     urls: ['https://stacks.cdc.gov/view/cdc/79987/cdc_79987_DS1.pdf'],
   },
   {
@@ -704,6 +726,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     publisher: 'CDC',
     topic: 'Boiling, disinfecting with bleach, storing water',
     licence: PUBLIC_DOMAIN_US,
+    // 730,926 bytes.
     urls: ['https://www.cdc.gov/natural-disasters/media/pdfs/2025/02/make-water-safe-during-emergency-p.pdf'],
   },
   {
@@ -714,8 +737,8 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     edition: '26 October 2017',
     licence: PUBLIC_DOMAIN_US,
     urls: [
+      // 352,891 bytes, PDF 1.4; CDC Stacks record 49402 holds the same file.
       'https://www.cdc.gov/disasters/hurricanes/pdf/woundcare.pdf',
-      // CDC Stacks record 49402's file; named on the record page, not opened itself.
       'https://stacks.cdc.gov/view/cdc/49402/cdc_49402_DS1.pdf',
     ],
   },

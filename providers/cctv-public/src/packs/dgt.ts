@@ -21,8 +21,9 @@ import {
  * application at etraffic.dgt.es, which serves these images, tagged `camaras` — under
  * Creative Commons Attribution (http://www.opendefinition.org/licenses/cc-by), free of
  * charge (https://nap.dgt.es/en/dataset/mapa-de-trafico, read 2026-09-27). The NAP's own
- * camera dataset pages could not be read from the build machine (robots.txt), so the
- * pack is off by default until the integrator has looked at them; see the registry record.
+ * camera dataset page, read 2026-11-08, states CC BY too but names DGT's portal legal notice
+ * as the condition of use, which reserves reproduction to personal use: the pack stays off by
+ * default until the operator has weighed the two; see the registry record.
  *
  * The camera list is the JSON the DGT's own camera page loads:
  * `{ camaras: [ { id, latitud, longitud, carretera, pk, sentido, provincia, imagen, fecha } ] }`

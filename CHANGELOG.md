@@ -5,6 +5,91 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Kiwix catalogue search returns books again.** Every search came back "Nothing in the
+  catalogue matched" because the live catalogue (read 2026-11-08) puts its downloads on
+  `lb.download.kiwix.org`, which the reader did not accept, and gives each book's size rounded up
+  to a whole KiB, which the download check treated as a disagreement with the exact size in the
+  Metalink file. Kiwix's own download hosts are accepted; the exact size comes from the Metalink
+  file, or from the server when there is none, and the catalogue's rounded figure only has to fit.
+- **The emergency references download.** cdc.gov answered 403 and irp.fas.org a browser-check
+  page to the plain fetch the downloads used; they now go through the same network stack as the
+  app's windows, with this build's browser user agent (the app named in it), which those sites
+  answer like a browser. The two Army manuals come from the
+  Army Publishing Directorate first (irp.fas.org stays as the survival manual's fallback), and
+  FEMA's guide from the address ready.gov keeps it at now.
+
+- **The portable zip is portable as unzipped.** It now holds an `OP-CB-data` folder beside
+  `OP-CB.exe` (with a short note inside), so the copy keeps its data there from the first start
+  instead of using the computer's own OP-CB data — which also let it start beside an installed
+  OP-CB, where before it exited at once (one data folder, one instance). Unzipped over a
+  WorldView-era portable copy, the old `WorldView-data` moves into it. Unzipped over a 0.7.2 or
+  0.7.3 portable copy, which used the computer's OP-CB data, it starts with empty data of its
+  own; the earlier data is untouched in `%APPDATA%\OP-CB`, and removing the new `OP-CB-data`
+  folder (as its note says) goes back to it. The release gate
+  (`release:assert-version`, run by every build) reads the zip's entry list and fails when the
+  exe is not at its root or the data folder is missing.
+
+- **Searching a book in a local kiwix-serve finds pages.** It named the book to the server by
+  the catalogue's `name` (`wikipedia_en_chemistry`), which a real kiwix-serve does not know as a
+  book ("No such book", read on browse.library.kiwix.org 2026-11-08); it now names it by its
+  catalogue id, which the server answers to, and the walkthrough's check says the book's title.
+  Books the server lists without a full-text index (`_ftindex:no`) are no longer offered for
+  searching, since the server cannot search them.
+
+- The Kiwix catalogue's results say what each edition holds — "full, with pictures",
+  "full text, no pictures", "introductions only" — where they showed openZIM's codes (`maxi`,
+  `nopic`, `mini`) beside three books all titled "Wikipedia"; and when more books match than one
+  page holds (50 of 65 for "wikipedia" in English), the panel says so.
+
+- The Map bar says when an imagery layer's newest picture is more than two days old ("True
+  colour · Suomi NPP · from 2 Nov"): NASA stopped Suomi NPP's true colour on 2 November 2026
+  and the bar went on offering it as today's picture.
+
+- With the CRT style on the globe, a click near the edge of the view selects the marker drawn
+  under the pointer: clicks, the right-click menu, hover and the pointer's position now follow
+  the picture's bend (1.5 % at the corners), where they used to land on the unbent picture a
+  few pixels away.
+
+- A source that both polls and listens (a Traccar server, say) retries its live connection
+  after a failure again: the next poll's schedule used to clear the retry, so the connection
+  stayed down until the source was restarted. Going offline cancelled the poll and, with it,
+  an open connection's abort signal by accident, and never opened it again: going offline now
+  closes a live stream from the internet on purpose (AISStream's, say) and coming back online
+  opens it again.
+
+### Added
+
+- **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's
+  open street-level imagery, no key, street images CC BY-SA 4.0 by its terms) covers places
+  Panoramax does not; its pictures are shown the same way — live, with licence and author, never
+  kept, the contributor named — and a press costs a second request only when the first found
+  nothing. Its answer shape was read live on 2026-11-08 (it had been waiting on that).
+
+- **Settings → Offline packs credits each pack's sources**: the credit its manifest recorded for
+  every provider at build time (a basemap cut from a Protomaps build: "© OpenStreetMap
+  contributors (ODbL)"), and each licence in full on hover. Packs from older hosts show no line.
+
+### Changed
+
+- The Kiwix server's default port in OP-CB (and in the Knowledge walkthrough's `kiwix-serve`
+  line) is **8090**, not 8080: 8080 is Kolibri's default and often readsb's web page, so the
+  three collided (first screen test, 2026-10-30). A kiwix-serve still running on 8080 is found
+  there while no port of your own is set, searched there, and its status says to set the port.
+
+- CI runs on the current actions majors (checkout v7, setup-node v7, upload-artifact v7,
+  pnpm/action-setup v6, action-gh-release v3), all on the Node 24 runtime; the v4/v2 ones ran on
+  Node 20, which GitHub is retiring. The CI jobs are pinned to `ubuntu-24.04` like the Linux
+  build, so `ubuntu-latest` moving to a newer LTS cannot change a release's environment unnoticed.
+- The Army's **first aid** reference is now **ATP 4-02.11 Casualty Response, Tactical Combat
+  Casualty Care, and First Aid (23 March 2026)**, which replaced TC 4-02.1 and, before it, the
+  FM 4-25.11 of 2002 that was listed. A downloaded FM 4-25.11 stays in the references folder
+  but is no longer listed.
+- The New Zealand camera pack's description under Public cameras (licence not confirmed) now
+  says what NZTA's copyright statement says: personal use only, and photography and imagery
+  are left out of that permission. The pack is unchanged and still off by default.
+
 ## [0.7.3] — 2026-10-30
 
 A fix for the whole-planet map download. Checked in the build container (full test suite with

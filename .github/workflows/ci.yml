@@ -21,7 +21,9 @@ env:
 jobs:
   verify:
     name: ${{ matrix.task.name }}
-    runs-on: ubuntu-latest
+    # Pinned like Build desktop's Linux job: `ubuntu-latest` moves to the next LTS on GitHub's
+    # schedule, and a release should not meet a new OS by surprise. Bump both together.
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -40,11 +42,11 @@ jobs:
           - { name: staged-resources, run: pnpm stage:resources -- --check }
           - { name: perf-budget, run: pnpm perf:budget }
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -52,7 +54,7 @@ jobs:
       - run: ${{ matrix.task.run }}
       - name: Upload verification evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evidence-${{ matrix.task.name }}
           path: artifacts/verification/
@@ -61,13 +63,13 @@ jobs:
 
   dependency-audit:
     name: dependency-audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -83,7 +85,7 @@ jobs:
           mkdir -p artifacts/verification
           pnpm audit --audit-level high --json > artifacts/verification/dependency-audit.json || true
           pnpm audit --audit-level high
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: evidence-dependency-audit
@@ -92,19 +94,19 @@ jobs:
 
   sbom:
     name: sbom
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm sbom
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: artifacts/release/*.sbom.json

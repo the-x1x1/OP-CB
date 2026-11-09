@@ -1079,6 +1079,11 @@ export class WorldPackRegistry {
       signature: signatureSummary(signature),
       createdAt: manifest.createdAt,
       ...(manifest.expiresAt !== undefined ? { expiresAt: manifest.expiresAt } : {}),
+      sources: manifest.sourcePolicies.map(({ providerId, license, attribution }) => ({
+        providerId,
+        license,
+        attribution,
+      })),
     };
     if (manifest.expiresAt !== undefined && this.clock.now() > Date.parse(manifest.expiresAt))
       summary.message = `expired on ${manifest.expiresAt.slice(0, 10)}`;

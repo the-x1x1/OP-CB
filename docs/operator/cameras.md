@@ -55,20 +55,20 @@ A second source, **Public cameras (licence not confirmed)** (`public-cameras-unv
 carries catalogs that agencies publish on their own sites but under no licence we could
 find for the images:
 
-| Pack        | Coverage                                                                                    | What is known                                                                   |
-| ----------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `caltrans`  | California state highways, districts 1–12                                                   | Public JSON for Caltrans's own map; no licence text                             |
-| `austin`    | City of Austin, Texas                                                                       | Catalogue is open data; the images are not licensed                             |
-| `nyc`       | New York City DOT                                                                           | No terms published                                                              |
-| `iowa`      | Iowa DOT                                                                                    | Catalogue CC BY 4.0; images not named in the licence                            |
-| `nzta`      | New Zealand state highways (NZ Transport Agency Journey Planner)                            | The Journey Planner states all rights reserved; no licence found for the images |
-| `wsdot`     | Washington State highways (WSDOT travel map layer; partner cameras on other hosts left out) | Keyless GIS layer; no licence stated for the images                             |
-| `lithuania` | Lithuanian roads (eismoinfo.lt, Lithuanian Road Administration)                             | No terms published                                                              |
-| `ny511`     | New York State (511NY) — **needs your own free developer key**                              | Access agreement allows redistribution with "powered by 511NY"; revocable       |
-| `udot`      | Utah (UDOT Traffic) — **needs your own free developer key**                                 | No licence stated                                                               |
-| `az511`     | Arizona (AZ511) — **needs your own free developer key**                                     | No licence stated                                                               |
-| `ga511`     | Georgia (511GA) — **needs your own free developer key**                                     | No licence stated                                                               |
-| `idaho511`  | Idaho (Idaho 511) — **needs your own free developer key**                                   | No licence stated                                                               |
+| Pack        | Coverage                                                                                    | What is known                                                             |
+| ----------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `caltrans`  | California state highways, districts 1–12                                                   | Public JSON for Caltrans's own map; no licence text                       |
+| `austin`    | City of Austin, Texas                                                                       | Catalogue is open data; the images are not licensed                       |
+| `nyc`       | New York City DOT                                                                           | No terms published                                                        |
+| `iowa`      | Iowa DOT                                                                                    | Catalogue CC BY 4.0; images not named in the licence                      |
+| `nzta`      | New Zealand state highways (NZ Transport Agency Journey Planner)                            | Personal use only; the permission leaves out photography and imagery      |
+| `wsdot`     | Washington State highways (WSDOT travel map layer; partner cameras on other hosts left out) | Keyless GIS layer; no licence stated for the images                       |
+| `lithuania` | Lithuanian roads (eismoinfo.lt, Lithuanian Road Administration)                             | No terms published                                                        |
+| `ny511`     | New York State (511NY) — **needs your own free developer key**                              | Access agreement allows redistribution with "powered by 511NY"; revocable |
+| `udot`      | Utah (UDOT Traffic) — **needs your own free developer key**                                 | No licence stated                                                         |
+| `az511`     | Arizona (AZ511) — **needs your own free developer key**                                     | No licence stated                                                         |
+| `ga511`     | Georgia (511GA) — **needs your own free developer key**                                     | No licence stated                                                         |
+| `idaho511`  | Idaho (Idaho 511) — **needs your own free developer key**                                   | No licence stated                                                         |
 
 The five 511 sites run on the same platform as Ontario 511. Each needs its own key:
 register on the site's developer page (`/developers/doc`), then paste the key in Sources →

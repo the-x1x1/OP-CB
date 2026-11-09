@@ -47,7 +47,13 @@ import { registerAppScheme, serveRenderer } from './app-protocol.js';
 import { PACK_BASEMAP_ROUTE, packBasemapResponse } from './pack-basemap.js';
 import { buildInfo } from './build-info.js';
 import { CredentialStore, CredentialStoreError, linuxPasswordStore } from './credential-store.js';
-import { IDENTIFIED_TILE_URLS, appUserAgent, identifiedTileHeaders, mergeSecurityHeaders } from './csp.js';
+import {
+  IDENTIFIED_TILE_URLS,
+  appUserAgent,
+  downloadUserAgent,
+  identifiedTileHeaders,
+  mergeSecurityHeaders,
+} from './csp.js';
 import { buildExternalHostAllowlist, checkExternalUrl, type ExternalHostAllowlist } from './external-links.js';
 import { IpcRouter, type IpcInvokeEventLike } from './ipc-router.js';
 import { createRuntime } from './runtime-factory.js';
@@ -148,7 +154,7 @@ async function bootstrap(): Promise<void> {
       title: 'Close WorldView first',
       message:
         'OP-CB is ready to take over the data the earlier version (WorldView) left, but WorldView still has it open.',
-      detail: `Close WorldView (also from the notification area), then start OP-CB again. Nothing has been moved yet.\n\n${legacy.busy}`,
+      detail: `Close WorldView (also from the notification area), then start OP-CB again. Nothing is lost: whatever has not moved yet moves then.\n\n${legacy.busy}`,
       buttons: ['Quit'],
     });
     app.exit(0);
@@ -357,6 +363,15 @@ async function bootstrap(): Promise<void> {
     host: electronHostBridge(),
     network: { isOnline: online },
     fetchImpl: gatedFetch(globalThis.fetch.bind(globalThis), workingOffline, approvedHosts),
+    // Library downloads go through Chromium's network stack (`net.fetch`), with the browser
+    // User-Agent of this build (csp.ts downloadUserAgent): cdc.gov and irp.fas.org refuse
+    // Node's fetch (403, a challenge page) and answer a browser (2026-11-08).
+    downloadFetchImpl: (input, init) => {
+      const headers = new Headers(init?.headers);
+      if (!headers.has('user-agent'))
+        headers.set('user-agent', downloadUserAgent(app.userAgentFallback, app.getVersion()));
+      return netFetch(input, { ...init, headers });
+    },
     // DuckDB/Parquet unless the operator chose NDJSON (Settings → History); NDJSON-era files
     // are read beside the Parquet ones, nothing converted or deleted (2026-10-05).
     historyBackend: settings.get().history.backend ?? 'duckdb-parquet',
@@ -441,8 +456,9 @@ async function bootstrap(): Promise<void> {
     first: () => settings.get().search?.service ?? 'nominatim',
   });
 
-  // Street-level pictures (street-level.ts): Panoramax, one request a second, on the operator's
-  // ask from What's here only, under the same online-lookup switch as place search.
+  // Street-level pictures (street-level.ts): Panoramax, then KartaView when that has nothing;
+  // one request a second, on the operator's ask from What's here only, under the same
+  // online-lookup switch as place search.
   const streetLevel = new StreetLevel({
     fetchImpl: netFetch,
     userAgent: appUserAgent(app.getVersion()),

@@ -1,0 +1,106 @@
+{
+  "type": "FeatureCollection",
+  "dataUpdatedTime": "2026-11-09T04:35:14Z",
+  "features": [
+    {
+      "mmsi": 230358000,
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [22.304923, 65.539452]
+      },
+      "properties": {
+        "mmsi": 230358000,
+        "sog": 8.2,
+        "cog": 307,
+        "navStat": 0,
+        "rot": 0,
+        "posAcc": false,
+        "raim": false,
+        "heading": 302,
+        "timestamp": 8,
+        "timestampExternal": 1794198909345
+      }
+    },
+    {
+      "mmsi": 311001866,
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [25.759293, 59.837808]
+      },
+      "properties": {
+        "mmsi": 311001866,
+        "sog": 0.1,
+        "cog": 17.5,
+        "navStat": 1,
+        "rot": 16,
+        "posAcc": false,
+        "raim": false,
+        "heading": 298,
+        "timestamp": 46,
+        "timestampExternal": 1794198851681
+      }
+    },
+    {
+      "mmsi": 230941570,
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [24.924268, 60.15519]
+      },
+      "properties": {
+        "mmsi": 230941570,
+        "sog": 1.2,
+        "cog": 202.3,
+        "navStat": 15,
+        "rot": -128,
+        "posAcc": true,
+        "raim": true,
+        "heading": 511,
+        "timestamp": 36,
+        "timestampExternal": 1794198877268
+      }
+    },
+    {
+      "mmsi": 230980000,
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [21.705192, 60.164313]
+      },
+      "properties": {
+        "mmsi": 230980000,
+        "sog": 0,
+        "cog": 80.5,
+        "navStat": 5,
+        "rot": 0,
+        "posAcc": true,
+        "raim": false,
+        "heading": 296,
+        "timestamp": 6,
+        "timestampExternal": 1794198908054
+      }
+    },
+    {
+      "mmsi": 265767620,
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [19.015317, 59.626517]
+      },
+      "properties": {
+        "mmsi": 265767620,
+        "sog": 0.1,
+        "cog": 57,
+        "navStat": 0,
+        "rot": 0,
+        "posAcc": false,
+        "raim": false,
+        "heading": 47,
+        "timestamp": 49,
+        "timestampExternal": 1794198889910
+      }
+    }
+  ]
+}

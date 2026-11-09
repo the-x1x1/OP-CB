@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { portableZipProblems, zipEntryNames } from './zip-names.js';
 
 /**
  * Every release artifact is the version being released, built from the commit being released.
@@ -16,7 +17,9 @@ import path from 'node:path';
  *  - `latest.yml` names another version or another installer;
  *  - the verification report is for another version or another commit, or hashes another
  *    version's files; SHA256SUMS lists another version's files;
- *  - the SBOM names another version or another commit.
+ *  - the SBOM names another version or another commit;
+ *  - the portable zip does not hold `OP-CB.exe` at its root with `OP-CB-data/READ-ME.txt`
+ *    beside it (2026-11-08: the copy is portable as unzipped only with that folder there).
  */
 export interface AssertVersionOptions {
   root: string;
@@ -146,6 +149,20 @@ export function assertReleaseVersion(opts: AssertVersionOptions): AssertVersionR
   for (const f of built) if (!allowed.has(f)) problems.push(`stale or foreign artifact apps/desktop/release/${f}`);
   for (const f of plan.required) if (!built.includes(f)) problems.push(`missing apps/desktop/release/${f}`);
   checked.push(`apps/desktop/release: ${built.length} artifact(s)`);
+
+  // The portable zip's layout: what scripts/package.mjs added after electron-builder is there.
+  if (platform === 'win32') {
+    const portable = expectedArtifacts(version).portable;
+    if (built.includes(portable)) {
+      try {
+        for (const p of portableZipProblems(zipEntryNames(path.join(releaseDir, portable))))
+          problems.push(`${portable}: ${p}`);
+        checked.push(`${portable} layout`);
+      } catch (err) {
+        problems.push(`${portable}: could not read its entries (${err instanceof Error ? err.message : String(err)})`);
+      }
+    }
+  }
 
   // The updater feed (latest.yml on Windows; latest-linux.yml, when written, on Linux).
   const feed = plan.updater.file;

@@ -271,7 +271,7 @@
         "termsUrl": "https://www.digitraffic.fi/en/terms-of-service/"
       },
       "commercialReview": "approved",
-      "notes": "Added 2026-09-28 (ships without a key). Positions and static reports heard by the Finnish Transport Infrastructure Agency's coastal AIS base stations (Gulf of Finland, Archipelago and Bothnian Seas, northern Baltic Proper), published by Fintraffic (https://www.digitraffic.fi/en/marine-traffic/; OpenAPI https://meri.digitraffic.fi/swagger/). CC BY 4.0 permits commercial use, redistribution and adaptation with the notice, a link where feasible and an indication of changes: the notice is shown with every ship and stamped on exports; OP-CB's only changes are unit conversions (knots to m/s, tenths of a metre to metres) and AIS codes decoded to text, and the provider's description says so. Etiquette from Digitraffic's instructions page (read 2026-09-28): send a Digitraffic-User header naming the application and never a person (OP-CB sends 'opcb', as the Fintraffic camera pack does); gzip is mandatory (the runtime's fetch requests and decodes it); without the header the limit is 60 requests a minute per IP. OP-CB asks for positions of the last 15 minutes once a minute and for changed static data every 15 minutes (a day's worth the first time). The live API could not be read from the build machine (robots.txt refuses automated readers), so the test fixtures are invented in the documented shape; a small recorded sample is permitted by the licence and should be added from a machine that can reach the API. MQTT over WebSocket (wss://meri.digitraffic.fi:443/mqtt) was not used: the provider SDK offers MQTT only to local transports (ADR-003), and a once-a-minute snapshot is all the map draws."
+      "notes": "Added 2026-09-28 (ships without a key). Positions and static reports heard by the Finnish Transport Infrastructure Agency's coastal AIS base stations (Gulf of Finland, Archipelago and Bothnian Seas, northern Baltic Proper), published by Fintraffic (https://www.digitraffic.fi/en/marine-traffic/; OpenAPI https://meri.digitraffic.fi/swagger/). CC BY 4.0 permits commercial use, redistribution and adaptation with the notice, a link where feasible and an indication of changes: the notice is shown with every ship and stamped on exports; OP-CB's only changes are unit conversions (knots to m/s, tenths of a metre to metres) and AIS codes decoded to text, and the provider's description says so. Etiquette from Digitraffic's instructions page (read 2026-09-28): send a Digitraffic-User header naming the application and never a person (OP-CB sends 'opcb', as the Fintraffic camera pack does); gzip is mandatory (the runtime's fetch requests and decodes it); without the header the limit is 60 requests a minute per IP. OP-CB asks for positions of the last 15 minutes once a minute and for changed static data every 15 minutes (a day's worth the first time). The live API could not be read from the build machine (robots.txt refuses automated readers), so the contract fixtures are invented in the documented shape; a small recorded sample (five positions and their static rows, read 2026-11-09 through the operator's browser) is in fixtures/digitraffic-ais/recorded and is read by the provider's tests. MQTT over WebSocket (wss://meri.digitraffic.fi:443/mqtt) was not used: the provider SDK offers MQTT only to local transports (ADR-003), and a once-a-minute snapshot is all the map draws."
     },
     {
       "providerId": "open-meteo",
@@ -777,7 +777,7 @@
         "termsUrl": "https://tfl.gov.uk/info-for/open-data-users/"
       },
       "commercialReview": "approved",
-      "notes": "Optional TFL_APP_KEY raises rate limits; keyless works. TfL's terms permit commercial use with the exact attribution string; TfL roundel/logo may not be used. Verify the current terms text at release time (page could not be fetched in this session)."
+      "notes": "Optional TFL_APP_KEY raises rate limits; keyless works. TfL's terms permit commercial use with the exact attribution string; TfL roundel/logo may not be used. Verify the current terms text at release time (page could not be fetched in this session). 2026-11-08: tfl.gov.uk answered the operator's browser with a bot check, left unanswered, so the terms are still unread first-hand; the API portal (https://api-portal.tfl.gov.uk/) says the open data is for developers to use in their own software and services provided they adhere to the transport data terms and conditions, which it links at https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service."
     },
     {
       "providerId": "ontario-511",
@@ -961,7 +961,7 @@
         "termsUrl": "https://nap.dgt.es/en/dataset/mapa-de-trafico"
       },
       "commercialReview": "approved",
-      "notes": "The camera list is the JSON loaded by DGT's own camera page (dgt.es), not a NAP resource; the images are eTraffic's, which the NAP lists under CC BY. The NAP's camera-specific dataset pages (camaras-dgt, camaras-dgt-datex2-v3-6-nuevo) could not be read from the build machine (robots.txt), so the pack ships in public-cameras but off by default (offByDefault). Before turning it on by default, read those pages and record the licence they state. At least 488 cameras answered on 2026-09-27; stills answered as images."
+      "notes": "The camera list is the JSON loaded by DGT's own camera page (dgt.es), not a NAP resource; the images are eTraffic's, which the NAP lists under CC BY. The NAP's camera-specific dataset pages (camaras-dgt, camaras-dgt-datex2-v3-6-nuevo) could not be read from the build machine (robots.txt), so the pack ships in public-cameras but off by default (offByDefault). Read 2026-11-08 from a browser: the NAP's current camera dataset, 'Cameras DGT DATEX2 v3.7' (https://nap.dgt.es/en/dataset/camaras-dgt-datex2-v3-7; access URL https://nap.dgt.es/datex2/v3/dgt/DevicePublication/camaras_datex2_v37.xml, hourly), states 'License: Creative Commons Attribution', 'Contract or licence: Licence and Free of charge', and 'Condition for use: https://www.dgt.es/contenido/aviso-legal/'. That legal notice speaks of the dgt.es portal: its intellectual property is DGT's unless stated otherwise, and unauthorised reproduction, distribution, commercialisation or transformation other than for personal and private use infringes it. The two read differently for the camera data; turning the pack on by default is the operator's decision on that reading (or a question to nap@dgt.es). 1,938 cameras answered on 2026-11-08, stills on etraffic.dgt.es."
     },
     {
       "providerId": "irca-iceland-webcams",
@@ -1198,8 +1198,8 @@
       "providerId": "nzta-traffic-cameras",
       "name": "NZ Transport Agency Waka Kotahi — Journey Planner traffic cameras",
       "sourceUrl": "https://www.journeys.nzta.govt.nz/assets/map-data-cache/cameras.json ; frames https://www.trafficnz.info/camera/",
-      "termsUrl": "https://www.journeys.nzta.govt.nz/ (footer: \"© NZ Transport Agency Waka Kotahi, all rights reserved\")",
-      "license": "None found for the camera list or images; the Journey Planner states all rights reserved. NZTA publishes other datasets under CC BY 4.0 on data.govt.nz; none covering these images was found.",
+      "termsUrl": "https://www.journeys.nzta.govt.nz/about-this-site ; https://www.nzta.govt.nz/about-us/about-this-site/website-terms-of-use",
+      "license": "None for the images. The Journey Planner's copyright statement (read 2026-11-08) allows reproduction for personal use only, with attribution, and says the permission does not extend to photography and imagery; other use needs NZTA's permission.",
       "category": "cctv",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -1215,7 +1215,7 @@
         "attributionText": "NZ Transport Agency Waka Kotahi (courtesy)"
       },
       "commercialReview": "manual-review-required",
-      "notes": "Shipped only in public-cameras-unverified (off by default). Ask NZTA whether the images are covered by its CC BY 4.0 open data policy; nzta.govt.nz could not be read from the build machines."
+      "notes": "Shipped only in public-cameras-unverified (off by default). Read 2026-11-08 through the operator's browser: nzta.govt.nz states the same personal-use permission (CC BY-NC 4.0) with the same exclusion for photographs and images, and its website terms of use forbid scrapers and other unauthorised automated access; the frame host trafficnz.info now redirects its home page to the Journey Planner; NZTA's open data portal has no camera dataset. Permission for other use: NZTA's Information team (informationteam@nzta.govt.nz)."
     },
     {
       "providerId": "wsdot-cameras",
@@ -1445,7 +1445,7 @@
         "attributionText": "Transpordiamet / Tarktee — tarktee.transpordiamet.ee (courtesy)"
       },
       "commercialReview": "manual-review-required",
-      "notes": "Keyless DATEX2 endpoints. Frame URLs rotate per capture. Default-off pending confirmation (the Estonian open data portal may list this feed under CC BY 4.0 — check avaandmed.eesti.ee)."
+      "notes": "Keyless DATEX2 endpoints. Frame URLs rotate per capture. Default-off pending confirmation (the Estonian open data portal may list this feed under CC BY 4.0 — check avaandmed.eesti.ee). Read 2026-11-08 on Estonia's open-data portal (andmed.eesti.ee, formerly avaandmed.eesti.ee): 'Teekaamerate pildid' (road camera images, the newest picture's URL per camera) and 'Teekaamerate asukohad' (camera locations), publisher Transpordiamet, access PUBLIC, licence CC_BY, DATEX II 2.3, updated every 10 minutes. Their stated terms are the Tark Tee DATEX II gateway's (https://tarktee.mnt.ee/#/en/terms): using the gateway needs registration and an API key that Transpordiamet approves (organisation name, contact, purpose); referring or linking to the service and to Transpordiamet is mandatory and must not misrepresent them; terms may change unilaterally. The keyless endpoints above are not the registered gateway the portal names. Not built; no pack."
     },
     {
       "providerId": "warendorf-webcam",
@@ -2845,7 +2845,30 @@
         "termsUrl": "https://panoramax.fr/"
       },
       "commercialReview": "approved",
-      "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) and KartaView (field shape not yet confirmed from a live answer) are not asked."
+      "notes": "Not a provider (2026-10-20): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here, one request a second, answers cached an hour in memory. Pictures are shown live from the instance that holds them with their licence and author, and are never kept, packed or exported: CC BY-SA's ShareAlike would then apply to the copy. Mapillary (token) is not asked; KartaView is asked only when Panoramax has nothing within reach (its own record below)."
+    },
+    {
+      "providerId": "kartaview",
+      "name": "KartaView — open street-level imagery (api.kartaview.org 2.0 photo search)",
+      "sourceUrl": "https://api.kartaview.org/2.0/photo/?lat=<lat>&lng=<lon>&radius=<m>",
+      "termsUrl": "https://kartaview.org/terms",
+      "license": "CC BY-SA 4.0 for the street images (kartaview.org/terms, section Open Source License: street images made available on KartaView licensed under Creative Commons Attribution-ShareAlike 4.0 International; read 2026-11-08). No key, no registration.",
+      "category": "imagery",
+      "plannedStatus": "default",
+      "dataPolicy": {
+        "cacheAllowed": true,
+        "rawPayloadRetentionAllowed": false,
+        "normalizedRetentionAllowed": false,
+        "redistributionAllowed": false,
+        "offlinePackAllowed": false,
+        "exportAllowed": false,
+        "commercialUseAllowed": true,
+        "attributionRequired": true,
+        "attributionText": "Street-level pictures: KartaView contributors, CC BY-SA 4.0",
+        "termsUrl": "https://kartaview.org/terms"
+      },
+      "commercialReview": "approved",
+      "notes": "Not a provider (2026-11-08): apps/desktop/src/main/street-level.ts asks it only when the operator presses Street view in What's here and Panoramax has nothing within reach (or no answer), one request a second, answers cached an hour in memory. Pictures are shown live from KartaView's CDN or storage servers with the licence and, when the answer names one, the author, and are never kept, packed or exported (ShareAlike). The answer shape (result.data[]: lat/lng/heading strings, shotDate, fileurlTh, imageThUrl, sequenceId/sequenceIndex, visibility, status; radius 1-500 m) was read live on 2026-11-08."
     },
     {
       "providerId": "kiwix-library",
