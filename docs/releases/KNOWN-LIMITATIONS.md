@@ -376,7 +376,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 
 ## 0.7.3
 
-- The whole-planet fix was checked against a synthetic archive in Protomaps' layout, not yet
+- The whole-planet fix was checked against a synthetic archive in Protomaps' layout and against
+  the real planet build's header (2026-11-08: its sections end at the file's size), not yet
   against a real planet download. A kept download is checked again only while its build is the
   newest Protomaps build (they are daily); after that a new download starts.
 

@@ -151,7 +151,11 @@ World & Maps → **Download a map for offline use**, and the offline-maps walkth
   (1,365), **z6 45.1 MB** (5,461), **z7 189.6 MB** (21,845) of tile data; the new archive's
   own directories add a few KB. A world to z5 or z6 fits an installer (119 MB today); the
   operator decides. The planet's whole-zoom tile data is 139,015,539,782 bytes with the leaf
-  directories after it (0.7.3's finding), 353 MB of them.
+  directories after it (0.7.3's finding), 353 MB of them. That header against 0.7.3's check:
+  root 127 + 15,548; tile data 16,384 + 139,015,539,782, ending where the metadata (1,180 bytes)
+  begins; leaf directories 139,015,557,346 + 353,497,906 = 139,369,055,252, the file's size —
+  every section inside the file and the last ending at its size, as the fixed check requires;
+  the check before 0.7.3 (tile data ending the file) failed it, as the operator's download did.
 
 Evidence: tile ids against the specification's table (including 12/3423/1763 → 19078479);
 synthetic archives extracted and compared tile by tile (world and area, sea deduplicated,
