@@ -49,8 +49,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's
   open street-level imagery, no key, street images CC BY-SA 4.0 by its terms) covers places
   Panoramax does not; its pictures are shown the same way — live, with licence and author, never
-  kept — and a press costs a second request only when the first found nothing. Its answer shape
-  was read live on 2026-11-08 (it had been waiting on that).
+  kept, the contributor named — and a press costs a second request only when the first found
+  nothing. Its answer shape was read live on 2026-11-08 (it had been waiting on that).
 
 ### Changed
 

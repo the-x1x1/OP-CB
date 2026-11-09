@@ -19,7 +19,10 @@ import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@opcb/ipc
  * read live the same day: `result.data[]` with `lat`/`lng`/`heading` as strings, `shotDate`
  * "YYYY-MM-DD HH:MM:SS.000", `fileurlTh` on storage<n>.openstreetcam.org, `imageThUrl` on
  * cdn.kartaview.org, `sequenceId`/`sequenceIndex` (its page), `visibility`, `status`; `radius`
- * is metres, 1–500; an error is HTTP 400 `{code, reason, message}`. The same rules apply:
+ * is metres, 1–500; an error is HTTP 400 `{code, reason, message}`. `user` is null unless
+ * `join=user` is asked, which fills it with `{id, username, fullName, category, driverType}` and
+ * changes nothing else (same records, same keys): asked, so the author CC BY-SA asks to be
+ * credited is shown, by `username`. The same rules apply:
  * shown live, never kept, one request a second (a press costs a second request only when the
  * first found nothing).
  *
@@ -88,6 +91,7 @@ export function kartaviewUrl(position: GeoPosition, radiusM: number, limit: numb
   u.searchParams.set('lng', position.longitude.toFixed(6));
   u.searchParams.set('radius', String(Math.max(1, Math.min(KARTAVIEW_MAX_RADIUS_M, Math.round(radiusM)))));
   u.searchParams.set('itemsPerPage', String(limit));
+  u.searchParams.set('join', 'user');
   return u.href;
 }
 
@@ -259,6 +263,7 @@ export function readKartaView(body: unknown, at: GeoPosition, limit: number): St
       const taken = Date.parse(`${shot[1]}T${shot[2]}Z`);
       if (Number.isFinite(taken)) picture.takenAt = new Date(taken).toISOString();
     }
+    // With `join=user`: {id, username, fullName, category, driverType} (read live 2026-11-08).
     const user = r['user'];
     const author =
       typeof user === 'string'

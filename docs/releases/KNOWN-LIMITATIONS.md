@@ -362,8 +362,7 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   the app's own requests (Electron's network stack, the build's browser user agent) have not
   yet been seen to get the same answers. If cdc.gov or irp.fas.org still refuse the app, that
   reference says so and the Army's own copy or the next address is tried.
-- Street view asks KartaView only when Panoramax has nothing within 150 m; a picture's author is
-  shown only when KartaView's answer names one (most do not).
+- Street view asks KartaView only when Panoramax has nothing within 150 m.
 - The portable zip's `OP-CB-data` folder is added after electron-builder by the packaging
   script; the release gate checks it is there, and the first build that runs it is the next.
 - True colour (Suomi NPP) shows 2 November 2026: NASA GIBS has no newer day for it (seen

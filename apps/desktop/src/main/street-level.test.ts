@@ -117,7 +117,15 @@ const KARTAVIEW_ANSWER = {
         sequenceIndex: '103',
         shotDate: '2022-08-29 21:49:53.000',
         status: 'active',
-        user: { username: 'someone' },
+        // The `user` object `join=user` gave on 2026-11-08 for a picture near the Eiffel Tower,
+        // set on this Honolulu record for the test (this record's own user was asked without the join).
+        user: {
+          id: '53',
+          username: 'telenavdrives',
+          fullName: 'telenavdrives',
+          category: 'INTERNAL',
+          driverType: 'DEDICATED',
+        },
         visibility: 'public',
       },
       // Not shown: a private one (seen in Paris), one with a thumbnail off KartaView's hosts, one with no place.
@@ -249,7 +257,7 @@ test('street level: a service that fails is said, and asked again after two minu
 test('street level: KartaView — the URL (radius in metres, at most 500) and the pictures of its live answer', () => {
   assert.equal(
     kartaviewUrl(HONOLULU, 150, 6),
-    `https://${KARTAVIEW_HOST}/2.0/photo/?lat=21.306900&lng=-157.858300&radius=150&itemsPerPage=6`,
+    `https://${KARTAVIEW_HOST}/2.0/photo/?lat=21.306900&lng=-157.858300&radius=150&itemsPerPage=6&join=user`,
   );
   assert.match(kartaviewUrl(HONOLULU, 2000, 6), /radius=500&/, 'the API refuses more than 500');
   const pics = readKartaView(KARTAVIEW_ANSWER, HONOLULU, 6);
@@ -260,7 +268,7 @@ test('street level: KartaView — the URL (radius in metres, at most 500) and th
   );
   const [near, far] = pics;
   assert.ok(near!.distanceM > 100 && near!.distanceM < 200, String(near!.distanceM));
-  assert.equal(near!.author, 'someone');
+  assert.equal(near!.author, 'telenavdrives');
   assert.match(near!.thumbUrl, /^https:\/\/storage13\.openstreetcam\.org\//, 'no CDN address: the storage one');
   assert.equal(far!.headingDeg, 229);
   assert.equal(far!.takenAt, '2019-05-29T04:31:28.000Z');
