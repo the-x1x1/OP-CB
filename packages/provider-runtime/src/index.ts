@@ -537,10 +537,13 @@ export class ProviderHost {
       if (online && (h.waitingForSetup || h.waitingForKey)) continue;
       if (!online) {
         this.cancelPoll(h);
+        // A live stream from the internet stops too, and is opened again when back online.
+        this.closeSubscription(h);
         const current = this.health.get(h.manifest.id)?.health;
         if (current) this.health.update({ ...current, status: 'OFFLINE', message: 'network offline' });
       } else {
         h.consecutiveFailures = 0;
+        if (h.provider.subscribe && !h.unsubscribe && !h.subTimer) void this.openSubscription(h);
         this.schedule(h, 0);
       }
     }
@@ -984,20 +987,7 @@ export class ProviderHost {
     h.run++;
     h.starting = false;
     this.cancelPoll(h);
-    if (h.subTimer) {
-      clearTimeout(h.subTimer);
-      h.subTimer = undefined;
-    }
-    h.subAbort?.abort();
-    h.subAbort = undefined;
-    if (h.unsubscribe) {
-      try {
-        h.unsubscribe();
-      } catch {
-        /* ignore */
-      }
-      h.unsubscribe = undefined;
-    }
+    this.closeSubscription(h);
     if (h.running) {
       h.running = false;
       try {
@@ -1187,6 +1177,24 @@ export class ProviderHost {
       }
     }
     return batch;
+  }
+
+  /** Closes the source's subscription and any retry of it (stop, or going offline). */
+  private closeSubscription(h: Hosted): void {
+    if (h.subTimer) {
+      clearTimeout(h.subTimer);
+      h.subTimer = undefined;
+    }
+    h.subAbort?.abort();
+    h.subAbort = undefined;
+    if (h.unsubscribe) {
+      try {
+        h.unsubscribe();
+      } catch {
+        /* ignore */
+      }
+      h.unsubscribe = undefined;
+    }
   }
 
   private async openSubscription(h: Hosted): Promise<void> {

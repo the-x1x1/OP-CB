@@ -1117,7 +1117,7 @@ test('a moved view asks a paged bounds source for an early poll no sooner than i
   await host.dispose();
 });
 
-test('a source that polls and subscribes still retries a failed subscription, and a cancelled poll leaves it alone', async (t) => {
+test('a source that polls and subscribes still retries a failed subscription; going offline closes it and online reopens it', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1_000_000 });
   const clock = { now: () => Date.now() };
   const usgs = createProvider();
@@ -1174,11 +1174,16 @@ test('a source that polls and subscribes still retries a failed subscription, an
   await flush();
   assert.equal(subscribes, 2, 'the poll schedule did not swallow the subscription retry');
   assert.equal(signals[0]?.aborted, false);
-  host.setOnline(false); // cancels the poll; the subscription is not the poll's to abort
+  host.setOnline(false);
   await flush();
-  assert.equal(signals[0]?.aborted, false, 'going offline cancelled the poll, not the open subscription');
+  assert.equal(signals[0]?.aborted, true, 'offline: the live stream from the internet is closed');
+  host.setOnline(true);
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(subscribes, 3, 'back online: opened again');
+  assert.equal(signals[1]?.aborted, false);
   await host.dispose();
-  assert.equal(signals[0]?.aborted, true, 'stopping the source closes it');
+  assert.equal(signals[1]?.aborted, true, 'stopping the source closes it');
 });
 
 test('a source waiting for the operator reads NEEDS_SETUP, is not retried or logged as failing, and polls again when its settings change', async () => {

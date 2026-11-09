@@ -52,7 +52,9 @@ Versioning: [semantic versioning](https://semver.org/).
 - A source that both polls and listens (a Traccar server, say) retries its live connection
   after a failure again: the next poll's schedule used to clear the retry, so the connection
   stayed down until the source was restarted. Going offline cancelled the poll and, with it,
-  an open connection's abort signal; it now leaves the connection alone.
+  an open connection's abort signal by accident, and never opened it again: going offline now
+  closes a live stream from the internet on purpose (AISStream's, say) and coming back online
+  opens it again.
 
 ### Added
 
