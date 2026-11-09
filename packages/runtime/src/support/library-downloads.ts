@@ -21,8 +21,14 @@ import { REFERENCES } from './references.js';
  * `<summary>`, `<language>`, `<name>`, `<flavour>`, `<category>`, `<articleCount>`,
  * `<mediaCount>`, `<dc:issued>` and `<link rel="http://opds-spec.org/acquisition/open-access"
  * type="application/x-zim" href="…/x.zim.meta4" length="…"/>`. The `.meta4` is a Metalink 4
- * file (RFC 5854): `<file name><size><hash type="sha-256"><url priority>`. The live catalogue
- * was not reachable from where this was written; the first real download is the check.
+ * file (RFC 5854): `<file name><size><hash type="sha-256"><url priority>`.
+ *
+ * Read live 2026-11-08 (the first screen test found every search empty): library.kiwix.org
+ * redirects to opds.library.kiwix.org; every download link is on `lb.download.kiwix.org` (the
+ * MirrorBrain load balancer), not `download.kiwix.org`; the entry's `length` is the size
+ * rounded up to a whole KiB (1,192,567,808 for a file the Metalink gives as 1,192,567,339; all
+ * 8 entries sampled were ceil(size / 1024) * 1024, two of them not round-to-nearest), so the
+ * Metalink's `<size>` is the exact one; the Metalink lists https mirrors by priority.
  *
  * A book is checked three ways before it is put in the library: its size against the
  * catalogue, its SHA-256 against the Metalink file when that gives one, and the MD5 every ZIM
@@ -32,6 +38,8 @@ import { REFERENCES } from './references.js';
 
 export const KIWIX_CATALOG = 'https://library.kiwix.org/catalog/v2/entries';
 const KIWIX_DOWNLOAD_HOST = 'download.kiwix.org';
+/** The catalogue's `length` is rounded up to a whole KiB. */
+const CATALOG_SIZE_SLACK = 1024;
 const ACQUISITION = 'http://opds-spec.org/acquisition/open-access';
 const MAX_REFERENCE_BYTES = 150 * 1024 * 1024;
 const PARTS_DIR = '.downloads';
@@ -75,7 +83,7 @@ function int(s: string | undefined): number | undefined {
   return Number.isSafeInteger(n) ? n : undefined;
 }
 
-/** The download link a catalogue entry may carry: only on download.kiwix.org, made https. */
+/** The download link a catalogue entry may carry: only on download.kiwix.org or its own hosts (lb., mirror.), made https. */
 export function kiwixDownloadUrl(href: string): string | undefined {
   let u: URL;
   try {
@@ -83,12 +91,25 @@ export function kiwixDownloadUrl(href: string): string | undefined {
   } catch {
     return undefined;
   }
-  if ((u.protocol !== 'https:' && u.protocol !== 'http:') || u.hostname !== KIWIX_DOWNLOAD_HOST) return undefined;
+  if ((u.protocol !== 'https:' && u.protocol !== 'http:') || !isKiwixDownloadHost(u.hostname)) return undefined;
   if (!/^\/zim\/[A-Za-z0-9._/-]+\.zim(\.meta4)?$/.test(u.pathname) || u.pathname.includes('..')) return undefined;
   u.protocol = 'https:';
   u.search = '';
   u.hash = '';
   return u.toString();
+}
+
+function isKiwixDownloadHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return (
+    h === KIWIX_DOWNLOAD_HOST ||
+    (h.endsWith(`.${KIWIX_DOWNLOAD_HOST}`) && /^[a-z0-9-]+$/.test(h.slice(0, -KIWIX_DOWNLOAD_HOST.length - 1)))
+  );
+}
+
+/** Whether the catalogue's size (rounded up to a KiB) fits an exact size. */
+export function catalogSizeFits(catalogBytes: number, exactBytes: number): boolean {
+  return catalogBytes >= exactBytes && catalogBytes - exactBytes < CATALOG_SIZE_SLACK;
 }
 
 export function readCatalog(text: string): { entries: CatalogEntry[]; total?: number } {
@@ -321,10 +342,11 @@ export class LibraryDownloads {
         }
       }
       if (meta.name && meta.name !== name) throw new Error(`the Metalink file is for ${meta.name}, not ${name}`);
-      const size = meta.size ?? entry.sizeBytes;
-      if (!size) throw new Error('the catalogue does not say how big the file is');
-      if (entry.sizeBytes && meta.size && entry.sizeBytes !== meta.size)
-        throw new Error('the catalogue and the Metalink file disagree on the size');
+      // The exact size: the Metalink's, else what the server says (the catalogue's is rounded).
+      const size = meta.size ?? (await this.exactSize([direct, ...meta.urls], entry.sizeBytes, signal));
+      if (!size) throw new Error('neither the Metalink file nor the server says how big the file is');
+      if (entry.sizeBytes && !catalogSizeFits(entry.sizeBytes, size))
+        throw new Error('the catalogue and the download disagree on the size');
       const free = await (this.deps.freeBytes ?? statfsFree)(this.deps.dir);
       // An earlier, unfinished download of the same file is continued.
       let at = 0;
@@ -431,6 +453,24 @@ export class LibraryDownloads {
           : { phase: 'failed', item, message: failureText(err) },
       );
     }
+  }
+
+  /** Without a Metalink file: the size a server gives for the file (a HEAD, redirects followed). */
+  private async exactSize(
+    urls: string[],
+    catalogBytes: number | undefined,
+    signal: AbortSignal,
+  ): Promise<number | undefined> {
+    for (const url of urls) {
+      try {
+        const res = await this.deps.fetchImpl(url, { method: 'HEAD', signal });
+        const n = int(res.ok ? (res.headers.get('content-length') ?? undefined) : undefined);
+        if (n && (!catalogBytes || catalogSizeFits(catalogBytes, n))) return n;
+      } catch (err) {
+        if (signal.aborted) throw err;
+      }
+    }
+    return undefined;
   }
 
   // ---- the references ---------------------------------------------------------------------------

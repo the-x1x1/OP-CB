@@ -5,6 +5,27 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Kiwix catalogue search returns books again.** Every search came back "Nothing in the
+  catalogue matched" because the live catalogue (read 2026-11-08) puts its downloads on
+  `lb.download.kiwix.org`, which the reader did not accept, and gives each book's size rounded up
+  to a whole KiB, which the download check treated as a disagreement with the exact size in the
+  Metalink file. Kiwix's own download hosts are accepted; the exact size comes from the Metalink
+  file, or from the server when there is none, and the catalogue's rounded figure only has to fit.
+- **The emergency references download.** cdc.gov answered 403 and irp.fas.org a browser-check
+  page to the plain fetch the downloads used; they now go through the same network stack as the
+  app's windows, which those sites answer like a browser. The two Army manuals come from the
+  Army Publishing Directorate first (irp.fas.org stays as the survival manual's fallback), and
+  FEMA's guide from the address ready.gov keeps it at now.
+
+### Changed
+
+- The Army's **first aid** reference is now **ATP 4-02.11 Casualty Response, Tactical Combat
+  Casualty Care, and First Aid (23 March 2026)**, which replaced TC 4-02.1 and, before it, the
+  FM 4-25.11 of 2002 that was listed. A downloaded FM 4-25.11 stays in the references folder
+  but is no longer listed.
+
 ## [0.7.3] — 2026-10-30
 
 A fix for the whole-planet map download. Checked in the build container (full test suite with

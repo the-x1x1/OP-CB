@@ -5,15 +5,18 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type { LibraryDownloadStatus, WorldClient } from '@opcb/ipc-contract';
-import { readCatalog, readMetalink } from '../../src/index.js';
+import { catalogSizeFits, kiwixDownloadUrl, readCatalog, readMetalink } from '../../src/index.js';
 import { startRuntime } from '../helpers/harness.js';
 import { buildZim, type ZimItemSpec } from '../helpers/zim-file.js';
 
 /*
  * The catalogue feed below follows libkiwix's own expected output (test/library_server.cpp
- * CATALOG_ENTRY, test/library.cpp), read 2026-10-30; the Metalink file follows RFC 5854. Both are
- * written here; nothing is copied from a live answer.
+ * CATALOG_ENTRY, test/library.cpp), read 2026-10-30, and the live catalogue read 2026-11-08:
+ * download links on lb.download.kiwix.org, `length` rounded up to a whole KiB. The Metalink file
+ * follows RFC 5854 and the live MirrorBrain answer. `LIVE_ENTRY` is one entry of the live feed.
  */
+
+const kib = (n: number) => Math.ceil(n / 1024) * 1024;
 
 const items: ZimItemSpec[] = [
   { ns: 'C', path: 'index', title: 'Main Page', body: '<h1>Survival library</h1>' },
@@ -78,22 +81,27 @@ function metalink(size: number, sha256: string): string {
 </metalink>`;
 }
 
-const ZIM_URL = 'https://download.kiwix.org/zim/other/field_medicine_en_2026-10.zim';
+const ZIM_URL = 'https://lb.download.kiwix.org/zim/other/field_medicine_en_2026-10.zim';
 
-function fakeKiwix(file: Uint8Array, opts: { sha?: string; stallAt?: number } = {}) {
+function fakeKiwix(file: Uint8Array, opts: { sha?: string; stallAt?: number; noMetalink?: boolean } = {}) {
   const asked: string[] = [];
   const sha = opts.sha ?? createHash('sha256').update(file).digest('hex');
   let stalled = false;
   const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input instanceof Request ? input.url : input);
     const range = new Headers(init?.headers).get('range');
-    asked.push(`${url}${range ? ` ${range}` : ''}`);
+    asked.push(`${init?.method === 'HEAD' ? 'HEAD ' : ''}${url}${range ? ` ${range}` : ''}`);
     if (url.startsWith('https://library.kiwix.org/catalog/v2/entries'))
       return new Response(
-        feed({ size: file.length, href: `http://download.kiwix.org/zim/other/field_medicine_en_2026-10.zim.meta4` }),
+        feed({
+          size: kib(file.length),
+          href: `http://lb.download.kiwix.org/zim/other/field_medicine_en_2026-10.zim.meta4`,
+        }),
       );
-    if (url === `${ZIM_URL}.meta4`) return new Response(metalink(file.length, sha));
+    if (url === `${ZIM_URL}.meta4`)
+      return opts.noMetalink ? new Response('gone', { status: 404 }) : new Response(metalink(file.length, sha));
     if (url === 'https://mirror.example.de/kiwix/zim/other/field_medicine_en_2026-10.zim' || url === ZIM_URL) {
+      if (init?.method === 'HEAD') return new Response(null, { headers: { 'content-length': String(file.length) } });
       const start = range ? Number(/^bytes=(\d+)-$/.exec(range)![1]) : 0;
       if (opts.stallAt !== undefined && !stalled && start < opts.stallAt) {
         stalled = true;
@@ -108,8 +116,16 @@ function fakeKiwix(file: Uint8Array, opts: { sha?: string; stallAt?: number } = 
       }
       return new Response(file.slice(start), { status: range ? 206 : 200 });
     }
-    if (url.endsWith('.pdf') && url.includes('irp.fas.org'))
-      return new Response(Buffer.from('%PDF-1.7 survival'), { headers: { 'content-type': 'application/pdf' } });
+    // armypubs.army.mil answers the PDF; irp.fas.org a browser-check page (as it did a plain fetch, 2026-10-30).
+    if (url.includes('armypubs.army.mil') && url.includes('3-50x21'))
+      return new Response(Buffer.from('%PDF-1.6 survival'), { headers: { 'content-type': 'application/pdf' } });
+    if (url.includes('armypubs.army.mil') && url.includes('4-02.11'))
+      return new Response(Buffer.from('%PDF-1.7 first aid'), { headers: { 'content-type': 'application/pdf' } });
+    if (url.includes('irp.fas.org'))
+      return new Response('<html>checking your browser</html>', {
+        status: 202,
+        headers: { 'content-type': 'text/html' },
+      });
     if (url.includes('ready.gov'))
       return new Response('<html>blocked</html>', { headers: { 'content-type': 'text/html' } });
     if (url.includes('nj.gov'))
@@ -186,7 +202,8 @@ test('library: the catalogue is read, a book downloaded from its Metalink mirror
     assert.equal(cat.entries.length, 1);
     const e = cat.entries[0]!;
     assert.equal(e.url, `${ZIM_URL}.meta4`, 'made https');
-    assert.equal(e.sizeBytes, file.length);
+    assert.equal(e.sizeBytes, kib(file.length), 'as the catalogue gives it: rounded up to a KiB');
+    assert.notEqual(e.sizeBytes, file.length);
     assert.equal(e.summary, 'Medicine for when help is far & slow');
     assert.equal(e.issued, '2026-10-01');
     assert.ok(k.asked.some((u) => u.includes('q=medicine') && u.includes('lang=eng')));
@@ -222,6 +239,22 @@ test('library: the catalogue is read, a book downloaded from its Metalink mirror
     );
   } finally {
     await h2.dispose();
+  }
+});
+
+test('library: without a Metalink file the exact size comes from the server, not the rounded catalogue', async () => {
+  const file = buildZim(items, { minor: 2 });
+  const k = fakeKiwix(file, { noMetalink: true });
+  const h = await startRuntime({ fetchImpl: k.fetchImpl });
+  try {
+    const cat = await h.client.request('library.catalog', {});
+    await h.client.request('library.download.start', { kind: 'zim', entry: cat.entries[0]! });
+    const st = await until(h.client, ['done', 'failed']);
+    assert.equal(st.phase, 'done', st.message ?? '');
+    assert.ok(k.asked.includes(`HEAD ${ZIM_URL}`));
+    assert.ok((await fs.readFile(path.join(h.dataDir, 'library', 'field_medicine_en_2026-10.zim'))).equals(file));
+  } finally {
+    await h.dispose();
   }
 });
 
@@ -289,9 +322,11 @@ test('library: the emergency references — PDFs only, a fallback address, probl
     assert.equal(st.step?.total, 6);
     const shelf = await h.client.request('library.shelf', undefined);
     const got = shelf.references.filter((r) => r.installed).map((r) => r.id);
-    assert.deepEqual(got.sort(), ['army-atp-3-50-21', 'army-fm-4-25-11', 'fema-are-you-ready']);
+    assert.deepEqual(got.sort(), ['army-atp-3-50-21', 'army-atp-4-02-11', 'fema-are-you-ready']);
     const fema = shelf.references.find((r) => r.id === 'fema-are-you-ready')!;
-    assert.equal(fema.installed?.from, 'https://www.nj.gov/njoem/pdf/areyouready.pdf', 'the web page was refused');
+    assert.equal(fema.installed?.from, 'https://www.nj.gov/njoem/pdf/areyouready.pdf', 'the web pages were refused');
+    const survival = shelf.references.find((r) => r.id === 'army-atp-3-50-21')!;
+    assert.match(survival.installed?.from ?? '', /^https:\/\/armypubs\.army\.mil\//, "the Army's own copy first");
     assert.equal(fema.installed?.sha256, createHash('sha256').update('%PDF-1.4 fema').digest('hex'));
     assert.equal(st.problems?.length, 3);
     assert.match(st.problems!.join('\n'), /answered 404/);
@@ -319,4 +354,61 @@ test('library: the readers refuse what is not theirs', () => {
   assert.equal(m.sha256, 'b'.repeat(64));
   assert.equal(m.size, 10);
   assert.deepEqual(m.urls, ['https://mirror.example.de/kiwix/zim/other/field_medicine_en_2026-10.zim']);
+});
+
+// One entry of the live answer (opds.library.kiwix.org, q=medicine&lang=eng, 2026-11-08), as served.
+const LIVE_ENTRY = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:dc="http://purl.org/dc/terms/"
+      xmlns:opds="https://specs.opds.io/opds-1.2"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">
+  <id>e1a46469-b429-8620-778b-e1e71e96682a</id>
+  <title>Filtered Entries (q=medicine&amp;lang=eng&amp;count=2)</title>
+  <totalResults>9</totalResults>
+  <entry>
+    <id>urn:uuid:bfa1e3b6-1ede-5d20-d4a8-c3a331c1b7e7</id>
+    <title>Medicine LibreTexts</title>
+    <updated>2025-01-16T00:00:00Z</updated>
+    <summary>Medicine courses and bookshelves from LibreTexts.org</summary>
+    <language>eng</language>
+    <name>libretexts.org_en_med</name>
+    <flavour></flavour>
+    <category></category>
+    <tags>medicine;_ftindex:no;_pictures:yes;_videos:yes;_details:yes</tags>
+    <articleCount>23171</articleCount>
+    <mediaCount>30785</mediaCount>
+    <link rel="http://opds-spec.org/image/thumbnail"
+          href="/catalog/v2/illustration/bfa1e3b6-1ede-5d20-d4a8-c3a331c1b7e7/?size=48"
+          type="image/png;width=48;height=48;scale=1"/>
+    <link type="text/html" href="https://browse.library.kiwix.org/content/libretexts.org_en_med_2025-01" />
+    <author>
+      <name>LibreTexts</name>
+    </author>
+    <publisher>
+      <name>openZIM</name>
+    </publisher>
+    <dc:issued>2025-01-16T00:00:00Z</dc:issued>
+    <link rel="http://opds-spec.org/acquisition/open-access" type="application/x-zim" href="https://lb.download.kiwix.org/zim/libretexts/libretexts.org_en_med_2025-01.zim.meta4" length="1192567808" />
+  </entry>
+</feed>
+`;
+
+test('library: the live catalogue shape is read (lb.download.kiwix.org, a KiB-rounded length)', () => {
+  const { entries, total } = readCatalog(LIVE_ENTRY);
+  assert.equal(total, 9);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0]!.url, 'https://lb.download.kiwix.org/zim/libretexts/libretexts.org_en_med_2025-01.zim.meta4');
+  assert.equal(entries[0]!.sizeBytes, 1192567808);
+  assert.equal(entries[0]!.articleCount, 23171);
+  assert.equal(entries[0]!.issued, '2025-01-16');
+  // The Metalink's exact size for that file.
+  assert.equal(catalogSizeFits(1192567808, 1192567339), true);
+  assert.equal(catalogSizeFits(1192567808, 1192567808 - 1024), false);
+  assert.equal(catalogSizeFits(1192567808, 1192567809), false);
+  // Kiwix's own hosts only.
+  assert.ok(kiwixDownloadUrl('https://download.kiwix.org/zim/a/b.zim'));
+  assert.ok(kiwixDownloadUrl('https://mirror.download.kiwix.org/zim/a/b.zim'));
+  assert.equal(kiwixDownloadUrl('https://evil.example/download.kiwix.org/zim/a/b.zim'), undefined);
+  assert.equal(kiwixDownloadUrl('https://xdownload.kiwix.org/zim/a/b.zim'), undefined);
+  assert.equal(kiwixDownloadUrl('https://a.b.download.kiwix.org/zim/a/b.zim'), undefined);
 });

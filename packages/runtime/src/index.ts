@@ -16,6 +16,7 @@ export { ZimLibrary, LIBRARY_DIR_NAME, type ZimLookup, type ZimItem } from './su
 export {
   LibraryDownloads,
   KIWIX_CATALOG,
+  catalogSizeFits,
   kiwixDownloadUrl,
   readCatalog,
   readMetalink,

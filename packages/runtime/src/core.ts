@@ -908,7 +908,7 @@ export class RuntimeCore {
     });
     this.zimLibrary = new ZimLibrary(this.dirs.libraryDir, this.loggerHub.logger('offline'));
     this.libraryDownloads = new LibraryDownloads({
-      fetchImpl: (input, init) => (this.deps.fetchImpl ?? fetch)(input, init),
+      fetchImpl: (input, init) => (this.deps.downloadFetchImpl ?? this.deps.fetchImpl ?? fetch)(input, init),
       dir: this.dirs.libraryDir,
       now: () => this.clock.now(),
       log: this.loggerHub.logger('offline'),
