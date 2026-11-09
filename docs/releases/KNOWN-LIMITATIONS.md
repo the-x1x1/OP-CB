@@ -367,8 +367,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - The portable zip's `OP-CB-data` folder is added after electron-builder by the packaging
   script; the release gate checks it is there, and the first build that runs it is the next.
 - True colour (Suomi NPP) shows 2 November 2026: NASA GIBS has no newer day for it (seen
-  2026-11-08), while the NOAA-20 true colour is current. The picture's date is in the overlay
-  button's tooltip and in What's here, not on the map.
+  2026-11-08), while the NOAA-20 true colour is current. The Map bar says so ("True colour ·
+  Suomi NPP · from 2 Nov"), as it does for any followed picture more than two days old.
 - Finnish road cameras (Fintraffic) show no municipality or province: the station list stopped
   carrying them (seen 2026-11-08); the cameras and their pictures are unaffected.
 - Wind on the globe waits on one saved answer from NOAA's ERDDAP (the shape of its JSON grid),

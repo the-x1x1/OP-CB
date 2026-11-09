@@ -40,6 +40,10 @@ Versioning: [semantic versioning](https://semver.org/).
   `nopic`, `mini`) beside three books all titled "Wikipedia"; and when more books match than one
   page holds (50 of 65 for "wikipedia" in English), the panel says so.
 
+- The Map bar says when an imagery layer's newest picture is more than two days old ("True
+  colour · Suomi NPP · from 2 Nov"): NASA stopped Suomi NPP's true colour on 2 November 2026
+  and the bar went on offering it as today's picture.
+
 ### Added
 
 - **Street view asks KartaView when Panoramax has nothing within reach.** KartaView (Grab's
