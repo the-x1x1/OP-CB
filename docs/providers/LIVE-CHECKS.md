@@ -54,8 +54,20 @@ Public camera catalogues (`cctv-public` packs; the keys the packs read, against 
 | `singapore`, `tfl` | 1 frame list, 889 cameras    | every key                                                                                                                                                                                                                                                                                                                                                                |
 | `fintraffic`       | 815 stations, 813 collecting | **drift:** `municipality`, `province` and `cameraType` are gone from every station. The pack used the first two for a camera's place line; cameras still list, with no place line. The station name (`vt25_Hanko_Santala`) is not parsed for one: its parts are roads, municipalities, villages and streets without a fixed order. A test with the live shape pins this. |
 
-Not checked here: the WMS/WMTS imagery layers (capabilities, not records), Home Assistant (the
-operator's own), the camera packs that need the operator's key (Ontario, Trafikverket), Taiwan's
+Imagery layers (WMTS/WMS capabilities: the layer, its tile matrix set or style, and its newest
+frame):
+
+| Layer                                                                      | Found                                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GIBS: GOES-East, GOES-West, Himawari band 13                               | present, `GoogleMapsCompatible_Level6`, PNG; newest frame 10 minutes old                                                                                                                                                                                           |
+| GIBS: IMERG 30-minute precipitation                                        | present; newest frame about five hours old (IMERG's usual delay)                                                                                                                                                                                                   |
+| GIBS: VIIRS NOAA-20 true colour                                            | present, `Level9`, JPEG; today's day in the time domain                                                                                                                                                                                                            |
+| GIBS: VIIRS SNPP true colour                                               | present, but **its newest day is 2026-11-02** in both the capabilities and GIBS's time domain, a week behind NOAA-20: the layer shows that day's picture until GIBS has newer ones; its date is in the overlay button's tooltip and in What's here, not on the map |
+| GIBS: Black Marble                                                         | present, its one 2016 frame                                                                                                                                                                                                                                        |
+| nowCOAST: GOES longwave, CONUS base reflectivity, lightning strike density | present with the styles the definitions name; newest frames minutes old                                                                                                                                                                                            |
+| EUMETSAT: Meteosat 0° and IODC IR 10.8                                     | the WMTS layer and `EPSG:3857 - 512` set present; the WMS time dimension (`timeFrom`) current, 15-minute steps                                                                                                                                                     |
+
+Not checked here: Home Assistant (the operator's own), the camera packs that need the operator's key (Ontario, Trafikverket), Taiwan's
 freeway list (`tisvcloud.freeway.gov.tw` did not load from the operator's network that day), and
 the transit sources.
 
