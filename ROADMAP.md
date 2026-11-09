@@ -452,8 +452,11 @@ each to be built on `feature/roadmap-3`:
       domain) at low zoom as now. Nothing public-domain is detailed enough past zoom 6–8, and the
       2D styles draw the Protomaps schema, so this is a record and a documented recipe (B1), not
       new code: write the licence record for a pack's basemap into the pack's manifest at build
-      time and show it in Settings → Offline packs. Waits on a Protomaps build (about 120 GB, kept
-      seven days) being cut on a machine with the room.
+      time and show it in Settings → Offline packs. Waits on a Protomaps build (about 139 GB, kept
+      seven days) being cut on a machine with the room. The in-app downloader (0.6.0+) does the
+      cut itself; a world shipped inside the installer measures z5 15 MB, z6 45 MB, z7 190 MB
+      against the 2026-11-08 build (docs/architecture/COMMAND-CENTER.md §8) — the operator's
+      call which, if any, to bundle.
 - Not needed now: the interface in other languages.
 - Still the operator's or legal's: the conditional providers (LR-01…LR-19) and AISStream's
   commercial terms; more camera, transit and bike-share regions (each feed's licence); OSIRIS's

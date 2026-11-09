@@ -144,7 +144,14 @@ World & Maps → **Download a map for offline use**, and the offline-maps walkth
 - PMTiles is read and written by OP-CB's own code (`packages/offline/src/pmtiles.ts`,
   `pmtiles-extract.ts`) from the published v3 specification; no new dependency.
 - `pnpm basemap:extract --world-zoom N [--plan-only]` does the same from the command line:
-  how the size of a world map to ship inside the installer will be measured.
+  how the size of a world map to ship inside the installer is measured. **Measured 2026-11-08**
+  against the live build `20261108.pmtiles` (139,369,055,252 bytes; root directory 15,548
+  bytes, 2,917 entries; one 133 KB leaf holds everything to zoom 7), by the same plan (unique
+  blobs, world to the zoom): to **z3 2.4 MB** (85 tiles), **z4 6.0 MB** (341), **z5 15.1 MB**
+  (1,365), **z6 45.1 MB** (5,461), **z7 189.6 MB** (21,845) of tile data; the new archive's
+  own directories add a few KB. A world to z5 or z6 fits an installer (119 MB today); the
+  operator decides. The planet's whole-zoom tile data is 139,015,539,782 bytes with the leaf
+  directories after it (0.7.3's finding), 353 MB of them.
 
 Evidence: tile ids against the specification's table (including 12/3423/1763 → 19078479);
 synthetic archives extracted and compared tile by tile (world and area, sea deduplicated,
