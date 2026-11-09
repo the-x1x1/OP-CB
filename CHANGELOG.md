@@ -72,6 +72,9 @@ Versioning: [semantic versioning](https://semver.org/).
   Casualty Care, and First Aid (23 March 2026)**, which replaced TC 4-02.1 and, before it, the
   FM 4-25.11 of 2002 that was listed. A downloaded FM 4-25.11 stays in the references folder
   but is no longer listed.
+- The New Zealand camera pack's description under Public cameras (licence not confirmed) now
+  says what NZTA's copyright statement says: personal use only, and photography and imagery
+  are left out of that permission. The pack is unchanged and still off by default.
 
 ## [0.7.3] — 2026-10-30
 

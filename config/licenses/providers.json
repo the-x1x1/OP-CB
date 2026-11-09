@@ -1198,8 +1198,8 @@
       "providerId": "nzta-traffic-cameras",
       "name": "NZ Transport Agency Waka Kotahi — Journey Planner traffic cameras",
       "sourceUrl": "https://www.journeys.nzta.govt.nz/assets/map-data-cache/cameras.json ; frames https://www.trafficnz.info/camera/",
-      "termsUrl": "https://www.journeys.nzta.govt.nz/ (footer: \"© NZ Transport Agency Waka Kotahi, all rights reserved\")",
-      "license": "None found for the camera list or images; the Journey Planner states all rights reserved. NZTA publishes other datasets under CC BY 4.0 on data.govt.nz; none covering these images was found.",
+      "termsUrl": "https://www.journeys.nzta.govt.nz/about-this-site ; https://www.nzta.govt.nz/about-us/about-this-site/website-terms-of-use",
+      "license": "None for the images. The Journey Planner's copyright statement (read 2026-11-08) allows reproduction for personal use only, with attribution, and says the permission does not extend to photography and imagery; other use needs NZTA's permission.",
       "category": "cctv",
       "plannedStatus": "optional",
       "dataPolicy": {
@@ -1215,7 +1215,7 @@
         "attributionText": "NZ Transport Agency Waka Kotahi (courtesy)"
       },
       "commercialReview": "manual-review-required",
-      "notes": "Shipped only in public-cameras-unverified (off by default). Ask NZTA whether the images are covered by its CC BY 4.0 open data policy; nzta.govt.nz could not be read from the build machines."
+      "notes": "Shipped only in public-cameras-unverified (off by default). Read 2026-11-08 through the operator's browser: nzta.govt.nz states the same personal-use permission (CC BY-NC 4.0) with the same exclusion for photographs and images, and its website terms of use forbid scrapers and other unauthorised automated access; the frame host trafficnz.info now redirects its home page to the Journey Planner; NZTA's open data portal has no camera dataset. Permission for other use: NZTA's Information team (informationteam@nzta.govt.nz)."
     },
     {
       "providerId": "wsdot-cameras",

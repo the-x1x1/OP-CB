@@ -152,7 +152,8 @@ export const PUBLIC_CAMERAS_UNVERIFIED_MANIFEST: ProviderManifest = {
       label: 'NZ Transport Agency (New Zealand)',
       kind: 'boolean',
       defaultLabel: 'On',
-      description: 'New Zealand state highway cameras from the Journey Planner. No reuse licence found for the images.',
+      description:
+        'New Zealand state highway cameras from the Journey Planner. Its copyright statement allows personal use only and leaves photography and imagery out.',
       helpUrl: 'https://www.journeys.nzta.govt.nz/traffic-cameras',
     },
     {
