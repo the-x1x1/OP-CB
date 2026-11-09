@@ -145,16 +145,30 @@ export function migrateLegacyData(opts: {
     // The portable zip ships an `OP-CB-data` folder holding only a note (scripts/package.mjs,
     // 2026-11-08): unzipped over a WorldView-era portable copy it is there already, empty of
     // data, and the old folder's contents move into it instead.
+    // The old folder is first renamed whole (all or nothing) to a staging name, then emptied into
+    // the new one entry by entry; a start that stops between the two finishes the move from the
+    // staging folder next time, whatever the new folder already holds.
+    const portableStaging = `${oldPortable}${STAGING_SUFFIX}`;
     if (
+      !isDir(f, portableStaging) &&
       isDir(f, oldPortable) &&
       (!f.existsSync(newPortable) || (isDir(f, newPortable) && !holdsOwnData(f, newPortable)))
     ) {
       try {
-        moveEntries(f, oldPortable, newPortable);
-        result.moved.push(`${oldPortable} → ${newPortable}`);
+        f.renameSync(oldPortable, portableStaging);
       } catch (err) {
         if (BUSY_CODES.has(errCode(err) ?? '')) result.busy = oldPortable;
         else result.problems.push(`could not rename ${oldPortable}: ${errText(err)}`);
+        return result;
+      }
+    }
+    if (isDir(f, portableStaging)) {
+      try {
+        moveEntries(f, portableStaging, newPortable);
+        result.moved.push(`${oldPortable} → ${newPortable}`);
+      } catch (err) {
+        if (BUSY_CODES.has(errCode(err) ?? '')) result.busy = portableStaging;
+        else result.problems.push(`finishing the move of ${portableStaging}: ${errText(err)}`);
         return result;
       }
     }

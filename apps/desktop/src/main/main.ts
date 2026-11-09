@@ -154,7 +154,7 @@ async function bootstrap(): Promise<void> {
       title: 'Close WorldView first',
       message:
         'OP-CB is ready to take over the data the earlier version (WorldView) left, but WorldView still has it open.',
-      detail: `Close WorldView (also from the notification area), then start OP-CB again. Nothing has been moved yet.\n\n${legacy.busy}`,
+      detail: `Close WorldView (also from the notification area), then start OP-CB again. Nothing is lost: whatever has not moved yet moves then.\n\n${legacy.busy}`,
       buttons: ['Quit'],
     });
     app.exit(0);
