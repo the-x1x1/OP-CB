@@ -8,6 +8,13 @@ alerts were written in-repo (not recorded) so tests are deterministic. Record re
 payloads with `pnpm provider:record weather` when network access exists; recorded
 files go in `recorded/`.
 
+`recorded/alerts-active.json` is three alerts of the live answer, read on 2026-11-09 through
+the operator's browser and copied unchanged with the collection's `@context`, `title` and
+`updated` (provenance in `alerts-active.meta.json`): a Flash Flood Warning update with its own
+polygon, references and flash-flood tags; a Flood Advisory whose `ends` is null; a Small Craft
+Advisory with no polygon, only a marine forecast zone. `providers/weather/src/recorded.test.ts`
+reads it with the provider's reader.
+
 | File | Purpose |
 | --- | --- |
 | normal.geojson | 9 alerts: 7 with polygons (Extreme/Severe/Moderate/Minor, one `Update`, one marine, one Red Flag with onset after sent), 1 zone-only advisory (geometry null, affectedZones), 1 with neither geometry nor zones |

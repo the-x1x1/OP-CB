@@ -86,3 +86,11 @@ ships were kept unchanged as `fixtures/digitraffic-ais/recorded/`, which the pro
 read; the live answer carries values the invented fixtures did not, such as a static row whose
 IMO, ship type, reference points and ETA are all "not available", and the provider reads them as
 such.
+
+The same evening, the past-day USGS earthquake feed (192 events) and NWS's active alerts (456,
+16 with their own polygon) were read the same way, and a few rows of each kept unchanged as
+`fixtures/usgs/recorded/` and `fixtures/weather/recorded/`, read by the providers' tests. Both
+are US public domain. Each selection was checked against a second read (USGS: the five events
+byte for byte; NWS: the selection's SHA-256 in the browser and in the repo); Digitraffic's static
+rows matched a second read apart from their timestamps, and its positions, which move by the
+minute, rest on the one read.

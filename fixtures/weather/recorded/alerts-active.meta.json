@@ -1,0 +1,13 @@
+{
+  "providerId": "nws-alerts",
+  "recordedAt": "2026-11-09T04:46Z",
+  "url": "https://api.weather.gov/alerts/active?status=actual&message_type=alert,update",
+  "status": 200,
+  "bytes": 12306,
+  "sha256": "418456147bbb94eb9b4ec86cd971f928882c1c2b23bc9aa7e0f83322d46ddd40",
+  "contentType": "application/geo+json",
+  "attribution": "Alerts: NOAA National Weather Service",
+  "license": "US-PD",
+  "selection": "3 of the 456 alerts in the answer (16 of which had their own polygon), copied unchanged with the collection's @context, title and updated: a Flash Flood Warning update with its own polygon, two references and the flash-flood tags; a new Flood Advisory with a polygon and ends null; a Small Craft Advisory with no polygon, drawn from one marine forecast zone. The compact form of this selection had the same SHA-256 in the browser and here (5ef1edd3fd15c6e6\u2026).",
+  "note": "Read through the operator's browser because the build machine cannot reach api.weather.gov (the browser sends its own User-Agent). Committing it is allowed only because the provider data policy permits raw retention and redistribution (NWS: US public domain)."
+}
