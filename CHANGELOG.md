@@ -32,6 +32,10 @@ Versioning: [semantic versioning](https://semver.org/).
   three collided (first screen test, 2026-10-30). A kiwix-serve already running on 8080 is
   found again by setting its port under Resources → Local services.
 
+- CI runs on the current actions majors (checkout v7, setup-node v7, upload-artifact v7,
+  pnpm/action-setup v6, action-gh-release v3), all on the Node 24 runtime; the v4/v2 ones ran on
+  Node 20, which GitHub is retiring. The CI jobs are pinned to `ubuntu-24.04` like the Linux
+  build, so `ubuntu-latest` moving to a newer LTS cannot change a release's environment unnoticed.
 - The Army's **first aid** reference is now **ATP 4-02.11 Casualty Response, Tactical Combat
   Casualty Care, and First Aid (23 March 2026)**, which replaced TC 4-02.1 and, before it, the
   FM 4-25.11 of 2002 that was listed. A downloaded FM 4-25.11 stays in the references folder
