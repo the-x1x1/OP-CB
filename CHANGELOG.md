@@ -9,18 +9,23 @@ Versioning: [semantic versioning](https://semver.org/).
 
 - **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
   readout showing what is round the selection, or the middle of the view, at its bearing and range
-  out to the range rings' outer ring, with a sweep. Off by default.
+  out to the range rings' outer ring, with a sweep. Off by default; also Show the contact sonar in
+  the palette.
 - **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
   from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
   and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
-  wind at the middle of the view. The definition is in `connectors/examples/weather/`, off
+  wind at the middle of the view. Each arrow is named by its place ("Wind at 25°N 165°W") and,
+  selected, says the wind the way a forecast does: "7.0 m/s (14 kn) from ENE (075°)", its Beaufort
+  force and the forecast step. The definition is in `connectors/examples/weather/`, off
   until its licence wording is confirmed.
 - **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
   vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
   occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
   CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
   off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
-  been read live; four MBTA vehicles are kept as a recorded test.
+  been read live; four MBTA vehicles are kept as a recorded test. A selected vehicle
+  has a Transit section: its route, trip, where it is on the trip, how full it is and whether it
+  is accessible, in words.
 - **A Traccar server on your own computer or network can push positions live**, as a public
   one could: a local definition may have a `websocket` whose URL is
   `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
