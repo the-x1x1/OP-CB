@@ -70,8 +70,8 @@ import { isCollected } from './collections.js';
 import { zoneEventTypes } from './watch-zones.js';
 import type { HostRegistry } from './store.js';
 import { overlaysToDraw } from '../map-providers.js';
-import { OVERVIEW_LENS_ID, withLayer } from '../overview-layers.js';
-import { allLayersHidden, onlyLayerHidden } from '../layer-tree.js';
+import { OVERVIEW_LENS_ID, lensFilter, withLayer } from '../overview-layers.js';
+import { allLayersHidden, objectFilter, onlyLayerHidden } from '../layer-tree.js';
 import { WEATHER_GROUP_ID, isImageryView, visibleOverlays, withWeatherImagery } from '../weather-imagery.js';
 import { stormsTarget, stormsViewHidden } from '../storms-view.js';
 import { displaySettings } from './display.js';
@@ -1458,7 +1458,16 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       const s = getState();
       const view = hosts.get()?.getView() ?? s.world.view;
       const middle = view.focus ?? view.center;
-      const list = nearbyOrder(s.world.objects.values(), middle, keyboardBounds(view.center, view.bounds));
+      // What the map shows: the lens's types less the layers switched off, and the per-object
+      // switches (Aircraft → Military only) — a hidden object is not stepped to.
+      const lens = lensById(s.lenses.activeId, s.lenses.lenses);
+      const hidden = s.session.settings?.hiddenLayers ?? [];
+      const shown = lens ? lensFilter(lens, hidden).objectTypes : undefined;
+      const keep = lens?.id === OVERVIEW_LENS_ID ? objectFilter(hidden) : undefined;
+      const list = nearbyOrder(s.world.objects.values(), middle, keyboardBounds(view.center, view.bounds), {
+        ...(shown ? { types: shown } : {}),
+        ...(keep ? { keep } : {}),
+      });
       if (!list.length) return false;
       const at = s.world.selectedId ? list.indexOf(s.world.selectedId) : -1;
       const next = at < 0 ? (step > 0 ? 0 : list.length - 1) : (at + step + list.length) % list.length;
