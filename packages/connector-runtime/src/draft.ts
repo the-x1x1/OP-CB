@@ -44,6 +44,11 @@ const ID_KEYS = [
   'guid',
   'station_id',
   'stationId',
+  // A station's or a site's code (NDBC buoys on ERDDAP, USGS gauges).
+  'station',
+  'site_no',
+  'site',
+  'sensor_id',
   'device_id',
   'deviceId',
   'icao',
@@ -215,8 +220,18 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
       todo.push('mapping.externalId: no feature id and no id-like property; name the field that identifies a feature');
     mapping['position'] = { geometry: 'geometry' };
   } else {
-    if (idKey) mapping['externalId'] = idKey;
-    else todo.push('mapping.externalId: no id-like field found; name the field that identifies a record');
+    if (idKey) {
+      mapping['externalId'] = idKey;
+      // A time series: several rows of the same thing, of which the map keeps the last read.
+      const ids = new Set(records.map((r) => String(r[idKey])));
+      if (ids.size < records.length)
+        notes.push(
+          `${records.length} rows for ${ids.size} ${idKey} value(s): a time series; each is drawn at its latest row` +
+            (/\/tabledap\//.test(sample.url)
+              ? `; ERDDAP's &orderByMax("${idKey},time") asks for only the latest row of each`
+              : ''),
+        );
+    } else todo.push('mapping.externalId: no id-like field found; name the field that identifies a record');
     const lat = pick(LAT_KEYS, keys);
     const lon = pick(LON_KEYS, keys);
     if (lat && lon) {

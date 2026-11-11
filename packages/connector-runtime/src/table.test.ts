@@ -133,3 +133,26 @@ test('rest-json with response.table: the rows poll as records by column name', a
     'not with wind',
   );
 });
+
+test('the drafter: NDBC buoy rows as ERDDAP served them (2026-11-11) — keyed by station, a time series noted', () => {
+  // Header and two rows of cwwcNDBCMet as read live from NOAA CoastWatch; nulls as served.
+  const live = {
+    table: {
+      columnNames: ['station', 'longitude', 'latitude', 'time', 'WSPD', 'WD', 'ATMP'],
+      columnTypes: ['String', 'float', 'float', 'String', 'float', 'short', 'float'],
+      columnUnits: [null, 'degrees_east', 'degrees_north', 'UTC', 'm s-1', 'degrees_true', 'degree_C'],
+      rows: [
+        ['51201', -158.116, 21.673, '2026-11-11T00:26:00Z', null, null, null],
+        ['51201', -158.116, 21.673, '2026-11-11T00:56:00Z', null, null, null],
+      ],
+    },
+  };
+  const d = draftDefinition({
+    url: 'https://coastwatch.pfeg.noaa.gov/erddap/tabledap/cwwcNDBCMet.json?station,longitude,latitude,time,WSPD,WD,ATMP',
+    text: JSON.stringify(live),
+  });
+  assert.equal((d.definition['mapping'] as Record<string, unknown>)['externalId'], 'station');
+  assert.ok(defaultConnectorRegistry.validate(d.definition).ok);
+  assert.match(d.notes.join(' '), /2 rows for 1 station value\(s\).*orderByMax\("station,time"\)/);
+  assert.equal(windColumns(live.table.columnNames), undefined, "a buoy's speed and direction are not a grid's u and v");
+});

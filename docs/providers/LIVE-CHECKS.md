@@ -118,3 +118,11 @@ in ERDDAP's layout; the time moved to 2026-09-23T18:00Z for the suite's clock). 
 constraint is refused (400: "Start=NaN"); a time between steps is answered with the nearest step
 (03:34 → 03:00, 04:40 → 06:00); a time past the forecast is 404. Brackets and parentheses may go
 unescaped.
+
+NOAA CoastWatch ERDDAP tabledap (`cwwcNDBCMet`, NDBC buoy observations), read the same way on
+2026-11-11: the answer has griddap's layout — `{ table: { columnNames, columnTypes, columnUnits,
+rows } }`, `null` where a value is missing — so `response.table` reads it. Variable names are
+upper case (`WSPD`, `WD`, `ATMP`, and `WSPU`/`WSPV` for the components); an unknown one is a 400
+naming it; a regular-expression station constraint was answered 503 ("temporary problem") at the
+time. A buoy's rows are a time series (two rows for 51201 from 00:26 and 00:56). The dataset's
+licence line is the same as the GFS grid's (used and redistributed for free, no warranty).
