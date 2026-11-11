@@ -1971,8 +1971,16 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     async exportVisible(format: 'geojson' | 'json' | 'csv' | 'kml'): Promise<void> {
       const s = getState();
       const lens = lensById(s.lenses.activeId, s.lenses.lenses);
+      // The types the map draws: the lens's less the layers switched off (Overview), so an
+      // export of what is visible leaves out a hidden layer's objects.
+      const shown = lens ? [...lensFilter(lens, s.session.settings?.hiddenLayers ?? []).objectTypes] : undefined;
+      // An empty list would ask for every type: with every layer off, nothing is visible.
+      if (shown && !shown.length) {
+        notify('Nothing to export', 'Every layer is switched off, so nothing is visible on the map.');
+        return;
+      }
       const query: WorldQuery = {
-        ...(lens ? { objectTypes: lens.objectTypes } : {}),
+        ...(shown ? { objectTypes: shown } : {}),
         ...(s.world.view.bounds ? { region: { kind: 'bounds', bounds: s.world.view.bounds } } : {}),
       };
       try {

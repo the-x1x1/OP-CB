@@ -35,6 +35,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Export visible objects and the ] and [ keys follow the layer switches: with a layer off, its
+  objects are no longer exported or stepped to.
 - A CSV export of the objects on the map writes negative latitudes, longitudes and altitudes as
   numbers: the guard against spreadsheet formulas turned every one west of Greenwich or south of
   the equator into text (`'-157.86`).
