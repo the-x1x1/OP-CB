@@ -63,7 +63,9 @@ revocable grants, OVapi's NDOV terms are unconfirmed, Metro Transit has no licen
 
 They share one mapping: the external id is the vehicle's id (else the entity's), the label
 its label (else its id), the route as a second label, and trip, stop, status, occupancy,
-congestion and wheelchair access as properties; speed and bearing are its motion.
+congestion and wheelchair access as properties; speed and bearing are its motion. Selected, a vehicle
+has a Transit section that gives them in words — "Stopped at stop 899 (the trip's 1st)", "Many seats
+available (0 % full)" — and leaves out what the feed says it does not know.
 
 ## Tests
 

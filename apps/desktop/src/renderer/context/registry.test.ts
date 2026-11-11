@@ -70,6 +70,7 @@ test('built-in registry: seven defaults and one type section for each supported 
     'satellite',
     'sensor',
     'storm',
+    'transit-vehicle',
     'vessel',
     'weather-alert',
     'weather-station',
