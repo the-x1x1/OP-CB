@@ -490,11 +490,20 @@ test('world.related: "nearby" is measured with altitude, so satellites overhead 
       providerId: 'celestrak',
     });
     state.ingest([obs('adsb-lol', 'aircraft', 'abc123', -19.5, 10_000)], { snapshot: false, providerId: 'adsb-lol' });
+    state.ingest([obs('noaa-gfs-wind', 'wind', '40S20W', -20)], { snapshot: false, providerId: 'noaa-gfs-wind' });
     state.flush();
     const quake = [...state.ids()].find((id) => id.startsWith('earthquake:'))!;
     const related = await h.client.request('world.related', { objectId: quake });
     const types = related.objects.map((o) => o.type).sort();
-    assert.deepEqual(types, ['aircraft'], 'the aircraft 42 km away at 10 km is near; the satellite 550 km up is not');
+    assert.deepEqual(
+      types,
+      ['aircraft'],
+      'the aircraft 42 km away at 10 km is near; the satellite 550 km up is not; nor is the wind grid point on top of it',
+    );
+    // A wind point's own related list may hold other things nearby.
+    const gust = [...state.ids()].find((id) => id.startsWith('wind:'))!;
+    const fromWind = await h.client.request('world.related', { objectId: gust });
+    assert.ok(fromWind.objects.some((o) => o.type === 'earthquake'));
   } finally {
     await h.dispose();
   }

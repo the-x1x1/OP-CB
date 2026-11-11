@@ -358,6 +358,9 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
           let kept = 0;
           for (const near of core.state.nearest(object.position, 64, undefined, NEARBY_RADIUS_M)) {
             if (near.object.id === objectId) continue;
+            // A wind grid's point is a sample of a field, not something "also here": with the
+            // wind layer on, the nearest one would take a place among the eight.
+            if (near.object.type === 'wind' && object.type !== 'wind') continue;
             const dAlt = (near.object.position?.altitudeM ?? 0) - alt;
             if (Math.hypot(near.distanceM, dAlt) > NEARBY_RADIUS_M) continue;
             objects.push(near.object);
