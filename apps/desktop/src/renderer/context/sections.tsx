@@ -1380,6 +1380,70 @@ export function sceneSummary(
   );
 }
 
+/** The Beaufort force for a wind of `mps` (the WMO's upper bounds in m/s) and its name. */
+const BEAUFORT_MAX_MPS = [0.5, 1.5, 3.3, 5.5, 7.9, 10.7, 13.8, 17.1, 20.7, 24.4, 28.4, 32.6];
+const BEAUFORT_NAMES = [
+  'Calm',
+  'Light air',
+  'Light breeze',
+  'Gentle breeze',
+  'Moderate breeze',
+  'Fresh breeze',
+  'Strong breeze',
+  'Near gale',
+  'Gale',
+  'Strong gale',
+  'Storm',
+  'Violent storm',
+  'Hurricane force',
+];
+export function beaufort(mps: number): { force: number; name: string } {
+  const i = BEAUFORT_MAX_MPS.findIndex((max) => mps < max);
+  const force = i < 0 ? 12 : i;
+  return { force, name: BEAUFORT_NAMES[force]! };
+}
+
+/** "6.9 m/s (13 kn) from ENE (075°)" — the way a forecast gives it: where it blows from. */
+export function windFrom(mps: number | undefined, fromDeg: number | undefined): string | undefined {
+  if (mps === undefined) return undefined;
+  if (mps < 0.5 || fromDeg === undefined) return 'Calm';
+  const point = COMPASS_16[Math.round((((fromDeg % 360) + 360) % 360) / 22.5) % 16];
+  const deg = String(Math.round(fromDeg) % 360).padStart(3, '0');
+  return `${mps.toFixed(1)} m/s (${Math.round(mps / 0.514444)} kn) from ${point} (${deg}°)`;
+}
+
+/**
+ * A point of a wind grid (`wind`, ADR-002 amendment 2026-11-11): the wind there, where it
+ * blows from, its Beaufort force, the forecast step it is for and the model. The arrow on the
+ * map points the other way — where the wind is going — so the panel says which is which.
+ */
+const windPoint: ContextSection = {
+  id: 'wind',
+  title: 'Wind',
+  render: ({ object }) => {
+    const mps = num(object, 'speedMps');
+    const from = num(object, 'fromDeg');
+    const valid = str(object, 'validAt') ?? object.observedAt;
+    const force = mps !== undefined ? beaufort(mps) : undefined;
+    return (
+      <div className="wv-ctx-stack">
+        <p className="wv-ctx-summary">
+          The wind 10 metres up at this point of a forecast grid. The arrow points where it blows to; a forecast names
+          it by where it comes from.
+        </p>
+        <FieldList
+          rows={[
+            { label: 'Wind', value: windFrom(mps, from) },
+            { label: 'Beaufort', value: force ? `Force ${force.force}, ${force.name.toLowerCase()}` : undefined },
+            { label: 'Forecast for', value: valid ? formatUtcDateTime(valid) : undefined },
+            { label: 'Model', value: str(object, 'model') },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+
 export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSection[] }> = [
   { type: 'aircraft', sections: [aircraft] },
   { type: 'earthquake', sections: [earthquake] },
@@ -1391,6 +1455,7 @@ export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSecti
   { type: 'weather-station', sections: [weatherStation] },
   { type: 'sensor', sections: [airQuality] },
   { type: 'imagery-scene', sections: [imageryScene] },
+  { type: 'wind', sections: [windPoint] },
   { type: 'camera', sections: [camera] },
   { type: 'vessel', sections: [vessel] },
 ];

@@ -73,6 +73,7 @@ test('built-in registry: seven defaults and one type section for each supported 
     'vessel',
     'weather-alert',
     'weather-station',
+    'wind',
   ]);
 });
 
