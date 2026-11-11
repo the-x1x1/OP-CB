@@ -328,7 +328,9 @@ legal; the commercial distribution review closed with no outstanding blockers.
       them from MapLibre (on feature/next).
 - [ ] Accessibility audit, by hand: a screen reader (NVDA or Narrator) through the main
       tasks, keyboard-only use of the map, and the HUD's ink over the imagery in each visual
-      style (its background is the map, not a token).
+      style (its background is the map, not a token). The automated part ran on 2026-11-10
+      (docs/releases/A11Y-CHECK-2026-11-10.md): every control named, focus drawn, and the
+      `aria-controls` that named elements not rendered fixed.
 
 ## From God's Eye View and OSIRIS, reviewed 2026-10-15
 

@@ -15,6 +15,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Screen readers are no longer pointed at parts of the window that are not there: the search
+  box, the menu button, the lens rail's group buttons and every tab strip named their list,
+  popover, group or panel even while it was closed (an automated accessibility check of the
+  renderer, docs/releases/A11Y-CHECK-2026-11-10.md).
 - A WebSocket JSON source whose connection fails waits the right time before trying again: one
   failure, reported as an error and then a close, doubled the wait twice.
 - The build refuses to stage Cesium's workers from a different engine than the one the app

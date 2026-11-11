@@ -112,7 +112,7 @@ export const Search = forwardRef<HTMLInputElement, SearchProps>(function Search(
           role="combobox"
           aria-label={label}
           aria-expanded={showList}
-          aria-controls={`${id}-list`}
+          aria-controls={showList ? `${id}-list` : undefined}
           aria-autocomplete="list"
           aria-activedescendant={active >= 0 && showList ? `${id}-opt-${active}` : undefined}
           autoComplete="off"

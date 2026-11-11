@@ -161,7 +161,7 @@ export function GroupRow({
             data-rail-row
             className="wv-layers__expand"
             aria-expanded={expanded}
-            aria-controls={listId}
+            aria-controls={expanded ? listId : undefined}
             aria-label={`${expanded ? 'Close' : 'Open'} ${group.name} layers`}
             title={`${expanded ? 'Close' : 'Open'} ${group.name} layers`}
             onClick={onExpand}
