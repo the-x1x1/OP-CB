@@ -128,7 +128,11 @@ New requests from this phase (none blocks it):
 2. **ADR-013 (the suite), same as `ogc`'s request 3:** per-URL fixtures in
    `runConnectorSuite` (a responder keyed by path, or a sidecar map), so a connector that
    makes two different requests per poll is tested with real answers, not
-   `suite-combined.json`.
+   `suite-combined.json`. **Landed 2026-11-10** (`feature/after-0.7.4`): `normalByPath` in
+   `SuiteFixtures` and in the `*.test.json` sidecar — the good answer for each request whose
+   path ends with the key, consulted before `normal` in Successful parse, Cancellation and
+   Mapping error. `traccar-demo-rest.test.json` now answers `/api/devices` and
+   `/api/positions` separately (4 observations, device 7 in no list shown under its id).
 3. **ADR-003 (the host):** `openSubscription`'s retry after a failed `subscribe` sits in
    `h.timer`, which `schedule()` (the poll) clears; a provider with both `query` and
    `subscribe` never gets that retry. This connector retries itself; a separate timer in

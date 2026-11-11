@@ -42,6 +42,10 @@ test('sidecar parsing refuses what it cannot run and keeps fixtures inside the r
     () => parseSidecar('{"schema":"other","normal":"x","empty":"y","malformed":[],"expectObservations":0}', 's'),
     /schema/,
   );
+  const base = '"normal":"x","empty":"y","malformed":[],"expectObservations":0';
+  assert.throws(() => parseSidecar(`{${base},"normalByPath":["/a"]}`, 's'), /normalByPath" must be an object/);
+  assert.throws(() => parseSidecar(`{${base},"normalByPath":{"api/x":"f"}}`, 's'), /must start with \//);
+  assert.doesNotThrow(() => parseSidecar(`{${base},"normalByPath":{"/api/x":"f"}}`, 's'));
   assert.throws(
     () =>
       loadSidecar(

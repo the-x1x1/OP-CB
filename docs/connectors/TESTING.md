@@ -31,14 +31,15 @@ work, in each phase's own `*.test.ts`.
 }
 ```
 
-| Key                  | Meaning                                                                                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `normal`             | The good response: a fixture path (relative to the repository root) or `{ "inline": "…" }`. A socket connector takes a list of messages.                             |
-| `empty`              | A response with no records.                                                                                                                                          |
-| `malformed`          | Bodies a poll must report MALFORMED, or messages a socket must ignore.                                                                                               |
-| `expectObservations` | How many observations `normal` yields.                                                                                                                               |
-| `expectIds`          | External ids that must be among them.                                                                                                                                |
-| `expect`             | Per-observation expectations by `externalId`: `observedAt`, `position` (numbers within 1e-6; `null` means absent), `payload` fields, `attribution`, quality `flags`. |
+| Key                  | Meaning                                                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `normal`             | The good response: a fixture path (relative to the repository root) or `{ "inline": "…" }`. A socket connector takes a list of messages.                                       |
+| `normalByPath`       | Optional: for a source that asks several URLs per poll, the good response for each request whose path ends with the key (`"/api/devices": "fixtures/…"`); others get `normal`. |
+| `empty`              | A response with no records.                                                                                                                                                    |
+| `malformed`          | Bodies a poll must report MALFORMED, or messages a socket must ignore.                                                                                                         |
+| `expectObservations` | How many observations `normal` yields.                                                                                                                                         |
+| `expectIds`          | External ids that must be among them.                                                                                                                                          |
+| `expect`             | Per-observation expectations by `externalId`: `observedAt`, `position` (numbers within 1e-6; `null` means absent), `payload` fields, `attribution`, quality `flags`.           |
 
 Sidecars are data. A check the sidecar cannot express is written in a `*.test.ts` that calls
 `runConnectorSuite` with a `verify` function. Fixtures are recorded from the real source

@@ -123,6 +123,22 @@ for (const name of ['traccar-demo-rest.json', 'traccar-local.json']) {
   });
 }
 
+test('suite: traccar-demo-rest.json with each URL answered as a server does (ADR-013 request 2)', async () => {
+  const r = await runConnectorSuite(rest(), {
+    ...restFixtures(),
+    normalByPath: { '/api/devices': fixture('devices.json'), '/api/positions': fixture('positions.json') },
+    // Device 7 has a position but is in no list: shown under its id (the REST join test).
+    expectObservations: 4,
+    expectIds: ['1', '2', '3', '7'],
+    verify: (obs) => {
+      const one = byId(obs).get('1');
+      if (one?.payload['name'] !== 'Van 12') return `device 1 named ${String(one?.payload['name'])}, not from the list`;
+      return one.payload['category'] === 'van' ? undefined : 'device 1 lost its category';
+    },
+  });
+  assert.ok(r.passed, formatSuite(r));
+});
+
 test('suite: traccar-demo-live.json (the socket)', async () => {
   const r = await runConnectorSuite(live(), {
     normal: [fixture('socket-devices.json'), fixture('socket-positions.json'), fixture('socket-events.json'), '{}'],

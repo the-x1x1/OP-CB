@@ -24,6 +24,12 @@ import { runMqttSuite } from '../connectors/mqtt/testing/suite.js';
 export interface SuiteFixtures {
   /** The good response: body text (JSON, CSV, …). For a socket connector, the messages. */
   normal: string | string[];
+  /**
+   * For a connector that asks more than one URL per poll (traccar: `/api/devices` and
+   * `/api/positions`): the good response for each request whose path ends with the key.
+   * A request matching no key gets `normal`. Used wherever the HTTP suite serves `normal`.
+   */
+  normalByPath?: Record<string, string>;
   /** A response with no records. */
   empty: string;
   /** Bodies that must be reported MALFORMED (a poll) or ignored (a socket). */
@@ -360,8 +366,14 @@ export async function runConnectorSuite(
     });
   } else if (!socket) {
     const normal = Array.isArray(fixtures.normal) ? fixtures.normal[0]! : fixtures.normal;
+    const byPath = Object.entries(fixtures.normalByPath ?? {});
+    const normalFor: testing.FixtureResponder = (req) => {
+      const pathname = new URL(req.url).pathname;
+      const hit = byPath.find(([suffix]) => pathname.endsWith(suffix));
+      return bodyOf(hit ? hit[1] : normal);
+    };
     await check('Successful parse', async () => {
-      const { provider } = await make(() => bodyOf(normal));
+      const { provider } = await make(normalFor);
       normalObservations = await query(provider);
       if (normalObservations.length !== fixtures.expectObservations)
         return `expected ${fixtures.expectObservations} observations, got ${normalObservations.length}`;
@@ -437,7 +449,7 @@ export async function runConnectorSuite(
       }
     });
     await check('Cancellation', async () => {
-      const { provider } = await make(() => bodyOf(normal));
+      const { provider } = await make(normalFor);
       const abort = new AbortController();
       abort.abort();
       try {
@@ -458,7 +470,7 @@ export async function runConnectorSuite(
       const ctx = testing.createFixtureContext({
         providerId: definition.id,
         clock: new testing.VirtualClock(NOW),
-        responder: () => bodyOf(normal),
+        responder: normalFor,
       });
       await provider.initialize(ctx);
       await provider.start();
