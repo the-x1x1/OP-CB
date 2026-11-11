@@ -9,6 +9,12 @@ export interface TypeVocabulary {
   /** Plural display noun for titles, e.g. "Earthquakes". */
   label: string;
   phrases: readonly string[];
+  /**
+   * The phrase names this type only when it stands alone, not inside a compound: "wind" and
+   * "wind near Hilo" are the wind layer, but "wind farm", "wind advisory" and "high wind
+   * warning" are things that have the word in their names, left to the text search.
+   */
+  alone?: true;
 }
 
 export const TYPE_VOCABULARY: readonly TypeVocabulary[] = Object.freeze([
@@ -142,7 +148,7 @@ export const TYPE_VOCABULARY: readonly TypeVocabulary[] = Object.freeze([
     label: 'Imagery scenes',
     phrases: ['imagery', 'imagery scenes', 'imagery scene', 'scenes', 'scene', 'satellite images', 'satellite imagery'],
   },
-  { type: ObjectTypes.Wind, label: 'Wind', phrases: ['wind', 'winds', 'wind arrows', 'wind map'] },
+  { type: ObjectTypes.Wind, label: 'Wind', phrases: ['wind', 'winds', 'wind arrows', 'wind map'], alone: true },
   { type: ObjectTypes.Place, label: 'Places', phrases: ['places', 'place', 'towns', 'cities'] },
 ]);
 

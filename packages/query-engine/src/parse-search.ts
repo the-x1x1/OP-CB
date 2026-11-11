@@ -40,6 +40,8 @@ interface Token {
   text: string;
   lower: string;
   used: boolean;
+  /** Taken as (part of) an object type's phrase. */
+  typeWord?: boolean;
 }
 
 interface Draft {
@@ -106,7 +108,7 @@ export function parseSearch(text: string, ctx: ParseContext): ParsedSearch {
   extractNavigation(tokens);
   extractTime(tokens, now, draft);
   extractIdentifiers(tokens, out, ctx);
-  extractTypes(tokens, draft);
+  extractTypes(tokens, draft, ctx.gazetteer);
   extractThresholds(tokens, draft, out);
   extractSpatial(tokens, ctx.gazetteer, draft, out);
   extractLeftover(tokens, ctx.gazetteer, draft, out);
@@ -365,11 +367,48 @@ function placeIntent(hit: GazetteerHit): SearchIntent {
 
 // ---- object types ------------------------------------------------------------
 
-const PHRASES = TYPE_VOCABULARY.flatMap((v) => v.phrases.map((p) => ({ type: v.type, words: p.split(' ') }))).sort(
-  (a, b) => b.words.length - a.words.length,
-);
+const PHRASES = TYPE_VOCABULARY.flatMap((v) =>
+  v.phrases.map((p) => ({ type: v.type, words: p.split(' '), alone: v.alone === true })),
+).sort((a, b) => b.words.length - a.words.length);
 
-function extractTypes(tokens: Token[], draft: Draft): void {
+/** Words that join a type to a place, a time or a count rather than making a compound with it. */
+const JOINING_WORDS: ReadonlySet<string> = new Set([
+  'near',
+  'around',
+  'nearby',
+  'close',
+  'over',
+  'above',
+  'across',
+  'in',
+  'at',
+  'within',
+  'from',
+  'during',
+  'since',
+  'on',
+  'by',
+  'off',
+  'speed',
+  'now',
+  'today',
+]);
+
+/**
+ * Whether the token beside a phrase makes a compound of it ("wind farm", "high wind"): an
+ * unused word that joins nothing, is not a stop word and does not start a place name.
+ */
+function compoundWith(t: Token | undefined, gazetteer: Gazetteer | undefined): boolean {
+  if (!t) return false;
+  // Beside another type's word ("wind advisory": a weather alert) it names that thing.
+  if (t.typeWord) return true;
+  if (t.used) return false;
+  if (STOP_WORDS.has(t.lower) || JOINING_WORDS.has(t.lower) || /^[\d.,:+-]/.test(t.lower)) return false;
+  if (gazetteer?.lookup(t.text, { limit: 1 }).some((h) => (h.score ?? 0) >= 0.9)) return false;
+  return true;
+}
+
+function extractTypes(tokens: Token[], draft: Draft, gazetteer?: Gazetteer): void {
   for (const phrase of PHRASES) {
     for (let i = 0; i + phrase.words.length <= tokens.length; i++) {
       let ok = true;
@@ -381,7 +420,15 @@ function extractTypes(tokens: Token[], draft: Draft): void {
         }
       }
       if (!ok) continue;
-      for (let k = 0; k < phrase.words.length; k++) tokens[i + k]!.used = true;
+      if (
+        phrase.alone &&
+        (compoundWith(tokens[i - 1], gazetteer) || compoundWith(tokens[i + phrase.words.length], gazetteer))
+      )
+        continue;
+      for (let k = 0; k < phrase.words.length; k++) {
+        tokens[i + k]!.used = true;
+        tokens[i + k]!.typeWord = true;
+      }
       if (!draft.types.includes(phrase.type)) draft.types.push(phrase.type);
     }
   }

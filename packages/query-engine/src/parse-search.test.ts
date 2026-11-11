@@ -303,3 +303,20 @@ test('parseSearch is deterministic and pure', () => {
   const later = parseSearch('M5+ earthquakes near Japan last 24 hours', { ...ctx, now: () => T0 + 60_000 });
   assert.notDeepEqual(later, a, 'time phrases are relative to the injected clock');
 });
+
+test('parseSearch: "wind" is the wind layer alone or with a place or time, not inside a compound', () => {
+  const q = (text: string) => {
+    const i = first(text, 'query');
+    return { types: i?.query?.objectTypes ?? [], text: i?.query?.text, region: i?.query?.region?.kind };
+  };
+  assert.deepEqual(q('wind').types, ['wind']);
+  assert.deepEqual(q('show me the wind').types, ['wind']);
+  assert.deepEqual(q('wind near honolulu'), { types: ['wind'], text: undefined, region: 'circle' });
+  assert.deepEqual(q('wind hawaii').types, ['wind'], 'followed by a place name');
+  assert.deepEqual(q('wind in the last hour').types, ['wind']);
+  // Things with the word in their names stay a text search, as before the wind layer existed.
+  assert.deepEqual(q('wind farm'), { types: [], text: 'wind farm', region: undefined });
+  assert.deepEqual(q('wind farms in texas').text, 'wind farms');
+  assert.deepEqual(q('wind advisory'), { types: ['weather-alert'], text: 'wind', region: undefined });
+  assert.deepEqual(q('high wind warning'), { types: ['weather-alert'], text: 'high wind', region: undefined });
+});
