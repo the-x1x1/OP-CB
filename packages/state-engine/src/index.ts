@@ -618,7 +618,12 @@ export function extractMotion(payload: Record<string, JsonValue>): WorldObject['
   const heading = payload['headingDegrees'] ?? payload['courseDegrees'];
   const vs = payload['verticalSpeedMps'];
   if (typeof speed === 'number' && Number.isFinite(speed)) m.speedMps = speed;
-  if (typeof heading === 'number' && Number.isFinite(heading)) m.headingDegrees = ((heading % 360) + 360) % 360;
+  if (typeof heading === 'number' && Number.isFinite(heading)) {
+    // Into 0–360 without adding 360 to a heading already in range: (114.8 + 360) % 360 is
+    // 114.80000000000001, and that noise reached panels and exports.
+    const h = heading % 360;
+    m.headingDegrees = h < 0 ? h + 360 : h === 0 ? 0 : h;
+  }
   if (typeof vs === 'number' && Number.isFinite(vs)) m.verticalSpeedMps = vs;
   return Object.keys(m).length ? m : undefined;
 }
