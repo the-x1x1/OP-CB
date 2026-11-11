@@ -146,4 +146,11 @@ test('{now} goes only in the path or the query', () => {
       url,
     );
   assert.ok(defaultConnectorRegistry.validate({ ...base, endpoint: { url: 'https://example.org/{now}/a.json' } }).ok);
+  assert.match(
+    defaultConnectorRegistry
+      .validate({ ...base, endpoint: { url: 'https://{lat}.example.org/a.json' } })
+      .errors.join('; '),
+    /placeholder may appear only in the path or the query/,
+    'nor a view placeholder',
+  );
 });

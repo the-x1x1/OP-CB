@@ -365,10 +365,12 @@ export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValid
   if (d.boundsMaxRadiusKm !== undefined && !has(RADIUS_KEYS))
     warnings.push('boundsMaxRadiusKm is set but no {radiusKm}/{radiusNm}/{radiusM} placeholder uses it');
   if (d.pagination?.strategy === 'next-link' && !d.endpoint) errors.push('next-link pagination needs an endpoint');
-  // The time goes in the path or the query, never the scheme, host or port: the host a source
-  // talks to is the one written in its definition.
+  // Placeholders — the time, the view, a credential — go in the path or the query, never the
+  // scheme, host or port: the host a source talks to is the one written in its definition.
   const origin = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i.exec(d.endpoint?.url ?? '')?.[0] ?? '';
   if (origin.includes('{now')) errors.push('{now} may appear only in the path or the query, not the host');
+  else if (origin.includes('{'))
+    errors.push('a placeholder may appear only in the path or the query, not the scheme, host or port');
   const wind = d.response?.wind;
   if (wind) {
     if ((d.response?.format ?? 'json') !== 'json') errors.push('response.wind reads a JSON table: format must be json');
