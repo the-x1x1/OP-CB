@@ -136,3 +136,14 @@ test('wind: each point is named as a chart names it, safe as an object id', asyn
   assert.equal(windPointName(0, 0), 'Wind at 0° 0°');
   assert.equal(windPointName(12.5, 179.5), 'Wind at 12.5°N 179.5°E');
 });
+
+test('{now} goes only in the path or the query', () => {
+  const base = JSON.parse(readFileSync(path.join(root, 'connectors/examples/weather/noaa-gfs-wind.json'), 'utf8'));
+  for (const url of ['https://{now}.example.org/a.json', 'https://example.org{now-1h}/a.json'])
+    assert.match(
+      defaultConnectorRegistry.validate({ ...base, endpoint: { url } }).errors.join('; '),
+      /\{now\} may appear only in the path or the query/,
+      url,
+    );
+  assert.ok(defaultConnectorRegistry.validate({ ...base, endpoint: { url: 'https://example.org/{now}/a.json' } }).ok);
+});

@@ -89,7 +89,8 @@ points. Used by `noaa-gfs-wind` (connectors/examples/weather), on the `wind` obj
 ### The request time: `{now}`
 
 `{now}` in the URL or a query value is the time of the request, `2026-11-11T03:34:54Z`;
-`{now-90m}` or `{now-3h}` that much earlier. A forecast grid on ERDDAP is asked for its step
+`{now-90m}` or `{now-3h}` that much earlier. Only in the path or the query: a definition with
+`{now}` in its host does not validate (the host a source talks to is the one written). A forecast grid on ERDDAP is asked for its step
 nearest a time — ERDDAP rounds, and does not take `now` itself — so `noaa-gfs-wind` asks for
 `{now-90m}`, whose nearest 3-hourly step is never after now (an observation more than ten
 minutes in the future is refused). A request with `{now…}` is cached under its URL with the placeholder as
