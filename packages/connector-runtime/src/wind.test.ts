@@ -97,12 +97,25 @@ test('the wind definition asks ERDDAP for the step at or before now, brackets as
   const provider = defaultConnectorRegistry.createProvider(v.definition!) as RestJsonProvider;
   const now = Date.parse('2026-11-11T03:34:54Z');
   (provider as unknown as { context: unknown }).context = { clock: { now: () => now } };
-  const url = provider.buildRequest({ query: {} }).url;
+  const req = provider.buildRequest({ query: {} });
+  const url = req.url;
   // 90 minutes back: ERDDAP's nearest 3-hourly step is then never after now (it rounds).
   assert.equal(
     url,
     'https://coastwatch.pfeg.noaa.gov/erddap/griddap/NCEP_Global_Best.json?ugrd10m[(2026-11-11T02:04:54Z)][(80):20:(-80)][(0):20:(359.5)],vgrd10m[(2026-11-11T02:04:54Z)][(80):20:(-80)][(0):20:(359.5)]',
   );
+  // Every poll a new URL, but one cache entry: keyed with the placeholder as written, so the
+  // last good grid is there to fall back on and other sources' entries are not pushed out.
+  assert.match(req.cacheKey!, /ugrd10m\[\(\{now-90m\}\)\]/);
+  (provider as unknown as { context: unknown }).context = { clock: { now: () => now + 3_600_000 } };
+  const later = provider.buildRequest({ query: {} });
+  assert.notEqual(later.url, url);
+  assert.equal(later.cacheKey, req.cacheKey);
+  // A source that does not ask for the time keeps the default key (its URL).
+  const other = defaultConnectorRegistry.createProvider(
+    defaultConnectorRegistry.validate({ ...doc, endpoint: { url: 'https://example.org/a.json' } }).definition!,
+  ) as RestJsonProvider;
+  assert.equal(other.buildRequest({ query: {} }).cacheKey, undefined);
 });
 
 test('wind: each point is named as a chart names it, safe as an object id', async () => {

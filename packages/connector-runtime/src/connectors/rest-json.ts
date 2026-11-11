@@ -89,18 +89,26 @@ export class RestJsonProvider extends PollingProvider {
     const e = this.definition.endpoint!;
     const view = viewValues(bounds, center, this.definition.boundsMaxRadiusKm);
     // Only a definition that asks for the time reads the clock.
-    const nowMs = JSON.stringify(e).includes('{now') ? this.context.clock.now() : 0;
-    const url = new URL(page.url ?? substituteNow(substitute(e.url, view), nowMs));
-    for (const [k, v] of Object.entries(e.query ?? {}))
-      url.searchParams.set(k, substituteNow(substitute(String(v), view), nowMs));
-    for (const [k, v] of Object.entries(page.query)) url.searchParams.set(k, v);
+    const timed = JSON.stringify(e).includes('{now');
+    const nowMs = timed ? this.context.clock.now() : 0;
+    const build = (fill: (t: string) => string) => {
+      const u = new URL(page.url ?? fill(substitute(e.url, view)));
+      for (const [k, v] of Object.entries(e.query ?? {})) u.searchParams.set(k, fill(substitute(String(v), view)));
+      for (const [k, v] of Object.entries(page.query)) u.searchParams.set(k, v);
+      return restorePathPlaceholder(u, e.credential);
+    };
     const req: ProviderHttpRequest = {
-      url: restorePathPlaceholder(url, e.credential),
+      url: build((t) => substituteNow(t, nowMs)),
       method: e.method ?? 'GET',
       headers: { Accept: acceptFor(this.definition), ...(e.headers ?? {}) },
       maxBytes: e.maxBytes ?? DEFAULT_MAX_BYTES,
       timeoutMs: this.manifest.refreshPolicy.timeoutMs,
     };
+    // A request that carries the time is a new URL every poll: keyed by it, each poll would
+    // take a new cache entry (pushing out other sources') and a failed poll would have no last
+    // good answer to fall back on. Keyed by the URL with `{now…}` left as written, every poll
+    // of the source shares one entry.
+    if (timed) req.cacheKey = build((t) => t);
     if (e.method === 'POST' && e.body !== undefined) {
       req.body = typeof e.body === 'string' ? e.body : JSON.stringify(e.body);
       req.headers!['Content-Type'] = typeof e.body === 'string' ? 'text/plain' : 'application/json';
@@ -141,7 +149,7 @@ export class RestJsonProvider extends PollingProvider {
         res = await this.context.http.request({
           ...req,
           signal: request.signal,
-          cacheKey: req.url,
+          cacheKey: req.cacheKey ?? req.url,
           ...(this.definition.endpoint?.emptyStatus ? { emptyStatus: this.definition.endpoint.emptyStatus } : {}),
         });
       } catch (err) {

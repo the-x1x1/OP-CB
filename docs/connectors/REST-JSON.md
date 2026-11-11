@@ -92,7 +92,9 @@ points. Used by `noaa-gfs-wind` (connectors/examples/weather), on the `wind` obj
 `{now-90m}` or `{now-3h}` that much earlier. A forecast grid on ERDDAP is asked for its step
 nearest a time — ERDDAP rounds, and does not take `now` itself — so `noaa-gfs-wind` asks for
 `{now-90m}`, whose nearest 3-hourly step is never after now (an observation more than ten
-minutes in the future is refused).
+minutes in the future is refused). A request with `{now…}` is cached under its URL with the placeholder as
+written, so each poll replaces the last in the cache, and a failed poll can fall back to the last
+good answer as any other source's can.
 
 ## `pagination`
 
