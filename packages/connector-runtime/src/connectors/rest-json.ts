@@ -21,6 +21,7 @@ import {
   type EndpointSpec,
 } from '@opcb/connector-sdk';
 import { createPaginator, type PageRequest, type Paginator } from '../pagination.js';
+import { decodeGtfsRealtime, GtfsRealtimeError } from '../gtfs-realtime.js';
 import { parseCsv } from '../csv.js';
 import { contourRecords } from '../contours.js';
 import { DEFAULT_MAX_BYTES } from '../shared/limits.js';
@@ -195,10 +196,19 @@ export class RestJsonProvider extends PollingProvider {
   }
 
   private parseBody(
-    res: { text(): string; json(): unknown },
+    res: { text(): string; json(): unknown; bytes(): Uint8Array },
     url: string,
   ): { records: unknown[]; body: unknown } | { malformed: string } {
     const format = this.definition.response?.format ?? 'json';
+    if (format === 'gtfs-rt') {
+      try {
+        const feed = decodeGtfsRealtime(res.bytes());
+        return { records: feed.vehicles, body: null };
+      } catch (err) {
+        if (err instanceof GtfsRealtimeError) return { malformed: `not a GTFS Realtime feed (${err.message})` };
+        throw err;
+      }
+    }
     if (format === 'csv') {
       const csv = parseCsv(res.text(), { ...(this.definition.response?.csv ?? {}) });
       if (csv.malformed) return { malformed: `not CSV (${csv.malformed})` };
@@ -237,6 +247,8 @@ function acceptFor(d: ConnectorProviderDefinition): string {
       return 'text/csv, text/plain;q=0.9, */*;q=0.1';
     case 'text':
       return 'text/plain, */*;q=0.1';
+    case 'gtfs-rt':
+      return 'application/x-protobuf, application/octet-stream;q=0.9, */*;q=0.1';
     default:
       return 'application/json, application/geo+json;q=0.9, */*;q=0.1';
   }

@@ -108,7 +108,12 @@ export interface ResponseSpec {
   itemsPath?: string;
   /** `entries`: the value at itemsPath is an object whose keys are ids; each value is a record with `_key`. */
   itemsAs?: 'array' | 'entries';
-  format?: 'json' | 'csv' | 'text';
+  /**
+   * `gtfs-rt` (2026-11-10): a GTFS Realtime FeedMessage in protobuf; each record is one
+   * vehicle position, `{ id, feedTimestamp?, vehicle: { trip, vehicle, position, … } }` with
+   * the proto's field names (connector-runtime `gtfs-realtime.ts`).
+   */
+  format?: 'json' | 'csv' | 'text' | 'gtfs-rt';
   /** CSV: the delimiter (default `,`) and whether the first row names the columns (default true). */
   /**
    * `delimiter`: one character, or `whitespace` for a column-aligned text table (lines split
@@ -407,7 +412,7 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
       s.object({
         itemsPath: s.optional(s.string({ min: 1, max: 256 })),
         itemsAs: s.optional(s.enum(['array', 'entries'] as const)),
-        format: s.optional(s.enum(['json', 'csv', 'text'] as const)),
+        format: s.optional(s.enum(['json', 'csv', 'text', 'gtfs-rt'] as const)),
         csv: s.optional(
           s.object({
             delimiter: s.optional(s.union([s.string({ min: 1, max: 1 }), s.enum(['whitespace'] as const)])),

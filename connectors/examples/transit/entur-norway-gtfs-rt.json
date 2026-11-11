@@ -1,0 +1,72 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "entur-norway-gtfs-rt",
+  "name": "Norway public transport — Entur GTFS Realtime",
+  "description": "All of Norway from Entur; Entur asks every client to name itself in ET-Client-Name.",
+  "connector": "gtfs-rt",
+  "objectType": "transit-vehicle",
+  "categories": ["transit"],
+  "endpoint": {
+    "url": "https://api.entur.io/realtime/v1/gtfs-rt/vehicle-positions",
+    "intervalSeconds": 30,
+    "headers": {
+      "ET-Client-Name": "opcb-transit"
+    }
+  },
+  "mapping": {
+    "externalId": {
+      "path": "vehicle.vehicle.id",
+      "fallback": "id"
+    },
+    "observedAt": {
+      "path": "vehicle.timestamp",
+      "fallback": "feedTimestamp"
+    },
+    "position": {
+      "lat": "vehicle.position.latitude",
+      "lon": "vehicle.position.longitude"
+    },
+    "labels": {
+      "name": {
+        "path": "vehicle.vehicle.label",
+        "fallback": ["vehicle.vehicle.id", "id"]
+      },
+      "route": "vehicle.trip.route_id"
+    },
+    "properties": {
+      "routeId": "vehicle.trip.route_id",
+      "tripId": "vehicle.trip.trip_id",
+      "directionId": "vehicle.trip.direction_id",
+      "tripStart": {
+        "concat": ["vehicle.trip.start_date", "vehicle.trip.start_time"],
+        "separator": " "
+      },
+      "scheduleRelationship": "vehicle.trip.schedule_relationship",
+      "stopId": "vehicle.stop_id",
+      "stopSequence": "vehicle.current_stop_sequence",
+      "stopStatus": "vehicle.current_status",
+      "occupancy": "vehicle.occupancy_status",
+      "occupancyPercent": "vehicle.occupancy_percentage",
+      "congestion": "vehicle.congestion_level",
+      "wheelchair": "vehicle.vehicle.wheelchair_accessible",
+      "licensePlate": "vehicle.vehicle.license_plate"
+    },
+    "motion": {
+      "speedMps": "vehicle.position.speed",
+      "headingDegrees": "vehicle.position.bearing"
+    }
+  },
+  "freshness": {
+    "liveSeconds": 120,
+    "recentSeconds": 600,
+    "expireSeconds": 1800
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "Entur — data under NLOD",
+    "url": "https://developer.entur.org/"
+  },
+  "termsUrl": "https://developer.entur.org/pages-intro-authentication",
+  "review": "user-configured",
+  "enabled": false
+}

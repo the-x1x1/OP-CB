@@ -3,7 +3,7 @@ import path from 'node:path';
 import { observationSchema, type JsonValue, type Observation } from '@opcb/world-model';
 import { ProviderError, testing } from '@opcb/provider-sdk';
 import { compileMapping, mapRecord, requestsPerPoll } from '@opcb/connector-sdk';
-import type { SuiteCheck, SuiteFixtures, SuiteResult } from '../../../testing/suite.js';
+import { asText, type SuiteCheck, type SuiteFixtures, type SuiteResult } from '../../../testing/suite.js';
 import { parseMqttDefinition, type MqttConnectorDefinition } from '../contract.js';
 import { BROKER_HOST_SETTING, LOOPBACK_BROKER, MqttProvider, mqttConnector, topicMapping } from '../mqtt.js';
 import { sampleTopic } from '../topics.js';
@@ -121,7 +121,7 @@ export async function runMqttSuite(doc: unknown, fixtures: SuiteFixtures): Promi
       for (const m of messagesOf(body, defaultTopic)) c.simulateMessage(m.topic, m.payload, { retained: m.retained });
   };
   const codeOf = (err: unknown) => (err instanceof ProviderError ? err.code : String(err));
-  const normal = Array.isArray(fixtures.normal) ? fixtures.normal : [fixtures.normal];
+  const normal = (Array.isArray(fixtures.normal) ? fixtures.normal : [fixtures.normal]).map(asText);
   let normalObservations: Observation[] = [];
 
   await check('Successful parse', async () => {
@@ -148,7 +148,7 @@ export async function runMqttSuite(doc: unknown, fixtures: SuiteFixtures): Promi
     const { provider, broker } = await make();
     const { emitted, abort, connection } = await open(provider, broker!);
     connection!.simulateOpen();
-    deliver(connection!, [fixtures.empty]);
+    deliver(connection!, [asText(fixtures.empty)]);
     await tick(settle);
     abort.abort();
     return emitted.length === 0 ? undefined : `empty message produced ${emitted.length} observations`;
@@ -157,7 +157,7 @@ export async function runMqttSuite(doc: unknown, fixtures: SuiteFixtures): Promi
     const { provider, broker } = await make();
     const { emitted, abort, connection } = await open(provider, broker!);
     connection!.simulateOpen();
-    deliver(connection!, fixtures.malformed);
+    deliver(connection!, fixtures.malformed.map(asText));
     await tick(settle);
     const h = await provider.health();
     abort.abort();

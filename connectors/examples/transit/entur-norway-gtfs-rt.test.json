@@ -1,0 +1,27 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/gtfs-rt/vehicles.pb",
+  "empty": "fixtures/connectors/gtfs-rt/trip-updates-only.pb",
+  "malformed": [
+    { "inline": "<!doctype html><title>Service unavailable</title>" },
+    { "inline": "{\"error\":\"no such feed\"}" }
+  ],
+  "expectObservations": 3,
+  "expectIds": ["1801", "v2", "T-22"],
+  "expect": [
+    {
+      "externalId": "1801",
+      "observedAt": "2026-09-23T19:59:45.000Z",
+      "payload": {
+        "name": "Bus 1801",
+        "route": "1",
+        "tripId": "T1-1405",
+        "tripStart": "20260923 14:05:00",
+        "stopStatus": "STOPPED_AT",
+        "occupancy": "MANY_SEATS_AVAILABLE",
+        "wheelchair": "WHEELCHAIR_ACCESSIBLE"
+      }
+    },
+    { "externalId": "v2", "observedAt": "2026-09-23T19:59:55.000Z", "payload": { "name": "v2" } }
+  ]
+}

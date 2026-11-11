@@ -45,7 +45,10 @@ export function sidecarPathFor(definitionPath: string): string {
   return path.join(dir, `${base}.test.json`);
 }
 
-function readSource(src: SidecarSource, root: string, what: string): string {
+/** Fixture files read as bytes, not text: a GTFS Realtime feed is protobuf. */
+const BINARY_FIXTURE = /\.(pb|bin)$/i;
+
+function readSource(src: SidecarSource, root: string, what: string): string | Uint8Array {
   if (typeof src === 'object' && src !== null && 'inline' in src) return String(src.inline);
   if (typeof src !== 'string') throw new Error(`${what}: expected a fixture path or { "inline": "…" }`);
   const abs = path.resolve(root, src);
@@ -53,7 +56,7 @@ function readSource(src: SidecarSource, root: string, what: string): string {
   if (rel.startsWith('..') || path.isAbsolute(rel))
     throw new Error(`${what}: fixture ${src} is outside the repository`);
   if (!existsSync(abs)) throw new Error(`${what}: fixture ${src} not found`);
-  return readFileSync(abs, 'utf8');
+  return BINARY_FIXTURE.test(abs) ? new Uint8Array(readFileSync(abs)) : readFileSync(abs, 'utf8');
 }
 
 export function parseSidecar(text: string, file: string): Sidecar {

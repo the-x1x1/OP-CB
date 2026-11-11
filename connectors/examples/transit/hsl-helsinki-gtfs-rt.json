@@ -1,0 +1,69 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "hsl-helsinki-gtfs-rt",
+  "name": "HSL vehicles (Helsinki region) — GTFS Realtime",
+  "description": "Helsinki Region Transport buses, trams, metro and trains.",
+  "connector": "gtfs-rt",
+  "objectType": "transit-vehicle",
+  "categories": ["transit"],
+  "endpoint": {
+    "url": "https://realtime.hsl.fi/realtime/vehicle-positions/v2/hsl",
+    "intervalSeconds": 30
+  },
+  "mapping": {
+    "externalId": {
+      "path": "vehicle.vehicle.id",
+      "fallback": "id"
+    },
+    "observedAt": {
+      "path": "vehicle.timestamp",
+      "fallback": "feedTimestamp"
+    },
+    "position": {
+      "lat": "vehicle.position.latitude",
+      "lon": "vehicle.position.longitude"
+    },
+    "labels": {
+      "name": {
+        "path": "vehicle.vehicle.label",
+        "fallback": ["vehicle.vehicle.id", "id"]
+      },
+      "route": "vehicle.trip.route_id"
+    },
+    "properties": {
+      "routeId": "vehicle.trip.route_id",
+      "tripId": "vehicle.trip.trip_id",
+      "directionId": "vehicle.trip.direction_id",
+      "tripStart": {
+        "concat": ["vehicle.trip.start_date", "vehicle.trip.start_time"],
+        "separator": " "
+      },
+      "scheduleRelationship": "vehicle.trip.schedule_relationship",
+      "stopId": "vehicle.stop_id",
+      "stopSequence": "vehicle.current_stop_sequence",
+      "stopStatus": "vehicle.current_status",
+      "occupancy": "vehicle.occupancy_status",
+      "occupancyPercent": "vehicle.occupancy_percentage",
+      "congestion": "vehicle.congestion_level",
+      "wheelchair": "vehicle.vehicle.wheelchair_accessible",
+      "licensePlate": "vehicle.vehicle.license_plate"
+    },
+    "motion": {
+      "speedMps": "vehicle.position.speed",
+      "headingDegrees": "vehicle.position.bearing"
+    }
+  },
+  "freshness": {
+    "liveSeconds": 120,
+    "recentSeconds": 600,
+    "expireSeconds": 1800
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "HSL (Helsinki Region Transport), CC BY 4.0",
+    "url": "https://www.hsl.fi/en/hsl/open-data"
+  },
+  "termsUrl": "https://www.hsl.fi/en/hsl/open-data",
+  "review": "user-configured",
+  "enabled": false
+}

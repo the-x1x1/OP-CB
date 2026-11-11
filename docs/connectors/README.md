@@ -4,6 +4,7 @@
 - [MAPPING.md](MAPPING.md) — paths, fields, transforms, conditions; what happens to a record.
 - [REST-JSON.md](REST-JSON.md) — the `rest-json` connector: endpoint, response, pagination, viewport, credentials.
 - [GEOJSON-CSV.md](GEOJSON-CSV.md) — the `geojson` and `csv` connectors.
+- [gtfs-rt.md](gtfs-rt.md) — the `gtfs-rt` connector: GTFS Realtime vehicle positions.
 - [WEBSOCKET.md](WEBSOCKET.md) — the `websocket-json` connector.
 - [TESTING.md](TESTING.md) — the sidecar, the shared suite, `connector:test`, `connector:add`.
 - [../architecture/CONNECTOR-ARCHITECTURE.md](../architecture/CONNECTOR-ARCHITECTURE.md) — how the packages fit together.
@@ -22,6 +23,7 @@ the rejected-records log line and health message) is in
 | `rest-json`           | Poll an HTTPS endpoint answering JSON (or CSV, or text); page through it                                                   | [REST-JSON.md](REST-JSON.md)           | [rest-json.ts](../../packages/connector-runtime/src/connectors/rest-json.ts)           |
 | `geojson`             | Poll a GeoJSON FeatureCollection; each feature an object at its geometry                                                   | [GEOJSON-CSV.md](GEOJSON-CSV.md)       | [geojson.ts](../../packages/connector-runtime/src/connectors/geojson.ts)               |
 | `csv`                 | Poll a CSV file; each row an object, columns by header                                                                     | [GEOJSON-CSV.md](GEOJSON-CSV.md)       | [csv.ts](../../packages/connector-runtime/src/connectors/csv.ts)                       |
+| `gtfs-rt`             | Poll a GTFS Realtime vehicle-positions feed (protobuf); each vehicle an object                                             | [gtfs-rt.md](gtfs-rt.md)               | [gtfs-rt.ts](../../packages/connector-runtime/src/connectors/gtfs-rt.ts)               |
 | `websocket-json`      | A WebSocket sending JSON messages                                                                                          | [WEBSOCKET.md](WEBSOCKET.md)           | [websocket-json.ts](../../packages/connector-runtime/src/connectors/websocket-json.ts) |
 | `wfs`, `ogc-features` | WFS and OGC API – Features as objects: WGS 84 and axis order, paging                                                       | [ogc.md](ogc.md)                       | [ogc/](../../packages/connector-runtime/src/connectors/ogc/)                           |
 | `wms`, `wmts`         | WMS and WMTS as raster overlays, time "latest"                                                                             | [ogc.md](ogc.md)                       | [ogc/](../../packages/connector-runtime/src/connectors/ogc/)                           |

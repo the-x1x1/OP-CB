@@ -15,7 +15,7 @@ import { observationSchema, type JsonValue, type Observation } from '@opcb/world
 import type { ConnectorProviderDefinition } from '@opcb/connector-sdk';
 import { loadSidecar } from '@opcb/tool-connector-validator';
 import { defaultConnectorRegistry } from '../../registry.js';
-import { runConnectorSuite } from '../../testing/suite.js';
+import { asText, runConnectorSuite } from '../../testing/suite.js';
 import {
   HttpIngestProvider,
   INGEST_DEFAULT_PORT,
@@ -111,7 +111,7 @@ for (const name of EXAMPLES) {
   test(`listener checks: ${name} with its sidecar fixtures`, async () => {
     const definition = definitionOf(name);
     const sidecar = loadSidecar(path.join(examplesDir, name.replace(/\.json$/, '.test.json')), root);
-    const normal = Array.isArray(sidecar.normal) ? sidecar.normal : [sidecar.normal];
+    const normal = (Array.isArray(sidecar.normal) ? sidecar.normal : [sidecar.normal]).map(asText);
 
     // Successful parse: 202 with counts, observations emitted as a delta, valid and attributed.
     const r = await rig(definition);
@@ -134,7 +134,7 @@ for (const name of EXAMPLES) {
 
     // Empty: accepted, nothing emitted.
     const empty = await rig(definition);
-    const emptyAnswer = await empty.post(sidecar.empty);
+    const emptyAnswer = await empty.post(asText(sidecar.empty));
     assert.equal(emptyAnswer.status, 202);
     assert.equal(json(emptyAnswer).accepted, 0);
     assert.equal(empty.emitted.flat().length, 0);
@@ -142,7 +142,7 @@ for (const name of EXAMPLES) {
     // Malformed: each one 400 with a reason, nothing emitted.
     const bad = await rig(definition);
     for (const [i, body] of sidecar.malformed.entries()) {
-      const a = await bad.post(body);
+      const a = await bad.post(asText(body));
       assert.equal(a.status, 400, `malformed[${i}] answered ${a.status}: ${String(a.body)}`);
       assert.ok(typeof json(a).error === 'string' && String(json(a).error).length > 0);
     }

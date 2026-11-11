@@ -7,6 +7,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
+  vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
+  occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
+  CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
+  off until each licence is confirmed and each feed has been read live.
 - **A Traccar server on your own computer or network can push positions live**, as a public
   one could: a local definition may have a `websocket` whose URL is
   `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the

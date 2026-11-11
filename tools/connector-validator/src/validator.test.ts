@@ -22,6 +22,8 @@ test('every example definition has a sidecar and passes the shared suite through
     'citibike-stations-rest',
     'usgs-earthquakes-csv',
     'sample-websocket',
+    'transit/mbta-gtfs-rt',
+    'transit/entur-norway-gtfs-rt',
   ]) {
     const file = path.join(examples, `${name}.json`);
     const doc = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;

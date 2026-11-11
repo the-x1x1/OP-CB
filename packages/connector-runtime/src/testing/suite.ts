@@ -21,19 +21,23 @@ import { runMqttSuite } from '../connectors/mqtt/testing/suite.js';
  * the fixture loopback listener, one push per fixture body. The result is a list of
  * named checks, each passed or failed with a reason, like the provider contract checklist.
  */
+/** A response body: text (JSON, CSV, …) or bytes (a GTFS Realtime feed). */
+export type SuiteBody = string | Uint8Array;
+export const asText = (b: SuiteBody): string => (typeof b === 'string' ? b : new TextDecoder().decode(b));
+
 export interface SuiteFixtures {
-  /** The good response: body text (JSON, CSV, …). For a socket connector, the messages. */
-  normal: string | string[];
+  /** The good response: body text (JSON, CSV, …) or bytes. For a socket connector, the messages. */
+  normal: SuiteBody | SuiteBody[];
   /**
    * For a connector that asks more than one URL per poll (traccar: `/api/devices` and
    * `/api/positions`): the good response for each request whose path ends with the key.
    * A request matching no key gets `normal`. Used wherever the HTTP suite serves `normal`.
    */
-  normalByPath?: Record<string, string>;
+  normalByPath?: Record<string, SuiteBody>;
   /** A response with no records. */
-  empty: string;
+  empty: SuiteBody;
   /** Bodies that must be reported MALFORMED (a poll) or ignored (a socket). */
-  malformed: string[];
+  malformed: SuiteBody[];
   /** How many observations `normal` yields. */
   expectObservations: number;
   /** External ids that must be among them. */
@@ -127,7 +131,7 @@ export async function runConnectorSuite(
   };
   const query = (provider: WorldProvider, signal = new AbortController().signal) =>
     provider.query!({ signal, background: true, bounds: { west: -160, south: 18, east: -154, north: 23 } });
-  const bodyOf = (text: string) => ({ status: 200, body: text });
+  const bodyOf = (body: SuiteBody) => ({ status: 200, body });
   const noHttp: testing.FixtureResponder = () => ({ status: 404, body: '' });
   const codeOf = (err: unknown) => (err instanceof ProviderError ? err.code : String(err));
 
