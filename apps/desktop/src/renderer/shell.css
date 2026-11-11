@@ -2595,6 +2595,15 @@
   filter: drop-shadow(0 0 1px var(--wv-hud-halo));
 }
 
+/* A short window (a 720p laptop, the field profile's small screens): a smaller scope, so the HUD
+   corner does not take a quarter of the map. The drawing scales with its viewBox. */
+@media (max-height: 820px) {
+  .wv-sonar svg {
+    width: 104px;
+    height: 104px;
+  }
+}
+
 .wv-sonar__grid circle,
 .wv-sonar__grid line {
   fill: none;
