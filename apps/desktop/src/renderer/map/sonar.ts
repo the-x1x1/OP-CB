@@ -1,4 +1,4 @@
-import type { GeoPosition } from '@opcb/world-model';
+import { FIELD_OBJECT_TYPES, type GeoPosition } from '@opcb/world-model';
 import { RANGE_RING_COUNT } from './range-rings.js';
 
 /**
@@ -9,12 +9,11 @@ import { RANGE_RING_COUNT } from './range-rings.js';
  * shows what is close to what you are looking at, and from which side, at a glance.
  *
  * Only the nearest `SONAR_MAX_CONTACTS` are drawn, the shown types only, and never the centre
- * itself. Wind points and areas without a position are not contacts.
+ * itself. A field's points (FIELD_OBJECT_TYPES: wind) and areas without a position are not contacts.
  */
 export const SONAR_MAX_CONTACTS = 48;
 const EARTH_RADIUS_M = 6_371_008.8;
 const rad = Math.PI / 180;
-const NOT_CONTACTS: ReadonlySet<string> = new Set(['wind']);
 
 export interface SonarContact {
   id: string;
@@ -80,7 +79,7 @@ export function sonarPicture<T extends ObjectLike>(
   const dLon = cos > 0.01 ? dLat / cos : 360;
   const found: Array<SonarContact & { d: number }> = [];
   for (const o of objects) {
-    if (!o.position || o.id === options.excludeId || NOT_CONTACTS.has(o.type)) continue;
+    if (!o.position || o.id === options.excludeId || FIELD_OBJECT_TYPES.has(o.type)) continue;
     if (options.visibleTypes && !options.visibleTypes.has(o.type)) continue;
     if (options.keep && !options.keep(o)) continue;
     if (Math.abs(o.position.latitude - center.latitude) > dLat) continue;

@@ -2,6 +2,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import {
   EventTypes,
+  FIELD_OBJECT_TYPES,
   formatIssues,
   isValidLatLon,
   worldQuerySchema,
@@ -360,7 +361,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
             if (near.object.id === objectId) continue;
             // A wind grid's point is a sample of a field, not something "also here": with the
             // wind layer on, the nearest one would take a place among the eight.
-            if (near.object.type === 'wind' && object.type !== 'wind') continue;
+            if (FIELD_OBJECT_TYPES.has(near.object.type) && !FIELD_OBJECT_TYPES.has(object.type)) continue;
             const dAlt = (near.object.position?.altitudeM ?? 0) - alt;
             if (Math.hypot(near.distanceM, dAlt) > NEARBY_RADIUS_M) continue;
             objects.push(near.object);
