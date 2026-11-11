@@ -74,6 +74,40 @@ export function findCesiumBuildDir() {
 }
 
 /**
+ * The directory of package `name` as Node would find it from `fromDir`: in each
+ * `node_modules` above it, and beside it when `fromDir` sits in one (pnpm puts a package's
+ * dependencies next to it in `.pnpm/<pkg>/node_modules`).
+ */
+export function packageDirFrom(fromDir, name) {
+  let dir = fromDir;
+  for (;;) {
+    const candidates = [path.join(dir, 'node_modules', ...name.split('/'))];
+    if (path.basename(dir) === 'node_modules') candidates.unshift(path.join(dir, ...name.split('/')));
+    for (const c of candidates) if (existsSync(path.join(c, 'package.json'))) return c;
+    const up = path.dirname(dir);
+    if (up === dir) return undefined;
+    dir = up;
+  }
+}
+
+/**
+ * The renderer bundles `@cesium/engine` (render-cesium imports it), but Workers, Assets and
+ * ThirdParty are staged from the combined `cesium` package. The two must be the same engine:
+ * Cesium's workers speak to the engine that loads them, and a `cesium` bump on its own (a
+ * Dependabot branch, 2026-11) brings a newer engine than the one bundled. Returns the problem,
+ * or undefined when they match or a version cannot be read.
+ */
+export function cesiumEngineMismatch(cesiumBuildDir, fromDir = appDir) {
+  const cesiumDir = realpathSync(path.resolve(cesiumBuildDir, '..', '..'));
+  const read = (dir) => (dir ? JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')).version : undefined);
+  const theirs = read(packageDirFrom(path.dirname(cesiumDir), '@cesium/engine'));
+  const ours = read(packageDirFrom(fromDir, '@cesium/engine'));
+  if (!theirs || !ours || theirs === ours) return undefined;
+  const cesium = read(cesiumDir);
+  return `cesium ${cesium} carries @cesium/engine ${theirs}, but the renderer bundles @cesium/engine ${ours}; the staged workers would not match the engine that loads them. Move both together (apps/desktop and packages/render-cesium depend on @cesium/engine).`;
+}
+
+/**
  * Stage the assets. Returns the staged directory, or throws with the places it looked —
  * a missing Cesium must fail the build, not warn in the middle of a successful one.
  */
@@ -84,6 +118,8 @@ export function stageCesiumAssets() {
       `cesium assets not found (looked in ${cesiumBuildDirCandidates().join(', ')}); the 3D globe cannot load without them`,
     );
   }
+  const mismatch = cesiumEngineMismatch(source);
+  if (mismatch) throw new Error(mismatch);
   rmSync(CESIUM_PUBLIC_DIR, { recursive: true, force: true });
   mkdirSync(CESIUM_PUBLIC_DIR, { recursive: true });
   for (const sub of CESIUM_SUBDIRS)
