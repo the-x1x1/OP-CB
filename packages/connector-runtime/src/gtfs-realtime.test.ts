@@ -184,3 +184,75 @@ test('gtfs-realtime: a recorded MBTA answer decodes to the values of MBTA’s ow
     assert.equal('multi_carriage_details' in vp, false, `${w.id}: carriages skipped`);
   });
 });
+
+test('the drafter: a pasted GTFS Realtime URL becomes a gtfs-rt draft with the shared mapping', async () => {
+  const { draftDefinition } = await import('./draft.js');
+  const { defaultConnectorRegistry } = await import('./registry.js');
+  const { GTFS_RT_VEHICLE_MAPPING } = await import('./connectors/gtfs-rt.js');
+  const bytes = feed('recorded/mbta-vehicles.pb');
+  const text = new TextDecoder().decode(bytes);
+  const d = draftDefinition({ url: 'https://cdn.mbta.com/realtime/VehiclePositions.pb', text, bytes });
+  assert.equal(d.connector, 'gtfs-rt');
+  assert.equal(d.definition['objectType'], 'transit-vehicle');
+  assert.deepEqual((d.definition['endpoint'] as Record<string, unknown>)['intervalSeconds'], 30);
+  assert.deepEqual(d.definition['mapping'], GTFS_RT_VEHICLE_MAPPING);
+  assert.equal(d.definition['review'], 'user-configured');
+  assert.equal(d.definition['enabled'], false);
+  assert.match(d.notes[0]!, /4 vehicle position\(s\) of 4 entities on 4 route\(s\)/);
+  assert.match(d.notes[1]!, /about 1 MB a day/);
+  assert.ok(!d.todo.some((t) => t.startsWith('objectType:') || t.startsWith('freshness:')), 'decided by the format');
+  assert.ok(
+    d.todo.some((t) => t.startsWith('attribution')),
+    'the licence is still the operator’s to name',
+  );
+  assert.ok(defaultConnectorRegistry.validate(d.definition).ok, 'the draft validates as it is');
+  // Served without a content type and from a URL without .pb (OVapi): recognised from the bytes.
+  const bare = draftDefinition({ url: 'https://gtfs.example.org/nl/vehiclePositions', text, bytes });
+  assert.equal(bare.connector, 'gtfs-rt');
+});
+
+test('the drafter: a GTFS Realtime feed of trip updates only is refused with why; JSON is drafted as before', async () => {
+  const { draftDefinition } = await import('./draft.js');
+  const tu = feed('trip-updates-only.pb');
+  assert.throws(
+    () =>
+      draftDefinition({
+        url: 'https://agency.example/TripUpdates.pb',
+        text: new TextDecoder().decode(tu),
+        bytes: tu,
+        contentType: 'application/x-protobuf',
+      }),
+    /no vehicle positions.*VehiclePositions feed/,
+  );
+  assert.throws(
+    () =>
+      draftDefinition({
+        url: 'https://agency.example/x.pb',
+        text: 'nope',
+        bytes: new Uint8Array([0x0a, 0x99]),
+        contentType: 'application/octet-stream',
+      }),
+    /binary but not a GTFS Realtime feed/,
+  );
+  const json = '{"items":[{"id":"a","lat":1,"lon":2}]}';
+  const j = draftDefinition({ url: 'https://x.example/a.json', text: json, bytes: new TextEncoder().encode(json) });
+  assert.equal(j.connector, 'rest-json', 'text with bytes beside it is not taken for protobuf');
+});
+
+test('every GTFS Realtime example uses the shared mapping', async () => {
+  const { readdirSync } = await import('node:fs');
+  const { GTFS_RT_VEHICLE_MAPPING } = await import('./connectors/gtfs-rt.js');
+  const dir2 = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    '..',
+    '..',
+    'connectors',
+    'examples',
+    'transit',
+  );
+  const files = readdirSync(dir2).filter((f) => f.endsWith('-gtfs-rt.json'));
+  assert.equal(files.length, 7);
+  for (const f of files)
+    assert.deepEqual(JSON.parse(readFileSync(path.join(dir2, f), 'utf8'))['mapping'], GTFS_RT_VEHICLE_MAPPING, f);
+});

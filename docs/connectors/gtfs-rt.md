@@ -68,6 +68,15 @@ label keys as labels, so it stays a property); speed and bearing are its motion.
 has a Transit section that gives them in words — "Stopped at stop 899 (the trip's 1st)", "Many seats
 available (0 % full)" — and leaves out what the feed says it does not know.
 
+## Adding another agency
+
+Paste the agency's VehiclePositions URL into Add a source (or `pnpm connector:add --url …`): the
+drafter recognises a GTFS Realtime feed from its bytes — protobuf or binary content type, a `.pb`
+URL, or a body that starts as a FeedMessage — and drafts a `gtfs-rt` definition with the shared
+mapping (`GTFS_RT_VEHICLE_MAPPING`), 30 s polling and transit freshness, noting how many vehicles
+and routes it saw and what the cadence costs in a day. A feed of trip updates or alerts only is
+refused with that reason. The licence and terms are left for the operator.
+
 ## Tests
 
 `fixtures/connectors/gtfs-rt/` holds feeds encoded by Google's protobuf library (Python) from

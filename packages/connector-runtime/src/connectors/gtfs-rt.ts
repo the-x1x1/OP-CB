@@ -13,6 +13,65 @@ import { RestJsonProvider, validateRestJson } from './rest-json.js';
  */
 export const GTFS_RT_CONNECTOR_ID = 'gtfs-rt';
 
+/**
+ * The mapping every GTFS Realtime definition shares (connectors/examples/transit, and the
+ * drafter's for a pasted feed URL): the vehicle's id (else the entity's), its label (else its
+ * id), its report time (else the feed's), and the trip, stop, status, load, traffic and access
+ * as properties; speed and bearing as motion. A test keeps the examples equal to it.
+ */
+export const GTFS_RT_VEHICLE_MAPPING = {
+  externalId: {
+    path: 'vehicle.vehicle.id',
+    fallback: 'id',
+  },
+  observedAt: {
+    path: 'vehicle.timestamp',
+    fallback: 'feedTimestamp',
+  },
+  position: {
+    lat: 'vehicle.position.latitude',
+    lon: 'vehicle.position.longitude',
+  },
+  labels: {
+    name: {
+      path: 'vehicle.vehicle.label',
+      fallback: ['vehicle.vehicle.id', 'id'],
+    },
+    route: 'vehicle.trip.route_id',
+  },
+  properties: {
+    routeId: 'vehicle.trip.route_id',
+    tripId: 'vehicle.trip.trip_id',
+    directionId: 'vehicle.trip.direction_id',
+    tripStart: {
+      concat: ['vehicle.trip.start_date', 'vehicle.trip.start_time'],
+      separator: ' ',
+    },
+    scheduleRelationship: 'vehicle.trip.schedule_relationship',
+    stopId: 'vehicle.stop_id',
+    stopSequence: 'vehicle.current_stop_sequence',
+    stopStatus: 'vehicle.current_status',
+    occupancy: 'vehicle.occupancy_status',
+    occupancyPercent: 'vehicle.occupancy_percentage',
+    congestion: 'vehicle.congestion_level',
+    wheelchair: 'vehicle.vehicle.wheelchair_accessible',
+    licensePlate: 'vehicle.vehicle.license_plate',
+  },
+  motion: {
+    speedMps: 'vehicle.position.speed',
+    headingDegrees: 'vehicle.position.bearing',
+  },
+} as const;
+
+/** What polling a feed of `bytes` every 30 s costs in a day, for the drafter's notes. */
+export const GTFS_RT_FREQUENCY_NOTE = (bytes: number): string => {
+  const perDay = (bytes * 2880) / 1e6;
+  return `polled every 30 s, a feed of this size is about ${perDay >= 1000 ? `${(perDay / 1000).toFixed(1)} GB` : `${Math.round(perDay)} MB`} a day; raise endpoint.intervalSeconds for a metered link`;
+};
+
+/** Freshness for a 30-second vehicle feed. */
+export const GTFS_RT_FRESHNESS = { liveSeconds: 120, recentSeconds: 600, expireSeconds: 1800 } as const;
+
 export function withGtfsRtDefaults(d: ConnectorProviderDefinition): ConnectorProviderDefinition {
   return { ...d, response: { ...(d.response ?? {}), format: 'gtfs-rt' } };
 }

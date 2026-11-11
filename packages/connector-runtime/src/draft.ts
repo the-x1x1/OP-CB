@@ -1,4 +1,6 @@
 import { parseCsv } from './csv.js';
+import { decodeGtfsRealtime, GtfsRealtimeError } from './gtfs-realtime.js';
+import { GTFS_RT_FREQUENCY_NOTE, GTFS_RT_FRESHNESS, GTFS_RT_VEHICLE_MAPPING } from './connectors/gtfs-rt.js';
 import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 
 /**
@@ -6,7 +8,8 @@ import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/co
  * 2026-09-23, so the desktop's main process can run it for the Add-source dialog; `pnpm
  * connector:add` imports it from here). From one sample of a source (its URL and body), a draft definition
  * the operator finishes by hand. The drafter recognises a GeoJSON FeatureCollection, a JSON
- * document with an array of records somewhere near the top, and CSV; it guesses the record
+ * document with an array of records somewhere near the top, CSV, and (2026-11-11) a GTFS
+ * Realtime vehicle-positions feed, recognised from its bytes; it guesses the record
  * path, the id, the time and the position fields from their names, and writes everything
  * else fail-closed: `review: user-configured`, `enabled: false`, no data policy opened, no
  * attribution claimed. What it could not decide is listed in `todo` so nothing is invented.
@@ -15,6 +18,8 @@ export interface DraftSample {
   url: string;
   contentType?: string;
   text: string;
+  /** The body as received: a binary format (GTFS Realtime protobuf) is read from these. */
+  bytes?: Uint8Array;
 }
 
 export interface DraftOptions {
@@ -145,6 +150,9 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
   todo.push('attribution.text and termsUrl: name the licence and the rights holder before this source is shown');
   todo.push('freshness: set liveSeconds/recentSeconds/expireSeconds for how quickly this source goes stale');
 
+  const gtfs = gtfsRealtimeDraft(sample, type, base, opts, todo, notes);
+  if (gtfs) return gtfs;
+
   let records: Array<Record<string, unknown>> = [];
   let json: unknown;
   const isCsv = type.includes('csv') || (!type.includes('json') && looksLikeCsv(sample.text));
@@ -244,6 +252,65 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
     notes.push(`only the first ${MAX_SAMPLE_KEYS} of ${keys.length} fields were drafted as properties`);
   base['mapping'] = mapping;
   return { definition: base, connector: String(base['connector']), todo, notes };
+}
+
+/**
+ * A GTFS Realtime feed: protobuf, so it is read from the bytes, and only when the answer says
+ * protobuf or binary, or the URL ends in .pb, or it starts as a FeedMessage does (0x0a, the
+ * header) and is not text. A feed of vehicle positions becomes a `gtfs-rt` draft with the
+ * shared mapping (GTFS_RT_VEHICLE_MAPPING) — the field names are the specification's, so
+ * nothing is guessed; a feed with none (trip updates or alerts only) is refused with why.
+ */
+function gtfsRealtimeDraft(
+  sample: DraftSample,
+  type: string,
+  base: Record<string, unknown>,
+  opts: DraftOptions,
+  todo: string[],
+  notes: string[],
+): DraftResult | undefined {
+  const b = sample.bytes;
+  if (!b?.length) return undefined;
+  const binaryType = /protobuf|octet-stream|x-google-protobuf/.test(type);
+  const pbUrl = /\.pb$/i.test(new URL(sample.url).pathname);
+  const looksBinary = b[0] === 0x0a && b.subarray(0, 64).some((x) => x < 0x09 || (x > 0x0d && x < 0x20));
+  if (!binaryType && !pbUrl && !looksBinary) return undefined;
+  let feed;
+  try {
+    feed = decodeGtfsRealtime(b);
+  } catch (err) {
+    if (err instanceof GtfsRealtimeError && (binaryType || pbUrl))
+      throw new Error(`the sample is binary but not a GTFS Realtime feed (${err.message})`);
+    if (err instanceof GtfsRealtimeError) return undefined;
+    throw err;
+  }
+  if (!feed.vehicles.length)
+    throw new Error(
+      `a GTFS Realtime feed with ${feed.entities} entit${feed.entities === 1 ? 'y' : 'ies'} and no vehicle positions ` +
+        '(trip updates or alerts): only a VehiclePositions feed is drawn; the agency usually publishes one beside it',
+    );
+  base['connector'] = 'gtfs-rt';
+  base['description'] =
+    `Drafted by connector:add from ${sample.url}, a GTFS Realtime vehicle-positions feed. Name the agency's licence and terms before enabling.`;
+  base['objectType'] = opts.objectType ?? 'transit-vehicle';
+  base['categories'] = ['transit'];
+  base['endpoint'] = { url: sample.url, intervalSeconds: opts.intervalSeconds ?? 30 };
+  base['mapping'] = structuredClone(GTFS_RT_VEHICLE_MAPPING) as unknown as Record<string, unknown>;
+  base['freshness'] = { ...GTFS_RT_FRESHNESS };
+  // The object type is decided by the format; the freshness too.
+  const placeholder = todo.findIndex((t) => t.startsWith('objectType:'));
+  if (placeholder >= 0) todo.splice(placeholder, 1);
+  const fresh = todo.findIndex((t) => t.startsWith('freshness:'));
+  if (fresh >= 0) todo.splice(fresh, 1);
+  const routes = new Set(feed.vehicles.map((v) => (v.vehicle['trip'] as { route_id?: string } | undefined)?.route_id));
+  routes.delete(undefined);
+  notes.push(
+    `GTFS Realtime ${feed.header.gtfs_realtime_version} feed: ${feed.vehicles.length} vehicle position(s) of ${feed.entities} entities` +
+      (routes.size ? ` on ${routes.size} route(s)` : '') +
+      '; mapped with the shared GTFS Realtime mapping (docs/connectors/gtfs-rt.md)',
+  );
+  notes.push(GTFS_RT_FREQUENCY_NOTE(b.length));
+  return { definition: base, connector: 'gtfs-rt', todo, notes };
 }
 
 function looksLikeCsv(text: string): boolean {

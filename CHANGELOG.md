@@ -25,7 +25,8 @@ Versioning: [semantic versioning](https://semver.org/).
   off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
   been read live; four MBTA vehicles are kept as a recorded test. A selected vehicle
   has a Transit section: its route, trip, where it is on the trip, how full it is and whether it
-  is accessible, in words.
+  is accessible, in words. Add a source recognises a pasted GTFS Realtime URL and drafts it with the same
+  mapping.
 - **A Traccar server on your own computer or network can push positions live**, as a public
   one could: a local definition may have a `websocket` whose URL is
   `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
