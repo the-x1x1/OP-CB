@@ -107,6 +107,47 @@ test('http: the response cache is bounded — a URL that changes every poll cann
   assert.equal(gone.fromCache, false);
 });
 
+test('http: one cache key over URLs that carry the time — validators only for the same URL, stale for any', async () => {
+  const clock = new VirtualClock();
+  const seen: Array<{ url: string; inm: string | null; ims: string | null }> = [];
+  let fail = false;
+  const client = new HttpClient({
+    allowedHosts: ['a.example'],
+    clock,
+    maxRetries: 0,
+    sleep: noSleep,
+    staleWhileErrorMs: 6 * 3600_000,
+    fetchImpl: fakeFetch((u, init) => {
+      const h = new Headers(init.headers as Record<string, string>);
+      seen.push({ url: u, inm: h.get('if-none-match'), ims: h.get('if-modified-since') });
+      if (fail) return new Response('down', { status: 503 });
+      // A server that answers 304 to any validator for the dataset, whatever step was asked.
+      if (h.get('if-none-match') || h.get('if-modified-since')) return new Response(null, { status: 304 });
+      return new Response(`step ${u.slice(-2)}`, {
+        status: 200,
+        headers: { etag: '"dataset-v1"', 'last-modified': 'Wed, 11 Nov 2026 00:00:00 GMT' },
+      });
+    }),
+  });
+  const key = 'GET https://a.example/grid?t={now-90m}';
+  assert.equal((await client.request({ url: 'https://a.example/grid?t=03', cacheKey: key })).text(), 'step 03');
+  // The next step: a different question, so no validator — not a 304 with step 03's body.
+  const next = await client.request({ url: 'https://a.example/grid?t=06', cacheKey: key });
+  assert.equal(next.text(), 'step 06');
+  assert.equal(seen[1]!.inm, null);
+  assert.equal(seen[1]!.ims, null);
+  // The same step asked again may be answered from the cache.
+  const same = await client.request({ url: 'https://a.example/grid?t=06', cacheKey: key });
+  assert.equal(seen[2]!.inm, '"dataset-v1"');
+  assert.equal(same.text(), 'step 06');
+  // The source down: the last good answer under the key, whichever step the poll asked for.
+  fail = true;
+  const stale = await client.request({ url: 'https://a.example/grid?t=09', cacheKey: key });
+  assert.equal(stale.stale, true);
+  assert.equal(stale.text(), 'step 06');
+  assert.equal(client.cacheSize(), 1, 'one entry for the source');
+});
+
 test('http: retries 5xx with backoff, gives up after maxRetries, opens circuit, serves stale within window', async () => {
   const clock = new VirtualClock();
   let mode: 'ok' | 'fail' = 'ok';
