@@ -591,7 +591,7 @@ export function buildWind(nowMs: number): WorldObject[] {
         nowMs,
         prov,
         { latitude: lat, longitude: lon },
-        { name: 'Wind (GFS)' },
+        { name: `Wind at ${Math.abs(lat)}°${lat < 0 ? 'S' : 'N'} ${Math.abs(lon)}°${lon < 0 ? 'W' : 'E'}` },
         {
           speedMps,
           towardDeg: toward,

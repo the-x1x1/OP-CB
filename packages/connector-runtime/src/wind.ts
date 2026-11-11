@@ -8,10 +8,12 @@ import { readPath, type WindSpec } from '@opcb/connector-sdk';
  * read live from NOAA CoastWatch on 2026-11-11 (docs/providers/LIVE-CHECKS.md). The columns are
  * found by name, so their order does not matter. Each record is one grid point:
  *
- *   { id, time, lat, lon, u, v, speedMps, towardDeg, fromDeg, source }
+ *   { id, name, time, lat, lon, u, v, speedMps, towardDeg, fromDeg, source }
  *
  * `id` names the point as a chart does, `50N160W` or `12.5S0E` — stable from one step to the
  * next and safe in an object id as it is (a `lat,lon` pair is not: comma, leading minus).
+ * `name` is the same place for people, `Wind at 50°N 160°W`: the grid's points would
+ * otherwise all be called the same in search and on the selection.
  *
  * `lon` is brought to −180…180 (ERDDAP's GFS runs 0…359.5); `towardDeg` is where the wind
  * blows to, clockwise from north (the arrow's heading); `fromDeg` where it blows from, as a
@@ -22,6 +24,7 @@ export const MAX_WIND_POINTS = 100_000;
 
 export interface WindRecord {
   id: string;
+  name: string;
   time?: string;
   lat: number;
   lon: number;
@@ -37,6 +40,12 @@ export interface WindRecord {
 const CALM_MPS = 0.05;
 
 const round = (n: number, digits: number) => Math.round(n * 10 ** digits) / 10 ** digits;
+
+/** `Wind at 50°N 160°W`: a grid point's name for people. */
+export function windPointName(lat: number, lon: number): string {
+  const part = (v: number, pos: string, neg: string) => `${Math.abs(round(v, 4))}°${v < 0 ? neg : v > 0 ? pos : ''}`;
+  return `Wind at ${part(lat, 'N', 'S')} ${part(lon, 'E', 'W')}`;
+}
 
 /** `50N160W`, `12.5S0E`: a grid point's name, safe in an object id. */
 export function windPointId(lat: number, lon: number): string {
@@ -78,6 +87,7 @@ export function windRecords(body: unknown, spec: WindSpec): { records: WindRecor
     const lonW = ((((lo! + 180) % 360) + 360) % 360) - 180;
     const rec: WindRecord = {
       id: windPointId(la!, lonW),
+      name: windPointName(la!, lonW),
       lat: la!,
       lon: lonW,
       u: uu!,

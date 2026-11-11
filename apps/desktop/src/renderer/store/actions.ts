@@ -1176,6 +1176,15 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     async toggleHud(): Promise<void> {
       await setDisplay({ hud: !displaySettings(getState().session.settings).hud });
     },
+    /**
+     * The contact sonar (map/sonar.ts). It is drawn in the HUD, so turning it on shows the HUD
+     * too; turning it off leaves the HUD as it is.
+     */
+    async toggleSonar(): Promise<void> {
+      const d = displaySettings(getState().session.settings);
+      // Shown only with the HUD: with the HUD off it is not on, whatever the setting says.
+      await setDisplay(d.hud && d.hudSonar ? { hudSonar: false } : { hudSonar: true, hud: true });
+    },
     /** G: the latitude and longitude grid (map/graticule.ts). */
     async toggleGrid(): Promise<void> {
       await setDisplay({ grid: !(displaySettings(getState().session.settings).grid ?? false) });

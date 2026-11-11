@@ -118,4 +118,8 @@ test('wind: each point is named as a chart names it, safe as an object id', asyn
     assert.doesNotThrow(() => makeObjectId('wind', 'noaa-gfs-wind', windPointId(la, lo)));
   const [r] = read(table(['latitude', 'longitude', 'ugrd10m', 'vgrd10m'], [[-50, 200, 1, 1]]));
   assert.equal(r!.id, '50S160W', 'named after the longitude is folded');
+  assert.equal(r!.name, 'Wind at 50°S 160°W');
+  const { windPointName } = await import('./wind.js');
+  assert.equal(windPointName(0, 0), 'Wind at 0° 0°');
+  assert.equal(windPointName(12.5, 179.5), 'Wind at 12.5°N 179.5°E');
 });

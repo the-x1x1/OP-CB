@@ -28,7 +28,7 @@
       "lon": "lon"
     },
     "labels": {
-      "name": { "literal": "Wind (GFS)" }
+      "name": "name"
     },
     "properties": {
       "speedMps": "speedMps",

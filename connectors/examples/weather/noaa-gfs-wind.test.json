@@ -15,6 +15,7 @@
       "externalId": "70N40E",
       "observedAt": "2026-09-23T18:00:00.000Z",
       "payload": {
+        "name": "Wind at 70°N 40°E",
         "speedMps": 9.82,
         "fromDeg": 10.8,
         "towardDeg": 190.8,

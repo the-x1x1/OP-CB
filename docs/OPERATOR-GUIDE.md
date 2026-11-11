@@ -376,7 +376,8 @@ read are named in a notice rather than half read.
   pointer. Settings → Rendering → Grid reference in the HUD adds the centre's MGRS or UTM
   reference and gives CUR, and the selection's Position, in it. With the Wind layer on (under
   Weather), WND gives the wind at the middle of the view, from where it blows (`FROM 274° 7.4 M/S`).
-  Settings → Rendering → Contact sonar in the HUD adds a small north-up scope above the readout:
+  Settings → Rendering → Contact sonar in the HUD (or the palette's Show the contact sonar,
+  which turns the HUD on with it) adds a small north-up scope above the readout:
   what is round the selection (SEL), or the middle of the view (VIEW), as blips at their bearing
   and range out to the range rings' outer ring, the nearest 48 of the shown layers, dimmer when not
   seen lately, with a sweep (none with reduced motion).

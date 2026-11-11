@@ -168,6 +168,15 @@ export function buildCommands(state: RootState, actions: ShellActions): PaletteC
       run: () => actions.toggleHud(),
     },
     {
+      id: 'view.sonar',
+      title: display.hud && display.hudSonar ? 'Hide the contact sonar' : 'Show the contact sonar',
+      group: 'View',
+      icon: 'target',
+      keywords: ['sonar', 'scope', 'radar', 'contacts', 'nearby', 'around', 'range', 'bearing', 'hud'],
+      available: !!settings,
+      run: () => actions.toggleSonar(),
+    },
+    {
       id: 'view.grid',
       title: display.grid ? 'Hide the latitude and longitude grid' : 'Show the latitude and longitude grid',
       group: 'View',
