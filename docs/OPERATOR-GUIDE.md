@@ -374,8 +374,8 @@ read are named in a notice rather than half read.
   the map shows. Closer in than 2,000 km (zoom 4 in 2D), NEAR says where the middle of the view
   is from the nearest town (`41.4 KM WNW HILO`), looked up offline once the view rests. With something selected, RNG gives the distance and bearing from it to the
   pointer. Settings → Rendering → Grid reference in the HUD adds the centre's MGRS or UTM
-  reference and gives CUR, and the selection's Position, in it. With the wind layer on (Weather
-  lens), WND gives the wind at the middle of the view, from where it blows (`FROM 274° 7.4 M/S`).
+  reference and gives CUR, and the selection's Position, in it. With the Wind layer on (under
+  Weather), WND gives the wind at the middle of the view, from where it blows (`FROM 274° 7.4 M/S`).
   Settings → Rendering → Contact sonar in the HUD adds a small north-up scope above the readout:
   what is round the selection (SEL), or the middle of the view (VIEW), as blips at their bearing
   and range out to the range rings' outer ring, the nearest 48 of the shown layers, dimmer when not

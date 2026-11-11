@@ -426,7 +426,7 @@ each to be built on `feature/roadmap-3`:
       (2026-11-11, on feature/after-0.7.4):** the answer was read live (docs/providers/LIVE-CHECKS.md)
       and the source built against it — `response.wind` in the connector runtime (u, v on a grid,
       ADR-013 amendment), a `wind` object type (ADR-002 amendment), arrows on the globe and the 2D
-      map in the Weather lens, and the wind at the middle of the view as the HUD's WND row; the
+      map as a Wind layer under Weather, and the wind at the middle of the view as the HUD's WND row; the
       definition `connectors/examples/weather/noaa-gfs-wind.json` asks for the step at or before
       now. **Left:** (1) the operator's reading of the ERDDAP copy's licence line ("may be used and
       redistributed for free", no warranty) — then a licence record and the definition moved to

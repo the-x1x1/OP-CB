@@ -105,7 +105,7 @@ global grid — read with `response.contour` ([REST-JSON.md](REST-JSON.md)) as t
 default because the 10% oval lies across Alaska, Canada, Scandinavia and the Southern Ocean at
 any hour. Fixture `fixtures/connectors/space/swpc-ovation-aurora.json`, recorded 2026-10-16.
 
-**GFS wind** (`noaa-gfs-wind`, Weather lens, an example: off until the operator has read its
+**GFS wind** (`noaa-gfs-wind`, Weather → Wind layer, an example: off until the operator has read its
 licence line): NOAA's Global Forecast System wind 10 m up, every 10° from 80° N to 80° S, at the
 3-hourly step at or before now, from NOAA CoastWatch's ERDDAP server (no key) — read with
 `response.wind` ([REST-JSON.md](REST-JSON.md)) as one `wind` object a point, drawn as arrows

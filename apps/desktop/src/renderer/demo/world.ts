@@ -28,6 +28,11 @@ export const DEMO_PROVIDERS = {
   firms: { id: 'nasa-firms', name: 'NASA FIRMS', attribution: 'NASA FIRMS active fire data (recorded sample)' },
   nws: { id: 'nws-alerts', name: 'NWS Alerts', attribution: 'National Weather Service (public domain)' },
   cameras: { id: 'cctv-public', name: 'Public cameras', attribution: 'Recorded demo camera (synthetic frame)' },
+  wind: {
+    id: 'noaa-gfs-wind',
+    name: 'Wind at 10 m (NOAA GFS via ERDDAP)',
+    attribution: 'Synthetic trade-wind field in the shape of NOAA GFS wind (demo)',
+  },
 } as const;
 
 function provenance(
@@ -549,6 +554,58 @@ export function buildWeatherAlert(nowMs: number): WorldObject {
     ],
   };
   return obj;
+}
+
+// ---- a wind grid round Hawaii (synthetic) ----------------------------------------------------
+
+/**
+ * A 5° grid (36 points) of trade winds round Hawaii in the shape `noaa-gfs-wind` gives (`wind` objects,
+ * ADR-002 amendment 2026-11-11): east-north-easterlies of 5–9 m/s, stronger south of 20° N,
+ * turning westerly north of 30° N. Synthetic, deterministic, valid at the last 3-hourly step.
+ */
+/** The grid point's name as connector-runtime `windPointId` gives it: `20N155W`. */
+const windPointId = (lat: number, lon: number) =>
+  `${Math.abs(lat)}${lat < 0 ? 'S' : 'N'}${Math.abs(lon)}${lon < 0 ? 'W' : 'E'}`;
+
+export function buildWind(nowMs: number): WorldObject[] {
+  const stepMs = 3 * 3600_000;
+  const observedAt = new Date(Math.floor(nowMs / stepMs) * stepMs).toISOString();
+  const prov = provenance(DEMO_PROVIDERS.wind, observedAt, 'demo://noaa-gfs-wind/synthetic');
+  const out: WorldObject[] = [];
+  for (let lat = 10; lat <= 35; lat += 5)
+    for (let lon = -170; lon <= -145; lon += 5) {
+      // Trades below 28° N blowing to the WSW; westerlies above, blowing to the ENE.
+      const trades = lat < 28;
+      const strength = trades ? 9 - (lat - 5) * 0.15 + Math.sin(lon / 7) : 6 + Math.cos(lon / 9) * 2;
+      const towardDeg = trades ? 245 + Math.sin(lat + lon / 10) * 12 : 70 + Math.cos(lat + lon) * 15;
+      const a = (towardDeg * Math.PI) / 180;
+      const u = Math.round(strength * Math.sin(a) * 100) / 100;
+      const v = Math.round(strength * Math.cos(a) * 100) / 100;
+      const speedMps = Math.round(Math.hypot(u, v) * 100) / 100;
+      const toward = Math.round((((((Math.atan2(u, v) * 180) / Math.PI) % 360) + 360) % 360) * 10) / 10;
+      const obj = baseObject(
+        makeObjectId('wind', DEMO_PROVIDERS.wind.id, windPointId(lat, lon)),
+        'wind',
+        DEMO_PROVIDERS.wind.id,
+        observedAt,
+        nowMs,
+        prov,
+        { latitude: lat, longitude: lon },
+        { name: 'Wind (GFS)' },
+        {
+          speedMps,
+          towardDeg: toward,
+          fromDeg: Math.round(((toward + 180) % 360) * 10) / 10,
+          uMps: u,
+          vMps: v,
+          validAt: observedAt,
+          model: 'NOAA GFS 0.5°, 10 m',
+        },
+      );
+      obj.motion = { headingDegrees: toward };
+      out.push(obj);
+    }
+  return out;
 }
 
 export function buildCamera(nowMs: number): WorldObject {

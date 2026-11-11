@@ -757,7 +757,7 @@ test("an aircraft's emergency is drawn where the aircraft is now, while it goes 
   assert.deepEqual(alone.geometry, { kind: 'point', position: { latitude: 21.2, longitude: -157.2 } });
 });
 
-test('wind: an arrow at every zoom, pointing where it blows, coloured by its strength', () => {
+test('wind: an arrow at every zoom, pointing where it blows, coloured by its strength, a Weather layer', () => {
   const view = {
     center: { latitude: 0, longitude: 0 },
     zoom: 1,
@@ -782,6 +782,8 @@ test('wind: an arrow at every zoom, pointing where it blows, coloured by its str
   assert.equal(by.get('w2')!.motion, undefined, 'the grid does not drift');
   const weather = BUILT_IN_LENSES.find((l) => l.id === 'weather')!;
   const overview = BUILT_IN_LENSES.find((l) => l.id === 'overview')!;
+  // In Overview too, as the Weather group's Wind switch: the rail is the Overview's, so a type
+  // left out of it could never be shown. The source itself is off until the operator turns it on.
   assert.ok(weather.objectTypes.includes('wind'));
-  assert.ok(!overview.objectTypes.includes('wind'), 'not in Overview: a global grid would bury the rest');
+  assert.ok(overview.objectTypes.includes('wind'));
 });

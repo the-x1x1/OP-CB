@@ -12,7 +12,7 @@ Versioning: [semantic versioning](https://semver.org/).
   out to the range rings' outer ring, with a sweep. Off by default.
 - **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
   from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
-  and warmer the stronger it is, in the Weather lens; with it on, the HUD's WND row gives the
+  and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
   wind at the middle of the view. The definition is in `connectors/examples/weather/`, off
   until its licence wording is confirmed.
 - **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's

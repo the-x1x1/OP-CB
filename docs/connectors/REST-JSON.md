@@ -81,7 +81,7 @@ A table of grid points with the wind's eastward and northward components — ERD
 JSON, `{ "table": { "columnNames": [...], "rows": [[time, latitude, longitude, u, v], …] } }` —
 is read with `{ "u": "ugrd10m", "v": "vgrd10m" }` (and `lat`, `lon`, `time`, `tablePath` if the
 names differ from `latitude`, `longitude`, `time`, `table`). Columns are found by name. Each
-point is a record: `lat`, `lon` (−180…180), `u`, `v` (m/s), `speedMps`, `towardDeg` (where it
+point is a record: `id` (`50N160W`, safe in an object id), `lat`, `lon` (−180…180), `u`, `v` (m/s), `speedMps`, `towardDeg` (where it
 blows to: an arrow's heading), `fromDeg` (where it blows from, as a forecast says "a westerly";
 neither in a calm), `time`, and `source`. A table of no rows is an empty answer. Up to 100,000
 points. Used by `noaa-gfs-wind` (connectors/examples/weather), on the `wind` object type.

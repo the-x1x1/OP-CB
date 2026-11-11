@@ -18,11 +18,7 @@
     }
   },
   "mapping": {
-    "externalId": {
-      "concat": ["lat", "lon"],
-      "separator": ",",
-      "required": true
-    },
+    "externalId": { "path": "id", "required": true },
     "observedAt": {
       "path": "time",
       "transform": "isoTimestamp"

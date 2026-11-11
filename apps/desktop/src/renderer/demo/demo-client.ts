@@ -61,6 +61,7 @@ import {
   buildSatellite,
   buildVessels,
   buildWeatherAlert,
+  buildWind,
   demoSnapshotSvg,
   DEMO_PROVIDERS,
 } from './world.js';
@@ -132,7 +133,7 @@ export class DemoClient implements WorldClient {
     const eq = buildEarthquakes(nowMs);
     for (const o of eq.objects) this.staticObjects.set(o.id, o);
     for (const e of eq.events) this.events.set(e.id, e);
-    for (const o of [buildFireDetection(nowMs), buildWeatherAlert(nowMs), buildCamera(nowMs)])
+    for (const o of [buildFireDetection(nowMs), buildWeatherAlert(nowMs), buildCamera(nowMs), ...buildWind(nowMs)])
       this.staticObjects.set(o.id, o);
     this.rebuildMovers(nowMs);
     this.sources = buildDemoSources(nowMs);

@@ -104,3 +104,18 @@ test('the wind definition asks ERDDAP for the step at or before now, brackets as
     'https://coastwatch.pfeg.noaa.gov/erddap/griddap/NCEP_Global_Best.json?ugrd10m[(2026-11-11T02:04:54Z)][(80):20:(-80)][(0):20:(359.5)],vgrd10m[(2026-11-11T02:04:54Z)][(80):20:(-80)][(0):20:(359.5)]',
   );
 });
+
+test('wind: each point is named as a chart names it, safe as an object id', async () => {
+  const { windPointId } = await import('./wind.js');
+  const { makeObjectId } = await import('@opcb/world-model');
+  assert.equal(windPointId(50, -160), '50N160W');
+  assert.equal(windPointId(-12.5, 0), '12.5S0E');
+  assert.equal(windPointId(0, 179.5), '0N179.5E');
+  for (const [la, lo] of [
+    [-90, -180],
+    [12.5, -0.5],
+  ] as const)
+    assert.doesNotThrow(() => makeObjectId('wind', 'noaa-gfs-wind', windPointId(la, lo)));
+  const [r] = read(table(['latitude', 'longitude', 'ugrd10m', 'vgrd10m'], [[-50, 200, 1, 1]]));
+  assert.equal(r!.id, '50S160W', 'named after the longitude is folded');
+});

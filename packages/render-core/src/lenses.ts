@@ -39,6 +39,7 @@ const ALL_TYPES = [
   'launch',
   'sensor',
   'imagery-scene',
+  'wind',
 ];
 
 export const BUILT_IN_LENSES: LensDefinition[] = [
@@ -97,7 +98,6 @@ export const BUILT_IN_LENSES: LensDefinition[] = [
   {
     id: 'weather',
     name: 'Weather',
-    // Wind only here: a global grid of arrows would bury everything else in Overview.
     objectTypes: ['weather-alert', 'storm', 'weather-station', 'wind'],
     eventTypes: ['weather-alert', 'storm'],
     renderingRules: [],

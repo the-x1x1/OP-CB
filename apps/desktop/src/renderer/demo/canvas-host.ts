@@ -41,6 +41,14 @@ const STYLE_COLORS: Record<string, string> = {
   launch: '#c9a0ff',
   sensor: '#35c98a',
   trail: '#62d9e6',
+  // Wind arrows by Beaufort band, as render-core's theme has them.
+  wind: '#cbd5e1',
+  'wind.calm': '#94a3b8',
+  'wind.light': '#7dd3fc',
+  'wind.moderate': '#86efac',
+  'wind.strong': '#fde047',
+  'wind.gale': '#fb923c',
+  'wind.storm': '#f87171',
 };
 
 function colorFor(styleClass: string, override?: string): string {
@@ -579,7 +587,27 @@ export class CanvasRendererHost implements RendererHostLike {
     const selected = f.style.selected || f.id === this.selectedId;
     const hovered = f.style.hovered || f.id === this.hoverId;
     ctx.globalAlpha = f.style.opacity ?? 1;
-    if (f.style.icon === 'aircraft' || f.style.icon === 'vessel') {
+    if (f.style.icon === 'wind') {
+      // An arrow along where the wind blows (rotationDegrees), as the real renderers draw it.
+      const rot = ((f.style.rotationDegrees ?? 0) * Math.PI) / 180;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(rot);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.5);
+      ctx.lineTo(0, -size * 0.35);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.5);
+      ctx.lineTo(size * 0.22, -size * 0.18);
+      ctx.lineTo(-size * 0.22, -size * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (f.style.icon === 'aircraft' || f.style.icon === 'vessel') {
       const rot = ((f.style.rotationDegrees ?? 0) * Math.PI) / 180;
       ctx.save();
       ctx.translate(p.x, p.y);

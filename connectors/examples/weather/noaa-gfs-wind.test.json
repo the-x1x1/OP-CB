@@ -12,7 +12,7 @@
   "expectObservations": 90,
   "expect": [
     {
-      "externalId": "70,40",
+      "externalId": "70N40E",
       "observedAt": "2026-09-23T18:00:00.000Z",
       "payload": {
         "speedMps": 9.82,
@@ -22,7 +22,7 @@
       }
     },
     {
-      "externalId": "50,-160",
+      "externalId": "50N160W",
       "payload": { "speedMps": 13.12, "fromDeg": 294.8, "towardDeg": 114.8 }
     }
   ]
