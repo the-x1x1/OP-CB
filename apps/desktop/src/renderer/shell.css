@@ -2632,6 +2632,11 @@
   }
 }
 
+/* …and with Settings → Reduced motion, which the system setting does not cover. */
+:root[data-reduced-motion='true'] .wv-sonar__sweep {
+  display: none;
+}
+
 .wv-sonar__blip {
   fill: var(--wv-hud-ink);
 }
