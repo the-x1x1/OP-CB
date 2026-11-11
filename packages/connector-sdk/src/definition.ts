@@ -141,6 +141,12 @@ export interface ResponseSpec {
    * and `contour` do not apply.
    */
   wind?: WindSpec;
+  /**
+   * A table of named columns (ADR-013 amendment 2026-11-11): `{ columnNames, rows }` at `path`
+   * (default `table`), as ERDDAP serves tabledap and griddap JSON. Each row becomes a record
+   * keyed by column name, then mapped as usual. `itemsPath` does not apply.
+   */
+  table?: { path?: string };
 }
 
 export interface WindSpec {
@@ -455,6 +461,7 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
             levels: s.array(s.number({ min: -1e9, max: 1e9 }), { min: 1, max: 8 }),
           }),
         ),
+        table: s.optional(s.object({ path: s.optional(s.string({ min: 1, max: 256 })) })),
         wind: s.optional(
           s.object({
             tablePath: s.optional(s.string({ min: 1, max: 256 })),

@@ -10,6 +10,7 @@ export * from './pagination.js';
 export * from './csv.js';
 export * from './contours.js';
 export * from './wind.js';
+export * from './table.js';
 export * from './gtfs-realtime.js';
 export * from './connectors/gtfs-rt.js';
 export * from './connectors/rest-json.js';

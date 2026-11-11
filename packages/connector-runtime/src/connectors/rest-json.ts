@@ -25,6 +25,7 @@ import { decodeGtfsRealtime, GtfsRealtimeError } from '../gtfs-realtime.js';
 import { parseCsv } from '../csv.js';
 import { contourRecords } from '../contours.js';
 import { windRecords } from '../wind.js';
+import { tableRecords } from '../table.js';
 import { DEFAULT_MAX_BYTES } from '../shared/limits.js';
 import { addUnseen, rejectedMessage, responseOrigin, warnRejected } from '../shared/mapping.js';
 
@@ -246,6 +247,12 @@ export class RestJsonProvider extends PollingProvider {
       if ('malformed' in read) return { malformed: read.malformed };
       return { records: read.records, body };
     }
+    const table = this.definition.response?.table;
+    if (table) {
+      const read = tableRecords(body, table);
+      if ('malformed' in read) return { malformed: read.malformed };
+      return { records: read.records, body };
+    }
     const found = extractRecords(body, this.definition.response);
     if ('malformed' in found) return { malformed: found.malformed };
     return { records: found.records, body };
@@ -376,6 +383,12 @@ export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValid
     if ((d.response?.format ?? 'json') !== 'json') errors.push('response.wind reads a JSON table: format must be json');
     if (d.response?.contour) errors.push('response.wind and response.contour cannot both be set');
     if (d.response?.itemsPath) warnings.push('response.itemsPath is ignored with response.wind');
+  }
+  if (d.response?.table) {
+    if ((d.response.format ?? 'json') !== 'json') errors.push('response.table reads a JSON table: format must be json');
+    if (d.response.wind || d.response.contour)
+      errors.push('response.table cannot be set with response.wind or response.contour');
+    if (d.response.itemsPath) warnings.push('response.itemsPath is ignored with response.table');
   }
   const contour = d.response?.contour;
   if (contour) {

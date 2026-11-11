@@ -16,7 +16,8 @@ Versioning: [semantic versioning](https://semver.org/).
   and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
   wind at the middle of the view. Each arrow is named by its place ("Wind at 25°N 165°W") and,
   selected, says the wind the way a forecast does: "7.0 m/s (14 kn) from ENE (075°)", its Beaufort
-  force and the forecast step. The definition is in `connectors/examples/weather/`, off
+  force and the forecast step. Add a source drafts a pasted ERDDAP wind URL as a wind source, and reads
+  any ERDDAP table (buoys, stations) by column name. The definition is in `connectors/examples/weather/`, off
   until its licence wording is confirmed.
 - **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
   vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,

@@ -54,6 +54,7 @@ provider host as for any provider.
 | `format`    | `json` (default), `csv` (see [GEOJSON-CSV.md](GEOJSON-CSV.md)), `text` (one record `{ text, url }`).                                    |
 | `contour`   | A gridded field read as areas: see below.                                                                                               |
 | `wind`      | A wind field read as points: see below.                                                                                                 |
+| `table`     | A table of named columns (ERDDAP): see below.                                                                                           |
 
 A body that is not JSON, has nothing at `itemsPath`, or in which every record is rejected
 by the mapping is reported MALFORMED; the cached copy is invalidated so it is never served
@@ -85,6 +86,15 @@ point is a record: `id` (`50N160W`, safe in an object id), `lat`, `lon` (−180�
 blows to: an arrow's heading), `fromDeg` (where it blows from, as a forecast says "a westerly";
 neither in a calm), `time`, and `source`. A table of no rows is an empty answer. Up to 100,000
 points. Used by `noaa-gfs-wind` (connectors/examples/weather), on the `wind` object type.
+
+### A table of named columns: `response.table`
+
+ERDDAP answers tabledap and griddap queries as `{ "table": { "columnNames": [...], "rows": [[...], …] } }`.
+`{ "table": {} }` (or `{ "table": { "path": "…" } }` elsewhere in the body) reads each row as a
+record keyed by column name, so the mapping names `latitude`, `time` or `station` as for any JSON.
+Add a source recognises the layout: a table with a u/v wind pair (`ugrd10m`/`vgrd10m`,
+`eastward_wind`/`northward_wind`, `u10`/`v10`, `uwnd`/`vwnd`) is drafted as a wind source with
+`response.wind`, any other as `response.table`.
 
 ### The request time: `{now}`
 

@@ -1,5 +1,6 @@
 import { parseCsv } from './csv.js';
 import { decodeGtfsRealtime, GtfsRealtimeError } from './gtfs-realtime.js';
+import { tableRecords, windColumns } from './table.js';
 import { GTFS_RT_FREQUENCY_NOTE, GTFS_RT_FRESHNESS, GTFS_RT_VEHICLE_MAPPING } from './connectors/gtfs-rt.js';
 import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 
@@ -178,6 +179,18 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
         .filter((f): f is Record<string, unknown> => Boolean(f && typeof f === 'object'))
         .map((f) => ({ ...((f['properties'] as Record<string, unknown>) ?? {}), _feature: f }));
       notes.push(`GeoJSON FeatureCollection with ${gj.features.length} feature(s); positions come from the geometry`);
+    } else if (tableAt(json)) {
+      // A table of named columns (ERDDAP): a wind field, or rows read by column name.
+      const names = tableAt(json)!;
+      const wind = windColumns(names);
+      if (wind) return windDraft(sample, names, wind, base, opts, todo, notes);
+      const read = tableRecords(json, {});
+      if ('malformed' in read) throw new Error(`the table did not read: ${read.malformed}`);
+      base['response'] = { table: {} };
+      records = read.records;
+      notes.push(
+        `a table of ${read.records.length} row(s) by ${names.length} named column(s) (ERDDAP's layout): ${names.slice(0, 12).join(', ')}${names.length > 12 ? ', …' : ''}; read with response.table`,
+      );
     } else {
       const found = findArray(json);
       if (!found) throw new Error('no array of records found in the JSON (looked three levels deep)');
@@ -311,6 +324,79 @@ function gtfsRealtimeDraft(
   );
   notes.push(GTFS_RT_FREQUENCY_NOTE(b.length));
   return { definition: base, connector: 'gtfs-rt', todo, notes };
+}
+
+/** The column names of a top-level `{ table: { columnNames, rows } }` (ERDDAP), if that is the shape. */
+function tableAt(json: unknown): string[] | undefined {
+  const t = (json as { table?: { columnNames?: unknown; rows?: unknown } } | null)?.table;
+  if (!t || !Array.isArray(t.columnNames) || !Array.isArray(t.rows)) return undefined;
+  return t.columnNames.every((n) => typeof n === 'string') ? (t.columnNames as string[]) : undefined;
+}
+
+/**
+ * A table with a u/v wind pair (an ERDDAP griddap answer): a `wind` source read with
+ * `response.wind`, mapped as `noaa-gfs-wind` is. A time of `(last)` is noted: on a forecast it
+ * is the forecast's far end, days ahead (NCEP_Global_Best, read 2026-11-11), so `({now-90m})`
+ * asks for the step at or before now — but on an analysis it is the latest, so it is not
+ * changed here.
+ */
+function windDraft(
+  sample: DraftSample,
+  names: readonly string[],
+  wind: { u: string; v: string },
+  base: Record<string, unknown>,
+  opts: DraftOptions,
+  todo: string[],
+  notes: string[],
+): DraftResult {
+  const col = (re: RegExp) => names.find((n) => re.test(n));
+  const lat = col(/^lat(itude)?$/i);
+  const lon = col(/^(lon|lng|long|longitude)$/i);
+  const time = col(/^time$/i);
+  if (!lat || !lon) throw new Error(`a wind table needs latitude and longitude columns; it has ${names.join(', ')}`);
+  base['objectType'] = opts.objectType ?? 'wind';
+  base['categories'] = ['weather'];
+  base['endpoint'] = { url: sample.url, intervalSeconds: opts.intervalSeconds ?? 3600 };
+  base['response'] = {
+    wind: {
+      u: wind.u,
+      v: wind.v,
+      ...(lat !== 'latitude' ? { lat } : {}),
+      ...(lon !== 'longitude' ? { lon } : {}),
+      ...(time && time !== 'time' ? { time } : {}),
+    },
+  };
+  base['mapping'] = {
+    externalId: { path: 'id', required: true },
+    ...(time ? { observedAt: { path: 'time', transform: 'isoTimestamp' } } : {}),
+    position: { lat: 'lat', lon: 'lon' },
+    labels: { name: 'name' },
+    properties: {
+      speedMps: 'speedMps',
+      fromDeg: 'fromDeg',
+      towardDeg: 'towardDeg',
+      uMps: 'u',
+      vMps: 'v',
+      ...(time ? { validAt: { path: 'time', transform: 'isoTimestamp' } } : {}),
+    },
+    motion: { headingDegrees: 'towardDeg' },
+  };
+  base['freshness'] = { liveSeconds: 10_800, recentSeconds: 21_600, expireSeconds: 43_200 };
+  base['description'] =
+    `Drafted by connector:add from ${sample.url}, a wind field (${wind.u}, ${wind.v}). Name the licence and terms before enabling.`;
+  for (const k of ['objectType:', 'freshness:']) {
+    const i = todo.findIndex((t) => t.startsWith(k));
+    if (i >= 0) todo.splice(i, 1);
+  }
+  if (!time) todo.push('observedAt: the table has no time column; every point carries the fetch time');
+  if (/\(last\)/.test(decodeURIComponent(sample.url)))
+    todo.push(
+      'endpoint.url: the time (last) is the latest step the server has — for a forecast, its far end, days ahead; ({now-90m}) asks for the step at or before now (ERDDAP rounds to the nearest)',
+    );
+  notes.push(
+    `a wind field: ${wind.u} and ${wind.v} by ${lat} and ${lon}${time ? ` at ${time}` : ''}; read with response.wind, one wind object a grid point (docs/connectors/REST-JSON.md)`,
+  );
+  return { definition: base, connector: 'rest-json', todo, notes };
 }
 
 function looksLikeCsv(text: string): boolean {
