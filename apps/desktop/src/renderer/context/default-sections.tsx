@@ -97,9 +97,12 @@ export const DEFAULT_SECTIONS: ContextSection[] = [
                   : undefined,
             },
             { label: 'Accuracy', value: p?.accuracyM !== undefined ? `±${formatDistance(p.accuracyM)}` : undefined },
-            { label: 'Speed', value: formatSpeed(object.motion?.speedMps, speedUnit) },
-            // A wind point's heading is where the wind blows to: its own section says it as a
-            // forecast does (from where), so it is not given here as if it were a vessel's.
+            // A wind point's speed and heading are the wind's, not its own (it does not move): its
+            // own section says them as a forecast does (from where), so they are not given here.
+            {
+              label: 'Speed',
+              value: object.type === 'wind' ? undefined : formatSpeed(object.motion?.speedMps, speedUnit),
+            },
             {
               label: 'Heading',
               value: object.type === 'wind' ? undefined : formatHeading(object.motion?.headingDegrees),
