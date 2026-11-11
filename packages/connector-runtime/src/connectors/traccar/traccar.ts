@@ -47,9 +47,13 @@ import { responseOrigin } from '../../shared/mapping.js';
  * the source's `host` setting (ADR-003's local policy: plain http, nothing discovered). The
  * token is a credential reference: `Authorization: Bearer` on the REST calls, `?token=` on
  * the socket URL, put there by the host (ADR-003/ADR-013 amendment for this phase) — the
- * provider never sees it. A local server is read by REST only: the host opens `wss://` to
- * public hosts alone.
+ * provider never sees it. A local server can have a `websocket` too (2026-11-10, under the
+ * ADR-003 amendment of 2026-10-20: `ws://` to loopback or the host the operator named): its
+ * `url` is then `ws://localhost/api/socket`, standing for the same server the REST calls
+ * reach, and the socket dialled is built from the `host` and `port` settings.
  */
+/** What a local definition's `websocket.url` says: "the socket of the server in my settings". */
+export const TRACCAR_LOCAL_SOCKET_URL = 'ws://localhost/api/socket';
 export const TRACCAR_CONNECTOR_ID = 'traccar';
 /** Traccar's default web port, and where a server on this computer is looked for. */
 export const TRACCAR_DEFAULT_PORT = 8082;
@@ -224,7 +228,7 @@ export class TraccarProvider extends PollingProvider {
     this.mapping = compileMapping(definition.mapping);
     this.timers = options.timers ?? realTimers;
     this.flushIntervalMs = options.flushIntervalMs ?? definition.websocket?.flushMs ?? 500;
-    if (definition.websocket && definition.endpoint) this.subscribe = (request, emit) => this.openSocket(request, emit);
+    if (definition.websocket) this.subscribe = (request, emit) => this.openSocket(request, emit);
   }
 
   protected override async onInitialize(context: ProviderContext): Promise<void> {
@@ -263,6 +267,12 @@ export class TraccarProvider extends PollingProvider {
     });
     if (!target.ok) throw new ProviderError('HOST_NOT_ALLOWED', target.reason, { retryable: false });
     return traccarBase(target.url);
+  }
+
+  /** The socket to dial: the definition's, or for a local server the one beside its REST address. */
+  socketUrl(): string {
+    if (this.definition.endpoint) return this.definition.websocket!.url;
+    return `${this.restBase().replace(/^http:/, 'ws:')}/api/socket`;
   }
 
   /** A REST request: the definition's headers, the token by reference (the host attaches it). */
@@ -481,7 +491,7 @@ export class TraccarProvider extends PollingProvider {
     let handle: ProviderSocketHandle;
     try {
       handle = await this.context.sockets.open(
-        ws.url,
+        this.socketUrl(),
         {
           onOpen: () => {
             if (!current()) return;
@@ -719,8 +729,16 @@ export function validateTraccar(d: ConnectorProviderDefinition): ConnectorValida
   }
   if (d.websocket) {
     const ws = d.websocket;
-    if (!d.endpoint)
-      errors.push('websocket needs an endpoint: a server on this computer or your network is read by REST only');
+    if (!d.endpoint) {
+      if (ws.url !== TRACCAR_LOCAL_SOCKET_URL)
+        errors.push(
+          `a local server's websocket.url is ${TRACCAR_LOCAL_SOCKET_URL}: the socket is the server in the source's host and port settings`,
+        );
+      if (ws.credential && ws.credential.name !== TRACCAR_LOCAL_CREDENTIAL)
+        errors.push(
+          `a local server's websocket.credential is ${TRACCAR_LOCAL_CREDENTIAL}, the same token as its REST calls`,
+        );
+    }
     let url: URL | undefined;
     try {
       url = new URL(ws.url);

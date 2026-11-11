@@ -5,6 +5,19 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **A Traccar server on your own computer or network can push positions live**, as a public
+  one could: a local definition may have a `websocket` whose URL is
+  `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
+  source's settings, with the same token. Plain `ws://` goes only to this computer or the host
+  you named.
+
+### Fixed
+
+- The build refuses to stage Cesium's workers from a different engine than the one the app
+  bundles (a `cesium` update on its own would have mixed them).
+
 ## [0.7.4] — 2026-11-08
 
 The first screen test's findings fixed, every keyless source read live, and an independent

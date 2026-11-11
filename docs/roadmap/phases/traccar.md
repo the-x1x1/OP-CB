@@ -120,6 +120,11 @@ New requests from this phase (none blocks it):
    read by REST alone. Smallest change: for a `local-process` provider, also accept `ws:`
    to loopback in `allowedHosts` or the trusted host, as the HTTP client already does for
    `http:`; the definition schema's `wss`-only rule would then need a local form too.
+   **Landed:** the host side with the 2026-10-20 amendment; the definition side on
+   2026-11-10 (`feature/after-0.7.4`): a definition with no endpoint may give
+   `ws://localhost/<path>` as its socket, standing for the server in its settings
+   (connector-sdk `isLocalSocketPlaceholder`); traccar dials `ws://<host>:<port>/api/socket`,
+   websocket-json refuses it.
 2. **ADR-013 (the suite), same as `ogc`'s request 3:** per-URL fixtures in
    `runConnectorSuite` (a responder keyed by path, or a sidecar map), so a connector that
    makes two different requests per poll is tested with real answers, not

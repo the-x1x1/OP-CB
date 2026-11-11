@@ -681,6 +681,24 @@ test('local: loopback by default, the named host and port from settings, REST on
   assert.equal(badPort.ctx.http.requests[0]!.url, 'http://127.0.0.1:8082/api/devices');
 });
 
+test('local with a socket: ws:// to the server in the settings, the same token in its URL', async () => {
+  const doc = {
+    ...local(),
+    websocket: { url: 'ws://localhost/api/socket', credential: { name: 'token', as: 'query' } },
+  };
+  const v = defaultConnectorRegistry.validate(doc);
+  assert.ok(v.ok, v.errors.join('; '));
+  const here = await start(doc, server());
+  here.sockets.secrets['traccar-local.token'] = 's3cret';
+  await here.provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  assert.equal(here.sockets.opened[0]!.url, 'ws://127.0.0.1:8082/api/socket?token=s3cret');
+  assert.deepEqual(here.sockets.opened[0]!.credential, { key: 'traccar-local.token', as: 'query', param: 'token' });
+
+  const named = await start(doc, server(), { settings: { host: 'traccar.home.example', port: 8090 } });
+  await named.provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  assert.equal(named.sockets.opened[0]!.url, 'ws://traccar.home.example:8090/api/socket');
+});
+
 // ── validation ─────────────────────────────────────────────────────────────
 
 test('validation refuses what a Traccar source cannot be', () => {
@@ -692,9 +710,9 @@ test('validation refuses what a Traccar source cannot be', () => {
   const ep = live()['endpoint'] as Record<string, unknown>;
   const cases: Array<[string, Record<string, unknown>, RegExp]> = [
     [
-      'socket without endpoint',
-      { ...local(), websocket: ws, credentials: live()['credentials'] },
-      /websocket needs an endpoint/,
+      'local socket naming a server',
+      { ...local(), websocket: { ...ws, credential: { name: 'token', as: 'query' } } },
+      /local server's websocket.url is ws:\/\/localhost\/api\/socket/,
     ],
     [
       'socket elsewhere',

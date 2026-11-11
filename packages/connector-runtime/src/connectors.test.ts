@@ -102,6 +102,28 @@ test('WebSocket JSON — the sample vehicle feed: subscribe with the secret, fil
   expectPass(r);
 });
 
+test('a ws://localhost socket stands for a local server: refused with an endpoint, and by websocket-json', () => {
+  const doc = example('sample-websocket.json') as Record<string, unknown> & { websocket: Record<string, unknown> };
+  const local = { ...doc, websocket: { ...doc.websocket, url: 'ws://localhost/feed' } };
+  const errors = (d: unknown) => {
+    const v = defaultConnectorRegistry.validate(d);
+    return v.ok ? [] : v.errors;
+  };
+  assert.ok(
+    errors({ ...local, endpoint: { url: 'https://example.org/api' } }).some((e) => /must be wss/.test(e)),
+    'with an endpoint, ws:// is refused as before',
+  );
+  const noEndpoint = local;
+  assert.ok(
+    errors(noEndpoint).some((e) => /this connector reads no local server/.test(e)),
+    errors(noEndpoint).join('; '),
+  );
+  assert.ok(
+    errors({ ...noEndpoint, websocket: { ...doc.websocket, url: 'ws://127.0.0.1/feed' } }).some((e) => /wss/.test(e)),
+    'only the localhost placeholder is a local socket',
+  );
+});
+
 test('the subscribe frame carries the secret the host hands to onOpen, and never the placeholder', async () => {
   const doc = example('sample-websocket.json') as { credentials: Record<string, { secretRef: string }> };
   const v = defaultConnectorRegistry.validate(doc);

@@ -479,7 +479,12 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
       if (d.endpoint.credential?.as === 'path' && !d.endpoint.url.includes('{TOKEN}'))
         return 'endpoint.credential "path" needs a {TOKEN} placeholder in the URL';
     }
-    if (d.websocket) {
+    // A definition with no endpoint reads a server on this computer or the operator's network
+    // (the source's host setting); its socket URL is then LOCAL_SOCKET_URL's host and a path,
+    // standing for that same server, and the connector builds the address it dials (ws:// to
+    // loopback or the named host only, ADR-003 amendment 2026-10-20). Only connectors that
+    // read a local server accept it; every other socket is wss:// to a public host.
+    if (d.websocket && !(d.endpoint === undefined && isLocalSocketPlaceholder(d.websocket.url))) {
       const bad = checkUrl(d.websocket.url, ['wss:']);
       if (bad) return `websocket.url ${bad}`;
     }
@@ -508,6 +513,18 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
  * for a remote connector — not loopback, a private range or a link-local metadata address
  * (SSRF, directive §76). Local connectors have their own contract.
  */
+/** A local definition's socket: "the server in this source's settings", at this path. */
+export const LOCAL_SOCKET_ORIGIN = 'ws://localhost';
+export function isLocalSocketPlaceholder(url: string): boolean {
+  if (!url.startsWith(`${LOCAL_SOCKET_ORIGIN}/`)) return false;
+  try {
+    const u = new URL(url);
+    return u.origin === LOCAL_SOCKET_ORIGIN && !u.search && !u.hash && !u.username && !u.password;
+  } catch {
+    return false;
+  }
+}
+
 export function checkUrl(url: string, protocols: string[]): string | undefined {
   let u: URL;
   try {

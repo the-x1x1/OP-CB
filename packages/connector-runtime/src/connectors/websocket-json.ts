@@ -366,6 +366,8 @@ export function validateWebSocketJson(d: ConnectorProviderDefinition): Connector
   const errors: string[] = [];
   const warnings: string[] = [];
   if (!d.websocket) errors.push('websocket is required');
+  else if (!/^wss:/i.test(d.websocket.url))
+    errors.push('websocket.url must be wss:// to a public host: this connector reads no local server');
   if (d.endpoint) warnings.push('endpoint is ignored by this connector');
   if (d.pagination) warnings.push('pagination is ignored by this connector');
   if (d.websocket?.heartbeat !== undefined && !d.websocket.heartbeatSeconds)

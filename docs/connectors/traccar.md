@@ -72,9 +72,13 @@ on this computer or your network).
 | no `endpoint`            | A server on **this computer** (`http://127.0.0.1:8082`), or on the one host you name in the source's `host` setting, at its `port` setting (default 8082) — ADR-003's local policy: plain http, nothing discovered.    |
 | `websocket.url` (public) | Must be the same server's socket: `wss://host[/prefix]/api/socket`, no query.                                                                                                                                          |
 
-A local server is read by REST only: the host opens `wss://` sockets to public hosts alone
-(ADR-003). Its positions are polled every 30 seconds, and a definition for one may not
-have a `websocket`.
+A local server's positions are polled every 30 seconds. Since 2026-11-10 a definition for
+one may also have a `websocket`, with `"url": "ws://localhost/api/socket"`: that URL stands
+for the same server the REST calls reach, and the socket dialled is
+`ws://<host setting>:<port setting>/api/socket` (`ws://127.0.0.1:8082/api/socket` with the
+settings empty), with the same `token` credential (`"credential": {"name": "token", "as":
+"query"}`). The host opens `ws://` only to loopback or the host you named (ADR-003 amendment,
+2026-10-20); every other socket is `wss://` to a public host.
 
 ## The token
 
