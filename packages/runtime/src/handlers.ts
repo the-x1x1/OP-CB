@@ -1762,7 +1762,7 @@ const CSV_COLUMNS = [
   'attribution',
 ] as const;
 
-function toCsv(objects: readonly WorldObject[]): string {
+export function toCsv(objects: readonly WorldObject[]): string {
   const rows = [CSV_COLUMNS.join(',')];
   for (const o of objects) {
     rows.push(CSV_COLUMNS.map((column) => csvCell(csvValue(o, column))).join(','));
@@ -1803,9 +1803,14 @@ function csvValue(o: WorldObject, column: (typeof CSV_COLUMNS)[number]): string 
   }
 }
 
-/** CSV cells are quoted and a leading =/+/-/@ is prefixed so a spreadsheet never executes a cell. */
-function csvCell(value: string | number | undefined): string {
+/**
+ * CSV cells are quoted and a text starting =/+/-/@ is prefixed so a spreadsheet never executes a
+ * cell. A number is written as it is: it cannot be a formula, and prefixing it turned every
+ * negative latitude, longitude and altitude (west, south, below the ellipsoid) into text.
+ */
+export function csvCell(value: string | number | undefined): string {
   if (value === undefined) return '';
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
   const text = String(value);
   const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
   return `"${safe.replace(/"/g, '""')}"`;

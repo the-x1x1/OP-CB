@@ -34,6 +34,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A CSV export of the objects on the map writes negative latitudes, longitudes and altitudes as
+  numbers: the guard against spreadsheet formulas turned every one west of Greenwich or south of
+  the equator into text (`'-157.86`).
 - Screen readers are no longer pointed at parts of the window that are not there: the search
   box, the menu button, the lens rail's group buttons and every tab strip named their list,
   popover, group or panel even while it was closed (an automated accessibility check of the
