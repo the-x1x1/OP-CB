@@ -144,6 +144,14 @@ export class WebSocketJsonProvider implements WorldProvider {
     this.lastAttempt = this.nowIso();
     const credentialKey = credentialRef(this.definition, ws.credential?.name);
     const current = () => session.generation === generation && !session.closed;
+    // The host reports one failure as an error and then a close: the connection is dropped once,
+    // or the back-off would double twice and the failure count twice (traccar request 3).
+    let dropped = false;
+    const drop = (error: ProviderError) => {
+      if (!current() || dropped) return;
+      dropped = true;
+      this.onDrop(session, error);
+    };
     let handle: ProviderSocketHandle;
     try {
       handle = await this.context.sockets.open(
@@ -162,16 +170,9 @@ export class WebSocketJsonProvider implements WorldProvider {
           onMessage: (data) => {
             if (current()) this.onMessage(session, data);
           },
-          onClose: (code, reason) => {
-            if (current())
-              this.onDrop(
-                session,
-                new ProviderError('OFFLINE', `the socket closed (${code}${reason ? ` ${reason}` : ''})`),
-              );
-          },
-          onError: (error) => {
-            if (current()) this.onDrop(session, new ProviderError('NETWORK', error.message));
-          },
+          onClose: (code, reason) =>
+            drop(new ProviderError('OFFLINE', `the socket closed (${code}${reason ? ` ${reason}` : ''})`)),
+          onError: (error) => drop(new ProviderError('NETWORK', error.message)),
         },
         {
           maxMessageBytes: ws.maxMessageBytes ?? DEFAULT_MAX_MESSAGE_BYTES,

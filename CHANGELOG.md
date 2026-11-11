@@ -15,6 +15,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A WebSocket JSON source whose connection fails waits the right time before trying again: one
+  failure, reported as an error and then a close, doubled the wait twice.
 - The build refuses to stage Cesium's workers from a different engine than the one the app
   bundles (a `cesium` update on its own would have mixed them).
 

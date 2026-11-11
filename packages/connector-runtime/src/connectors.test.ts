@@ -8,6 +8,7 @@ import { runConnectorSuite, formatSuite } from './testing/suite.js';
 import {
   defaultConnectorRegistry,
   RestJsonProvider,
+  WebSocketJsonProvider,
   loadDefinitionsFrom,
   parseCsv,
   createPaginator,
@@ -143,6 +144,50 @@ test('the subscribe frame carries the secret the host hands to onOpen, and never
   assert.deepEqual(opened.credential, { key: 'sample-vehicle-feed.token' }, 'the host resolves the key');
   opened.handle.simulateOpen();
   assert.equal(opened.handle.sent[0], '{"action":"subscribe","channel":"positions","token":"s3cret"}');
+});
+
+test('websocket-json: one failure reported as an error and then a close is one drop, one back-off step', async () => {
+  const doc = example('sample-websocket.json');
+  const v = defaultConnectorRegistry.validate(doc);
+  assert.ok(v.ok && v.definition);
+  const delays: number[] = [];
+  const pending = new Map<number, () => void>();
+  let next = 1;
+  const timers = {
+    setTimeout: (fn: () => void, ms: number) => {
+      delays.push(ms);
+      pending.set(next, fn);
+      return next++;
+    },
+    clearTimeout: (h: unknown) => void pending.delete(h as number),
+  };
+  const provider = new WebSocketJsonProvider(v.definition!, { timers, flushIntervalMs: 0 });
+  const sockets = new testing.FixtureSockets();
+  sockets.secrets['sample-vehicle-feed.token'] = 's3cret';
+  await provider.initialize(
+    testing.createFixtureContext({
+      providerId: 'sample-vehicle-feed',
+      sockets,
+      credentials: ['sample-vehicle-feed.token'],
+    }),
+  );
+  await provider.start();
+  await provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  const first = sockets.opened[0]!.handle;
+  first.simulateOpen();
+  delays.length = 0;
+  first.simulateError(new Error('reset'));
+  first.simulateClose(1006, 'reset');
+  assert.equal(pending.size, 1, 'one reconnect is waiting, not two');
+  const [firstDelay] = delays;
+  for (const fn of [...pending.values()]) fn();
+  pending.clear();
+  await new Promise((r) => setImmediate(r));
+  delays.length = 0;
+  sockets.opened[1]!.handle.simulateError(new Error('refused'));
+  sockets.opened[1]!.handle.simulateClose(1006, '');
+  assert.equal(pending.size, 1);
+  assert.equal(delays[0], firstDelay! * 2, 'the back-off doubled once per failure');
 });
 
 test('a query credential goes into the URL the host dials, never to the subscribe frame or the connector (ADR-003 amendment, for traccar)', async () => {
