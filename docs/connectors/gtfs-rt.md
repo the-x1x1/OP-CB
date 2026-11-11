@@ -62,8 +62,9 @@ operator's reading of its licence (the records say what each needs: MBTA's and C
 revocable grants, OVapi's NDOV terms are unconfirmed, Metro Transit has no licence text).
 
 They share one mapping: the external id is the vehicle's id (else the entity's), the label
-its label (else its id), the route as a second label, and trip, stop, status, occupancy,
-congestion and wheelchair access as properties; speed and bearing are its motion. Selected, a vehicle
+its label (else its id); the route, trip, stop, status, occupancy, congestion and wheelchair
+access are properties (a `route` label is mapped too, but the world model keeps only its own
+label keys as labels, so it stays a property); speed and bearing are its motion. Selected, a vehicle
 has a Transit section that gives them in words — "Stopped at stop 899 (the trip's 1st)", "Many seats
 available (0 % full)" — and leaves out what the feed says it does not know.
 
@@ -79,4 +80,6 @@ byte); the test checks every value the mapping reads against MBTA's own JSON fee
 minute. Live reads on 2026-11-11 from the operator's browser (same-origin requests; the build
 container cannot reach the agencies): MBTA 367 entities, Entur 384 KB, Metro Transit 35 KB and
 OVapi 66 entities, all protobuf starting with the header. CapMetro, TransLink and HSL were not
-read same-origin and are unchecked (`docs/providers/LIVE-CHECKS.md`).
+read same-origin and are unchecked (`docs/providers/LIVE-CHECKS.md`). `connectors/examples/transit/transit.test.ts`
+runs the MBTA definition over the recorded slice end to end, with the clock at the minute it was
+read: four transit vehicles in the world state with their route, trip, stop and load.
