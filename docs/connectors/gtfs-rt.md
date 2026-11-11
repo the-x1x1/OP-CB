@@ -80,6 +80,8 @@ byte); the test checks every value the mapping reads against MBTA's own JSON fee
 minute. Live reads on 2026-11-11 from the operator's browser (same-origin requests; the build
 container cannot reach the agencies): MBTA 367 entities, Entur 384 KB, Metro Transit 35 KB and
 OVapi 66 entities, all protobuf starting with the header. CapMetro, TransLink and HSL were not
-read same-origin and are unchecked (`docs/providers/LIVE-CHECKS.md`). `connectors/examples/transit/transit.test.ts`
+read same-origin and are unchecked (`docs/providers/LIVE-CHECKS.md`). Feed size decides the cost of the 30 s
+cadence: Entur's whole-country feed (384 KB a read) is about 1.1 GB a day, MBTA's (42 KB) about
+120 MB — raise `endpoint.intervalSeconds` for a metered link. `connectors/examples/transit/transit.test.ts`
 runs the MBTA definition over the recorded slice end to end, with the clock at the minute it was
 read: four transit vehicles in the world state with their route, trip, stop and load.
