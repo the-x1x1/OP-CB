@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
+  readout showing what is round the selection, or the middle of the view, at its bearing and range
+  out to the range rings' outer ring, with a sweep. Off by default.
 - **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
   from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
   and warmer the stronger it is, in the Weather lens; with it on, the HUD's WND row gives the

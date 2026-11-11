@@ -58,6 +58,7 @@ import { observeLongFrames } from './long-frames.js';
 import { SNAPSHOT_PAGE_SIZE, nextSubscriptionBounds, pinnedSelection } from './subscription-bounds.js';
 import { withSelection } from './selection-objects.js';
 import { windPoints } from './wind-readout.js';
+import { sonarPicture } from './sonar.js';
 import { OVERVIEW_LENS_ID, lensFilter } from '../overview-layers.js';
 import { CAMERA_PREVIEWS_LAYER_ID, layerOn, objectFilter } from '../layer-tree.js';
 import { CameraPreviews } from './camera-previews.js';
@@ -985,6 +986,26 @@ export function MapHost() {
     () => (display.hud && windShown ? windPoints(world.objects.values()) : undefined),
     [display.hud, windShown, world.objects],
   );
+  // The contact sonar's picture (sonar.ts): round the selection, else the middle of the view,
+  // out to the range rings' outer ring; recomputed as the world (four times a second at most)
+  // or the view's ring spacing changes.
+  const sonarOn = display.hud && (display.hudSonar ?? false);
+  const sonarSpacing = sonarOn ? ringSpacingM(world.view) : undefined;
+  const sonarCenter = sonarOn ? (selectionAt ?? world.view.focus ?? world.view.center) : undefined;
+  const sonarKey = sonarCenter ? `${sonarCenter.latitude.toFixed(3)}|${sonarCenter.longitude.toFixed(3)}` : '';
+  const hudSonar = useMemo(
+    () =>
+      sonarOn
+        ? sonarPicture(world.objects.values(), sonarCenter, sonarSpacing, {
+            onSelection: !!selectionAt,
+            excludeId: world.selectedId,
+            ...(visibleTypes ? { visibleTypes } : {}),
+          })
+        : undefined,
+    // sonarCenter by its key: a new object each render with the same place.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sonarOn, sonarKey, sonarSpacing, world.objects, world.selectedId, visibleTypes, !!selectionAt],
+  );
   const activeCollection = collections.collections.find((c) => c.id === collections.activeId);
   const ringsCenter = ui.rangeRings ? selectionAt : undefined;
   const ringsSpacing = ui.rangeRings ? ringSpacingM(world.view) : undefined;
@@ -1258,6 +1279,7 @@ export function MapHost() {
           timeMode={timeline.control.mode}
           shownAtMs={timeline.control.cursorMs}
           {...(hudWind?.length ? { wind: hudWind } : {})}
+          {...(hudSonar ? { sonar: hudSonar } : {})}
         />
       ) : null}
       <div className="wv-map__controls" role="group" aria-label="Map controls">

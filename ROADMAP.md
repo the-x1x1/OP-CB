@@ -368,8 +368,11 @@ Engineering with no licence or key, in the order they are to be built:
 - [x] **Air quality, Canada** (on feature/roadmap-2: `eccc-aqhi`, the air-quality rule reads AQHI on its own scale) (GEV `8887ca4`): ECCC's AQHI as an air-quality reading carried with
       its scale (`{provider, scale, value, band}`), since AQHI, the US AQI and Europe's EAQI do not
       share a meaning. Open Government Licence – Canada (attribution): record first.
-- [ ] **Contact sonar** (GEV `513dc87`): an optional HUD style with range rings round the
-      selection; after the 2D profile, since it costs frames.
+- [x] **Contact sonar** (GEV `513dc87`; on feature/after-0.7.4, 2026-11-11): an optional HUD
+      style with range rings round the selection — a north-up scope above the HUD's readout, the
+      nearest 48 contacts of the shown layers out to the rings' outer ring, the sweep a CSS
+      animation (off with reduced motion). Off by default; its cost in frames is not yet measured
+      on a real GPU.
 
 Decided on 2026-10-20 (see "The operator's decisions" below) and since built or in hand:
 **Wind on the globe** (NOAA ERDDAP, keyless; waits on one saved answer), **Street-level

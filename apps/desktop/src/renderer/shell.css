@@ -2559,11 +2559,19 @@
   border-radius: 2px;
 }
 
-.wv-hud__readout {
+/* The readout, and the contact sonar above it when it is on. */
+.wv-hud__corner {
   position: absolute;
   right: var(--wv-space-3);
   /* Above the foot of the map (credits and view bar); map-host.tsx measures it. */
   bottom: calc(var(--wv-dock-h, 0px) + var(--wv-space-3));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--wv-space-2);
+}
+
+.wv-hud__readout {
   display: grid;
   grid-template-columns: auto auto;
   column-gap: 0.8em;
@@ -2572,6 +2580,78 @@
 
 .wv-hud__readout dd {
   margin: 0;
+}
+
+/* Contact sonar (map/sonar-scope.tsx): drawn in the HUD's ink, so each visual style tints it. */
+.wv-sonar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.wv-sonar svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 1px var(--wv-hud-halo));
+}
+
+.wv-sonar__grid circle,
+.wv-sonar__grid line {
+  fill: none;
+  stroke: var(--wv-hud-dim);
+  stroke-width: 1;
+}
+
+.wv-sonar__grid circle:last-child {
+  stroke: var(--wv-hud-ink);
+}
+
+.wv-sonar__sweep {
+  animation: wv-sonar-sweep 4s linear infinite;
+}
+
+.wv-sonar__sweep path {
+  fill: var(--wv-hud-ink);
+  opacity: 0.14;
+}
+
+.wv-sonar__sweep line {
+  stroke: var(--wv-hud-ink);
+  stroke-width: 1.2;
+}
+
+@keyframes wv-sonar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wv-sonar__sweep {
+    display: none;
+  }
+}
+
+.wv-sonar__blip {
+  fill: var(--wv-hud-ink);
+}
+
+.wv-sonar__blip--stale {
+  opacity: 0.45;
+}
+
+.wv-sonar__centre {
+  stroke: var(--wv-hud-ink);
+  stroke-width: 1.2;
+}
+
+.wv-sonar__north {
+  color: var(--wv-hud-dim);
+  line-height: 1;
+}
+
+.wv-sonar__caption {
+  color: var(--wv-hud-dim);
 }
 
 /* A small reticle on the point the coordinates are for: four ticks round an open centre. */

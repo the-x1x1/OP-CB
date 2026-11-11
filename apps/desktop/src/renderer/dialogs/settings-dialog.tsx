@@ -203,6 +203,12 @@ export function SettingsDialog() {
             </span>
           </label>
           <Toggle
+            label="Contact sonar in the HUD"
+            description="A small scope in the HUD's corner: what is round the selection, or the middle of the view, at its bearing and range out to the range rings' outer ring, with a sweep. Shown with the HUD."
+            checked={display.hudSonar ?? false}
+            onChange={(v) => setDisplay({ hudSonar: v })}
+          />
+          <Toggle
             label="Latitude and longitude grid"
             description="Lines every so many degrees, closer together as you zoom in, each named near the middle of the view (G)."
             checked={display.grid ?? false}

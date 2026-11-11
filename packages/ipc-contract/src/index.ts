@@ -737,6 +737,12 @@ export interface AppSettings {
      */
     hudGrid?: 'none' | 'mgrs' | 'utm';
     /**
+     * (additive, 2026-11-11) Contact sonar: a small north-up scope in the HUD's corner, the
+     * objects round the selection (or the middle of the view) out to the range rings' outer
+     * ring, with a sweep. Shown only with the HUD; absent means off.
+     */
+    hudSonar?: boolean;
+    /**
      * (additive, 2026-10-08, docs/cyberdeck M5) How hard the app works — the name of the last
      * profile chosen; choosing one sets other settings, which the operator may change after.
      * `field`: Low graphics, the 2D map, the field status strip on, and sources on the internet
