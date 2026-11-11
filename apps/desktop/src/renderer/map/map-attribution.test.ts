@@ -59,3 +59,19 @@ test('credits: every source with something drawn, once — not the first three f
     ['USGS', 'ADS-B Exchange', 'NOAA GFS'],
   );
 });
+
+test('folded, the full credits are still in the page (hidden), for a saved picture to unfold', () => {
+  const g = globalThis as { localStorage?: unknown };
+  const before = g.localStorage;
+  g.localStorage = { getItem: () => '1', setItem: () => {} };
+  try {
+    const html = renderToStaticMarkup(
+      createElement(MapAttribution, { credits: ['Powered by Esri — Source: Esri', 'NASA FIRMS', 'NOAA GFS'] }),
+    );
+    assert.match(html, /wv-map__attribution--collapsed/);
+    assert.match(html, /Sources \(3\)/);
+    assert.match(html, /class="wv-map__attribution-full">Powered by Esri — Source: Esri · NASA FIRMS · NOAA GFS</);
+  } finally {
+    g.localStorage = before;
+  }
+});

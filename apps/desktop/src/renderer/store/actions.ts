@@ -1961,11 +1961,17 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         box && box.width > 0 && box.height > 0
           ? { x: Math.max(0, box.left), y: Math.max(0, box.top), width: box.width, height: box.height }
           : undefined;
+      // The credits go in the picture unfolded, whatever is folded on screen (shell.css).
+      const root = globalThis.document?.documentElement;
+      root?.setAttribute('data-capturing', 'true');
       try {
+        if (root) await new Promise((resolve) => setTimeout(resolve, 60));
         const r = await client.request('view.capture', rect ? { rect } : {});
         if ('path' in r) notify('Picture saved', `${r.width} × ${r.height}: ${r.path}`);
       } catch (err) {
         fail('Picture not saved', err);
+      } finally {
+        root?.removeAttribute('data-capturing');
       }
     },
     async exportVisible(format: 'geojson' | 'json' | 'csv' | 'kml'): Promise<void> {

@@ -38,7 +38,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 - The map's credit line credits every source with something drawn. It stopped at the first three
   sources found among all objects, drawn or not, so a fourth (in the demo: ADS-B, AIS, CelesTrak
-  and the wind field) went uncredited on screen.
+  and the wind field) went uncredited on screen. A saved picture of the map carries every credit, unfolded, even when
+  the credits are folded away on screen.
 - Export visible objects and the ] and [ keys follow the layer switches: with a layer off, its
   objects are no longer exported or stepped to.
 - A CSV export of the objects on the map writes negative latitudes, longitudes and altitudes as

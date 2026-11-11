@@ -90,13 +90,10 @@ export function MapAttribution({ credits }: { credits: readonly string[] }) {
         <Icon name={collapsed ? 'info' : 'chevronDown'} size={12} />
         {collapsed ? <span>Sources ({credits.length})</span> : null}
       </button>
-      {collapsed ? (
-        lead ? (
-          <span className="wv-map__attribution-lead">{lead}</span>
-        ) : null
-      ) : (
-        <span>{credits.join(' · ')}</span>
-      )}
+      {collapsed && lead ? <span className="wv-map__attribution-lead">{lead}</span> : null}
+      {/* Rendered folded too, hidden by CSS: a saved picture of the map unfolds it, so the
+          picture carries every credit whatever the operator folded on screen. */}
+      <span className="wv-map__attribution-full">{credits.join(' · ')}</span>
     </div>
   );
 }

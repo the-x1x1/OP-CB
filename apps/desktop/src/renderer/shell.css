@@ -1127,6 +1127,24 @@
   max-width: none;
 }
 
+.wv-map__attribution--collapsed .wv-map__attribution-full {
+  display: none;
+}
+
+/* While a picture of the map is taken (Save a picture of the map): every credit, unfolded. */
+:root[data-capturing='true'] .wv-map__attribution--collapsed {
+  max-width: 70%;
+}
+
+:root[data-capturing='true'] .wv-map__attribution--collapsed .wv-map__attribution-full {
+  display: inline;
+}
+
+:root[data-capturing='true'] .wv-map__attribution--collapsed .wv-map__attribution-lead,
+:root[data-capturing='true'] .wv-map__attribution-toggle {
+  display: none;
+}
+
 .wv-map__attribution-lead {
   margin-left: 2px;
 }
