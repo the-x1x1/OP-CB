@@ -94,3 +94,16 @@ are US public domain. Each selection was checked against a second read (USGS: th
 byte for byte; NWS: the selection's SHA-256 in the browser and in the repo); Digitraffic's static
 rows matched a second read apart from their timestamps, and its positions, which move by the
 minute, rest on the one read.
+
+## 2026-11-11 (UTC)
+
+GTFS Realtime vehicle feeds, read from the operator's browser with same-origin requests (a
+cross-origin read from the browser is refused by CORS and says nothing about the feed):
+
+| Source                                                              | Answer                                    | Found                                                                                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mbta-gtfs-rt`                                                      | 367 entities, 42,343 bytes                | four vehicles decoded by the app's reader equal MBTA's JSON feed of the same minute field for field; kept as `fixtures/connectors/gtfs-rt/recorded/` |
+| `entur-norway-gtfs-rt`                                              | 384,385 bytes, `application/octet-stream` | a protobuf FeedMessage (starts with the header)                                                                                                      |
+| `metro-transit-msp-gtfs-rt`                                         | 34,928 bytes                              | the same                                                                                                                                             |
+| `ovapi-nl-gtfs-rt`                                                  | 66 entities, 9,008 bytes, no content type | the same; the reader does not rely on the content type                                                                                               |
+| `capmetro-gtfs-rt`, `translink-seq-gtfs-rt`, `hsl-helsinki-gtfs-rt` | not read same-origin                      | unchecked                                                                                                                                            |

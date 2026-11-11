@@ -1,0 +1,13 @@
+{
+  "providerId": "mbta-gtfs-rt",
+  "recordedAt": "2026-11-11T03:29Z",
+  "url": "https://cdn.mbta.com/realtime/VehiclePositions.pb",
+  "status": 200,
+  "bytes": 503,
+  "sha256": "6e6f3093c038c76936062638df13f988c6052e59715ac89bd6c90bf93f641c91",
+  "contentType": "application/x-protobuf",
+  "attribution": "MBTA / MassDOT (text only — no logos)",
+  "license": "MassDOT Developers License Agreement (use, reproduce, redistribute; acknowledge MassDOT)",
+  "selection": "The FeedHeader and the first 4 of 367 entities of the answer (42,343 bytes), cut at entity boundaries and copied byte for byte; nothing re-encoded. The four cover a bus, a subway train with multi-carriage details, an added shuttle with no direction or bearing, and a bus in transit.",
+  "note": "Read through the operator's browser because the build machine cannot reach the feed. The decoded values were compared with MBTA's own VehiclePositions.json read the same minute and matched (positions to float32 precision). Committing it is allowed only because the provider's data policy permits raw retention and redistribution."
+}

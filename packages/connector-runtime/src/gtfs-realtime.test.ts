@@ -88,3 +88,99 @@ test('gtfs-realtime: a feed of no vehicles, and what is not a feed', () => {
   // An entity with no header at all.
   assert.throws(() => decodeGtfsRealtime(whole.subarray(whole.indexOf(0x12))), /no FeedHeader|wire type|past the end/);
 });
+
+test('gtfs-realtime: a recorded MBTA answer decodes to the values of MBTA’s own JSON feed', () => {
+  // recorded/mbta-vehicles.pb: header + the first 4 of 367 entities, read 2026-11-11 03:29 UTC
+  // (meta.json beside it). The expected values were read from
+  // https://cdn.mbta.com/realtime/VehiclePositions.json the same minute.
+  const f = decodeGtfsRealtime(feed('recorded/mbta-vehicles.pb'));
+  assert.deepEqual(f.header, { gtfs_realtime_version: '2.0', incrementality: 'FULL_DATASET', timestamp: 1794367756 });
+  assert.equal(f.entities, 4);
+  const near = (a: unknown, b: number) => typeof a === 'number' && Math.abs(a - b) < 2e-5;
+  const want = [
+    {
+      id: 'y1832',
+      route: '60',
+      trip: '78181228',
+      dir: 0,
+      start: '22:50:00',
+      label: '1832',
+      lat: 42.334991,
+      lon: -71.085104,
+      bearing: 292,
+      stop: '899',
+      seq: 1,
+      status: 'STOPPED_AT',
+      ts: 1794367752,
+      occ: 'MANY_SEATS_AVAILABLE',
+    },
+    {
+      id: 'O-548CA387',
+      route: 'Orange',
+      trip: '79436600',
+      dir: 1,
+      start: '22:03:00',
+      label: '1514',
+      lat: 42.3925,
+      lon: -71.07715,
+      bearing: 355,
+      stop: '70279',
+      seq: 160,
+      status: 'STOPPED_AT',
+      ts: 1794367736,
+    },
+    {
+      id: 'ynk230',
+      route: 'Shuttle-Generic',
+      trip: 'BL-40770992',
+      label: '230',
+      lat: 42.348704,
+      lon: -71.077994,
+      status: 'IN_TRANSIT_TO',
+      ts: 1794367732,
+      rel: 'ADDED',
+    },
+    {
+      id: 'y2023',
+      route: '134',
+      trip: '78265394',
+      dir: 1,
+      start: '22:19:00',
+      label: '2023',
+      lat: 42.429977,
+      lon: -71.129822,
+      bearing: 144,
+      stop: '9146',
+      seq: 23,
+      status: 'IN_TRANSIT_TO',
+      ts: 1794367751,
+      occ: 'MANY_SEATS_AVAILABLE',
+    },
+  ];
+  assert.deepEqual(
+    f.vehicles.map((v) => v.id),
+    want.map((w) => w.id),
+  );
+  f.vehicles.forEach((v, i) => {
+    const w = want[i]!;
+    const vp = v.vehicle;
+    const trip = vp['trip'] as Record<string, unknown>;
+    const pos = vp['position'] as Record<string, unknown>;
+    assert.equal(v.feedTimestamp, 1794367756);
+    assert.equal(trip['route_id'], w.route, w.id);
+    assert.equal(trip['trip_id'], w.trip, w.id);
+    assert.equal(trip['direction_id'], w.dir, w.id);
+    assert.equal(trip['start_time'], w.start, w.id);
+    assert.equal(trip['schedule_relationship'], w.rel ?? 'SCHEDULED', w.id);
+    assert.deepEqual(vp['vehicle'], { id: w.id, label: w.label });
+    assert.ok(near(pos['latitude'], w.lat) && near(pos['longitude'], w.lon), `${w.id} position`);
+    assert.equal(pos['bearing'], w.bearing, w.id);
+    assert.equal(vp['stop_id'], w.stop, w.id);
+    assert.equal(vp['current_stop_sequence'], w.seq, w.id);
+    assert.equal(vp['current_status'], w.status, w.id);
+    assert.equal(vp['timestamp'], w.ts, w.id);
+    assert.equal(vp['occupancy_status'], w.occ, w.id);
+    assert.equal(vp['occupancy_percentage'], w.occ ? 0 : undefined, w.id);
+    assert.equal('multi_carriage_details' in vp, false, `${w.id}: carriages skipped`);
+  });
+});

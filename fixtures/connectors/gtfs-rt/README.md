@@ -3,9 +3,8 @@
 Encoded by Google's protobuf library (Python, `google.protobuf` 7.36) from message types
 declared with the field numbers, types and enums of `gtfs-realtime.proto`
 (github.com/google/transit, commit 2ce6aa79, 2026-11-05) — an encoder independent of the
-reader in `packages/connector-runtime/src/gtfs-realtime.ts`. Nothing here was recorded from a
-live feed: the container cannot reach the transit agencies, and no feed has been read live
-yet. Vehicle ids, plates and trips are made up.
+reader in `packages/connector-runtime/src/gtfs-realtime.ts`. Vehicle ids, plates and trips in
+these three are made up.
 
 - `vehicles.pb`: six entities — `v1` with every vehicle field the reader takes; `v2` with only
   a position; `tu1` a trip update; `v3` deleted; `alert1` an alert; `v4` with carriage details
@@ -14,3 +13,10 @@ yet. Vehicle ids, plates and trips are made up.
 - `trip-updates-only.pb`: a header with no timestamp and one trip update.
 
 The generator is kept beside the test as `generate.py`; run `python3 generate.py .` here.
+
+`recorded/mbta-vehicles.pb` is not made up: the header and the first 4 of 367 entities of
+MBTA's live VehiclePositions feed, read 2026-11-11 03:29 UTC through the operator's browser and
+cut at entity boundaries, byte for byte (`recorded/mbta-vehicles.meta.json` has the source,
+hash, licence and selection). Its values are tested against MBTA's own JSON feed read the same
+minute. MBTA's data policy allows raw retention and redistribution with the credit
+"MBTA / MassDOT" (text only, no logos).

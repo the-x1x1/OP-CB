@@ -70,6 +70,11 @@ congestion and wheelchair access as properties; speed and bearing are its motion
 `fixtures/connectors/gtfs-rt/` holds feeds encoded by Google's protobuf library (Python) from
 the same field numbers and types — an encoder independent of this reader — with the script
 that makes them. `gtfs-realtime.test.ts` decodes them field by field; the MBTA and Entur
-definitions run the shared connector suite through their sidecars (all 14 checks). **No feed
-has been read live yet:** the build container cannot reach the agencies. A live read of each
-before it is turned on is the first check.
+definitions run the shared connector suite through their sidecars (all 14 checks).
+
+`recorded/mbta-vehicles.pb` is a slice of MBTA's live feed (header and four vehicles, byte for
+byte); the test checks every value the mapping reads against MBTA's own JSON feed from the same
+minute. Live reads on 2026-11-11 from the operator's browser (same-origin requests; the build
+container cannot reach the agencies): MBTA 367 entities, Entur 384 KB, Metro Transit 35 KB and
+OVapi 66 entities, all protobuf starting with the header. CapMetro, TransLink and HSL were not
+read same-origin and are unchecked (`docs/providers/LIVE-CHECKS.md`).
