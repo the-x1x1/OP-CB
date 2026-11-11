@@ -114,6 +114,7 @@ Type defaults (`DEFAULT_RETENTION_POLICIES`, overridable per type through
 | weather-alert, storm, weather-station                | 30 d                                     | as row        | —            |
 | camera                                               | never stored (snapshots are not history) | —             | —            |
 | traffic-segment, sensor                              | 7 d                                      | as row        | —            |
+| wind                                                 | 2 d (a step is superseded by the next)   | as row        | —            |
 | launch                                               | 90 d                                     | as row        | —            |
 | infrastructure, airport, port, place                 | indefinite                               | as row        | —            |
 | user data (`providerId` in `USER_DATA_PROVIDER_IDS`) | indefinite, never thinned                | as row        | —            |
