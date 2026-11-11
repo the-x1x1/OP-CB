@@ -681,7 +681,7 @@ export class RuntimeCore {
       flags: () => ({
         history: this.historyOpen,
         collections: true,
-        localAircraft: this.providerHost.list().some((p) => p.running && p.manifest.transport === 'local-process'),
+        localAircraft: hasLocalAircraftSource(this.providerHost.list()),
       }),
     });
     await this.packs.refresh();
@@ -1859,6 +1859,20 @@ export class RuntimeCore {
     // and from search for up to half a minute (2026-10-03), and a removed one lingered.
     await this.providerHost.pollNow('cameras-local').catch(() => undefined);
   }
+}
+
+/**
+ * Whether a running source on this computer or the operator's network brings aircraft (a
+ * readsb, a local ADS-B feed): the offline capability the diagnostics report. Any running
+ * local source used to count, so an enabled ingest or Traccar source read as local aircraft
+ * (ingest phase, O1).
+ */
+export function hasLocalAircraftSource(
+  providers: ReadonlyArray<{ running: boolean; manifest: { transport: string; objectTypes: readonly string[] } }>,
+): boolean {
+  return providers.some(
+    (p) => p.running && p.manifest.transport === 'local-process' && p.manifest.objectTypes.includes('aircraft'),
+  );
 }
 
 export function isLiveMode(mode: string): boolean {
