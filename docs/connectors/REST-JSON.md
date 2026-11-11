@@ -53,6 +53,7 @@ provider host as for any provider.
 | `itemsAs`   | `array` (default) or `entries` — the value at `itemsPath` is an object keyed by id; each value becomes a record with its key as `_key`. |
 | `format`    | `json` (default), `csv` (see [GEOJSON-CSV.md](GEOJSON-CSV.md)), `text` (one record `{ text, url }`).                                    |
 | `contour`   | A gridded field read as areas: see below.                                                                                               |
+| `wind`      | A wind field read as points: see below.                                                                                                 |
 
 A body that is not JSON, has nothing at `itemsPath`, or in which every record is rejected
 by the mapping is reported MALFORMED; the cached copy is invalidated so it is never served
@@ -73,6 +74,25 @@ points (marching squares); up to 2,000,000 points, which must mostly fill the gr
 more than four cells a point). A regional grid across 180° (170° E to 170° W, in either longitude
 form) is read the same way and cut at 180°; a grid with columns missing elsewhere is not. `itemsPath` and `csv` do not apply. Used by
 `swpc-aurora` (connectors/enabled).
+
+### A wind field: `response.wind`
+
+A table of grid points with the wind's eastward and northward components — ERDDAP's griddap
+JSON, `{ "table": { "columnNames": [...], "rows": [[time, latitude, longitude, u, v], …] } }` —
+is read with `{ "u": "ugrd10m", "v": "vgrd10m" }` (and `lat`, `lon`, `time`, `tablePath` if the
+names differ from `latitude`, `longitude`, `time`, `table`). Columns are found by name. Each
+point is a record: `lat`, `lon` (−180…180), `u`, `v` (m/s), `speedMps`, `towardDeg` (where it
+blows to: an arrow's heading), `fromDeg` (where it blows from, as a forecast says "a westerly";
+neither in a calm), `time`, and `source`. A table of no rows is an empty answer. Up to 100,000
+points. Used by `noaa-gfs-wind` (connectors/examples/weather), on the `wind` object type.
+
+### The request time: `{now}`
+
+`{now}` in the URL or a query value is the time of the request, `2026-11-11T03:34:54Z`;
+`{now-90m}` or `{now-3h}` that much earlier. A forecast grid on ERDDAP is asked for its step
+nearest a time — ERDDAP rounds, and does not take `now` itself — so `noaa-gfs-wind` asks for
+`{now-90m}`, whose nearest 3-hourly step is never after now (an observation more than ten
+minutes in the future is refused).
 
 ## `pagination`
 

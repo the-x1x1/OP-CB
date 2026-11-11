@@ -1,0 +1,66 @@
+{
+  "schema": "oneview.connector.v1",
+  "id": "noaa-gfs-wind",
+  "name": "Wind at 10 m (NOAA GFS via ERDDAP)",
+  "description": "The wind 10 m above the ground or sea from NOAA's Global Forecast System, every 10° from 80° N to 80° S, at the forecast step nearest the time asked (3-hourly). Read from NOAA CoastWatch's ERDDAP server, no key. Arrows point where the wind blows to.",
+  "connector": "rest-json",
+  "objectType": "wind",
+  "categories": ["weather"],
+  "endpoint": {
+    "url": "https://coastwatch.pfeg.noaa.gov/erddap/griddap/NCEP_Global_Best.json?ugrd10m[({now-90m})][(80):20:(-80)][(0):20:(359.5)],vgrd10m[({now-90m})][(80):20:(-80)][(0):20:(359.5)]",
+    "intervalSeconds": 3600,
+    "timeoutSeconds": 60
+  },
+  "response": {
+    "wind": {
+      "u": "ugrd10m",
+      "v": "vgrd10m"
+    }
+  },
+  "mapping": {
+    "externalId": {
+      "concat": ["lat", "lon"],
+      "separator": ",",
+      "required": true
+    },
+    "observedAt": {
+      "path": "time",
+      "transform": "isoTimestamp"
+    },
+    "position": {
+      "lat": "lat",
+      "lon": "lon"
+    },
+    "labels": {
+      "name": { "literal": "Wind (GFS)" }
+    },
+    "properties": {
+      "speedMps": "speedMps",
+      "fromDeg": "fromDeg",
+      "towardDeg": "towardDeg",
+      "uMps": "u",
+      "vMps": "v",
+      "validAt": {
+        "path": "time",
+        "transform": "isoTimestamp"
+      },
+      "model": { "literal": "NOAA GFS 0.5°, 10 m" }
+    },
+    "motion": {
+      "headingDegrees": "towardDeg"
+    }
+  },
+  "freshness": {
+    "liveSeconds": 10800,
+    "recentSeconds": 21600,
+    "expireSeconds": 43200
+  },
+  "sourceQuality": "authoritative",
+  "attribution": {
+    "text": "Wind: NOAA NCEP Global Forecast System, via NOAA CoastWatch ERDDAP",
+    "url": "https://www.nco.ncep.noaa.gov/pmb/products/gfs/"
+  },
+  "termsUrl": "https://coastwatch.pfeg.noaa.gov/erddap/info/NCEP_Global_Best/index.html",
+  "review": "user-configured",
+  "enabled": false
+}

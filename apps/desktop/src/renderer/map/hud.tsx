@@ -19,6 +19,7 @@ import { formatDistance } from './measure.js';
 import type { NearbyPlaceResult } from '@opcb/ipc-contract';
 import { compassPoint } from '../context/object-knowledge.js';
 import { useActions } from '../store/store.js';
+import { windAt, windReadout, type WindPoint } from './wind-readout.js';
 
 /**
  * The view as the renderer reports it, at most once an animation frame.
@@ -155,6 +156,8 @@ export interface HudProps {
   /** The timeline's mode and the moment the map shows (paused, replaying or in history). */
   timeMode?: 'LIVE' | 'PAUSED' | 'REPLAY' | 'HISTORICAL';
   shownAtMs?: number;
+  /** The wind layer's grid points while it is shown: the WND row reads the wind at the middle. */
+  wind?: readonly WindPoint[];
 }
 
 /**
@@ -176,7 +179,8 @@ export function hudClock(
  * Heads-up display over the map (Settings → Rendering → HUD, or H): the ground at the middle of
  * the view in decimal degrees and degrees-minutes-seconds — and as an MGRS or UTM reference
  * when one is chosen — the ground under the pointer (CUR, in that reference if chosen), the
- * range and bearing to it from the selection (RNG), the camera's altitude (3D) or
+ * range and bearing to it from the selection (RNG), the wind at the middle while the wind layer
+ * is shown (WND, from where it blows), the camera's altitude (3D) or
  * zoom (2D), heading and pitch, the UTC clock, the visual style, and a small reticle on the
  * point the coordinates are for.
  *
@@ -186,7 +190,18 @@ export function hudClock(
  * hidden from assistive technology: a readout that changes on every frame of camera motion
  * would be read out without end.
  */
-export function Hud({ host, mode, visualStyle, orbit, following, selection, grid, timeMode, shownAtMs }: HudProps) {
+export function Hud({
+  host,
+  mode,
+  visualStyle,
+  orbit,
+  following,
+  selection,
+  grid,
+  timeMode,
+  shownAtMs,
+  wind,
+}: HudProps) {
   const view = useHostView(host);
   const cursor = useHostPointer(host);
   const range = rangeReadout(selection, cursor);
@@ -195,6 +210,7 @@ export function Hud({ host, mode, visualStyle, orbit, following, selection, grid
   const at = view?.focus ?? view?.center;
   const nearEnabled = !!view && (mode === '3D' ? view.altitudeM <= NEAR_MAX_ALTITUDE_M : view.zoom >= NEAR_MIN_ZOOM);
   const near = nearReadout(useNearestTown(at, nearEnabled));
+  const wnd = wind?.length ? windReadout(windAt(wind, at)) : undefined;
   return (
     <div className="wv-hud" data-style={visualStyle} aria-hidden="true">
       <div className="wv-hud__reticle" />
@@ -223,6 +239,12 @@ export function Hud({ host, mode, visualStyle, orbit, following, selection, grid
           <>
             <dt>NEAR</dt>
             <dd>{near}</dd>
+          </>
+        ) : null}
+        {wnd ? (
+          <>
+            <dt>WND</dt>
+            <dd>{wnd}</dd>
           </>
         ) : null}
         <dt>CUR</dt>

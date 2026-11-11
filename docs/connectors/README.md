@@ -105,6 +105,14 @@ global grid — read with `response.contour` ([REST-JSON.md](REST-JSON.md)) as t
 default because the 10% oval lies across Alaska, Canada, Scandinavia and the Southern Ocean at
 any hour. Fixture `fixtures/connectors/space/swpc-ovation-aurora.json`, recorded 2026-10-16.
 
+**GFS wind** (`noaa-gfs-wind`, Weather lens, an example: off until the operator has read its
+licence line): NOAA's Global Forecast System wind 10 m up, every 10° from 80° N to 80° S, at the
+3-hourly step at or before now, from NOAA CoastWatch's ERDDAP server (no key) — read with
+`response.wind` ([REST-JSON.md](REST-JSON.md)) as one `wind` object a point, drawn as arrows
+pointing where the wind blows, coloured by Beaufort band; the HUD's WND row reads it at the middle
+of the view. Polled hourly, 612 points (about 44 KB). Fixture
+`fixtures/connectors/wind/gfs-wind-10deg.json`, read live 2026-11-11.
+
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the
 integrator in the commit that ships it.

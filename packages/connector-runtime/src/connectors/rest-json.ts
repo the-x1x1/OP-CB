@@ -24,6 +24,7 @@ import { createPaginator, type PageRequest, type Paginator } from '../pagination
 import { decodeGtfsRealtime, GtfsRealtimeError } from '../gtfs-realtime.js';
 import { parseCsv } from '../csv.js';
 import { contourRecords } from '../contours.js';
+import { windRecords } from '../wind.js';
 import { DEFAULT_MAX_BYTES } from '../shared/limits.js';
 import { addUnseen, rejectedMessage, responseOrigin, warnRejected } from '../shared/mapping.js';
 
@@ -87,8 +88,11 @@ export class RestJsonProvider extends PollingProvider {
   ): ProviderHttpRequest {
     const e = this.definition.endpoint!;
     const view = viewValues(bounds, center, this.definition.boundsMaxRadiusKm);
-    const url = new URL(page.url ?? substitute(e.url, view));
-    for (const [k, v] of Object.entries(e.query ?? {})) url.searchParams.set(k, substitute(String(v), view));
+    // Only a definition that asks for the time reads the clock.
+    const nowMs = JSON.stringify(e).includes('{now') ? this.context.clock.now() : 0;
+    const url = new URL(page.url ?? substituteNow(substitute(e.url, view), nowMs));
+    for (const [k, v] of Object.entries(e.query ?? {}))
+      url.searchParams.set(k, substituteNow(substitute(String(v), view), nowMs));
     for (const [k, v] of Object.entries(page.query)) url.searchParams.set(k, v);
     const req: ProviderHttpRequest = {
       url: restorePathPlaceholder(url, e.credential),
@@ -222,6 +226,12 @@ export class RestJsonProvider extends PollingProvider {
     } catch {
       return { malformed: 'response is not valid JSON' };
     }
+    const wind = this.definition.response?.wind;
+    if (wind) {
+      const read = windRecords(body, wind);
+      if ('malformed' in read) return { malformed: read.malformed };
+      return { records: read.records, body };
+    }
     const contour = this.definition.response?.contour;
     if (contour) {
       const read = contourRecords(body, contour);
@@ -313,6 +323,21 @@ export function substitute(text: string, view: Readonly<Record<ViewKey, string>>
   return out;
 }
 
+const NOW_PLACEHOLDER = /\{now(?:-(\d{1,4})([mh]))?\}/g;
+
+/**
+ * `{now}`, `{now-90m}`, `{now-3h}` → the request time (less the offset) as ISO 8601 to the
+ * second, UTC. A forecast grid is asked for its step nearest a time (NOAA ERDDAP rounds a
+ * griddap time to the nearest step; it does not take `now`, read 2026-11-11).
+ */
+export function substituteNow(text: string, nowMs: number): string {
+  if (!text.includes('{now')) return text;
+  return text.replace(NOW_PLACEHOLDER, (_m, n: string | undefined, unit: string | undefined) => {
+    const back = n ? Number(n) * (unit === 'h' ? 3_600_000 : 60_000) : 0;
+    return new Date(nowMs - back).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  });
+}
+
 export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -332,6 +357,12 @@ export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValid
   if (d.boundsMaxRadiusKm !== undefined && !has(RADIUS_KEYS))
     warnings.push('boundsMaxRadiusKm is set but no {radiusKm}/{radiusNm}/{radiusM} placeholder uses it');
   if (d.pagination?.strategy === 'next-link' && !d.endpoint) errors.push('next-link pagination needs an endpoint');
+  const wind = d.response?.wind;
+  if (wind) {
+    if ((d.response?.format ?? 'json') !== 'json') errors.push('response.wind reads a JSON table: format must be json');
+    if (d.response?.contour) errors.push('response.wind and response.contour cannot both be set');
+    if (d.response?.itemsPath) warnings.push('response.itemsPath is ignored with response.wind');
+  }
   const contour = d.response?.contour;
   if (contour) {
     if ((d.response?.format ?? 'json') !== 'json')

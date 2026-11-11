@@ -142,6 +142,7 @@ export const TYPE_VOCABULARY: readonly TypeVocabulary[] = Object.freeze([
     label: 'Imagery scenes',
     phrases: ['imagery', 'imagery scenes', 'imagery scene', 'scenes', 'scene', 'satellite images', 'satellite imagery'],
   },
+  { type: ObjectTypes.Wind, label: 'Wind', phrases: ['wind', 'winds', 'wind arrows', 'wind map'] },
   { type: ObjectTypes.Place, label: 'Places', phrases: ['places', 'place', 'towns', 'cities'] },
 ]);
 

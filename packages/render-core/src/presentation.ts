@@ -307,6 +307,29 @@ export const DEFAULT_RULES: RenderingRule[] = [
     markerPx: 6,
   },
   {
+    // A wind grid (ADR-002 amendment 2026-11-11): an arrow at every point at every zoom,
+    // pointing where the wind blows to (motion.headingDegrees), longer and warmer the
+    // stronger it is — bands by the Beaufort scale's edges in m/s.
+    objectTypes: ['wind'],
+    lod: { global: 'icons', continental: 'icons', regional: 'icons', local: 'icons' },
+    styleClass: 'wind',
+    icon: 'wind',
+    basePriority: 5,
+    clusterPx: 0,
+    sizeBy: { property: 'speedMps', min: 0, max: 25, scale: [9, 22] },
+    colorBy: {
+      property: 'speedMps',
+      bands: [
+        { upTo: 1.5, suffix: 'calm' },
+        { upTo: 5.5, suffix: 'light' },
+        { upTo: 10.7, suffix: 'moderate' },
+        { upTo: 17.1, suffix: 'strong' },
+        { upTo: 24.4, suffix: 'gale' },
+        { upTo: Number.POSITIVE_INFINITY, suffix: 'storm' },
+      ],
+    },
+  },
+  {
     objectTypes: ['camera'],
     lod: { global: 'points', continental: 'points', regional: 'points', local: 'icons' },
     styleClass: 'camera',

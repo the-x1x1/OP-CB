@@ -7,11 +7,17 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
+  from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
+  and warmer the stronger it is, in the Weather lens; with it on, the HUD's WND row gives the
+  wind at the middle of the view. The definition is in `connectors/examples/weather/`, off
+  until its licence wording is confirmed.
 - **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
   vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
   occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
   CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
-  off until each licence is confirmed and each feed has been read live.
+  off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
+  been read live; four MBTA vehicles are kept as a recorded test.
 - **A Traccar server on your own computer or network can push positions live**, as a public
   one could: a local definition may have a `websocket` whose URL is
   `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the

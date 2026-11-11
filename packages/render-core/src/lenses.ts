@@ -97,7 +97,8 @@ export const BUILT_IN_LENSES: LensDefinition[] = [
   {
     id: 'weather',
     name: 'Weather',
-    objectTypes: ['weather-alert', 'storm', 'weather-station'],
+    // Wind only here: a global grid of arrows would bury everything else in Overview.
+    objectTypes: ['weather-alert', 'storm', 'weather-station', 'wind'],
     eventTypes: ['weather-alert', 'storm'],
     renderingRules: [],
     visiblePanels: ['selection', 'sources', 'feed', 'timeline'],

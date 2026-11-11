@@ -756,3 +756,32 @@ test("an aircraft's emergency is drawn where the aircraft is now, while it goes 
   )!;
   assert.deepEqual(alone.geometry, { kind: 'point', position: { latitude: 21.2, longitude: -157.2 } });
 });
+
+test('wind: an arrow at every zoom, pointing where it blows, coloured by its strength', () => {
+  const view = {
+    center: { latitude: 0, longitude: 0 },
+    zoom: 1,
+    altitudeM: 20_000_000,
+    headingDegrees: 0,
+    pitchDegrees: -90,
+  };
+  const objects = [
+    obj('w1', 'wind', 10, 20, { speedMps: 0.8, headingDegrees: 0 }),
+    obj('w2', 'wind', 10, 30, { speedMps: 9, headingDegrees: 190.8 }),
+    obj('w3', 'wind', 10, 40, { speedMps: 30, headingDegrees: 90 }),
+  ];
+  const r = presentObjects({ objects, view: view as never });
+  const by = new Map(r.upsert.map((f) => [f.objectId, f]));
+  assert.equal(by.get('w2')!.style.icon, 'wind', 'an arrow even at global zoom');
+  assert.equal(by.get('w2')!.style.rotationDegrees, 190.8);
+  assert.deepEqual(
+    ['w1', 'w2', 'w3'].map((id) => by.get(id)!.style.styleClass),
+    ['wind.calm', 'wind.moderate', 'wind.storm'],
+  );
+  assert.ok(by.get('w3')!.style.size! > by.get('w1')!.style.size!, 'longer the stronger');
+  assert.equal(by.get('w2')!.motion, undefined, 'the grid does not drift');
+  const weather = BUILT_IN_LENSES.find((l) => l.id === 'weather')!;
+  const overview = BUILT_IN_LENSES.find((l) => l.id === 'overview')!;
+  assert.ok(weather.objectTypes.includes('wind'));
+  assert.ok(!overview.objectTypes.includes('wind'), 'not in Overview: a global grid would bury the rest');
+});

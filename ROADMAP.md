@@ -418,14 +418,17 @@ each to be built on `feature/roadmap-3`:
       strictly in the main process, Copy a link to this view in the palette, a link pasted into
       search opens too (ADR-004 amendment 2026-10-20; docs/OPERATOR-GUIDE.md "Links to a view").
 - [ ] **Wind on the globe:** a source that needs no key and no licence condition. NOAA's ERDDAP
-      serves NCEP's GFS 10 m wind (`NCEP_Global_Best`, 0.5°, U.S. public domain) as JSON, so no
-      GRIB2 decoder (God's Eye View's way) is needed; Open-Meteo's free tier is non-commercial,
-      so not that. **Waiting on one thing:** a saved answer from
-      `coastwatch.pfeg.noaa.gov/erddap/griddap/NCEP_Global_Best.json?ugrd10m[(last)][(-90):10:(90)][(0):10:(359.5)],vgrd10m[…]`
-      (the container cannot reach either ERDDAP host, 2026-10-20) to read the row shape from — the
-      source is not built against a guessed shape. Then: a `wind` field read by the connector
-      runtime (u, v on a grid, like `response.contour`'s points), drawn as particles on the globe
-      and arrows on the 2D map, and the reading at the centre in the HUD.
+      serves NCEP's GFS 10 m wind (`NCEP_Global_Best`, 0.5°) as JSON, so no GRIB2 decoder (God's
+      Eye View's way) is needed; Open-Meteo's free tier is non-commercial, so not that. **Built
+      (2026-11-11, on feature/after-0.7.4):** the answer was read live (docs/providers/LIVE-CHECKS.md)
+      and the source built against it — `response.wind` in the connector runtime (u, v on a grid,
+      ADR-013 amendment), a `wind` object type (ADR-002 amendment), arrows on the globe and the 2D
+      map in the Weather lens, and the wind at the middle of the view as the HUD's WND row; the
+      definition `connectors/examples/weather/noaa-gfs-wind.json` asks for the step at or before
+      now. **Left:** (1) the operator's reading of the ERDDAP copy's licence line ("may be used and
+      redistributed for free", no warranty) — then a licence record and the definition moved to
+      `connectors/enabled/`; (2) particles on the globe, which want a field overlay in the render
+      contract (ADR-008) and a look on the operator's GPU.
 - [x] **Street-level imagery** as God's Eye View has it, without its keyed ones: Panoramax
       (open API, each picture's own CC BY-SA 4.0 or Etalab 2.0 licence and author shown; on
       feature/roadmap-3, Street view in What's here); live only, never cached into packs

@@ -31,6 +31,11 @@ export interface CredentialRef {
 }
 
 export interface EndpointSpec {
+  /**
+   * `{now}` in the URL or a query value is the request's time, `2026-11-11T03:34:54Z`; `{now-90m}`
+   * or `{now-3h}` that much earlier (minutes or hours, up to 9999). For a source that is asked
+   * for a time, such as a forecast grid's nearest step (connector-runtime `rest-json.ts`).
+   */
   url: string;
   method?: 'GET' | 'POST';
   headers?: Record<string, string>;
@@ -128,6 +133,26 @@ export interface ResponseSpec {
    * apply.
    */
   contour?: ContourSpec;
+  /**
+   * A gridded wind field (ADR-013 amendment 2026-11-11): the body is a table of grid points
+   * with the wind's u and v components (ERDDAP griddap JSON), and each record is one point —
+   * `lat`, `lon` (−180…180), `u`, `v`, `speedMps`, `towardDeg`, `fromDeg`, `time` and the
+   * body's top-level values under `source` (connector-runtime `wind.ts`). `itemsPath`, `csv`
+   * and `contour` do not apply.
+   */
+  wind?: WindSpec;
+}
+
+export interface WindSpec {
+  /** Path to the table, an object with `columnNames` and `rows`; default `table`. */
+  tablePath?: string;
+  /** Column names of the eastward and northward components, in m/s. */
+  u: string;
+  v: string;
+  /** Column names of latitude, longitude and time; default `latitude`, `longitude`, `time`. */
+  lat?: string;
+  lon?: string;
+  time?: string;
 }
 
 export interface ContourSpec {
@@ -428,6 +453,16 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
             lat: s.optional(s.string({ min: 1, max: 256 })),
             value: s.optional(s.string({ min: 1, max: 256 })),
             levels: s.array(s.number({ min: -1e9, max: 1e9 }), { min: 1, max: 8 }),
+          }),
+        ),
+        wind: s.optional(
+          s.object({
+            tablePath: s.optional(s.string({ min: 1, max: 256 })),
+            u: s.string({ min: 1, max: 64 }),
+            v: s.string({ min: 1, max: 64 }),
+            lat: s.optional(s.string({ min: 1, max: 64 })),
+            lon: s.optional(s.string({ min: 1, max: 64 })),
+            time: s.optional(s.string({ min: 1, max: 64 })),
           }),
         ),
       }),

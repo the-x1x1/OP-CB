@@ -77,6 +77,8 @@ export const ObjectTypes = {
   Sensor: 'sensor',
   /** One capture by a satellite or aircraft: its footprint, time and collection (STAC items). */
   ImageryScene: 'imagery-scene',
+  /** The wind at one point of a forecast or analysis grid: speed and direction (ADR-002, 2026-11-11). */
+  Wind: 'wind',
 } as const;
 export type ObjectType = (typeof ObjectTypes)[keyof typeof ObjectTypes];
 

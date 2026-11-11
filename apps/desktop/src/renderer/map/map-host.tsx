@@ -57,6 +57,7 @@ import { attributeLongTask, markDelta, takeDecodeMax, takeRenderMax, takeRenderP
 import { observeLongFrames } from './long-frames.js';
 import { SNAPSHOT_PAGE_SIZE, nextSubscriptionBounds, pinnedSelection } from './subscription-bounds.js';
 import { withSelection } from './selection-objects.js';
+import { windPoints } from './wind-readout.js';
 import { OVERVIEW_LENS_ID, lensFilter } from '../overview-layers.js';
 import { CAMERA_PREVIEWS_LAYER_ID, layerOn, objectFilter } from '../layer-tree.js';
 import { CameraPreviews } from './camera-previews.js';
@@ -978,6 +979,12 @@ export function MapHost() {
 
   // Where the selection is: the centre of range rings and where the HUD's RNG row measures from.
   const selectionAt = selectionPosition(world);
+  // The wind layer's points while it is shown, for the HUD's WND row (wind-readout.ts).
+  const windShown = !visibleTypes || visibleTypes.has('wind');
+  const hudWind = useMemo(
+    () => (display.hud && windShown ? windPoints(world.objects.values()) : undefined),
+    [display.hud, windShown, world.objects],
+  );
   const activeCollection = collections.collections.find((c) => c.id === collections.activeId);
   const ringsCenter = ui.rangeRings ? selectionAt : undefined;
   const ringsSpacing = ui.rangeRings ? ringSpacingM(world.view) : undefined;
@@ -1250,6 +1257,7 @@ export function MapHost() {
           {...(display.hudGrid && display.hudGrid !== 'none' ? { grid: display.hudGrid } : {})}
           timeMode={timeline.control.mode}
           shownAtMs={timeline.control.cursorMs}
+          {...(hudWind?.length ? { wind: hudWind } : {})}
         />
       ) : null}
       <div className="wv-map__controls" role="group" aria-label="Map controls">

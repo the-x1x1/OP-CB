@@ -107,3 +107,14 @@ cross-origin read from the browser is refused by CORS and says nothing about the
 | `metro-transit-msp-gtfs-rt`                                         | 34,928 bytes                              | the same                                                                                                                                             |
 | `ovapi-nl-gtfs-rt`                                                  | 66 entities, 9,008 bytes, no content type | the same; the reader does not rely on the content type                                                                                               |
 | `capmetro-gtfs-rt`, `translink-seq-gtfs-rt`, `hsl-helsinki-gtfs-rt` | not read same-origin                      | unchecked                                                                                                                                            |
+
+NOAA's GFS 10 m wind on CoastWatch ERDDAP (`NCEP_Global_Best`), read the same way: the dataset
+is a 3-hourly, 0.5° forecast running eight days ahead (time `(last)` is the end of the forecast,
+not now), latitude is stored north to south, longitude 0 to 359.5, and the answer's columns are
+`time, latitude, longitude, ugrd10m, vgrd10m` in m/s. Its licence reads that the data may be
+used and redistributed for free. A coarse grid (20° by 40°, 90 points) for 2026-11-11 03:00 UTC
+is kept as `fixtures/connectors/wind/gfs-wind-10deg.json` (rows as served; the envelope written
+in ERDDAP's layout; the time moved to 2026-09-23T18:00Z for the suite's clock). `now` in a time
+constraint is refused (400: "Start=NaN"); a time between steps is answered with the nearest step
+(03:34 → 03:00, 04:40 → 06:00); a time past the forecast is 404. Brackets and parentheses may go
+unescaped.
