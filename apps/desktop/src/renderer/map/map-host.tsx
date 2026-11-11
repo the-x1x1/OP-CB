@@ -43,7 +43,7 @@ import {
 import { Button, EmptyState, Icon, formatObjectType } from '@opcb/ui';
 import { useActions, useAppState, useClient, useDispatch, useHosts } from '../store/store.js';
 import { drawnWhileComparing, visibleOverlays } from '../weather-imagery.js';
-import { MapAttribution } from './map-attribution.js';
+import { MapAttribution, sourceCredits } from './map-attribution.js';
 import { ViewBar } from './view-bar.js';
 import { basemapForMode, overlaysToDraw, resolveMapProvider, sourceBasemapFor, terrainFor } from '../map-providers.js';
 import { BasemapNotice } from './basemap-notice.js';
@@ -1112,14 +1112,11 @@ export function MapHost() {
 
   // ---- on-screen attribution: sources of what is visible + basemap ----
   const attribution = useMemo(() => {
-    const seen = new Set<string>();
-    for (const o of world.objects.values()) {
-      const text =
-        o.provenance.attribution ??
-        sources.entries.find((s) => s.providerId === o.provenance.providerId)?.meta.attribution;
-      if (text) seen.add(text);
-      if (seen.size >= 3) break;
-    }
+    const seen = sourceCredits(
+      world.objects.values(),
+      new Map(sources.entries.map((e) => [e.providerId, e.meta.attribution])),
+      { ...(visibleTypes ? { visibleTypes } : {}), ...(keepObject ? { keep: keepObject } : {}) },
+    );
     // The basemap actually drawn, not the one configured: 2D on a fresh install is configured
     // for Natural Earth II, which only the globe can show, and credited it over an empty map.
     const credit = basemapEntry?.attribution;
@@ -1131,7 +1128,16 @@ export function MapHost() {
     // they were credited nowhere on screen.
     const models = activeMode === '3D' ? modelCreditLines(modelKinds) : [];
     return [...(credit ? [credit] : []), ...overlayCredits, ...seen, ...models];
-  }, [world.objects, sources.entries, shownOverlays, basemapEntry?.attribution, activeMode, modelKinds]);
+  }, [
+    world.objects,
+    sources.entries,
+    shownOverlays,
+    basemapEntry?.attribution,
+    activeMode,
+    modelKinds,
+    visibleTypes,
+    keepObject,
+  ]);
 
   // The HUD's readout sits above the foot of the map (credits and view bar), however many rows
   // they wrap to: at a fixed offset the view bar covered its second and third lines (2026-10-03).
