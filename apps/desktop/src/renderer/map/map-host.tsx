@@ -1000,11 +1000,13 @@ export function MapHost() {
             onSelection: !!selectionAt,
             excludeId: world.selectedId,
             ...(visibleTypes ? { visibleTypes } : {}),
+            // The switches that act on single objects too (Aircraft → Military only), as the map.
+            ...(keepObject ? { keep: keepObject } : {}),
           })
         : undefined,
     // sonarCenter by its key: a new object each render with the same place.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sonarOn, sonarKey, sonarSpacing, world.objects, world.selectedId, visibleTypes, !!selectionAt],
+    [sonarOn, sonarKey, sonarSpacing, world.objects, world.selectedId, visibleTypes, keepObject, !!selectionAt],
   );
   const activeCollection = collections.collections.find((c) => c.id === collections.activeId);
   const ringsCenter = ui.rangeRings ? selectionAt : undefined;

@@ -59,11 +59,18 @@ export function rangeBearing(a: GeoPosition, b: GeoPosition): { distanceM: numbe
  * The scope's picture: the contacts within `spacingM × RANGE_RING_COUNT` of `center`, nearest
  * first, at most `max`. Undefined without a centre or a spacing.
  */
-export function sonarPicture(
-  objects: Iterable<ObjectLike>,
+export function sonarPicture<T extends ObjectLike>(
+  objects: Iterable<T>,
   center: GeoPosition | undefined,
   spacingM: number | undefined,
-  options: { onSelection?: boolean; excludeId?: string | null; visibleTypes?: ReadonlySet<string>; max?: number } = {},
+  options: {
+    onSelection?: boolean;
+    excludeId?: string | null;
+    visibleTypes?: ReadonlySet<string>;
+    /** A per-object filter the map applies too (layer-tree `objectFilter`). */
+    keep?: (o: T) => boolean;
+    max?: number;
+  } = {},
 ): SonarPicture | undefined {
   if (!center || !spacingM || !(spacingM > 0)) return undefined;
   const rangeM = spacingM * RANGE_RING_COUNT;
@@ -75,6 +82,7 @@ export function sonarPicture(
   for (const o of objects) {
     if (!o.position || o.id === options.excludeId || NOT_CONTACTS.has(o.type)) continue;
     if (options.visibleTypes && !options.visibleTypes.has(o.type)) continue;
+    if (options.keep && !options.keep(o)) continue;
     if (Math.abs(o.position.latitude - center.latitude) > dLat) continue;
     const lonGap = Math.abs(((((o.position.longitude - center.longitude + 540) % 360) + 360) % 360) - 180);
     if (lonGap > dLon) continue;

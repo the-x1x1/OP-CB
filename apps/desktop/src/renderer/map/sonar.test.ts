@@ -54,6 +54,10 @@ test('the scope keeps the nearest few, and needs a centre and a spacing', () => 
   assert.equal(p.contacts.length, SONAR_MAX_CONTACTS);
   assert.equal(p.contacts[0]!.id, 'v0');
   assert.equal(sonarPicture(many, undefined, 50_000), undefined);
+  const odd = sonarPicture(many, { latitude: 0, longitude: 0 }, 50_000, {
+    keep: (x) => Number(x.id.slice(1)) % 2 === 1,
+  })!;
+  assert.equal(odd.contacts[0]!.id, 'v1', 'what the map leaves out by object, the scope leaves out');
   assert.equal(sonarPicture(many, { latitude: 0, longitude: 0 }, undefined), undefined);
   // Near a pole the longitude box opens up rather than missing contacts.
   const polar = sonarPicture([o('a', 89.5, 120)], { latitude: 89.5, longitude: -60 }, 50_000)!;
