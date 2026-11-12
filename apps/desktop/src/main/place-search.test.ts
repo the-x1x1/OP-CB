@@ -234,3 +234,63 @@ test('place search: Settings can put Photon first, and the two are cached apart'
   assert.equal((await search.search({ text: 'eiffel' })).service, 'nominatim');
   assert.deepEqual(calls, ['photon.komoot.io', 'nominatim.openstreetmap.org']);
 });
+
+test('place search: a place across 180° (boxed −180…180 by both services) is shown by its point, not framed round the world', () => {
+  // The shapes Nominatim and Photon answered for "Fiji" (read 2026-11-11).
+  const [n] = parseNominatim(
+    [
+      {
+        osm_type: 'relation',
+        osm_id: 571747,
+        lat: '-18.1239696',
+        lon: '179.0122737',
+        addresstype: 'country',
+        name: 'Fiji',
+        display_name: 'Fiji',
+        boundingbox: ['-21.9434274', '-12.2613866', '-180.0000000', '180.0000000'],
+      },
+    ],
+    5,
+  );
+  const [p] = parsePhoton(
+    {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {
+            osm_type: 'R',
+            osm_id: 571747,
+            type: 'country',
+            name: 'Fiji',
+            extent: [-180, -12.2613866, 180, -21.9434274],
+          },
+          geometry: { type: 'Point', coordinates: [179.0122737, -18.1239696] },
+        },
+      ],
+    },
+    5,
+  );
+  for (const r of [n!, p!]) {
+    assert.equal(r.bounds, undefined, 'no strip round the world');
+    assert.equal(r.zoom, 4);
+    assert.deepEqual(r.position, { latitude: -18.1239696, longitude: 179.0122737 });
+  }
+  // A continent that really is that wide keeps its box.
+  const [a] = parseNominatim(
+    [
+      {
+        osm_type: 'relation',
+        osm_id: 1,
+        lat: '-79.4',
+        lon: '0',
+        addresstype: 'continent',
+        name: 'Antarctica',
+        display_name: 'Antarctica',
+        boundingbox: ['-90', '-60', '-180', '180'],
+      },
+    ],
+    5,
+  );
+  assert.deepEqual(a!.bounds, { west: -180, south: -90, east: 180, north: -60 });
+});

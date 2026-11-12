@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Searching for a place that crosses 180° (Fiji, Russia, Kiribati) goes to the place instead of
+  framing a strip round the whole world: both geocoders box such places from −180 to 180.
 - Place search from a view across 180° (Fiji, the Aleutians) favours places there, not ones
   near longitude 0 off West Africa.
 - A weather alert or other area drawn across 180° now reaches the watch zones inside it; before,
