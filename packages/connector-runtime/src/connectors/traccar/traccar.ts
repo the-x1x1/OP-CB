@@ -482,10 +482,14 @@ export class TraccarProvider extends PollingProvider {
     const current = () => session.generation === generation && !session.closed;
     // The host reports one failure as an error and then a close: the socket is dropped once.
     let dropped = false;
+    let opened = false;
     const drop = (error: ProviderError) => {
       if (!current() || dropped) return;
       dropped = true;
-      this.onDrop(session, error);
+      // A socket that never opened may have been refused for its token: the host cannot say
+      // (a WebSocket hides the upgrade's status), so the REST API is asked with the same token.
+      if (!opened) void this.dropUnopened(session, error, current);
+      else this.onDrop(session, error);
     };
     if (session.closed) return;
     let handle: ProviderSocketHandle;
@@ -495,6 +499,7 @@ export class TraccarProvider extends PollingProvider {
         {
           onOpen: () => {
             if (!current()) return;
+            opened = true;
             this.socketConnected = true;
             this.socketError = undefined;
             this.socketLastSuccess = this.nowIso();
@@ -605,6 +610,42 @@ export class TraccarProvider extends PollingProvider {
     session.emit(batch, { snapshot: false });
   }
 
+  /**
+   * Phase request 4 (2026-11-11): a socket refused at the upgrade (HTTP 401/403) reached this
+   * provider as an error and a close, like a dropped one, so it was redialled for ever and shown
+   * DEGRADED. When a socket closes without having opened and the socket and the REST API carry
+   * the same token, one REST request settles it: refused there too (AUTH), the socket stops and
+   * the source says AUTH_REQUIRED; otherwise it is a drop like any other and is redialled.
+   */
+  private async dropUnopened(session: Session, error: ProviderError, current: () => boolean): Promise<void> {
+    const ws = this.definition.websocket!;
+    const socketRef = ws.credential ? this.definition.credentials?.[ws.credential.name]?.secretRef : undefined;
+    const restRef =
+      this.definition.credentials?.[this.definition.endpoint?.credential?.name ?? TRACCAR_LOCAL_CREDENTIAL]?.secretRef;
+    if (socketRef && socketRef === restRef) {
+      try {
+        const req = this.buildRequest(this.restBase(), '/api/devices');
+        await this.context.http.request({ ...req, cacheKey: `${req.url}#socket-auth`, timeoutMs: 15_000 });
+      } catch (err) {
+        if (current() && err instanceof ProviderError && err.code === 'AUTH') {
+          const refused = new ProviderError(
+            'AUTH',
+            'the Traccar server refused the token: the live socket did not open and /api/devices was refused too',
+            { retryable: false },
+          );
+          this.socketConnected = false;
+          session.handle = undefined;
+          this.noteSocketError(refused);
+          this.context.logger.warn('traccar socket refused', { message: refused.message });
+          session.emit([], { snapshot: false });
+          this.closeSession(session);
+          return;
+        }
+      }
+    }
+    if (current()) this.onDrop(session, error);
+  }
+
   private onDrop(session: Session, error: ProviderError): void {
     if (session.closed) return;
     session.handle = undefined;
@@ -655,7 +696,12 @@ export class TraccarProvider extends PollingProvider {
   override async health(): Promise<ProviderHealth> {
     const h = await super.health();
     let lead: string | undefined;
-    if (this.subscribe && this.session && h.status !== 'DISABLED' && h.status !== 'AUTH_REQUIRED') {
+    // The socket refused for its token (dropUnopened): the session is closed, nothing redials.
+    if (this.subscribe && !this.socketConnected && this.socketError?.code === 'AUTH' && h.status !== 'DISABLED') {
+      h.status = 'AUTH_REQUIRED';
+      lead = this.socketError.message;
+      if (this.socketErrorAt) h.lastError = this.socketError.toInfo(this.socketErrorAt);
+    } else if (this.subscribe && this.session && h.status !== 'DISABLED' && h.status !== 'AUTH_REQUIRED') {
       if (this.socketConnected) {
         // Connected is LIVE; until a device list is read, the message says what is held back.
         if (!this.directory.listRead)

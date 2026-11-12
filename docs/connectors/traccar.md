@@ -102,9 +102,12 @@ and the REST poll carries on — or use a definition without a `websocket`, like
 `traccar-demo-rest.json`, and a shorter `intervalSeconds`.
 
 A 401 or 403 on a REST call is AUTH_REQUIRED. Without the credential, the socket is not
-opened at all. A socket that refuses the token is not reported as AUTH_REQUIRED: the host
-sees only the connection close, so the source shows DEGRADED (the poll works) or OFFLINE,
-and the socket is dialled again with back-off, up to once a minute.
+opened at all. A socket refused for its token reaches the source only as a close (a
+WebSocket hides the upgrade's status), so when a socket closes without having opened and the
+socket and the REST API carry the same token, the source asks `/api/devices` once: refused
+there too, it stops dialling and shows AUTH_REQUIRED ("the Traccar server refused the token");
+answered, the close was something else and the socket is dialled again with back-off, up to
+once a minute.
 
 ## What a record holds
 
@@ -165,7 +168,8 @@ rest is the operator's responsibility.
 
 - LIVE after a good poll, or while the socket is connected (until the first device list
   is read, the message says positions of devices not yet described are held).
-- DEGRADED when the socket dropped (or was refused) but the poll works: "live socket
+- AUTH_REQUIRED when the socket was refused for its token (above): it is not redialled.
+- DEGRADED when the socket dropped (or would not open) but the poll works: "live socket
   unavailable (…); positions from the poll every N s". The socket is reopened with
   back-off from 2 s to a minute.
 - OFFLINE / ERROR / AUTH_REQUIRED / RATE_LIMITED as the host classifies failures.

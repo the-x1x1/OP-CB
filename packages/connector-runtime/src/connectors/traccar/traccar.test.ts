@@ -513,7 +513,53 @@ test('socket: one failure reported as an error and a close drops the socket once
   await new Promise((r) => setImmediate(r));
   sockets.opened[1]!.handle.simulateError(new Error('refused'));
   sockets.opened[1]!.handle.simulateClose(1006, '');
+  // It never opened: the REST API is asked first (it answers), then it is redialled.
+  await new Promise((r) => setImmediate(r));
   assert.deepEqual(timers.delays(), [4000]);
+});
+
+test('socket: refused for its token (it never opens, /api/devices is refused too) — AUTH_REQUIRED, not redialled', async () => {
+  for (const status of [401, 403]) {
+    const timers = new ManualTimers();
+    const asked: string[] = [];
+    const responder: testing.FixtureResponder = (req) => {
+      asked.push(pathOf(req));
+      return pathOf(req).endsWith('/api/devices') ? { status } : ok(fixture('positions.json'));
+    };
+    const { provider, sockets } = await start(live(), responder, { timers });
+    await provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+    const s = sockets.opened[0]!.handle;
+    s.simulateError(new Error('Unexpected server response'));
+    s.simulateClose(1006, '');
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(timers.delays(), [], `${status}: nothing redials`);
+    assert.equal(sockets.opened.length, 1);
+    assert.equal(asked.filter((p) => p.endsWith('/api/devices')).length, 1, 'one REST request settles it');
+    const h = await provider.health();
+    assert.equal(h.status, 'AUTH_REQUIRED', String(status));
+    assert.match(h.message ?? '', /refused the token/);
+    assert.equal(h.lastError?.code, 'AUTH');
+  }
+});
+
+test('socket: a socket that opened and then dropped is redialled without asking the REST API', async () => {
+  const timers = new ManualTimers();
+  const asked: string[] = [];
+  const base = server();
+  const { provider, sockets } = await start(
+    live(),
+    (req) => {
+      asked.push(pathOf(req));
+      return base(req);
+    },
+    { timers },
+  );
+  await provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  const s = sockets.opened[0]!.handle;
+  s.simulateOpen();
+  s.simulateClose(1006, 'gone');
+  assert.deepEqual(timers.delays(), [2000], 'at once, as before');
+  assert.equal(asked.length, 0);
 });
 
 test('socket: a socket that cannot be opened at start is tried again by the provider', async () => {

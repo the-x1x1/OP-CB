@@ -148,7 +148,11 @@ New requests from this phase (none blocks it):
    provider as an error and a close, so a socket that refuses the token cannot be told
    from a dropped one: it shows DEGRADED/OFFLINE and is redialled. Passing the upgrade's
    HTTP status (as a `ProviderError('AUTH')` from `open`, or on `onClose`) would let it
-   stop and say AUTH_REQUIRED.
+   stop and say AUTH_REQUIRED. **Done without a contract change (2026-11-11):** a socket
+   that closes without having opened, when it and the REST API carry the same token, is
+   followed by one `/api/devices` request; refused there too, the socket stops and the
+   source says AUTH_REQUIRED (`dropUnopened` in traccar.ts, three tests). Passing the
+   status through `ProviderSockets` stays open for sockets with no REST API to ask.
 
 ## Evidence
 
