@@ -1,3 +1,4 @@
+import { someOf } from './some-of.js';
 import type { Dispatch } from 'react';
 import type {
   GeoBounds,
@@ -1018,7 +1019,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           dispatch({ type: 'collections/list', collections: await client.request('collections.list', undefined) });
           notify('Collection imported', r.imported.name);
         }
-        if (r.issues.length) notify('Import issues', r.issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.issues.length) notify('Import issues', someOf(r.issues, 3), 'MINOR');
       } catch (err) {
         fail('Import failed', err);
       }
@@ -1704,8 +1705,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         const r = await client.request('offline.installPack', undefined);
         const issues = r.issues.filter((i) => i !== 'cancelled');
         // One notice either way: what was installed (and what it replaced), or why not.
-        if (r.installed) notify('Offline pack installed', [r.installed.name, ...issues.slice(0, 2)].join(' — '));
-        else if (issues.length) notify('Pack not installed', issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.installed)
+          notify(
+            'Offline pack installed',
+            [r.installed.name, ...(issues.length ? [someOf(issues, 2, ' — ')] : [])].join(' — '),
+          );
+        else if (issues.length) notify('Pack not installed', someOf(issues, 3), 'MINOR');
         dispatch({ type: 'offline/status', status: await client.request('offline.status', undefined) });
         return { installed: r.installed?.name ?? null, issues };
       } catch (err) {
@@ -1729,7 +1734,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         dispatch({ type: 'offline/status', status: r.status });
         if (r.added) notify('Publisher added', r.added);
         else if (r.issues.length && r.issues[0] !== 'cancelled')
-          notify('Publisher not added', r.issues.slice(0, 2).join('; '), 'MINOR');
+          notify('Publisher not added', someOf(r.issues, 2), 'MINOR');
       } catch (err) {
         fail('Publisher not added', err);
       }
@@ -1754,8 +1759,9 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         const r = await client.request('offline.addVault', undefined);
         dispatch({ type: 'offline/status', status: r.status });
         const issues = r.issues.filter((i) => i !== 'cancelled');
-        if (r.added) notify('Data vault added', [r.added, ...issues.slice(0, 1)].join(' — '));
-        else if (issues.length) notify('Data vault not added', issues.slice(0, 2).join('; '), 'MINOR');
+        if (r.added)
+          notify('Data vault added', [r.added, ...(issues.length ? [someOf(issues, 1, ' — ')] : [])].join(' — '));
+        else if (issues.length) notify('Data vault not added', someOf(issues, 2), 'MINOR');
         return { added: r.added, issues };
       } catch (err) {
         fail('Data vault not added', err);
@@ -1775,8 +1781,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         const r = await client.request('offline.installPackTo', { vaultId });
         const issues = r.issues.filter((i) => i !== 'cancelled');
-        if (r.installed) notify('Offline pack installed', [r.installed.name, ...issues.slice(0, 2)].join(' — '));
-        else if (issues.length) notify('Pack not installed', issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.installed)
+          notify(
+            'Offline pack installed',
+            [r.installed.name, ...(issues.length ? [someOf(issues, 2, ' — ')] : [])].join(' — '),
+          );
+        else if (issues.length) notify('Pack not installed', someOf(issues, 3), 'MINOR');
         dispatch({ type: 'offline/status', status: await client.request('offline.status', undefined) });
         return { installed: r.installed?.name ?? null, issues };
       } catch (err) {
