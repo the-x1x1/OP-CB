@@ -36,6 +36,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Areas that cross 180° (an alert or watch zone over the Aleutians or Fiji) now match the
+  objects inside them, report the right bounds, and centre their label on the area instead of
+  halfway round the world.
 - On the flat map, a circle round a pole (a polar satellite's footprint, range rings near a pole)
   is drawn over the pole instead of closing straight across the map, and an area that crosses
   180° (an alert over the Aleutians or Fiji) is no longer drawn the long way across the map.
