@@ -36,6 +36,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- On the flat map, a circle round a pole (a polar satellite's footprint, range rings near a pole)
+  is drawn over the pole instead of closing straight across the map, and an area that crosses
+  180° (an alert over the Aleutians or Fiji) is no longer drawn the long way across the map.
 - The map's credit line credits every source with something drawn. It stopped at the first three
   sources found among all objects, drawn or not, so a fourth (in the demo: ADS-B, AIS, CelesTrak
   and the wind field) went uncredited on screen. A saved picture of the map carries every credit, unfolded, even when
