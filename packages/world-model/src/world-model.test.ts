@@ -398,3 +398,13 @@ test('polygons across the antimeridian: their bounds span 180°, and only what i
   assert.ok(pointInPolygon({ latitude: 1, longitude: 11 }, plain));
   assert.ok(!pointInPolygon({ latitude: 1, longitude: 13 }, plain));
 });
+
+test('the middle of bounds across the antimeridian is on the 180° side', async () => {
+  const { boundsCenter } = await import('./geo.js');
+  assert.deepEqual(boundsCenter({ west: 170, south: -20, east: -170, north: -10 }), {
+    latitude: -15,
+    longitude: 180,
+  });
+  assert.deepEqual(boundsCenter({ west: 175, south: 50, east: -165, north: 54 }), { latitude: 52, longitude: -175 });
+  assert.deepEqual(boundsCenter({ west: -10, south: 0, east: 10, north: 2 }), { latitude: 1, longitude: 0 });
+});

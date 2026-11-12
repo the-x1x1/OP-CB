@@ -154,8 +154,11 @@ export interface ZoneDraft {
   geometry: GeoRegion;
 }
 
-/** A ring of [lon, lat] as a zone outline: closing point dropped, at least three points, not across 180°. */
-function outline(coords: unknown): Array<[number, number]> | 'antimeridian' | undefined {
+/**
+ * A ring of [lon, lat] as a zone outline: closing point dropped, at least three points. A ring
+ * across 180° is kept as written, each edge the short way round.
+ */
+function outline(coords: unknown): Array<[number, number]> | undefined {
   if (!Array.isArray(coords)) return undefined;
   const ring: Array<[number, number]> = [];
   for (const c of coords) {
@@ -168,16 +171,14 @@ function outline(coords: unknown): Array<[number, number]> | 'antimeridian' | un
   const last = ring.at(-1);
   if (first && last && ring.length > 1 && first[0] === last[0] && first[1] === last[1]) ring.pop();
   if (ring.length < 3) return undefined;
-  for (let i = 0; i < ring.length; i++)
-    if (Math.abs(ring[(i + 1) % ring.length]![0] - ring[i]![0]) > 180) return 'antimeridian';
   return ring;
 }
 
 /**
  * The shapes of a KML or GeoJSON file as zone drafts: each polygon's outer ring (holes are not
  * kept), each part of a multipolygon its own zone; a GeoJSON feature OP-CB wrote with a
- * `circle` comes back as that circle. Points and lines are not zones; they, shapes across the
- * 180° meridian and bad rings are counted in `issues`.
+ * `circle` comes back as that circle. Points and lines are not zones; they and bad rings are
+ * counted in `issues`. A shape across 180° is kept as drawn.
  */
 export function zonesFromGeodata(
   format: ZoneGeoFormat,
@@ -233,7 +234,6 @@ export function zonesFromGeodata(
     }
   }
   const zones: ZoneDraft[] = [];
-  let across = 0;
   let bad = 0;
   let simplified = 0;
   for (const shape of shapes) {
@@ -260,8 +260,7 @@ export function zonesFromGeodata(
     }
     shape.rings.forEach((r, i) => {
       const ring = outline(r);
-      if (ring === 'antimeridian') across++;
-      else if (!ring) bad++;
+      if (!ring) bad++;
       else {
         const base = shape.name?.trim() || `Zone ${zones.length + 1}`;
         const fit = withinPointLimit(ring);
@@ -276,9 +275,6 @@ export function zonesFromGeodata(
   const kept = zones.slice(0, MAX_IMPORTED_ZONES);
   const issues = [
     notShapes ? `${notShapes} points or lines left out: a zone is a shape` : undefined,
-    across
-      ? `${across} shape${across === 1 ? '' : 's'} across the 180° meridian left out: draw one each side`
-      : undefined,
     bad
       ? `${bad} shape${bad === 1 ? '' : 's'} with fewer than three points or a point off the globe left out`
       : undefined,

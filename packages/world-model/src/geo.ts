@@ -118,6 +118,12 @@ export function clampBounds(b: GeoBounds): GeoBounds {
   return { west: lon(b.west), south: lat(b.south), east: lon(b.east), north: lat(b.north) };
 }
 
+/** The middle of bounds; across the antimeridian (west > east) it is on the 180° side. */
+export function boundsCenter(b: GeoBounds): { latitude: number; longitude: number } {
+  const east = b.west > b.east ? b.east + 360 : b.east;
+  return { latitude: (b.north + b.south) / 2, longitude: normalizeLongitude((b.west + east) / 2) };
+}
+
 /** Bounds may cross the antimeridian (west > east). */
 export function boundsContain(b: GeoBounds, p: { latitude: number; longitude: number }): boolean {
   if (p.latitude < b.south || p.latitude > b.north) return false;

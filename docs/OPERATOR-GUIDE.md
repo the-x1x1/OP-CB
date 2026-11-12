@@ -409,7 +409,7 @@ read are named in a notice rather than half read.
   the size of a continent); within a fraction of a degree of the antipode a distance is the
   spherical one, within 0.1%. The line is drawn along the great circle. **Export** saves the
   line — or with Area on, the shape — as a GPX route, KML (Google Earth, ATAK) or GeoJSON.
-  With Area on, **Watch** makes the shape a watch zone (not across the 180° meridian).
+  With Area on, **Watch** makes the shape a watch zone (one across the 180° meridian too).
 - **The map by keyboard**: Tab to the map (or click it); then the arrow keys move the view, the
   plus and minus keys zoom, and Shift with the arrows turns and tilts it — on the globe and the
   2D map alike. `]` selects the next object out from the middle of the view and `[` the one
@@ -503,7 +503,7 @@ rises.
 Zones also come from elsewhere: **What's here → Watch here** (50 km round a point), the measure
 tool's **Watch** (its shape, with Area on), and the tab's **import** button, which reads the
 shapes of a KML or GeoJSON file — an area drawn in Google Earth, ATAK or QGIS — as new zones
-(points, lines and shapes across the 180° meridian are left out, and the notice says so). The
+(points and lines are left out, and the notice says so; a shape across the 180° meridian is kept). The
 **export** button writes every zone to KML or GeoJSON; a circle goes out as a polygon, and from
 GeoJSON comes back a circle.
 

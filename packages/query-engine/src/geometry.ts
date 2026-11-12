@@ -3,6 +3,7 @@ import {
   circleBounds,
   geometryCentroid,
   pointInPolygon,
+  polygonBounds,
   regionBounds,
   regionContains,
   type GeoBounds,
@@ -36,20 +37,15 @@ export function geometryPoints(g: WorldGeometry): Array<[number, number]> {
   return out;
 }
 
+/**
+ * Bounds of a geometry, the short way round: an alert drawn across 180° (the Aleutians, Fiji)
+ * gives bounds with west > east, not a box round the rest of the world that misses every zone
+ * inside it.
+ */
 export function geometryBounds(g: WorldGeometry): GeoBounds | undefined {
   const pts = geometryPoints(g);
   if (pts.length === 0) return undefined;
-  let west = 180,
-    east = -180,
-    south = 90,
-    north = -90;
-  for (const [lon, lat] of pts) {
-    if (lon < west) west = lon;
-    if (lon > east) east = lon;
-    if (lat < south) south = lat;
-    if (lat > north) north = lat;
-  }
-  return { west, south, east, north };
+  return polygonBounds(pts);
 }
 
 /** Outer rings of polygon-like geometries. */

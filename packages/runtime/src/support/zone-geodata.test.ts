@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { WatchZone } from '@opcb/ipc-contract';
-import { haversineMeters } from '@opcb/world-model';
+import { haversineMeters, regionContains } from '@opcb/world-model';
 import { CIRCLE_VERTICES, zoneRing, zonesFromGeodata, zonesToGeodata } from './zone-geodata.js';
 
 const at = '2026-10-05T00:00:00.000Z';
@@ -105,7 +105,7 @@ test('GeoJSON: a circle keeps its centre and radius and comes back a circle', ()
   });
 });
 
-test('reading shapes: holes and points are not zones, a multipolygon is several, 180° is refused', () => {
+test('reading shapes: holes and points are not zones, a multipolygon is several, one across 180° is kept', () => {
   const geojson = JSON.stringify({
     type: 'FeatureCollection',
     features: [
@@ -177,8 +177,12 @@ test('reading shapes: holes and points are not zones, a multipolygon is several,
   if ('malformed' in read) return;
   assert.deepEqual(
     read.zones.map((z) => z.name),
-    ['Two islands (1)', 'Two islands (2)'],
+    ['Two islands (1)', 'Two islands (2)', 'Fiji'],
   );
+  const fiji = read.zones[2]!.geometry;
+  assert.ok(regionContains(fiji, { latitude: -17.5, longitude: 179.95 }), 'west of 180°');
+  assert.ok(regionContains(fiji, { latitude: -17.45, longitude: -179.8 }), 'east of 180°');
+  assert.ok(!regionContains(fiji, { latitude: -17.5, longitude: 0 }), 'not round the world');
   assert.equal(
     (read.zones[0]!.geometry as { polygon: unknown[] }).polygon.length,
     3,
@@ -186,7 +190,6 @@ test('reading shapes: holes and points are not zones, a multipolygon is several,
   );
   assert.deepEqual(read.issues, [
     '1 points or lines left out: a zone is a shape',
-    '1 shape across the 180° meridian left out: draw one each side',
     '1 shape with fewer than three points or a point off the globe left out',
   ]);
   assert.ok('malformed' in zonesFromGeodata('geojson', '[1,2'));

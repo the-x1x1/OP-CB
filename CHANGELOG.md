@@ -34,8 +34,18 @@ Versioning: [semantic versioning](https://semver.org/).
   source's settings, with the same token. Plain `ws://` goes only to this computer or the host
   you named.
 
+### Changed
+
+- **A watch zone can cross the 180° meridian**: the measure tool's Watch and the zone import keep
+  a shape over the Aleutians or Fiji as drawn, instead of refusing it and asking for one shape
+  each side.
+
 ### Fixed
 
+- Place search from a view across 180° (Fiji, the Aleutians) favours places there, not ones
+  near longitude 0 off West Africa.
+- A weather alert or other area drawn across 180° now reaches the watch zones inside it; before,
+  it was taken as covering the rest of the world and matched none of them.
 - Areas that cross 180° (an alert or watch zone over the Aleutians or Fiji) now match the
   objects inside them, report the right bounds, and centre their label on the area instead of
   halfway round the world.

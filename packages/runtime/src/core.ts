@@ -4,6 +4,7 @@ import path from 'node:path';
 import { existsSync, promises as fs } from 'node:fs';
 import { spawn as nodeSpawn } from 'node:child_process';
 import {
+  boundsCenter,
   systemClock,
   type Clock,
   type GeoBounds,
@@ -1765,12 +1766,8 @@ export class RuntimeCore {
 
   /** Search bias: the centre of the last reported viewport, else the configured default. */
   defaultBias(): { latitude: number; longitude: number } | undefined {
-    if (this.viewport) {
-      return {
-        latitude: (this.viewport.north + this.viewport.south) / 2,
-        longitude: (this.viewport.east + this.viewport.west) / 2,
-      };
-    }
+    // A view across the antimeridian (Fiji, the Aleutians) runs west > east; its middle is there.
+    if (this.viewport) return boundsCenter(this.viewport);
     return this.deps.defaultSearchBias;
   }
 
