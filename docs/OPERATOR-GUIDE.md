@@ -327,7 +327,8 @@ The box at the top searches as you type, on this machine only: objects on the ma
 registration, MMSI, name), events, places in the built-in gazetteer (cities, airports by
 name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, an MGRS reference
 such as `4QFJ1234567890`, a UTM one such as `4Q 612345 2358765`, or a geo URI such as
-`geo:21.3069,-157.8583` as a phone shares a location), your own places — the
+`geo:21.3069,-157.8583` as a phone shares a location, or a Google Maps link — read here, not
+sent anywhere), your own places — the
 locations in your collections, by title or tag ("Collected · Big Island trip"), and your watch
 zones by name — commands ("switch to 3D", "source health", "aviation lens") and queries ("M5+ earthquakes last 24 hours", "earthquakes near
 Japan"). Enter picks the first row: a command or query named in full runs (a query with one

@@ -42,6 +42,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Search reads coordinates pasted from Wikipedia (its typeset minus sign), a pair in round
+  brackets, and a Google Maps link (the map's centre or a `q=` point) — the link read here
+  rather than sent to the online place search as text.
 - A local `.tsv` file is read as tab-separated; before, without a delimiter in its definition,
   each row was read as one column and nothing had a position.
 - Searching for a place that crosses 180° (Fiji, Russia, Kiribati) goes to the place instead of

@@ -181,9 +181,35 @@ function geoUri(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined
   };
 }
 
+/**
+ * A Google Maps link: the map's centre in its path (`/maps/@21.3069,-157.8583,12z`, also after
+ * `/place/…`) or a point in its query (`?q=21.3069,-157.8583`). Other links are not places.
+ */
+const MAPS_LINK = /^https?:\/\/(?:(?:www\.)?google\.[a-z.]+\/maps\b|maps\.google\.[a-z.]+\/)/i;
+const MAPS_AT = /\/@([+-]?\d{1,3}(?:\.\d+)?),([+-]?\d{1,3}(?:\.\d+)?)(?:[,/?]|$)/;
+const MAPS_Q = /[?&](?:q|query|ll)=([+-]?\d{1,3}(?:\.\d+)?)(?:,|%2C)\s*([+-]?\d{1,3}(?:\.\d+)?)(?:&|$)/i;
+
+function mapsLink(t: string): ParsedCoordinate | undefined {
+  if (!MAPS_LINK.test(t)) return undefined;
+  const m = MAPS_AT.exec(t) ?? MAPS_Q.exec(t);
+  if (!m) return undefined;
+  const lat = Number(m[1]);
+  const lon = Number(m[2]);
+  if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180)) return undefined;
+  return { kind: 'decimal', latitude: lat, longitude: lon, label: formatCoordinateLabel(lat, lon) };
+}
+
 export function parseCoordinates(text: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
-  const t = text.trim();
+  // A minus sign as typeset (U+2212, Wikipedia's coordinates) is a minus; one pair of round
+  // brackets round the whole (a tuple printed by a script) is not part of it.
+  const t = text
+    .trim()
+    .replace(/\u2212/g, '-')
+    .replace(/^\((.*)\)$/s, '$1')
+    .trim();
   if (!t) return undefined;
+  const link = mapsLink(t);
+  if (link) return link;
   const uri = geoUri(t);
   if (uri) return uri;
   const grid = gridReference(t);

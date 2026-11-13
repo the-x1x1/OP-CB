@@ -170,3 +170,24 @@ test('parseCoordinates reads a geo URI (RFC 5870, two dimensions) and says why i
   assert.equal(say('geo:Honolulu'), 'geo URI not read: it needs latitude,longitude in decimal degrees');
   assert.equal(parseCoordinates('geography 101'), undefined, 'not a URI');
 });
+
+test('coordinates as pasted: a typeset minus, a bracketed pair, a Google Maps link', () => {
+  const at = (t: string) => {
+    const r = parseCoordinates(t);
+    return r && r.kind !== 'unsupported' ? [r.latitude, r.longitude] : r;
+  };
+  // Wikipedia's decimal coordinates use U+2212 and a semicolon.
+  assert.deepEqual(at('−33.8568; 151.2153'), [-33.8568, 151.2153]);
+  assert.deepEqual(at('(21.3069, -157.8583)'), [21.3069, -157.8583]);
+  assert.deepEqual(at('https://www.google.com/maps/@21.3069,-157.8583,12z'), [21.3069, -157.8583]);
+  assert.deepEqual(
+    at('https://www.google.com/maps/place/Honolulu,+HI/@21.3281,-157.8691,12z/data=!3m1'),
+    [21.3281, -157.8691],
+  );
+  assert.deepEqual(at('https://www.google.co.uk/maps/@51.5,-0.12,10z'), [51.5, -0.12]);
+  assert.deepEqual(at('https://maps.google.com/?q=21.3,-157.8'), [21.3, -157.8]);
+  assert.deepEqual(at('https://www.google.com/maps/search/?api=1&query=21.3069%2C-157.8583'), [21.3069, -157.8583]);
+  assert.equal(at('https://example.org/maps/@21,1,1z'), undefined, 'only Google Maps links');
+  assert.equal(at('https://www.google.com/maps/@91,0,3z'), undefined, 'out of range');
+  assert.equal(at('(21.3, -157.8'), undefined, 'unbalanced');
+});
