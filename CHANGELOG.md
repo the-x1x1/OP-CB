@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A local `.tsv` file is read as tab-separated; before, without a delimiter in its definition,
+  each row was read as one column and nothing had a position.
 - Searching for a place that crosses 180° (Fiji, Russia, Kiribati) goes to the place instead of
   framing a strip round the whole world: both geocoders box such places from −180 to 180.
 - Place search from a view across 180° (Fiji, the Aleutians) favours places there, not ones

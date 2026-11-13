@@ -24,6 +24,7 @@ import {
   type FileSource,
   type Ogr2ogrAccess,
 } from './index.js';
+import { readFileRecords } from './formats.js';
 
 /**
  * The file connectors over the SDK's fixture granted folder (`testing.FixtureLocalAccess`,
@@ -663,4 +664,16 @@ test('gdal-import end to end: the granted folder, the host converting, re-conver
   clock.advance(300_000);
   await query();
   assert.equal(converter.calls.length, 2, 'a changed part: converted again');
+});
+
+test('csv: a .tsv file is read tab-separated unless the definition names a delimiter', () => {
+  const text = 'name\tlat\tlon\nGauge, north\t19.7\t-155.1\n';
+  const read = (p: string, csv?: Record<string, unknown>) => {
+    const r = readFileRecords(text, 'csv', { ...(csv ? { response: { csv } } : {}) } as never, { path: p } as never);
+    assert.ok(!('malformed' in r));
+    return r.records as Array<Record<string, string>>;
+  };
+  assert.deepEqual(read('gauges.tsv'), [{ name: 'Gauge, north', lat: '19.7', lon: '-155.1' }]);
+  assert.equal(Object.keys(read('gauges.csv')[0]!).length, 2, 'a .csv stays comma-separated');
+  assert.equal(Object.keys(read('gauges.tsv', { delimiter: ',' })[0]!).length, 2, 'the definition decides');
 });

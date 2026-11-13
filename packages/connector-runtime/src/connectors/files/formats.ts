@@ -130,7 +130,9 @@ export function readFileRecords(
     return { records: r.features, format, skipped: r.skipped, notes: r.notes };
   }
   if (format === 'csv') {
-    const csv = parseCsv(text, { ...(definition.response?.csv ?? {}) });
+    // A .tsv file is tab-separated unless the definition names another delimiter.
+    const tsv = extensionOf(spec.path) === 'tsv' ? { delimiter: '\t' } : {};
+    const csv = parseCsv(text, { ...tsv, ...(definition.response?.csv ?? {}) });
     if (csv.malformed) return { malformed: `not CSV (${csv.malformed})` };
     const notes = csv.dropped ? [`${csv.dropped} row(s) past the row limit were dropped`] : [];
     return { records: csv.records, format, skipped: [], notes };
