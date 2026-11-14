@@ -211,6 +211,14 @@ export function evaluateReadiness(input: ReadinessInput): ReadinessItem[] {
     const live = on.find((x) => x!.health.status === 'LIVE');
     if (!on.length) out.push({ ...base, status: 'setup-required', reason: 'No receiver source is on.' });
     else if (live) out.push({ ...base, ...verifiedOr(input, 'sdr', `${live.name} connected.`) });
+    // The local receiver source is on by default and looks for one; never having found one is
+    // not something going wrong (on jconn, 2026-11-13, a red "Degraded" for a receiver nobody owns).
+    else if (on.every((x) => !x!.health.lastSuccess))
+      out.push({
+        ...base,
+        status: 'setup-required',
+        reason: `None found yet (${on[0]!.health.message ?? 'looking'}); one appears here once it answers.`,
+      });
     else
       out.push({
         ...base,

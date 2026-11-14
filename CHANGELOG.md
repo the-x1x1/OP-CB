@@ -42,6 +42,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Command Center: the aircraft/ship receiver row says "Setup required" (none found yet) when
+  the receiver source, on by default, has never found one; "Degraded" is for one that answered
+  and stopped.
 - An app that starts offline (the start screen not yet answered, Work offline, no network) no
   longer lets each internet source try once and log the refusal before it knows.
 - A public camera pack whose catalogue comes back empty says so in the log, instead of calling

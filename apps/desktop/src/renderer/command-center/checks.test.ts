@@ -304,3 +304,24 @@ test('built-in library: books OP-CB can open, references on disk, a find made of
   assert.equal(r(shelf([], true)).status, 'degraded');
   assert.equal(r(shelf([old], false)).status, 'setup-required');
 });
+
+test('readiness: a receiver source on by default that never found one is set-up, not degraded', () => {
+  // 2026-11-13 on jconn: a red "Degraded" for a receiver nobody owns (readsb-local is on by
+  // default and looks for one at 127.0.0.1:8080).
+  const readsb = (health: Partial<SourceHealthEntry['health']>): SourceHealthEntry =>
+    ({
+      providerId: 'readsb-local',
+      name: 'Local ADS-B receiver (readsb)',
+      enabled: true,
+      health: { status: 'OFFLINE', ...health },
+      meta: { credentialsRequired: [] },
+    }) as unknown as SourceHealthEntry;
+  const item = (h: Partial<SourceHealthEntry['health']>) =>
+    evaluateReadiness({ ...data({ sources: [readsb(h)] }), guides: [], field: null }).find((i) => i.id === 'receiver')!;
+  const never = item({ message: 'readsb not detected at http://127.0.0.1:8080/data/aircraft.json' });
+  assert.equal(never.status, 'setup-required');
+  assert.match(never.reason, /None found yet \(readsb not detected at/);
+  // One that answered before and stopped is degraded.
+  const lost = item({ message: 'readsb not detected at …', lastSuccess: '2026-10-30T08:00:00.000Z' });
+  assert.equal(lost.status, 'degraded');
+});
