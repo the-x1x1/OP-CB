@@ -307,3 +307,19 @@ test('WatchZoneEvaluator: what is inside when a zone starts watching was already
   ev.setZones([trafficBounds]);
   assert.equal(ev.evaluateObjects([at('aircraft:icao24:p4', 21.3, -157.9)]).length, 0);
 });
+
+test('WatchZoneEvaluator: an object entry is remembered for the dedupe window only, not for good', () => {
+  const clock = new FixedClock();
+  const ev = new WatchZoneEvaluator({ clock });
+  ev.setZones([trafficBounds]);
+  clock.advance(WATCH_ZONE_ENTRY_BASELINE_MS);
+  const planes = Array.from({ length: 50 }, (_, i) =>
+    obj({ id: `aircraft:icao24:a${String(i).padStart(5, '0')}`, type: 'aircraft', lat: 21.3, lon: -157.9 }),
+  );
+  assert.equal(ev.evaluateObjects(planes).length, 50);
+  assert.equal(ev.rememberedCount(), 50);
+  for (const p of planes) ev.forgetObject(p.id);
+  clock.advance(7 * HOUR);
+  ev.evaluateObjects([]);
+  assert.equal(ev.rememberedCount(), 0, 'past the window: forgotten');
+});

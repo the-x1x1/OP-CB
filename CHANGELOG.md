@@ -60,6 +60,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Watch zones no longer remember every aircraft or ship that ever entered.** Each entry was
+  kept for as long as the app ran, to stop the same one being announced twice within six hours;
+  past those six hours it is now forgotten (checked once an hour). An event's entry is kept, so
+  an alert upgraded days later is still told as an upgrade.
+
 - **Local API: `since`, `from` and `to` with no zone are UTC,** not the computer's local time (in
   Hawaii `since` a minute before the objects was read as ten hours after them, and nothing came
   back).
