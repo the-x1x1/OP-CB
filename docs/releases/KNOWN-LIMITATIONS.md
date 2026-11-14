@@ -457,8 +457,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - The first start of 0.6.0 turns Update automatically on, once, in every settings file — an
   operator who had switched it off before cannot be told from one who never touched it, since
   the file holds every setting either way. Switch it off again; from then on it stays off.
-- Automatic updates on Windows have been tested against a fake updater only: the first real
-  restart into a new version is the release after the one that brings them.
+- Automatic updates on Windows have run for real once: 0.7.3 to 0.7.4 on the operator's
+  desktop (2026-11-13) — found 3 s after going online, downloaded in 7 s, "Restart to update",
+  back as 0.7.4 in about 15 s. Not yet seen: a portable copy told of an update, a prerelease
+  offered to an opted-in install, and an update after a quit that waits for the runtime to stop.
 - The MCP server and the local API's Windows named pipe have been tested with fakes and over
   stdio in the container, not yet from a real MCP client against a running app.
 - The people of a Home Assistant household are shown only while `home-assistant-people` is on;
