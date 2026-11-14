@@ -784,7 +784,15 @@ async function bootstrap(): Promise<void> {
     openLink(url, 'open-url');
   });
 
+  // Quitting waits for the runtime to stop (below); a launch in that time starts again after.
+  let quitState: 'running' | 'stopping' | 'stopped' = 'running';
   app.on('second-instance', (_event, argv) => {
+    // This instance is on its way out and still holds the lock: the new launch would only flash
+    // a window over a stopping runtime. Start again once this one has exited, with its arguments.
+    if (quitState !== 'running') {
+      app.relaunch({ args: argv.slice(1) });
+      return;
+    }
     if (main.isDestroyed()) main = open();
     if (main.isMinimized()) main.restore();
     main.focus();
@@ -800,7 +808,6 @@ async function bootstrap(): Promise<void> {
   // zones flushed), at most QUIT_WAIT_MS, then quits for real. Before, the stop was started and
   // not waited for: the process ended first, and every start reconciled the history index
   // ("history index reconciled with partition files", each start on jconn, 2026-11-13).
-  let quitState: 'running' | 'stopping' | 'stopped' = 'running';
   app.on('before-quit', (event) => {
     if (quitState === 'stopped') return;
     event.preventDefault();
