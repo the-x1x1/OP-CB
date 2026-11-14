@@ -218,6 +218,7 @@ test('parseSearch: thresholds and time phrases', () => {
   assert.match(noUnit.notes[0]!, /no unit/);
 
   assert.deepEqual(first('fires today', 'query')!.query!.time, { start: '2026-09-21T00:00:00.000Z', end: iso(0) });
+  assert.match(first('fires today', 'query')!.title, /\(today, UTC\)$/);
   assert.deepEqual(first('fires yesterday', 'query')!.query!.time, {
     start: '2026-09-20T00:00:00.000Z',
     end: '2026-09-21T00:00:00.000Z',

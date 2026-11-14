@@ -194,6 +194,11 @@ const NUMBER_WORDS: Record<string, number> = {
   twelve: 12,
 };
 
+/**
+ * Time words in a search. Calendar ones — today, yesterday, this week, this month — are UTC
+ * days, as every time in the app is UTC, and their label says so: in Hawaii "today" starts at
+ * 2 PM the day before.
+ */
 function extractTime(tokens: Token[], now: number, draft: Draft): void {
   const startOfDay = (ms: number) => Math.floor(ms / DAY) * DAY;
   for (let i = 0; i < tokens.length; i++) {
@@ -206,21 +211,21 @@ function extractTime(tokens: Token[], now: number, draft: Draft): void {
       b = tokens[i + 2]?.lower;
     if (t.lower === 'today') {
       range = { start: iso(startOfDay(now)), end: iso(now) };
-      label = 'today';
+      label = 'today, UTC';
       consumed = 1;
     } else if (t.lower === 'yesterday') {
       range = { start: iso(startOfDay(now) - DAY), end: iso(startOfDay(now)) };
-      label = 'yesterday';
+      label = 'yesterday, UTC';
       consumed = 1;
     } else if (t.lower === 'since' && a === 'yesterday') {
       range = { start: iso(startOfDay(now) - DAY), end: iso(now) };
-      label = 'since yesterday';
+      label = 'since yesterday, UTC';
       consumed = 2;
     } else if (t.lower === 'this' && (a === 'week' || a === 'month')) {
       const start =
         a === 'week' ? startOfIsoWeek(now) : Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth(), 1);
       range = { start: iso(start), end: iso(now) };
-      label = `this ${a}`;
+      label = `this ${a}, UTC`;
       consumed = 2;
     } else if (t.lower === 'last' || t.lower === 'past' || t.lower === 'previous') {
       if (a !== undefined) {

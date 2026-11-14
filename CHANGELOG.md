@@ -42,6 +42,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **Search says a calendar day is UTC:** "fires today" is titled "Fires (today, UTC)", and so
+  are yesterday, this week and this month — as every time in the app, they are UTC days.
+
 - **A watch zone can cross the 180° meridian**: the measure tool's Watch and the zone import keep
   a shape over the Aleutians or Fiji as drawn, instead of refusing it and asking for one shape
   each side.
