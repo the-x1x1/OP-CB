@@ -25,20 +25,35 @@ const numeric =
   (f: (n: number) => number): Transform =>
   (v) => {
     const n = num(v);
-    return n === undefined ? undefined : f(n);
+    if (n === undefined) return undefined;
+    // A result too large for a number (`scale:` or a unit of a huge value) is no value, not
+    // Infinity (which JSON writes as null).
+    const out = f(n);
+    return Number.isFinite(out) ? out : undefined;
   };
+
+/** The last instant a Date holds (±8.64 × 10^15 ms): past it toISOString throws. */
+const MAX_DATE_MS = 8.64e15;
 
 const roundTo = (digits: number) => (n: number) => Math.round(n * 10 ** digits) / 10 ** digits;
 
-/** ISO 8601, or the common date-only and space-separated forms, as an ISO instant string. */
-function isoTimestamp(v: JsonValue): string | undefined {
-  if (typeof v === 'number') return Number.isFinite(v) ? new Date(v > 1e11 ? v : v * 1000).toISOString() : undefined;
+/**
+ * ISO 8601, or the common date-only and space-separated forms, as an ISO instant string. A
+ * date-time with no zone is UTC, as most feeds mean it — written with a space or with a `T`
+ * alike: `Date.parse` reads the `T` form as the computer's own local time, which put
+ * "2026-09-23T10:00:00" ten hours later in Hawaii than "2026-09-23 10:00:00".
+ */
+export function isoTimestamp(v: JsonValue): string | undefined {
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) return undefined;
+    const ms = v > 1e11 ? v : v * 1000;
+    return Math.abs(ms) <= MAX_DATE_MS ? new Date(ms).toISOString() : undefined;
+  }
   if (typeof v !== 'string') return undefined;
   const t = v.trim();
   if (!t) return undefined;
-  // "2026-09-23 10:00:00" → treat as UTC, as most feeds mean it.
-  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(t) ? t.replace(' ', 'T') + 'Z' : t;
-  const ms = Date.parse(normalized);
+  const zoneless = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(t);
+  const ms = Date.parse(zoneless ? `${t.replace(' ', 'T')}Z` : t);
   if (!Number.isFinite(ms)) return undefined;
   return new Date(ms).toISOString();
 }

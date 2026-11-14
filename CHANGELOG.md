@@ -60,6 +60,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Connector definitions: a time with no zone is UTC however it is written.** With
+  `isoTimestamp`, or an `observedAt` mapped with no transform, `2026-09-23 10:00:00` was read as
+  UTC but `2026-09-23T10:00:00` as the computer's local time — ten hours later in Hawaii. Both are
+  UTC now (`unambiguousTimestamp` still refuses a zone-less time). A number too large to be a
+  date no longer throws (it lost the whole poll), and a unit conversion or `scale:` that
+  overflows gives no value instead of Infinity.
+
 - **Counts read the same on any system:** the layer list, library, map download and Settings
   wrote numbers in the system's own style (`1.234` on a German Windows) beside the rest of the
   app's `1,234`.
