@@ -408,3 +408,52 @@ test('offline: a runtime that starts offline asks the internet nothing, not even
     await fs.rm(tmp, { recursive: true, force: true });
   }
 });
+
+test('offline: started behind the start screen, choosing Online is online on the first tick', async () => {
+  // The jconn sequence (2026-11-13): the gate is shut until the operator answers, then opens.
+  // Before, the connection needed a second vote 30 s later (and the throttled probe could spoil
+  // it), so the sources waited up to a minute and a half. Now one good probe is enough.
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-choose-online-'));
+  let gateOpen = false;
+  const shut = { count: 0 };
+  const fetchImpl = (async (input: RequestInfo | URL) => {
+    if (!gateOpen) {
+      shut.count++;
+      throw new Error('gate shut');
+    }
+    const url = String(input instanceof Request ? input.url : input);
+    return new Response(url.includes('earthquake.usgs.gov') ? '{"type":"FeatureCollection","features":[]}' : '', {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }) as typeof fetch;
+  try {
+    const h = await startRuntime({
+      dataDir: path.join(tmp, 'data'),
+      clock: new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z')),
+      fetchImpl,
+      disableReachabilityProbe: false,
+      network: { isOnline: () => gateOpen },
+      providerInstances: [createUsgs()],
+    });
+    try {
+      // The shell reports the network once after start (main.ts pollNetwork), gate shut.
+      h.runtime.setNetworkOnline(false);
+      await settle();
+      assert.equal((await h.client.request('sources.connection', undefined)).state, 'OFFLINE');
+      assert.equal(shut.count, 0, 'nothing tried the shut gate');
+      gateOpen = true;
+      h.runtime.setNetworkOnline(true);
+      await settle();
+      assert.notEqual(
+        (await h.client.request('sources.connection', undefined)).state,
+        'OFFLINE',
+        'online without waiting for a second check',
+      );
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
+});
