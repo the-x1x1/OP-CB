@@ -209,3 +209,42 @@ test('connection-monitor: hysteresis of 1 commits immediately; no sources means 
   assert.equal(h.monitor.state(), 'CONNECTED');
   assert.deepEqual(h.changes, ['OFFLINE', 'CONNECTED']);
 });
+
+test('connection-monitor: started while the OS (or the mode gate) says offline, one good probe after it opens is enough', async () => {
+  // The start screen: the door is shut until the operator chooses, so every source is offline
+  // and the monitor starts OFFLINE. Choosing Online opens it; the sources come back only once
+  // the monitor says so, so a second vote 30 s later (which the throttled probe could also
+  // spoil) kept the app offline for a minute or more.
+  let online = false;
+  const m = new ConnectionMonitor({
+    network: { isOnline: () => online },
+    probe: async () => true,
+    sourceHealth: {
+      connection: () => ({
+        state: 'OFFLINE',
+        networkOnline: online,
+        remoteLive: 0,
+        remoteTotal: 2,
+        localLive: 0,
+        at: '',
+      }),
+    },
+  });
+  assert.equal(m.state(), 'OFFLINE');
+  online = true;
+  await m.tick();
+  assert.equal(m.state(), 'DEGRADED', 'reachable, sources not yet back: they are told to poll now');
+});
+
+test('connection-monitor: a probe-driven OFFLINE still needs two good probes to clear', async () => {
+  let reach = false;
+  const m = new ConnectionMonitor({ network: { isOnline: () => true }, probe: async () => reach });
+  await m.tick();
+  await m.tick();
+  assert.equal(m.state(), 'OFFLINE');
+  reach = true;
+  await m.tick();
+  assert.equal(m.state(), 'OFFLINE', 'one good probe after failed ones is not enough');
+  await m.tick();
+  assert.equal(m.state(), 'CONNECTED');
+});

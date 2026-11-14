@@ -1779,6 +1779,9 @@ export class RuntimeCore {
   setNetworkOnline(online: boolean): void {
     if (this.osOnline === online) return;
     this.osOnline = online;
+    // Back online (the network, or the operator's Online on the start screen): probe now rather
+    // than answer from the throttled result taken while the door was shut.
+    if (online) this.lastProbeAt = 0;
     if (!online) {
       this.providerHost.setOnline(false);
       this.providerHost.health.setNetworkOnline(false);

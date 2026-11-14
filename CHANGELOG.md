@@ -42,6 +42,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Choosing Online on the start screen brings live data in seconds; before, the connection
+  monitor waited for a second check 30 s later (and the throttled probe could spoil that one),
+  so the map stayed offline for up to a minute and a half (seen on jconn, 2026-11-13).
 - Search reads coordinates pasted from Wikipedia (its typeset minus sign), a pair in round
   brackets, and a Google Maps link (the map's centre or a `q=` point) — the link read here
   rather than sent to the online place search as text.

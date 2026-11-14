@@ -13,7 +13,9 @@ import type { ConnectionSnapshot, ConnectionState } from '@opcb/source-health';
  * Output: CONNECTED / DEGRADED / OFFLINE with hysteresis — a probe-driven change
  * needs `hysteresis` consecutive agreeing evaluations (default 2) so a single
  * failed probe or one flapping source never toggles the indicator. An OS "offline"
- * signal is authoritative and applies immediately.
+ * signal is authoritative and applies immediately. When OFFLINE came from that signal (or the
+ * app's own gate, before the operator chose a mode), the first tick after it says online again
+ * whose probe succeeds commits what it sees: the OS signal plus that probe are the two votes.
  */
 export interface NetworkSignal {
   isOnline(): boolean;
@@ -65,6 +67,8 @@ export class ConnectionMonitor {
   private committed: ConnectionState;
   private candidate: ConnectionState | undefined;
   private candidateCount = 0;
+  /** OFFLINE because the OS signal said so, not because probes or sources failed. */
+  private heldByOs = false;
   private lastProbe: boolean | undefined;
   private lastProbeAt: number | undefined;
   private timer: unknown;
@@ -84,6 +88,7 @@ export class ConnectionMonitor {
     };
     this.log = opts.logger ?? silentLogger;
     this.committed = this.observe(undefined);
+    this.heldByOs = !this.network.isOnline();
   }
 
   state(): ConnectionState {
@@ -179,13 +184,19 @@ export class ConnectionMonitor {
       this.lastProbe = result;
       this.lastProbeAt = this.clock.now();
     }
-    this.evaluate(this.lastProbe);
+    this.evaluate(this.lastProbe, this.probe ? this.lastProbe === true : true);
     return this.snapshot();
   }
 
   /** Apply hysteresis to a freshly observed state. */
-  private evaluate(probeResult: boolean | undefined): void {
+  private evaluate(probeResult: boolean | undefined, confirmed = false): void {
     const observed = this.observe(probeResult);
+    // Offline was the OS's word and a fresh probe now reaches the internet: nothing flapped, so
+    // what is seen stands without waiting for a second vote 30 s later.
+    if (this.heldByOs && confirmed && observed !== 'OFFLINE') {
+      this.commit(observed, 'os-online');
+      return;
+    }
     if (observed === this.committed) {
       this.candidate = undefined;
       this.candidateCount = 0;
@@ -212,6 +223,9 @@ export class ConnectionMonitor {
   private commit(state: ConnectionState, reason: string): void {
     this.candidate = undefined;
     this.candidateCount = 0;
+    // Held by the OS from its "offline" until something other than OFFLINE is committed.
+    if (reason === 'os-offline') this.heldByOs = true;
+    else if (state !== 'OFFLINE') this.heldByOs = false;
     if (state === this.committed) return;
     const from = this.committed;
     this.committed = state;
