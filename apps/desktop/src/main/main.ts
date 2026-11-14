@@ -559,9 +559,11 @@ async function bootstrap(): Promise<void> {
       };
     },
     'data.restart': async () => {
+      // relaunch() starts the new instance once this one has exited; quit() (not exit) lets the
+      // runtime finish writing first (before-quit, below).
       setTimeout(() => {
         app.relaunch();
-        app.exit(0);
+        app.quit();
       }, 200);
       return { restarting: true };
     },
