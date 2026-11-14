@@ -88,7 +88,22 @@ test('parseCoordinates accepts exact forms and declines everything else', () => 
   ok('21 18 25 N, 157 51 30 W', 21.30694, -157.85833);
   ok("21°18.5'N 157°51'W", 21.30833, -157.85);
   ok("S 33°52' E 151°12'", -33.8667, 151.2);
+  // Colons between degrees, minutes and seconds; no gap between the halves when both carry a letter.
+  ok('21:18:25N 157:51:30W', 21.30694, -157.85833);
+  ok('21:18:25N, 157:51:30W', 21.30694, -157.85833);
+  ok('21.3N157.8W', 21.3, -157.8);
+  ok('N21.3W157.8', 21.3, -157.8);
+  ok('157.8W21.3N', 21.3, -157.8);
+  ok('33.87s151.21e', -33.87, 151.21);
+  ok('21°18\'25"N157°51\'30"W', 21.30694, -157.85833);
   for (const bad of [
+    '21.3N157.8',
+    '21.3157.8W',
+    'N512WN',
+    'N12345',
+    '21N22N',
+    '12:30',
+    '12:30:15',
     '12junk, 34oops',
     '91, 10',
     '10, 181',

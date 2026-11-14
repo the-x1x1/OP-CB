@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
+- **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
+  (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
+  (`21.3N157.8W`, `N21.3W157.8`). Without both letters (`21.3N157.8`) it still declines.
 - **The running version at the top left**, under the wordmark on the start screen, the map
   and in the Command Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
   update it is the new one; the commit tells a test build from the release it follows.

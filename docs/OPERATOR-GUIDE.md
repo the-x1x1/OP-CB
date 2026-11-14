@@ -325,7 +325,8 @@ nothing analyses their content.
 
 The box at the top searches as you type, on this machine only: objects on the map (callsign,
 registration, MMSI, name), events, places in the built-in gazetteer (cities, airports by
-name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, an MGRS reference
+name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, `21:18:25N
+157:51:30W` or `21.3N157.8W` (written together, both halves need their N/S/E/W), an MGRS reference
 such as `4QFJ1234567890`, a UTM one such as `4Q 612345 2358765`, or a geo URI such as
 `geo:21.3069,-157.8583` as a phone shares a location, or a Google Maps link — read here, not
 sent anywhere), your own places — the

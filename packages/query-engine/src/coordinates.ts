@@ -6,7 +6,8 @@ import { readGridReference } from '@opcb/world-model';
  * for while looking like a success.
  *
  * Decimal degrees: "21.3, -157.9", "21.3 -157.9", "N 21.3 W 157.9", "21.3°N 157.9°W".
- * DMS (basic):     "21°18'25\"N 157°51'30\"W", "21 18 25 N, 157 51 30 W".
+ * DMS (basic):     "21°18'25\"N 157°51'30\"W", "21 18 25 N, 157 51 30 W", "21:18:25N 157:51:30W".
+ * With no gap:     "21.3N157.8W", "N21.3W157.8" — only when both halves carry a hemisphere letter.
  * MGRS:            "4QFJ1234567890", "4Q FJ 12345 67890" (2 to 10 figures) — the middle of the square.
  * UTM:             "4Q 612345 2358765", "4Q 612345mE 2358765mN" — zone, latitude band, easting, northing.
  * geo URI:         "geo:21.3069,-157.8583", with ";crs=wgs84" and ";u=35" (metres) — RFC 5870, two
@@ -58,9 +59,9 @@ function readDecimal(text: string): Component | undefined {
   };
 }
 
-/** 21°18'25"N or 21 18 25 N or 21°18.5'N — degrees, optional minutes, optional seconds, mandatory hemisphere letter. */
+/** 21°18'25"N, 21 18 25 N, 21:18:25N or 21°18.5'N — degrees, optional minutes, optional seconds, mandatory hemisphere letter. */
 const DMS_COMPONENT =
-  /^(\d{1,3})\s*(?:°|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?\s*([NSEW])$|^([NSEW])\s*(\d{1,3})\s*(?:°|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?$/i;
+  /^(\d{1,3})\s*(?:°|:|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′:]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?\s*([NSEW])$|^([NSEW])\s*(\d{1,3})\s*(?:°|:|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′:]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?$/i;
 
 function readDms(text: string): Component | undefined {
   const m = DMS_COMPONENT.exec(text.trim());
@@ -90,8 +91,28 @@ function splitCandidates(text: string): Array<[string, string]> {
     return parts.length === 2 ? [[parts[0]!, parts[1]!]] : [];
   }
   const words = t.split(/\s+/);
+  if (words.length === 1) return letterSplits(t);
   const out: Array<[string, string]> = [];
   for (let i = 1; i < words.length; i++) out.push([words.slice(0, i).join(' '), words.slice(i).join(' ')]);
+  return out;
+}
+
+/**
+ * One word with no gap ("21.3N157.8W", "N21.3W157.8", "21°18'N157°51'W"): split where one
+ * hemisphere letter ends a half or starts the next, and only where both halves carry their own
+ * letter, so the letters say which number is which and nothing is guessed.
+ */
+function letterSplits(t: string): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  for (let i = 1; i < t.length; i++) {
+    const before = t[i - 1]!;
+    const at = t[i]!;
+    const afterLetter = /[NSEW]/i.test(before) && /[\d+-]/.test(at);
+    const beforeLetter = /[NSEW]/i.test(at) && /[\d°'′"″.]/.test(before);
+    if (!afterLetter && !beforeLetter) continue;
+    const pair: [string, string] = [t.slice(0, i), t.slice(i)];
+    if (pair.every((half) => /[NSEW]/i.test(half))) out.push(pair);
+  }
   return out;
 }
 
