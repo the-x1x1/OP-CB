@@ -61,7 +61,7 @@ export function parseTrace(payload: unknown, opts: TraceParseOptions): ObjectTra
     if (atMs < opts.fromMs || atMs > opts.toMs) continue;
     const point: ObjectTrackPoint = { observedAt: new Date(atMs).toISOString(), latitude: lat, longitude: lon };
     if (alt === 'ground') point.altitudeM = 0;
-    else if (typeof alt === 'number' && Number.isFinite(alt)) point.altitudeM = Math.round(alt * FOOT_TO_M * 10) / 10;
+    else if (typeof alt === 'number' && Math.abs(alt) < 1e7) point.altitudeM = Math.round(alt * FOOT_TO_M * 10) / 10;
     out.push(point);
   }
   out.sort((a, b) => Date.parse(a.observedAt) - Date.parse(b.observedAt));

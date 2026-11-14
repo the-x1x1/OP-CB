@@ -35,6 +35,17 @@ test('parseTrace: seconds after timestamp → ISO times; feet → metres; ground
   assert.equal(points[2]!.altitudeM, 0, '"ground"');
   assert.equal(points[3]!.altitudeM, undefined, 'null altitude stays unknown');
   assert.equal(points[4]!.altitudeM, 914.4);
+  // An altitude too large to mean anything stays unknown rather than becoming Infinity.
+  const huge = parseTrace(
+    { icao: 'ae5f01', timestamp: START / 1000, trace: [[0, 39, -75, 1e308]] },
+    {
+      fromMs: 0,
+      toMs: NOW,
+      maxPoints: 100,
+    },
+  );
+  assert.ok(Array.isArray(huge));
+  assert.equal(huge[0]!.altitudeM, undefined);
 });
 
 test('parseTrace: window, thinning, and refusals', () => {
