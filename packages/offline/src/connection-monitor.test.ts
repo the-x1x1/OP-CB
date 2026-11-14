@@ -128,6 +128,8 @@ test('connection-monitor: a probe-driven change needs two consecutive agreeing r
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'CONNECTED', 'alternating probes never toggle the state');
   assert.deepEqual(h.changes, []);
+  // The sources have stopped answering too: the probe's word stands.
+  h.setHealth(0, 2);
   h.setProbe(false);
   await h.monitor.tick();
   await h.monitor.tick();
@@ -136,6 +138,7 @@ test('connection-monitor: a probe-driven change needs two consecutive agreeing r
   h.setProbe('throw');
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'OFFLINE', 'a throwing probe counts as unreachable');
+  h.setHealth(2, 2);
   h.setProbe(true);
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'OFFLINE');
@@ -247,4 +250,19 @@ test('connection-monitor: a probe-driven OFFLINE still needs two good probes to 
   assert.equal(m.state(), 'OFFLINE', 'one good probe after failed ones is not enough');
   await m.tick();
   assert.equal(m.state(), 'CONNECTED');
+});
+
+test('connection-monitor: the probe host down while sources answer is DEGRADED, not OFFLINE', async () => {
+  // The probe asks one host (USGS). OFFLINE stops every remote source, so an outage or a filter
+  // on that one host must not take the whole app offline while the others are reachable.
+  const h = harness();
+  h.setProbe(false);
+  await h.monitor.tick();
+  await h.monitor.tick();
+  assert.equal(h.monitor.state(), 'DEGRADED');
+  // When the sources fail too, it is the network: OFFLINE.
+  h.setHealth(0, 2);
+  await h.monitor.tick();
+  await h.monitor.tick();
+  assert.equal(h.monitor.state(), 'OFFLINE');
 });

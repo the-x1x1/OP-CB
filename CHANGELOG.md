@@ -45,6 +45,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The app no longer goes offline as a whole when only its reachability check fails (one host,
+  USGS) while other sources still answer: an outage or a filter on that host showed OFFLINE and
+  stopped every internet source. It is now DEGRADED and the sources keep running.
 - Quitting waits (up to 4 s) for history, settings and zones to be written; before, the app
   could end first, and every start repaired the history index.
 - Command Center: the aircraft/ship receiver row says "Setup required" (none found yet) when

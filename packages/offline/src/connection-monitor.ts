@@ -212,8 +212,11 @@ export class ConnectionMonitor {
 
   private observe(probeResult: boolean | undefined): ConnectionState {
     if (!this.network.isOnline()) return 'OFFLINE';
-    if (probeResult === false) return 'OFFLINE';
     const health = this.sourceHealth?.connection();
+    // The probe asks one host. When it fails while sources are still answering, the internet is
+    // there and that host is not (an outage, a filter): DEGRADED, so the sources keep running.
+    // OFFLINE stops every remote source, which one unreachable host must not do.
+    if (probeResult === false) return health && health.remoteLive > 0 ? 'DEGRADED' : 'OFFLINE';
     if (!health) return 'CONNECTED';
     if (health.remoteTotal === 0) return 'CONNECTED';
     if (health.remoteLive === 0) return probeResult === true ? 'DEGRADED' : 'OFFLINE';
