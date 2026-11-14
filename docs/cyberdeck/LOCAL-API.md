@@ -86,7 +86,8 @@ curl --unix-socket "$XDG_RUNTIME_DIR/opcb/api.sock" http://opcb/v1/health
 | `/v1/offline`      | offline capabilities, packs, vault labels and states                                      |
 | `/v1/own-position` | this computer's GPS fix, its time and accuracy — no coordinates with NO FIX               |
 
-Example answers for each are in `fixtures/local-api/v1/`. Errors are
+`since`, `from` and `to` are ISO times; one with no zone (`2026-10-08T19:59:00`) is UTC, as
+every time here is. Example answers for each are in `fixtures/local-api/v1/`. Errors are
 `{ "error": { "code", "message" } }`: 400 bad query, 403 not allowed, 404, 405 not GET, 413 too
 large, 429 more than 120 requests a minute.
 

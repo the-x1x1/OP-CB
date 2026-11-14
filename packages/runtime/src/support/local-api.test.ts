@@ -250,6 +250,19 @@ test('local API: objects near a point — bounded, paged, and only what the data
   }
   assert.deepEqual(seen, [...all.objects.map((o) => o.id)].sort());
 
+  // A time with no zone is UTC, whatever this computer's zone (it was read as local time: in
+  // Hawaii a minute before the objects was ten hours after them, and nothing came back).
+  const was = process.env['TZ'];
+  process.env['TZ'] = 'Pacific/Honolulu';
+  try {
+    const since = body<Page>(await get('/v1/objects?since=2026-10-08T19:59:00'));
+    assert.equal(since.objects.length, all.objects.length);
+    assert.equal(body<Page>(await get('/v1/objects?since=2026-10-08T20:01:00')).objects.length, 0);
+  } finally {
+    if (was === undefined) delete process.env['TZ'];
+    else process.env['TZ'] = was;
+  }
+
   for (const bad of [
     '/v1/objects?lat=21.3',
     '/v1/objects?radiusKm=5',

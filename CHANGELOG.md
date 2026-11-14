@@ -60,6 +60,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Local API: `since`, `from` and `to` with no zone are UTC,** not the computer's local time (in
+  Hawaii `since` a minute before the objects was read as ten hours after them, and nothing came
+  back).
+
 - **Connector definitions: a time with no zone is UTC however it is written.** With
   `isoTimestamp`, or an `observedAt` mapped with no transform, `2026-09-23 10:00:00` was read as
   UTC but `2026-09-23T10:00:00` as the computer's local time — ten hours later in Hawaii. Both are
