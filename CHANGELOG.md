@@ -42,6 +42,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **Search and queries over many objects are faster:** when only the first few are wanted (a
+  search row's count and its first match), the best few are kept as the objects are read instead
+  of sorting them all — 150,000 aircraft with different times: about 0.1 s a query instead of 2 s.
+  A search by name builds rows only for the matches it shows.
+
 - **Search says a calendar day is UTC:** "fires today" is titled "Fires (today, UTC)", and so
   are yesterday, this week and this month — as every time in the app, they are UTC days.
 

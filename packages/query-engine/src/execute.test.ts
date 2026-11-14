@@ -474,3 +474,38 @@ test('executeQuery: more objects of a type than a spread call takes (200,000) ar
   const result = executeQuery({ objectTypes: ['aircraft'], limit: 3 }, { state, now: () => T0 });
   assert.equal(result.items.length, 3);
 });
+
+test('executeQuery: a small limit over many gives the first of the full order (ties, missing values, both ways)', () => {
+  let seed = 17;
+  const rand = () => (seed = (seed * 16_807) % 2_147_483_647) / 2_147_483_647;
+  const objects = Array.from({ length: 2_000 }, (_, i) =>
+    objectFrom({
+      providerId: 'usgs-earthquakes',
+      objectType: 'earthquake',
+      externalId: `e${i}`,
+      observedAt: iso(-Math.floor(rand() * 50) * 60_000),
+      lat: 0,
+      lon: 0,
+      payload: rand() < 0.2 ? {} : { magnitude: Math.floor(rand() * 10) / 2 },
+    }),
+  );
+  const state = { ofType: () => objects } as unknown as Parameters<typeof executeQuery>[1]['state'];
+  const now = () => T0;
+  for (const sort of [
+    undefined,
+    { field: 'properties.magnitude', direction: 'desc' as const },
+    { field: 'properties.magnitude', direction: 'asc' as const },
+  ]) {
+    const all = executeQuery({ objectTypes: ['earthquake'], ...(sort ? { sort } : {}) }, { state, now });
+    for (const limit of [1, 7, 100, 249]) {
+      const some = executeQuery({ objectTypes: ['earthquake'], ...(sort ? { sort } : {}), limit }, { state, now });
+      assert.deepEqual(
+        some.items.map((o) => o.id),
+        all.items.slice(0, limit).map((o) => o.id),
+        `${sort?.field ?? 'time'} ${sort?.direction ?? ''} limit ${limit}`,
+      );
+      assert.equal(some.total, 2_000);
+      assert.equal(some.truncated, true);
+    }
+  }
+});

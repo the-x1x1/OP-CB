@@ -107,8 +107,9 @@ export function executeEventQuery(query: WorldQuery, sources: EventQuerySources)
     (e, p) => resolveEventField(e, p),
     (e) => e.id,
     (e) => e.startAt,
+    query.limit,
   );
-  return finish(sorted, query.limit, 'live', sources.now());
+  return finish(sorted, query.limit, 'live', sources.now(), matched.length);
 }
 
 /** The pure core: filter/sort/limit an explicit candidate list. Exported for callers that already hold objects. */
@@ -139,8 +140,9 @@ export function applyObjectQuery(
     (o, p) => resolveObjectField(o, p),
     (o) => o.id,
     (o) => o.observedAt,
+    query.limit,
   );
-  return finish(sorted, query.limit, basis, nowMs);
+  return finish(sorted, query.limit, basis, nowMs, matched.length);
 }
 
 function liveCandidates(query: WorldQuery, state: WorldState): Iterable<WorldObject> {
@@ -177,10 +179,11 @@ function sortItems<T>(
   resolve: (item: T, path: string) => FieldValue,
   idOf: (item: T) => string,
   timeOf: (item: T) => string,
+  limit?: number,
 ): T[] {
   const dir = sort?.direction === 'asc' ? 1 : -1;
-  const keyed = items.map((item) => ({ item, key: sort ? resolve(item, sort.field) : timeOf(item), id: idOf(item) }));
-  keyed.sort((a, b) => {
+  type Keyed = { item: T; key: FieldValue | string; id: string };
+  const order = (a: Keyed, b: Keyed): number => {
     const ka = a.key,
       kb = b.key;
     const aNone = ka === undefined || ka === null,
@@ -190,7 +193,30 @@ function sortItems<T>(
     const c = aNone && bNone ? 0 : compareValues(ka, kb) * dir;
     if (c !== 0) return c;
     return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-  });
+  };
+  const keyOf = (item: T): Keyed => ({ item, key: sort ? resolve(item, sort.field) : timeOf(item), id: idOf(item) });
+  // A few wanted from many (a search row's "aircraft last 24 hours" over 150,000): keep the best
+  // `limit` in order as they come rather than sorting them all. Ids are unique, so the order is
+  // total and the first `limit` are the same either way.
+  if (limit !== undefined && limit >= 1 && limit <= 1000 && limit * 8 < items.length) {
+    const best: Keyed[] = [];
+    for (const item of items) {
+      const k = keyOf(item);
+      if (best.length === limit && order(k, best[limit - 1]!) >= 0) continue;
+      let lo = 0,
+        hi = best.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (order(best[mid]!, k) <= 0) lo = mid + 1;
+        else hi = mid;
+      }
+      best.splice(lo, 0, k);
+      if (best.length > limit) best.pop();
+    }
+    return best.map((k) => k.item);
+  }
+  const keyed = items.map(keyOf);
+  keyed.sort(order);
   return keyed.map((k) => k.item);
 }
 
@@ -199,8 +225,8 @@ function finish<T>(
   limit: number | undefined,
   basis: 'live' | 'historical',
   nowMs: number,
+  total = sorted.length,
 ): WorldQueryResult<T> {
-  const total = sorted.length;
   const items = limit !== undefined && limit >= 0 && limit < total ? sorted.slice(0, limit) : sorted;
   return { items, total, truncated: items.length < total, basis, evaluatedAt: new Date(nowMs).toISOString() };
 }
