@@ -60,6 +60,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **HUD: a position or heading that is not a number shows a dash,** as altitude and the grid
+  reference already did, instead of `NaN°NaN′0NaN″`.
+
 - **Watch zones no longer remember every aircraft or ship that ever entered.** Each entry was
   kept for as long as the app ran, to stop the same one being announced twice within six hours;
   past those six hours it is now forgotten (checked once an hour). An event's entry is kept, so
