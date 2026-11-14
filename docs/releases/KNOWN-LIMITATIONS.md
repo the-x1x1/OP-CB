@@ -101,8 +101,8 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   on another datum (NAD27, ED50) comes out tens to hundreds of metres off, and one in the old
   "AL" lettering names a different square or is refused. In the search box a polar MGRS
   reference (bands A, B, Y, Z) needs six figures or more, or spaces in it — `BAW1234` is read
-  as a flight's callsign. UPS coordinates are shown (HUD, panel) but not read from the search
-  box; give the MGRS reference instead.
+  as a flight's callsign. A UPS coordinate is read from the search box only inside its polar
+  cap (beyond 84° N or 80° S).
 - GPX, KML and GeoJSON: a collected aircraft, ship or other object goes out with its position
   only while it is on the map and every source behind it allows export (in the collection file
   too, where it otherwise keeps just its name). A GeoJSON shape across 180° (a watch zone over
