@@ -1,4 +1,4 @@
-# Known limitations — 0.7.4
+# Known limitations — 0.7.5
 
 Each line is a limitation a user or operator can run into. Classification follows the
 directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQUIRED`,
@@ -356,6 +356,23 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   licence record, which is not in the registry until you confirm its terms (use
   `--pmtiles-only` meanwhile). A Martin server can be read by the tool, not chosen as the
   app's basemap.
+
+## 0.7.5
+
+- Run on a screen before this release: 0.7.4 (the automatic update from 0.7.3 included) and a
+  build of this branch at `f021db71` (2026-11-13). Everything after that — the version at the
+  top left, quitting that waits for the runtime (at most 4 s), a launch during the quit starting
+  the app again, online in seconds after the start screen — is checked by tests only, not yet in
+  the installed app.
+- "Restart to update" has not been seen since quitting started to wait for the runtime: the
+  installer is already running while the app finishes stopping.
+- A connector definition whose times carry no zone (`2026-09-23T10:00:00`) now reads them as UTC,
+  with `T` or a space alike; before, the `T` form was read in the computer's own zone. A device
+  that writes its local time without saying so is misread by hours either way: map such a time
+  with `unambiguousTimestamp`, which refuses it, or a `timestamp:` pattern with the offset.
+- With very many objects (150,000 aircraft) the search box takes 0.1–0.4 s a keystroke, and the
+  GNSS interference rule about 0.3 s each time aircraft change; at realistic counts (15,000) a
+  tenth of that.
 
 ## 0.7.4
 
