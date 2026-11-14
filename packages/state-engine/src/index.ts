@@ -217,7 +217,9 @@ export class WorldState {
   }
 
   recentObservations(limit = 100): Observation[] {
-    return this.recent.slice(-limit);
+    const cap = this.opts.recentObservations;
+    const n = limit > 0 ? Math.min(limit, cap) : cap;
+    return n > 0 ? this.recent.slice(-n) : [];
   }
 
   // ---- writes -------------------------------------------------------------
@@ -587,10 +589,14 @@ export class WorldState {
     if (t.length > this.opts.maxTrackPoints) t.splice(0, t.length - this.opts.maxTrackPoints);
   }
 
+  /**
+   * Kept to `recentObservations`, trimmed when it reaches twice that: trimming at every push moved
+   * all 5,000 kept along by one for each observation, most of an ADS-B poll's ingest time.
+   */
   private pushRecent(obs: Observation): void {
     this.recent.push(obs);
-    if (this.recent.length > this.opts.recentObservations)
-      this.recent.splice(0, this.recent.length - this.opts.recentObservations);
+    const cap = this.opts.recentObservations;
+    if (this.recent.length > 2 * cap) this.recent.splice(0, this.recent.length - cap);
   }
 }
 

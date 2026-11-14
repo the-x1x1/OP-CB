@@ -42,6 +42,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- **Taking in a large poll is faster:** the list of the 5,000 most recent observations was
+  trimmed at every one, moving all 5,000 along each time; it is trimmed in batches now (150,000
+  aircraft taken in: 1.5 s instead of 2.4 s).
+
 - **Search and queries over many objects are faster:** when only the first few are wanted (a
   search row's count and its first match), the best few are kept as the objects are read instead
   of sorting them all — 150,000 aircraft with different times: about 0.1 s a query instead of 2 s.
