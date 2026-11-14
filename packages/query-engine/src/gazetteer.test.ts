@@ -136,6 +136,14 @@ test('parseCoordinates reads MGRS and UTM grid references, and says why when one
   const ambiguous = parseCoordinates('18S 585628 4511322');
   assert.ok(ambiguous?.kind === 'unsupported');
   assert.match(ambiguous.note, /^UTM reference not read: .*could be latitude band S/);
+  // As the HUD writes them: band S with mE and mN, and UPS in the polar caps.
+  assert.equal(parseCoordinates('33S 300000mE 3800000mN')?.kind, 'utm');
+  const ups = parseCoordinates('UPS N 2000000mE 1444542mN');
+  assert.ok(ups && ups.kind === 'utm' && Math.abs(ups.latitude - 85) < 1e-4);
+  assert.equal(ups.label, 'UPS N 2000000mE 1444542mN (85.0000° N, 0.0000° E)');
+  const notPolar = parseCoordinates('UPS N 2000000mE 1000000mN');
+  assert.ok(notPolar?.kind === 'unsupported');
+  assert.match(notPolar.note, /^UPS reference not read: That UPS coordinate is not in the north polar cap/);
   // A bare 100 km square is not taken for a reference: too easily something else.
   assert.equal(parseCoordinates('4QFJ'), undefined);
   // The polar caps: a reference with six figures or more, or written with spaces…

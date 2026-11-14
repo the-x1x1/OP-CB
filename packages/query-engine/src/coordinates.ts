@@ -10,6 +10,7 @@ import { readGridReference } from '@opcb/world-model';
  * With no gap:     "21.3N157.8W", "N21.3W157.8" — only when both halves carry a hemisphere letter.
  * MGRS:            "4QFJ1234567890", "4Q FJ 12345 67890" (2 to 10 figures) — the middle of the square.
  * UTM:             "4Q 612345 2358765", "4Q 612345mE 2358765mN" — zone, latitude band, easting, northing.
+ * UPS:             "UPS N 2000000mE 1444542mN" — the polar caps, as the HUD writes them.
  * geo URI:         "geo:21.3069,-157.8583", with ";crs=wgs84" and ";u=35" (metres) — RFC 5870, two
  *                  dimensions only — and Android's "?z=15" and "geo:0,0?q=21.3,-157.8(Label)" (what a
  *                  phone's "share location" gives; after God's Eye View 11bc2ec).
@@ -123,7 +124,7 @@ export function formatCoordinateLabel(lat: number, lon: number): string {
 function gridReference(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
   const read = readGridReference(t);
   if (!read) return undefined;
-  if ('error' in read) return { kind: 'unsupported', note: gridReferenceNote(read.kind, read.error) };
+  if ('error' in read) return { kind: 'unsupported', note: gridReferenceNote(read.kind, read.error, t) };
   return {
     kind: read.kind,
     latitude: read.latitude,
@@ -134,8 +135,8 @@ function gridReference(t: string): ParsedCoordinate | UnsupportedCoordinate | un
 }
 
 /** "MGRS reference not read: …" — the search box's footer says the same (components/search-items.ts). */
-function gridReferenceNote(kind: 'mgrs' | 'utm', error: string): string {
-  return `${kind === 'mgrs' ? 'MGRS' : 'UTM'} reference not read: ${error}`;
+function gridReferenceNote(kind: 'mgrs' | 'utm', error: string, text: string): string {
+  return `${kind === 'mgrs' ? 'MGRS' : /^UPS\b/i.test(text) ? 'UPS' : 'UTM'} reference not read: ${error}`;
 }
 
 /**

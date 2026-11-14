@@ -460,7 +460,8 @@ const UTM_TEXT = /^(\d{1,2})\s*([C-HJ-NP-X])[\s,]+(\d{5,7}(?:\.\d+)?)\s*(?:m?E)?
  * The letter is read as a latitude band, and the point must lie in that band (within a
  * degree). N and S are also written for the hemisphere: when the band reading cannot be
  * right the hemisphere one is used, and when both can (S between about 31° and 41° N) the
- * coordinate is refused as ambiguous.
+ * coordinate is refused as ambiguous — unless it is written as this app writes UTM, with mE
+ * and mN after the figures (`39S 304392mE 3672727mN`), which is band S.
  */
 export function parseUtm(text: string): ReadGridReference | { error: string } | undefined {
   const m = UTM_TEXT.exec(text.trim());
@@ -486,9 +487,12 @@ export function parseUtm(text: string): ReadGridReference | { error: string } | 
       (letter === 'N'
         ? hemisphere.latitude >= 0 && hemisphere.latitude < UTM_NORTH_LIMIT + 1
         : hemisphere.latitude < 0 && hemisphere.latitude >= UTM_SOUTH_LIMIT - 1);
-    if (letter === 'S' && bandFits && hemisphereFits)
+    // Written with mE and mN, as this app writes UTM (the HUD, What's here), S is band S: what
+    // the app showed reads back. Bare figures could be either, and are refused.
+    const ownForm = /\dmE[\s,]+\d+(?:\.\d+)?mN$/i.test(text.trim());
+    if (letter === 'S' && bandFits && hemisphereFits && !ownForm)
       return {
-        error: `${zone}S could be latitude band S (32°–40° N) or the southern hemisphere; write the band letter, or use MGRS.`,
+        error: `${zone}S could be latitude band S (32°–40° N) or the southern hemisphere: write mE and mN after the figures for band S (${zone}S ${Math.floor(easting)}mE ${Math.floor(northing)}mN), the band letter for the south, or use MGRS.`,
       };
     if (!point && hemisphereFits) {
       point = hemisphere;
@@ -497,6 +501,29 @@ export function parseUtm(text: string): ReadGridReference | { error: string } | 
   }
   if (!point) return { error: `That UTM coordinate is not in latitude band ${letter} of zone ${zone}.` };
   return { ...point, precisionM: 1, text: `${written} ${Math.floor(easting)}mE ${Math.floor(northing)}mN` };
+}
+
+const UPS_TEXT = /^UPS\s*([NS])[\s,]+(\d{6,7}(?:\.\d+)?)\s*(?:m?E)?[\s,]+(\d{6,7}(?:\.\d+)?)\s*(?:m?N)?$/i;
+
+/**
+ * Read a UPS coordinate — the polar grid beyond UTM, as the HUD writes it: `UPS N 2000000mE
+ * 1444542mN`. The point must lie in its cap (beyond 84° N or 80° S, with UTM's half-degree
+ * overlap); one nearer the equator is not a UPS coordinate anyone would write.
+ */
+export function parseUps(text: string): ReadGridReference | { error: string } | undefined {
+  const m = UPS_TEXT.exec(text.trim());
+  if (!m) return undefined;
+  const hemisphere = m[1]!.toUpperCase() as 'N' | 'S';
+  const easting = Number(m[2]);
+  const northing = Number(m[3]);
+  const point = fromUps(hemisphere, easting, northing);
+  const inCap =
+    !!point && (hemisphere === 'N' ? point.latitude >= UTM_NORTH_LIMIT - 0.5 : point.latitude <= UTM_SOUTH_LIMIT + 0.5);
+  if (!point || !inCap)
+    return {
+      error: `That UPS coordinate is not in the ${hemisphere === 'N' ? 'north' : 'south'} polar cap (beyond ${hemisphere === 'N' ? '84° N' : '80° S'}); use UTM or MGRS there.`,
+    };
+  return { ...point, precisionM: 1, text: `UPS ${hemisphere} ${Math.floor(easting)}mE ${Math.floor(northing)}mN` };
 }
 
 /**
@@ -510,13 +537,13 @@ const MGRS_SEARCH =
 
 /**
  * Typed text read as a grid reference, if it is written as one: MGRS with at least one figure
- * each way, or UTM. `error` says why one that looks like a reference cannot be read.
+ * each way, or UTM (UPS in the polar caps, read as UTM's kind: the HUD's UTM setting shows it). `error` says why one that looks like a reference cannot be read.
  */
 export function readGridReference(
   text: string,
 ): (ReadGridReference & { kind: 'mgrs' | 'utm' }) | { kind: 'mgrs' | 'utm'; error: string } | undefined {
   const t = text.trim();
   const kind = MGRS_SEARCH.test(t) ? 'mgrs' : 'utm';
-  const read = kind === 'mgrs' ? parseMgrs(t) : parseUtm(t);
+  const read = kind === 'mgrs' ? parseMgrs(t) : /^UPS\b/i.test(t) ? parseUps(t) : parseUtm(t);
   return read ? { kind, ...read } : undefined;
 }

@@ -48,6 +48,12 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A grid reference copied from the HUD reads back in search everywhere.** UTM in latitude band
+  S (32°–40° N: the southern United States, the Mediterranean, Iran, China, Japan) was refused
+  as "band S or south?" even as the HUD wrote it; written with mE and mN it is now the band.
+  UPS (beyond 84° N and 80° S) was not read at all; it is now, inside its polar cap. A test
+  pastes the HUD's decimal, DMS, MGRS and UTM for 400 points back into search.
+
 - A circle's bounds now hold the whole circle: one reaching a pole takes in every longitude, and
   wide circles use the exact width (the old estimate fell short, ±40° instead of ±43° at 60°N for
   a 2,200 km circle), so a watch zone or search circle no longer misses what lies near its edge.
