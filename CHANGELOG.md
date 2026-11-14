@@ -5,6 +5,18 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] — 2026-11-14
+
+What the first look at 0.7.4 on a screen found, fixed: online in seconds after the start
+screen, the running version shown at the top left, quitting that waits for the history to be
+written, and a watch zone or a circle that crosses 180° or a pole. Then testing since 0.7.4 in the
+build container — fuzzing every feed reader, importer and request, the app run with 150,000
+aircraft and under other time zones — and what it found: searches and queries that failed or
+crawled with very many objects, times read in the computer's own zone, feed numbers too large to
+mean anything, and memory a busy watch zone never gave back. Checked in the build container
+(full test suite, typecheck, licence, boundary and connector checks); 0.7.4 and a build of this
+branch from 2026-11-13 were run on the operator's computer, this release itself not yet.
+
 ### Added
 
 - **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
