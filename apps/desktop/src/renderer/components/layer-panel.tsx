@@ -34,8 +34,8 @@ const NO_COUNT: LayerCount = { total: 0, inView: 0 };
 /** "120 in view of 4,567 on hand", for a switch's tooltip. */
 function countText(n: LayerCount): string {
   return n.total === n.inView
-    ? `${n.total.toLocaleString()} on hand`
-    : `${n.inView.toLocaleString()} in view of ${n.total.toLocaleString()} on hand`;
+    ? `${n.total.toLocaleString('en-US')} on hand`
+    : `${n.inView.toLocaleString('en-US')} in view of ${n.total.toLocaleString('en-US')} on hand`;
 }
 
 /** The view's bounds, rounded, so the counts are not recomputed for a pan too small to change them. */

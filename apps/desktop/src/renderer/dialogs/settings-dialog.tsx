@@ -555,7 +555,7 @@ function TileCacheSettings({
           {
             label: 'Stored',
             value: status
-              ? `${formatBytes(status.bytes)} of ${formatBytes(status.maxBytes)} · ${status.tiles.toLocaleString()} tiles`
+              ? `${formatBytes(status.bytes)} of ${formatBytes(status.maxBytes)} · ${status.tiles.toLocaleString('en-US')} tiles`
               : 'Reading…',
           },
           {
@@ -600,7 +600,7 @@ function TileCacheSettings({
           preloadable
             ? `About 21,800 tiles (~400 MB), fetched in the background behind whatever is on screen. Esri's terms govern bulk downloading of World Imagery — switching this on is your decision.${
                 pre && pre.state !== 'off'
-                  ? ` ${pre.state === 'done' ? 'Done' : pre.state === 'running' ? 'Running' : 'Stopped'}: ${pre.done.toLocaleString()} of ${pre.total.toLocaleString()}.${pre.message ? ` ${pre.message}` : ''}`
+                  ? ` ${pre.state === 'done' ? 'Done' : pre.state === 'running' ? 'Running' : 'Stopped'}: ${pre.done.toLocaleString('en-US')} of ${pre.total.toLocaleString('en-US')}.${pre.message ? ` ${pre.message}` : ''}`
                   : ''
               }`
             : `Available when the basemap is Esri World Imagery${basemap ? ` (it is ${basemap.name})` : ''}.`
@@ -677,7 +677,7 @@ function HistorySettings({ history }: { history: AppSettings['history'] }) {
           {
             label: 'Stored',
             value: usage
-              ? `${formatBytes(usage.bytes)} of ${formatBytes(maxMB * 1024 * 1024)} · ${usage.partitions.toLocaleString()} partitions`
+              ? `${formatBytes(usage.bytes)} of ${formatBytes(maxMB * 1024 * 1024)} · ${usage.partitions.toLocaleString('en-US')} partitions`
               : 'Reading…',
           },
           ...(top.length
@@ -699,7 +699,7 @@ function HistorySettings({ history }: { history: AppSettings['history'] }) {
             ? [
                 {
                   label: 'Not repeated',
-                  value: `${usage.skippedUnchanged.toLocaleString()} unchanged observations since start were not written again`,
+                  value: `${usage.skippedUnchanged.toLocaleString('en-US')} unchanged observations since start were not written again`,
                 },
               ]
             : []),

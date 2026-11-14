@@ -287,7 +287,7 @@ export function KiwixCatalog() {
                   <span className="wv-cc-muted">
                     {flavourText(e.flavour) ? ` · ${flavourText(e.flavour)}` : ''}
                     {e.sizeBytes ? ` · ${bytesText(e.sizeBytes)}` : ''}
-                    {e.articleCount ? ` · ${e.articleCount.toLocaleString()} pages` : ''}
+                    {e.articleCount ? ` · ${e.articleCount.toLocaleString('en-US')} pages` : ''}
                     {e.issued ? ` · ${e.issued}` : ''}
                   </span>
                   {e.summary ? <div className="wv-cc-muted">{e.summary}</div> : null}

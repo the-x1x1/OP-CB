@@ -60,6 +60,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Counts read the same on any system:** the layer list, library, map download and Settings
+  wrote numbers in the system's own style (`1.234` on a German Windows) beside the rest of the
+  app's `1,234`.
+
 - **Aircraft and ship feeds: a number too large to mean anything is dropped.** In adsb.lol and
   readsb, one (a snapshot time, say) could make a time with no date and throw, losing the whole
   poll, or overflow an altitude or speed to infinity. In AIS static data, a ship's length,

@@ -216,7 +216,7 @@ function MapDownloadState() {
       {st.build ? (
         <div className="wv-cc-muted">
           Build {st.build.date} (OpenStreetMap data of that day)
-          {st.tiles !== undefined ? ` · ${st.tiles.toLocaleString()} tiles` : ''}
+          {st.tiles !== undefined ? ` · ${st.tiles.toLocaleString('en-US')} tiles` : ''}
         </div>
       ) : null}
       {st.phase === 'planned' && st.sizeBytes !== undefined ? (
