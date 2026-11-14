@@ -7,8 +7,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Added
 
-- **The running version at the top left**, under the wordmark on the map and in the Command
-  Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
+- **The running version at the top left**, under the wordmark on the start screen, the map
+  and in the Command Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
   update it is the new one; the commit tells a test build from the release it follows.
 - **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
   readout showing what is round the selection, or the middle of the view, at its bearing and range

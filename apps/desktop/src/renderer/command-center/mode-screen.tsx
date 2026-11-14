@@ -3,6 +3,7 @@ import type { OperatingMode } from '@opcb/ipc-contract';
 import { Button, Icon } from '@opcb/ui';
 import { useAppSlice } from '../store/store.js';
 import { useCC } from './use-cc.js';
+import { VersionTag } from '../components/version-tag.js';
 
 /**
  * The start screen (the Command Center, 2026-10-30): Online or Offline, chosen by the operator
@@ -77,6 +78,7 @@ export function ModeScreen() {
         <div className="wv-cc-start__brand">
           <span className="wv-brand-wordmark wv-cc-start__wordmark" role="img" aria-label="OP-CB" />
           <span className="wv-brand-caption">Operation Civilization Backup</span>
+          <VersionTag />
         </div>
         <h1 id="wv-cc-start-title" className="wv-cc-start__title">
           How will you work today?
