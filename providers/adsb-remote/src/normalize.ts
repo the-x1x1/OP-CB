@@ -48,8 +48,13 @@ const NON_ICAO = /^~([0-9a-f]{6})$/;
 const SQUAWK = /^[0-7]{4}$/;
 const CATEGORY = /^[A-D][0-7]$/;
 
+/**
+ * A number the feed could mean: finite and below 10^15 (a millisecond clock reads 1.8 × 10^12).
+ * A larger one overflowed to Infinity once rounded (altitude, speed) or made a time that has no
+ * date, which threw and lost the whole poll.
+ */
 function num(v: unknown): number | undefined {
-  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+  return typeof v === 'number' && Number.isFinite(v) && Math.abs(v) < 1e15 ? v : undefined;
 }
 
 function text(v: unknown, max: number): string | undefined {
@@ -95,7 +100,8 @@ export function aircraftRowToDraft(raw: unknown, opts: AircraftNormalizeOptions)
   if (!isValidLatLon(lat, lon)) return 'missing position';
   const seenPos = Math.max(0, num(row['seen_pos']) ?? 0);
   const observedMs = opts.nowMs - seenPos * 1000;
-  if (!Number.isFinite(observedMs) || observedMs <= 0) return 'invalid snapshot time';
+  // 8.64e15 ms is the last instant a Date can hold; past it toISOString throws.
+  if (!Number.isFinite(observedMs) || observedMs <= 0 || observedMs > 8.64e15) return 'invalid snapshot time';
 
   const altBaro = row['alt_baro'];
   const onGround = typeof altBaro === 'string' && altBaro.trim().toLowerCase() === 'ground';

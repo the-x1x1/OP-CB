@@ -60,6 +60,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Aircraft and ship feeds: a number too large to mean anything is dropped.** In adsb.lol and
+  readsb, one (a snapshot time, say) could make a time with no date and throw, losing the whole
+  poll, or overflow an altitude or speed to infinity. In AIS static data, a ship's length,
+  beam, draught and IMO number are kept only inside their message fields' ranges (A and B 0–511 m,
+  C and D 0–63 m, draught up to 25.5 m). Found by feeding thousands of altered recorded answers
+  through each reader.
+
 - **Very large lists no longer fail with "Maximum call stack size exceeded".** Joining one list
   onto another passed every item as an argument, which breaks past about 125,000: a query or
   search over more aircraft than that ("aircraft above 30000 ft" with 150,000 on hand), a long
