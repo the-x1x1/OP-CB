@@ -416,7 +416,16 @@ export class PublicCamerasProvider extends PollingProvider {
     });
     if (result.malformed) {
       invalidate();
-      throw new ProviderError('MALFORMED', `${pack.id} catalog has an unexpected shape`, { retryable: false });
+      // An empty answer is not a new shape: Taiwan's Highway Bureau served its list as a 0-byte
+      // file on 2026-11-13 (HTTP 200, rewritten by its export job). Say so in Source health.
+      const empty = typeof payload === 'string' ? payload.trim() === '' : payload === null || payload === undefined;
+      throw new ProviderError(
+        'MALFORMED',
+        empty
+          ? `${pack.id} catalog came back empty (the publisher's file has nothing in it)`
+          : `${pack.id} catalog has an unexpected shape`,
+        { retryable: false },
+      );
     }
     if (result.total > 0 && result.drafts.length === 0) {
       invalidate();

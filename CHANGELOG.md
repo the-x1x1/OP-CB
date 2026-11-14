@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A public camera pack whose catalogue comes back empty says so in the log, instead of calling
+  it an unexpected shape (Taiwan's Highway Bureau served a 0-byte list on 2026-11-13).
 - The search list's "Search places online" row says Enter only when Enter takes it; under a
   local answer (a pasted coordinate, a satellite by name) it says "online" instead.
 - Enter on a satellite's name selects it when the name has a second one in brackets ("NOAA 20"
