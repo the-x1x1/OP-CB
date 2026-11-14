@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Quitting waits (up to 4 s) for history, settings and zones to be written; before, the app
+  could end first, and every start repaired the history index.
 - Command Center: the aircraft/ship receiver row says "Setup required" (none found yet) when
   the receiver source, on by default, has never found one; "Degraded" is for one that answered
   and stopped.

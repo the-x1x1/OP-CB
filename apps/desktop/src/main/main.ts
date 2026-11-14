@@ -76,6 +76,8 @@ import { isReaderContents, isReaderUrl, openReader, type ReaderDeps } from './li
  *  5. window
  */
 const DEV = !app.isPackaged && process.env.OPCB_DEV === '1';
+/** The longest a quit waits for the runtime to stop before it quits anyway. */
+const QUIT_WAIT_MS = 4_000;
 const NETWORK_POLL_MS = 15_000;
 /** The first update check after start, and the gap between the next ones. */
 const UPDATE_FIRST_CHECK_MS = 20_000;
@@ -792,21 +794,46 @@ async function bootstrap(): Promise<void> {
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });
-  app.on('before-quit', () => {
+  // Quitting waits for the runtime to stop (history written and its index saved, settings and
+  // zones flushed), at most QUIT_WAIT_MS, then quits for real. Before, the stop was started and
+  // not waited for: the process ended first, and every start reconciled the history index
+  // ("history index reconciled with partition files", each start on jconn, 2026-11-13).
+  let quitState: 'running' | 'stopping' | 'stopped' = 'running';
+  app.on('before-quit', (event) => {
+    if (quitState === 'stopped') return;
+    event.preventDefault();
+    if (quitState === 'stopping') return;
+    quitState = 'stopping';
     clearInterval(networkTimer);
     clearTimeout(updateFirst);
     clearInterval(updateRetry);
     clearInterval(updateTimer);
-    // The local API's socket goes now: the asynchronous stop below may not finish before exit.
+    // The local API's socket goes now, whatever the stop below does.
     runtime.localApi?.closeNow();
     router.dispose();
     updater.dispose();
-    void runtime
+    const stopped = runtime
       .stop()
       .catch((err: unknown) =>
         log.error('runtime stop failed', { error: err instanceof Error ? err.message : String(err) }),
       );
-    void hub.flush();
+    let ceilingTimer: ReturnType<typeof setTimeout> | undefined;
+    const ceiling = new Promise<void>((resolve) => {
+      ceilingTimer = setTimeout(() => {
+        log.warn('quitting before the runtime finished stopping', { waitedMs: QUIT_WAIT_MS });
+        resolve();
+      }, QUIT_WAIT_MS);
+    });
+    void Promise.race([stopped, ceiling])
+      .then(() => {
+        clearTimeout(ceilingTimer);
+        return hub.flush();
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        quitState = 'stopped';
+        app.quit();
+      });
   });
 }
 
