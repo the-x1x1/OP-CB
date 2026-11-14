@@ -51,6 +51,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A satellite's catalogue number written with leading zeros** (`00005`, as in a TLE) is the
+  same satellite as `5`; a source (a connector definition, say) writing it that way would have made a second copy of it on the map.
+
 - **Search: a time span longer than there is data** ("earthquakes last 99999999999 days") starts
   at 1970; it made the search fail with "Invalid time value".
 

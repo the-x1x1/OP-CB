@@ -55,7 +55,10 @@ export const authoritativeRules: Readonly<Record<string, IdentityRule>> = Object
   satellite: (o) => {
     const norad = str(o.payload['noradId']) ?? (o.externalId && NORAD.test(o.externalId) ? o.externalId : undefined);
     if (!norad || !NORAD.test(norad)) return undefined;
-    return { objectId: Ids.satelliteByNorad(norad), authoritative: true, rule: 'satellite.norad' };
+    // A catalogue number is a number: a TLE's zero-padded "00005" is the 5 a JSON catalogue gives.
+    const n = Number(norad);
+    if (n < 1) return undefined;
+    return { objectId: Ids.satelliteByNorad(n), authoritative: true, rule: 'satellite.norad' };
   },
   earthquake: (o) => {
     if (o.providerId !== 'usgs-earthquakes' || !o.externalId) return undefined;

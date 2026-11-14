@@ -81,3 +81,16 @@ test('airport identity: missing or invalid ICAO falls back to a provider-scoped 
   const p2 = defaultIdentityResolver.resolve(airportObservation('source-two', 'X1', { name: 'Strip' }));
   assert.notEqual(p1.objectId, p2.objectId);
 });
+
+test('satellite identity: a zero-padded catalogue number is the same satellite; 0 is none', () => {
+  const sat = (providerId: string, externalId: string, payload: Record<string, JsonValue>) =>
+    defaultIdentityResolver.resolve({
+      ...airportObservation(providerId, externalId, payload),
+      objectType: 'satellite',
+    });
+  const fromJson = sat('celestrak', '5', { noradId: 5 });
+  const fromTle = sat('some-tle-feed', 'VANGUARD 1', { noradId: '00005' });
+  assert.equal(fromJson.objectId, 'satellite:norad:5');
+  assert.equal(fromTle.objectId, fromJson.objectId);
+  assert.equal(sat('some-tle-feed', '00000', {}).rule, 'provider-scoped');
+});
