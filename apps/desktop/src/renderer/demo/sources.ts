@@ -161,6 +161,24 @@ export function buildDemoSources(nowMs: number): SourceHealthEntry[] {
       [{ from: 'STARTING', to: 'LIVE', at: iso(9 * 60_000) }],
     ),
     entry(
+      DEMO_PROVIDERS.wind,
+      ['weather'],
+      'remote',
+      'LIVE',
+      {
+        lastAttempt: iso(25 * 60_000),
+        lastSuccess: iso(25 * 60_000),
+        lastObservation: iso(25 * 60_000),
+        latencyMs: 640,
+        objectCount: 36,
+        cacheAgeMs: 0,
+      },
+      {
+        termsUrl: 'https://coastwatch.pfeg.noaa.gov/erddap/info/NCEP_Global_Best/index.html',
+        refreshIntervalMs: 3_600_000,
+      },
+    ),
+    entry(
       { id: 'opensky-network', name: 'OpenSky Network', attribution: 'The OpenSky Network (non-commercial)' },
       ['aviation'],
       'remote',

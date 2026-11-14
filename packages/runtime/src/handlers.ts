@@ -2,6 +2,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import {
   EventTypes,
+  FIELD_OBJECT_TYPES,
   formatIssues,
   isValidLatLon,
   worldQuerySchema,
@@ -358,6 +359,9 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
           let kept = 0;
           for (const near of core.state.nearest(object.position, 64, undefined, NEARBY_RADIUS_M)) {
             if (near.object.id === objectId) continue;
+            // A wind grid's point is a sample of a field, not something "also here": with the
+            // wind layer on, the nearest one would take a place among the eight.
+            if (FIELD_OBJECT_TYPES.has(near.object.type) && !FIELD_OBJECT_TYPES.has(object.type)) continue;
             const dAlt = (near.object.position?.altitudeM ?? 0) - alt;
             if (Math.hypot(near.distanceM, dAlt) > NEARBY_RADIUS_M) continue;
             objects.push(near.object);
@@ -1762,7 +1766,7 @@ const CSV_COLUMNS = [
   'attribution',
 ] as const;
 
-function toCsv(objects: readonly WorldObject[]): string {
+export function toCsv(objects: readonly WorldObject[]): string {
   const rows = [CSV_COLUMNS.join(',')];
   for (const o of objects) {
     rows.push(CSV_COLUMNS.map((column) => csvCell(csvValue(o, column))).join(','));
@@ -1803,9 +1807,14 @@ function csvValue(o: WorldObject, column: (typeof CSV_COLUMNS)[number]): string 
   }
 }
 
-/** CSV cells are quoted and a leading =/+/-/@ is prefixed so a spreadsheet never executes a cell. */
-function csvCell(value: string | number | undefined): string {
+/**
+ * CSV cells are quoted and a text starting =/+/-/@ is prefixed so a spreadsheet never executes a
+ * cell. A number is written as it is: it cannot be a formula, and prefixing it turned every
+ * negative latitude, longitude and altitude (west, south, below the ellipsoid) into text.
+ */
+export function csvCell(value: string | number | undefined): string {
   if (value === undefined) return '';
+  if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
   const text = String(value);
   const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
   return `"${safe.replace(/"/g, '""')}"`;

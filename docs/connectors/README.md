@@ -4,6 +4,7 @@
 - [MAPPING.md](MAPPING.md) — paths, fields, transforms, conditions; what happens to a record.
 - [REST-JSON.md](REST-JSON.md) — the `rest-json` connector: endpoint, response, pagination, viewport, credentials.
 - [GEOJSON-CSV.md](GEOJSON-CSV.md) — the `geojson` and `csv` connectors.
+- [gtfs-rt.md](gtfs-rt.md) — the `gtfs-rt` connector: GTFS Realtime vehicle positions.
 - [WEBSOCKET.md](WEBSOCKET.md) — the `websocket-json` connector.
 - [TESTING.md](TESTING.md) — the sidecar, the shared suite, `connector:test`, `connector:add`.
 - [../architecture/CONNECTOR-ARCHITECTURE.md](../architecture/CONNECTOR-ARCHITECTURE.md) — how the packages fit together.
@@ -22,6 +23,7 @@ the rejected-records log line and health message) is in
 | `rest-json`           | Poll an HTTPS endpoint answering JSON (or CSV, or text); page through it                                                   | [REST-JSON.md](REST-JSON.md)           | [rest-json.ts](../../packages/connector-runtime/src/connectors/rest-json.ts)           |
 | `geojson`             | Poll a GeoJSON FeatureCollection; each feature an object at its geometry                                                   | [GEOJSON-CSV.md](GEOJSON-CSV.md)       | [geojson.ts](../../packages/connector-runtime/src/connectors/geojson.ts)               |
 | `csv`                 | Poll a CSV file; each row an object, columns by header                                                                     | [GEOJSON-CSV.md](GEOJSON-CSV.md)       | [csv.ts](../../packages/connector-runtime/src/connectors/csv.ts)                       |
+| `gtfs-rt`             | Poll a GTFS Realtime vehicle-positions feed (protobuf); each vehicle an object                                             | [gtfs-rt.md](gtfs-rt.md)               | [gtfs-rt.ts](../../packages/connector-runtime/src/connectors/gtfs-rt.ts)               |
 | `websocket-json`      | A WebSocket sending JSON messages                                                                                          | [WEBSOCKET.md](WEBSOCKET.md)           | [websocket-json.ts](../../packages/connector-runtime/src/connectors/websocket-json.ts) |
 | `wfs`, `ogc-features` | WFS and OGC API – Features as objects: WGS 84 and axis order, paging                                                       | [ogc.md](ogc.md)                       | [ogc/](../../packages/connector-runtime/src/connectors/ogc/)                           |
 | `wms`, `wmts`         | WMS and WMTS as raster overlays, time "latest"                                                                             | [ogc.md](ogc.md)                       | [ogc/](../../packages/connector-runtime/src/connectors/ogc/)                           |
@@ -102,6 +104,14 @@ global grid — read with `response.contour` ([REST-JSON.md](REST-JSON.md)) as t
 10, 30, 50 and 70 percent, weather-alert areas in green to red, out of the feed (INFO). Off by
 default because the 10% oval lies across Alaska, Canada, Scandinavia and the Southern Ocean at
 any hour. Fixture `fixtures/connectors/space/swpc-ovation-aurora.json`, recorded 2026-10-16.
+
+**GFS wind** (`noaa-gfs-wind`, Weather → Wind layer, an example: off until the operator has read its
+licence line): NOAA's Global Forecast System wind 10 m up, every 10° from 80° N to 80° S, at the
+3-hourly step at or before now, from NOAA CoastWatch's ERDDAP server (no key) — read with
+`response.wind` ([REST-JSON.md](REST-JSON.md)) as one `wind` object a point, drawn as arrows
+pointing where the wind blows, coloured by Beaufort band; the HUD's WND row reads it at the middle
+of the view. Polled hourly, 612 points (about 44 KB). Fixture
+`fixtures/connectors/wind/gfs-wind-10deg.json`, read live 2026-11-11.
 
 A phase adds its connector's row at the end of the connectors table (this file is a shared
 file in `docs/roadmap/phases/ownership.json`); a shipped definition gets its row from the

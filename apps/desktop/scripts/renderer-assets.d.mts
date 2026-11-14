@@ -8,6 +8,8 @@ export declare const MAPLIBRE_PUBLIC_DIR: string;
 export declare function packageFileCandidates(pkg: string, relative: string): string[];
 export declare function cesiumBuildDirCandidates(): string[];
 export declare function findCesiumBuildDir(): string | undefined;
+export declare function packageDirFrom(fromDir: string, name: string): string | undefined;
+export declare function cesiumEngineMismatch(cesiumBuildDir: string, fromDir?: string): string | undefined;
 export declare function stageCesiumAssets(): string;
 export declare const MAPLIBRE_WORKER_PATH: string;
 export declare const MAPLIBRE_RUNTIME_FILES: readonly string[];

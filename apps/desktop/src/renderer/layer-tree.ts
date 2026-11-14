@@ -66,6 +66,7 @@ const TYPE_NAMES: Readonly<Record<string, string>> = {
   'weather-alert': 'Weather alerts',
   storm: 'Tropical storms',
   'weather-station': 'Weather stations',
+  wind: 'Wind',
   earthquake: 'Earthquakes',
   'fire-detection': 'Fire detections',
   'transit-vehicle': 'Transit vehicles',

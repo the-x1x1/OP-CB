@@ -19,6 +19,9 @@ import { formatDistance } from './measure.js';
 import type { NearbyPlaceResult } from '@opcb/ipc-contract';
 import { compassPoint } from '../context/object-knowledge.js';
 import { useActions } from '../store/store.js';
+import { windAt, windReadout, type WindPoint } from './wind-readout.js';
+import type { SonarPicture } from './sonar.js';
+import { SonarScope } from './sonar-scope.js';
 
 /**
  * The view as the renderer reports it, at most once an animation frame.
@@ -155,6 +158,10 @@ export interface HudProps {
   /** The timeline's mode and the moment the map shows (paused, replaying or in history). */
   timeMode?: 'LIVE' | 'PAUSED' | 'REPLAY' | 'HISTORICAL';
   shownAtMs?: number;
+  /** The wind layer's grid points while it is shown: the WND row reads the wind at the middle. */
+  wind?: readonly WindPoint[];
+  /** The contact sonar's picture (Settings → Rendering), drawn above the readout. */
+  sonar?: SonarPicture;
 }
 
 /**
@@ -176,7 +183,8 @@ export function hudClock(
  * Heads-up display over the map (Settings → Rendering → HUD, or H): the ground at the middle of
  * the view in decimal degrees and degrees-minutes-seconds — and as an MGRS or UTM reference
  * when one is chosen — the ground under the pointer (CUR, in that reference if chosen), the
- * range and bearing to it from the selection (RNG), the camera's altitude (3D) or
+ * range and bearing to it from the selection (RNG), the wind at the middle while the wind layer
+ * is shown (WND, from where it blows), the contact sonar when it is on (sonar-scope.tsx), the camera's altitude (3D) or
  * zoom (2D), heading and pitch, the UTC clock, the visual style, and a small reticle on the
  * point the coordinates are for.
  *
@@ -186,7 +194,19 @@ export function hudClock(
  * hidden from assistive technology: a readout that changes on every frame of camera motion
  * would be read out without end.
  */
-export function Hud({ host, mode, visualStyle, orbit, following, selection, grid, timeMode, shownAtMs }: HudProps) {
+export function Hud({
+  host,
+  mode,
+  visualStyle,
+  orbit,
+  following,
+  selection,
+  grid,
+  timeMode,
+  shownAtMs,
+  wind,
+  sonar,
+}: HudProps) {
   const view = useHostView(host);
   const cursor = useHostPointer(host);
   const range = rangeReadout(selection, cursor);
@@ -195,6 +215,7 @@ export function Hud({ host, mode, visualStyle, orbit, following, selection, grid
   const at = view?.focus ?? view?.center;
   const nearEnabled = !!view && (mode === '3D' ? view.altitudeM <= NEAR_MAX_ALTITUDE_M : view.zoom >= NEAR_MIN_ZOOM);
   const near = nearReadout(useNearestTown(at, nearEnabled));
+  const wnd = wind?.length ? windReadout(windAt(wind, at)) : undefined;
   return (
     <div className="wv-hud" data-style={visualStyle} aria-hidden="true">
       <div className="wv-hud__reticle" />
@@ -208,49 +229,58 @@ export function Hud({ host, mode, visualStyle, orbit, following, selection, grid
         {orbit ? <span className="wv-hud__tag">ORBIT</span> : null}
         {following ? <span className="wv-hud__tag">FOLLOW</span> : null}
       </div>
-      <dl className="wv-hud__readout">
-        <dt>POS</dt>
-        <dd>{at ? formatDecimal(at.latitude, at.longitude) : '—'}</dd>
-        <dt>DMS</dt>
-        <dd>{at ? formatDms(at.latitude, at.longitude) : '—'}</dd>
-        {grid ? (
-          <>
-            <dt>{grid.toUpperCase()}</dt>
-            <dd>{at ? formatGridReference(at.latitude, at.longitude, grid) : '—'}</dd>
-          </>
-        ) : null}
-        {near ? (
-          <>
-            <dt>NEAR</dt>
-            <dd>{near}</dd>
-          </>
-        ) : null}
-        <dt>CUR</dt>
-        <dd>{cursorReadout(cursor, grid)}</dd>
-        {range ? (
-          <>
-            <dt>RNG</dt>
-            <dd>{range}</dd>
-          </>
-        ) : null}
-        {mode === '3D' ? (
-          <>
-            <dt>ALT</dt>
-            <dd>{view ? formatAltitude(view.altitudeM) : '—'}</dd>
-          </>
-        ) : (
-          <>
-            <dt>ZOOM</dt>
-            <dd>{view ? formatZoom(view.zoom) : '—'}</dd>
-          </>
-        )}
-        <dt>HDG</dt>
-        <dd>
-          {view ? formatHeading(view.headingDegrees) : '—'}
-          <span className="wv-hud__label"> PITCH </span>
-          {view ? formatPitch(view.pitchDegrees) : '—'}
-        </dd>
-      </dl>
+      <div className="wv-hud__corner">
+        {sonar ? <SonarScope picture={sonar} /> : null}
+        <dl className="wv-hud__readout">
+          <dt>POS</dt>
+          <dd>{at ? formatDecimal(at.latitude, at.longitude) : '—'}</dd>
+          <dt>DMS</dt>
+          <dd>{at ? formatDms(at.latitude, at.longitude) : '—'}</dd>
+          {grid ? (
+            <>
+              <dt>{grid.toUpperCase()}</dt>
+              <dd>{at ? formatGridReference(at.latitude, at.longitude, grid) : '—'}</dd>
+            </>
+          ) : null}
+          {near ? (
+            <>
+              <dt>NEAR</dt>
+              <dd>{near}</dd>
+            </>
+          ) : null}
+          {wnd ? (
+            <>
+              <dt>WND</dt>
+              <dd>{wnd}</dd>
+            </>
+          ) : null}
+          <dt>CUR</dt>
+          <dd>{cursorReadout(cursor, grid)}</dd>
+          {range ? (
+            <>
+              <dt>RNG</dt>
+              <dd>{range}</dd>
+            </>
+          ) : null}
+          {mode === '3D' ? (
+            <>
+              <dt>ALT</dt>
+              <dd>{view ? formatAltitude(view.altitudeM) : '—'}</dd>
+            </>
+          ) : (
+            <>
+              <dt>ZOOM</dt>
+              <dd>{view ? formatZoom(view.zoom) : '—'}</dd>
+            </>
+          )}
+          <dt>HDG</dt>
+          <dd>
+            {view ? formatHeading(view.headingDegrees) : '—'}
+            <span className="wv-hud__label"> PITCH </span>
+            {view ? formatPitch(view.pitchDegrees) : '—'}
+          </dd>
+        </dl>
+      </div>
     </div>
   );
 }

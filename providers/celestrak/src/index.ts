@@ -265,7 +265,7 @@ export class CelestrakProvider extends PollingProvider implements ObjectTrackSou
           sample: result.rejected.slice(0, 3).map((r) => r.reason),
         });
       this.lastSkipped.set(group, skippedKey);
-      observations.push(...result.observations);
+      for (const item of result.observations) observations.push(item);
     }
     return { observations, cacheAgeMs: anyStale ? oldestServedMs : 0, ...(unavailable ? { unavailable } : {}) };
   }

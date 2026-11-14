@@ -87,6 +87,26 @@ test('display actions: V twice in quick succession moves two styles, and each ch
   await h.actions.toggleGrid();
   assert.equal(h.get().session.settings?.display.grid, false);
   assert.equal(h.get().session.settings?.display.hud, true, 'and leaves the HUD as it was');
+  // The contact sonar is drawn in the HUD: on brings the HUD with it, off leaves the HUD.
+  await h.actions.toggleHud();
+  await h.actions.toggleSonar();
+  assert.deepEqual(
+    { hud: h.get().session.settings?.display.hud, sonar: h.get().session.settings?.display.hudSonar },
+    { hud: true, sonar: true },
+  );
+  await h.actions.toggleSonar();
+  assert.deepEqual(
+    { hud: h.get().session.settings?.display.hud, sonar: h.get().session.settings?.display.hudSonar },
+    { hud: true, sonar: false },
+  );
+  // On in the settings but with the HUD off, it is not shown, so the command turns it on.
+  await h.actions.toggleSonar();
+  await h.actions.toggleHud();
+  await h.actions.toggleSonar();
+  assert.deepEqual(
+    { hud: h.get().session.settings?.display.hud, sonar: h.get().session.settings?.display.hudSonar },
+    { hud: true, sonar: true },
+  );
 });
 
 test('camera actions: orbit is refused with reduced motion; follow takes the selected object only', async () => {

@@ -275,6 +275,7 @@ test('store: policy enforcement — no normalized retention writes nothing, raw 
   assert.equal(store.effectiveRetention('aircraft', 'no-retain'), 0);
   assert.equal(store.effectiveRetention('aircraft', 'user'), 'indefinite', 'user data is kept indefinitely');
   assert.equal(effectiveRetentionSeconds(retentionPolicyFor('aircraft'), undefined), 0);
+  assert.equal(retentionPolicyFor('wind').retainSeconds, 2 * 86_400, 'a wind grid two days, not the 7-day fallback');
 
   const sweep = await store.sweepRetention(Date.parse(iso(D3, 2 * 3600)));
   assert.deepEqual(

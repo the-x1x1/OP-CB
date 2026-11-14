@@ -1,0 +1,30 @@
+{
+  "schema": "oneview.connector-test.v1",
+  "normal": "fixtures/connectors/wind/gfs-wind-10deg.json",
+  "empty": "fixtures/connectors/wind/gfs-wind-empty.json",
+  "malformed": [
+    { "inline": "not json" },
+    { "inline": "{\"table\":{\"columnNames\":[\"time\",\"latitude\",\"longitude\"],\"rows\":[]}}" },
+    {
+      "inline": "{\"table\":{\"columnNames\":[\"time\",\"latitude\",\"longitude\",\"ugrd10m\",\"vgrd10m\"],\"rows\":[[\"2026-09-23T18:00:00Z\",10,0,null,null]]}}"
+    }
+  ],
+  "expectObservations": 90,
+  "expect": [
+    {
+      "externalId": "70N40E",
+      "observedAt": "2026-09-23T18:00:00.000Z",
+      "payload": {
+        "name": "Wind at 70°N 40°E",
+        "speedMps": 9.82,
+        "fromDeg": 10.8,
+        "towardDeg": 190.8,
+        "validAt": "2026-09-23T18:00:00.000Z"
+      }
+    },
+    {
+      "externalId": "50N160W",
+      "payload": { "speedMps": 13.12, "fromDeg": 294.8, "towardDeg": 114.8 }
+    }
+  ]
+}

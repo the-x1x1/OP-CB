@@ -1,0 +1,9 @@
+{
+  "table": {
+    "columnNames": ["time", "latitude", "longitude", "ugrd10m", "vgrd10m"],
+    "columnTypes": ["String", "double", "double", "float", "float"],
+    "columnUnits": ["UTC", "degrees_north", "degrees_east", "m s-1", "m s-1"],
+    "rows": [
+    ]
+  }
+}

@@ -41,6 +41,16 @@ const STYLE_COLORS: Record<string, string> = {
   launch: '#c9a0ff',
   sensor: '#35c98a',
   trail: '#62d9e6',
+  // Range rings round the selection, as render-core's theme has them.
+  'range-ring': '#c4b5fd',
+  // Wind arrows by Beaufort band, as render-core's theme has them.
+  wind: '#cbd5e1',
+  'wind.calm': '#94a3b8',
+  'wind.light': '#7dd3fc',
+  'wind.moderate': '#86efac',
+  'wind.strong': '#fde047',
+  'wind.gale': '#fb923c',
+  'wind.storm': '#f87171',
 };
 
 function colorFor(styleClass: string, override?: string): string {
@@ -449,6 +459,7 @@ export class CanvasRendererHost implements RendererHostLike {
     for (const f of ordered) if (f.geometry.kind === 'density') this.drawDensity(ctx, f);
     for (const f of ordered) if (f.geometry.kind === 'polygon') this.drawPolygon(ctx, f);
     for (const f of ordered) if (f.geometry.kind === 'line') this.drawLine(ctx, f);
+    for (const f of ordered) if (f.geometry.kind === 'circle') this.drawCircle(ctx, f);
     for (const f of ordered) if (f.geometry.kind === 'cluster') this.drawCluster(ctx, f);
     for (const f of ordered) if (f.geometry.kind === 'point') this.drawPoint(ctx, f);
     this.drawAttribution(ctx);
@@ -533,6 +544,29 @@ export class CanvasRendererHost implements RendererHostLike {
     }
   }
 
+  /**
+   * A circle on the ground (range rings, a satellite's footprint, a radio horizon): drawn as
+   * a circle through the point due north of its centre, which is close enough for a demo map.
+   */
+  private drawCircle(ctx: CanvasRenderingContext2D, f: RenderFeature): void {
+    if (f.geometry.kind !== 'circle') return;
+    const { center, radiusM } = f.geometry;
+    const c = this.projectPoint(center.latitude, center.longitude);
+    // The radius to the point due north (where the rings put their labels), on the sphere.
+    const north = Math.min(89.9, center.latitude + (radiusM / 6_371_008.8) * (180 / Math.PI));
+    const r = Math.abs(c.y - this.projectPoint(north, center.longitude).y);
+    if (!(r > 0.5) || r > 1e5) return;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = colorFor(f.style.styleClass, f.style.color);
+    ctx.lineWidth = f.style.size ?? 1.5;
+    ctx.setLineDash(f.style.lineStyle === 'dashed' ? [6, 4] : []);
+    ctx.globalAlpha = f.style.opacity ?? 0.8;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
   private drawLine(ctx: CanvasRenderingContext2D, f: RenderFeature): void {
     if (f.geometry.kind !== 'line') return;
     ctx.beginPath();
@@ -579,7 +613,27 @@ export class CanvasRendererHost implements RendererHostLike {
     const selected = f.style.selected || f.id === this.selectedId;
     const hovered = f.style.hovered || f.id === this.hoverId;
     ctx.globalAlpha = f.style.opacity ?? 1;
-    if (f.style.icon === 'aircraft' || f.style.icon === 'vessel') {
+    if (f.style.icon === 'wind') {
+      // An arrow along where the wind blows (rotationDegrees), as the real renderers draw it.
+      const rot = ((f.style.rotationDegrees ?? 0) * Math.PI) / 180;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(rot);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, size * 0.5);
+      ctx.lineTo(0, -size * 0.35);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.5);
+      ctx.lineTo(size * 0.22, -size * 0.18);
+      ctx.lineTo(-size * 0.22, -size * 0.18);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (f.style.icon === 'aircraft' || f.style.icon === 'vessel') {
       const rot = ((f.style.rotationDegrees ?? 0) * Math.PI) / 180;
       ctx.save();
       ctx.translate(p.x, p.y);

@@ -88,7 +88,22 @@ test('parseCoordinates accepts exact forms and declines everything else', () => 
   ok('21 18 25 N, 157 51 30 W', 21.30694, -157.85833);
   ok("21°18.5'N 157°51'W", 21.30833, -157.85);
   ok("S 33°52' E 151°12'", -33.8667, 151.2);
+  // Colons between degrees, minutes and seconds; no gap between the halves when both carry a letter.
+  ok('21:18:25N 157:51:30W', 21.30694, -157.85833);
+  ok('21:18:25N, 157:51:30W', 21.30694, -157.85833);
+  ok('21.3N157.8W', 21.3, -157.8);
+  ok('N21.3W157.8', 21.3, -157.8);
+  ok('157.8W21.3N', 21.3, -157.8);
+  ok('33.87s151.21e', -33.87, 151.21);
+  ok('21°18\'25"N157°51\'30"W', 21.30694, -157.85833);
   for (const bad of [
+    '21.3N157.8',
+    '21.3157.8W',
+    'N512WN',
+    'N12345',
+    '21N22N',
+    '12:30',
+    '12:30:15',
     '12junk, 34oops',
     '91, 10',
     '10, 181',
@@ -121,6 +136,14 @@ test('parseCoordinates reads MGRS and UTM grid references, and says why when one
   const ambiguous = parseCoordinates('18S 585628 4511322');
   assert.ok(ambiguous?.kind === 'unsupported');
   assert.match(ambiguous.note, /^UTM reference not read: .*could be latitude band S/);
+  // As the HUD writes them: band S with mE and mN, and UPS in the polar caps.
+  assert.equal(parseCoordinates('33S 300000mE 3800000mN')?.kind, 'utm');
+  const ups = parseCoordinates('UPS N 2000000mE 1444542mN');
+  assert.ok(ups && ups.kind === 'utm' && Math.abs(ups.latitude - 85) < 1e-4);
+  assert.equal(ups.label, 'UPS N 2000000mE 1444542mN (85.0000° N, 0.0000° E)');
+  const notPolar = parseCoordinates('UPS N 2000000mE 1000000mN');
+  assert.ok(notPolar?.kind === 'unsupported');
+  assert.match(notPolar.note, /^UPS reference not read: That UPS coordinate is not in the north polar cap/);
   // A bare 100 km square is not taken for a reference: too easily something else.
   assert.equal(parseCoordinates('4QFJ'), undefined);
   // The polar caps: a reference with six figures or more, or written with spaces…
@@ -169,4 +192,25 @@ test('parseCoordinates reads a geo URI (RFC 5870, two dimensions) and says why i
   assert.equal(say('geo:95,10'), 'geo URI not read: latitude or longitude out of range');
   assert.equal(say('geo:Honolulu'), 'geo URI not read: it needs latitude,longitude in decimal degrees');
   assert.equal(parseCoordinates('geography 101'), undefined, 'not a URI');
+});
+
+test('coordinates as pasted: a typeset minus, a bracketed pair, a Google Maps link', () => {
+  const at = (t: string) => {
+    const r = parseCoordinates(t);
+    return r && r.kind !== 'unsupported' ? [r.latitude, r.longitude] : r;
+  };
+  // Wikipedia's decimal coordinates use U+2212 and a semicolon.
+  assert.deepEqual(at('−33.8568; 151.2153'), [-33.8568, 151.2153]);
+  assert.deepEqual(at('(21.3069, -157.8583)'), [21.3069, -157.8583]);
+  assert.deepEqual(at('https://www.google.com/maps/@21.3069,-157.8583,12z'), [21.3069, -157.8583]);
+  assert.deepEqual(
+    at('https://www.google.com/maps/place/Honolulu,+HI/@21.3281,-157.8691,12z/data=!3m1'),
+    [21.3281, -157.8691],
+  );
+  assert.deepEqual(at('https://www.google.co.uk/maps/@51.5,-0.12,10z'), [51.5, -0.12]);
+  assert.deepEqual(at('https://maps.google.com/?q=21.3,-157.8'), [21.3, -157.8]);
+  assert.deepEqual(at('https://www.google.com/maps/search/?api=1&query=21.3069%2C-157.8583'), [21.3069, -157.8583]);
+  assert.equal(at('https://example.org/maps/@21,1,1z'), undefined, 'only Google Maps links');
+  assert.equal(at('https://www.google.com/maps/@91,0,3z'), undefined, 'out of range');
+  assert.equal(at('(21.3, -157.8'), undefined, 'unbalanced');
 });

@@ -39,3 +39,33 @@ test('unambiguousTimestamp: Unix seconds or milliseconds between 2000 and 2100, 
   assert.equal(t('2028-02-29T00:00:00Z'), '2028-02-29T00:00:00.000Z');
   assert.equal(unambiguousTimestamp(Number.NaN), undefined);
 });
+
+test('isoTimestamp: a date-time with no zone is UTC whether written with T or a space, on any computer', () => {
+  const was = process.env['TZ'];
+  process.env['TZ'] = 'Pacific/Honolulu';
+  try {
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23T10:00:00'), '2026-09-23T10:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23T10:00'), '2026-09-23T10:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23 10:00:00.5'), '2026-09-23T10:00:00.500Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23T10:00:00-10:00'), '2026-09-23T20:00:00.000Z');
+    // And so is an observedAt mapped with no transform at all.
+    const m = compileMapping({
+      externalId: 'id',
+      observedAt: 'at',
+      position: { lat: 'la', lon: 'lo' },
+    });
+    const r = mapRecord({ id: 'a', at: '2026-09-23T10:00:00', la: 1, lo: 2 }, m);
+    assert.ok(r.ok);
+    assert.equal(r.record.observedAt, '2026-09-23T10:00:00.000Z');
+  } finally {
+    if (was === undefined) delete process.env['TZ'];
+    else process.env['TZ'] = was;
+  }
+});
+
+test('transforms: a number past what a date or a number holds is no value, never a throw or Infinity', () => {
+  assert.equal(TRANSFORMS['isoTimestamp']!(1e20), undefined);
+  assert.equal(TRANSFORMS['isoTimestamp']!(-1e20), undefined);
+  assert.equal(TRANSFORMS['feetToMeters']!(1e308), undefined);
+  assert.equal(resolveTransform('scale:1e300')!(1e300), undefined);
+});

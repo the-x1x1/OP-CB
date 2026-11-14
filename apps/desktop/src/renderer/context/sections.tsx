@@ -1380,6 +1380,169 @@ export function sceneSummary(
   );
 }
 
+/** A GTFS Realtime enum name as words: `MANY_SEATS_AVAILABLE` → "Many seats available". */
+export function gtfsWords(v: string | undefined): string | undefined {
+  if (!v) return undefined;
+  const words = v.toLowerCase().replace(/_/g, ' ').trim();
+  return words ? words[0]!.toUpperCase() + words.slice(1) : undefined;
+}
+
+const STOP_STATUS: Readonly<Record<string, string>> = {
+  STOPPED_AT: 'Stopped at',
+  IN_TRANSIT_TO: 'On its way to',
+  INCOMING_AT: 'Arriving at',
+};
+const SCHEDULE: Readonly<Record<string, string>> = {
+  SCHEDULED: 'On the timetable',
+  ADDED: 'An extra trip, not on the timetable',
+  UNSCHEDULED: 'Runs without a timetable',
+  CANCELED: 'Cancelled',
+  DUPLICATED: 'A copy of a timetabled trip',
+  DELETED: 'Removed from the timetable',
+  NEW: 'A new trip, not on the timetable',
+};
+/** What is not worth a row: the feed saying it does not know. */
+const GTFS_UNKNOWN = new Set(['NO_DATA_AVAILABLE', 'UNKNOWN_CONGESTION_LEVEL', 'NO_VALUE', 'UNKNOWN']);
+
+/** "Stopped at stop 899 (the trip's 1st)" from a GTFS Realtime vehicle's stop fields. */
+export function transitStop(
+  status: string | undefined,
+  stopId: string | undefined,
+  sequence: number | undefined,
+): string | undefined {
+  if (!stopId) return status ? gtfsWords(status) : undefined;
+  const lead = (status && STOP_STATUS[status]) ?? 'At or near';
+  const nth = (n: number) => {
+    const tail = n % 100 >= 11 && n % 100 <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
+    return `${n}${tail}`;
+  };
+  return `${lead} stop ${stopId}${sequence !== undefined ? ` (the trip's ${nth(sequence)})` : ''}`;
+}
+
+/** "2026-11-10 22:50" from GTFS's start date and time ("20261110 22:50:00"): the agency's local time. */
+export function transitTripStart(v: string | undefined): string | undefined {
+  const m = v?.match(/^(\d{4})(\d{2})(\d{2})(?:\s+(\d{1,2}):(\d{2}))?/);
+  if (!m) return v || undefined;
+  return `${m[1]}-${m[2]}-${m[3]}${m[4] ? ` ${m[4].padStart(2, '0')}:${m[5]}` : ''} (local time)`;
+}
+
+/**
+ * A bus, train, tram or ferry from a GTFS Realtime feed (`gtfs-rt`; docs/connectors/gtfs-rt.md):
+ * its route and trip, where it is on the trip, how full it is and whether it is accessible —
+ * the feed's codes in words. Other transit sources give `route` and `occupancy`, read too.
+ */
+const transitVehicle: ContextSection = {
+  id: 'transit-vehicle',
+  title: 'Transit',
+  render: ({ object }) => {
+    const known = (k: string) => {
+      const v = str(object, k);
+      return v && !GTFS_UNKNOWN.has(v) ? v : undefined;
+    };
+    const occupancy = known('occupancy');
+    const pct = num(object, 'occupancyPercent');
+    const occupancyText = occupancy
+      ? `${gtfsWords(occupancy)}${pct !== undefined ? ` (${Math.round(pct)} % full)` : ''}`
+      : pct !== undefined
+        ? `${Math.round(pct)} % full`
+        : undefined;
+    const schedule = known('scheduleRelationship');
+    const wheelchair = known('wheelchair');
+    const direction = num(object, 'directionId');
+    return (
+      <FieldList
+        rows={[
+          { label: 'Route', value: str(object, 'routeId') ?? str(object, 'route') },
+          {
+            label: 'Where',
+            value: transitStop(known('stopStatus'), str(object, 'stopId'), num(object, 'stopSequence')),
+          },
+          { label: 'Trip', value: str(object, 'tripId'), mono: true },
+          { label: 'Direction', value: direction !== undefined ? String(direction) : undefined },
+          { label: 'Trip starts', value: transitTripStart(str(object, 'tripStart')) },
+          { label: 'Timetable', value: schedule ? (SCHEDULE[schedule] ?? gtfsWords(schedule)) : undefined },
+          { label: 'How full', value: occupancyText },
+          { label: 'Traffic', value: gtfsWords(known('congestion')) },
+          {
+            label: 'Wheelchair',
+            value:
+              wheelchair === 'WHEELCHAIR_ACCESSIBLE'
+                ? 'Accessible'
+                : wheelchair === 'WHEELCHAIR_INACCESSIBLE'
+                  ? 'Not accessible'
+                  : undefined,
+          },
+          { label: 'Plate', value: str(object, 'licensePlate'), mono: true },
+        ]}
+      />
+    );
+  },
+};
+
+/** The Beaufort force for a wind of `mps` (the WMO's upper bounds in m/s) and its name. */
+const BEAUFORT_MAX_MPS = [0.5, 1.5, 3.3, 5.5, 7.9, 10.7, 13.8, 17.1, 20.7, 24.4, 28.4, 32.6];
+const BEAUFORT_NAMES = [
+  'Calm',
+  'Light air',
+  'Light breeze',
+  'Gentle breeze',
+  'Moderate breeze',
+  'Fresh breeze',
+  'Strong breeze',
+  'Near gale',
+  'Gale',
+  'Strong gale',
+  'Storm',
+  'Violent storm',
+  'Hurricane force',
+];
+export function beaufort(mps: number): { force: number; name: string } {
+  const i = BEAUFORT_MAX_MPS.findIndex((max) => mps < max);
+  const force = i < 0 ? 12 : i;
+  return { force, name: BEAUFORT_NAMES[force]! };
+}
+
+/** "6.9 m/s (13 kn) from ENE (075°)" — the way a forecast gives it: where it blows from. */
+export function windFrom(mps: number | undefined, fromDeg: number | undefined): string | undefined {
+  if (mps === undefined) return undefined;
+  if (mps < 0.5 || fromDeg === undefined) return 'Calm';
+  const point = COMPASS_16[Math.round((((fromDeg % 360) + 360) % 360) / 22.5) % 16];
+  const deg = String(Math.round(fromDeg) % 360).padStart(3, '0');
+  return `${mps.toFixed(1)} m/s (${Math.round(mps / 0.514444)} kn) from ${point} (${deg}°)`;
+}
+
+/**
+ * A point of a wind grid (`wind`, ADR-002 amendment 2026-11-11): the wind there, where it
+ * blows from, its Beaufort force, the forecast step it is for and the model. The arrow on the
+ * map points the other way — where the wind is going — so the panel says which is which.
+ */
+const windPoint: ContextSection = {
+  id: 'wind',
+  title: 'Wind',
+  render: ({ object }) => {
+    const mps = num(object, 'speedMps');
+    const from = num(object, 'fromDeg');
+    const valid = str(object, 'validAt') ?? object.observedAt;
+    const force = mps !== undefined ? beaufort(mps) : undefined;
+    return (
+      <div className="wv-ctx-stack">
+        <p className="wv-ctx-summary">
+          The wind 10 metres up at this point of a forecast grid. The arrow points where it blows to; a forecast names
+          it by where it comes from.
+        </p>
+        <FieldList
+          rows={[
+            { label: 'Wind', value: windFrom(mps, from) },
+            { label: 'Beaufort', value: force ? `Force ${force.force}, ${force.name.toLowerCase()}` : undefined },
+            { label: 'Forecast for', value: valid ? formatUtcDateTime(valid) : undefined },
+            { label: 'Model', value: str(object, 'model') },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+
 export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSection[] }> = [
   { type: 'aircraft', sections: [aircraft] },
   { type: 'earthquake', sections: [earthquake] },
@@ -1391,6 +1554,8 @@ export const TYPE_SECTIONS: ReadonlyArray<{ type: string; sections: ContextSecti
   { type: 'weather-station', sections: [weatherStation] },
   { type: 'sensor', sections: [airQuality] },
   { type: 'imagery-scene', sections: [imageryScene] },
+  { type: 'wind', sections: [windPoint] },
+  { type: 'transit-vehicle', sections: [transitVehicle] },
   { type: 'camera', sections: [camera] },
   { type: 'vessel', sections: [vessel] },
 ];

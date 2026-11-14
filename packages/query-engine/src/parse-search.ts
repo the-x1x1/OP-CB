@@ -40,6 +40,8 @@ interface Token {
   text: string;
   lower: string;
   used: boolean;
+  /** Taken as (part of) an object type's phrase. */
+  typeWord?: boolean;
 }
 
 interface Draft {
@@ -106,7 +108,7 @@ export function parseSearch(text: string, ctx: ParseContext): ParsedSearch {
   extractNavigation(tokens);
   extractTime(tokens, now, draft);
   extractIdentifiers(tokens, out, ctx);
-  extractTypes(tokens, draft);
+  extractTypes(tokens, draft, ctx.gazetteer);
   extractThresholds(tokens, draft, out);
   extractSpatial(tokens, ctx.gazetteer, draft, out);
   extractLeftover(tokens, ctx.gazetteer, draft, out);
@@ -192,6 +194,11 @@ const NUMBER_WORDS: Record<string, number> = {
   twelve: 12,
 };
 
+/**
+ * Time words in a search. Calendar ones — today, yesterday, this week, this month — are UTC
+ * days, as every time in the app is UTC, and their label says so: in Hawaii "today" starts at
+ * 2 PM the day before.
+ */
 function extractTime(tokens: Token[], now: number, draft: Draft): void {
   const startOfDay = (ms: number) => Math.floor(ms / DAY) * DAY;
   for (let i = 0; i < tokens.length; i++) {
@@ -204,21 +211,21 @@ function extractTime(tokens: Token[], now: number, draft: Draft): void {
       b = tokens[i + 2]?.lower;
     if (t.lower === 'today') {
       range = { start: iso(startOfDay(now)), end: iso(now) };
-      label = 'today';
+      label = 'today, UTC';
       consumed = 1;
     } else if (t.lower === 'yesterday') {
       range = { start: iso(startOfDay(now) - DAY), end: iso(startOfDay(now)) };
-      label = 'yesterday';
+      label = 'yesterday, UTC';
       consumed = 1;
     } else if (t.lower === 'since' && a === 'yesterday') {
       range = { start: iso(startOfDay(now) - DAY), end: iso(now) };
-      label = 'since yesterday';
+      label = 'since yesterday, UTC';
       consumed = 2;
     } else if (t.lower === 'this' && (a === 'week' || a === 'month')) {
       const start =
         a === 'week' ? startOfIsoWeek(now) : Date.UTC(new Date(now).getUTCFullYear(), new Date(now).getUTCMonth(), 1);
       range = { start: iso(start), end: iso(now) };
-      label = `this ${a}`;
+      label = `this ${a}, UTC`;
       consumed = 2;
     } else if (t.lower === 'last' || t.lower === 'past' || t.lower === 'previous') {
       if (a !== undefined) {
@@ -262,8 +269,9 @@ function numberOf(word: string): number | undefined {
   if (/^\d+$/.test(word)) return Number(word);
   return NUMBER_WORDS[word];
 }
+/** From `ms` before now; a span longer than there is data for starts at 1970 (a date at all). */
 function lookback(now: number, ms: number): TimeRange {
-  return { start: iso(now - ms), end: iso(now) };
+  return { start: iso(Math.max(0, now - ms)), end: iso(now) };
 }
 function iso(ms: number): string {
   return new Date(ms).toISOString();
@@ -365,11 +373,48 @@ function placeIntent(hit: GazetteerHit): SearchIntent {
 
 // ---- object types ------------------------------------------------------------
 
-const PHRASES = TYPE_VOCABULARY.flatMap((v) => v.phrases.map((p) => ({ type: v.type, words: p.split(' ') }))).sort(
-  (a, b) => b.words.length - a.words.length,
-);
+const PHRASES = TYPE_VOCABULARY.flatMap((v) =>
+  v.phrases.map((p) => ({ type: v.type, words: p.split(' '), alone: v.alone === true })),
+).sort((a, b) => b.words.length - a.words.length);
 
-function extractTypes(tokens: Token[], draft: Draft): void {
+/** Words that join a type to a place, a time or a count rather than making a compound with it. */
+const JOINING_WORDS: ReadonlySet<string> = new Set([
+  'near',
+  'around',
+  'nearby',
+  'close',
+  'over',
+  'above',
+  'across',
+  'in',
+  'at',
+  'within',
+  'from',
+  'during',
+  'since',
+  'on',
+  'by',
+  'off',
+  'speed',
+  'now',
+  'today',
+]);
+
+/**
+ * Whether the token beside a phrase makes a compound of it ("wind farm", "high wind"): an
+ * unused word that joins nothing, is not a stop word and does not start a place name.
+ */
+function compoundWith(t: Token | undefined, gazetteer: Gazetteer | undefined): boolean {
+  if (!t) return false;
+  // Beside another type's word ("wind advisory": a weather alert) it names that thing.
+  if (t.typeWord) return true;
+  if (t.used) return false;
+  if (STOP_WORDS.has(t.lower) || JOINING_WORDS.has(t.lower) || /^[\d.,:+-]/.test(t.lower)) return false;
+  if (gazetteer?.lookup(t.text, { limit: 1 }).some((h) => (h.score ?? 0) >= 0.9)) return false;
+  return true;
+}
+
+function extractTypes(tokens: Token[], draft: Draft, gazetteer?: Gazetteer): void {
   for (const phrase of PHRASES) {
     for (let i = 0; i + phrase.words.length <= tokens.length; i++) {
       let ok = true;
@@ -381,7 +426,15 @@ function extractTypes(tokens: Token[], draft: Draft): void {
         }
       }
       if (!ok) continue;
-      for (let k = 0; k < phrase.words.length; k++) tokens[i + k]!.used = true;
+      if (
+        phrase.alone &&
+        (compoundWith(tokens[i - 1], gazetteer) || compoundWith(tokens[i + phrase.words.length], gazetteer))
+      )
+        continue;
+      for (let k = 0; k < phrase.words.length; k++) {
+        tokens[i + k]!.used = true;
+        tokens[i + k]!.typeWord = true;
+      }
       if (!draft.types.includes(phrase.type)) draft.types.push(phrase.type);
     }
   }

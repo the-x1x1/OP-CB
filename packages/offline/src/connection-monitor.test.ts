@@ -128,6 +128,8 @@ test('connection-monitor: a probe-driven change needs two consecutive agreeing r
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'CONNECTED', 'alternating probes never toggle the state');
   assert.deepEqual(h.changes, []);
+  // The sources have stopped answering too: the probe's word stands.
+  h.setHealth(0, 2);
   h.setProbe(false);
   await h.monitor.tick();
   await h.monitor.tick();
@@ -136,6 +138,7 @@ test('connection-monitor: a probe-driven change needs two consecutive agreeing r
   h.setProbe('throw');
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'OFFLINE', 'a throwing probe counts as unreachable');
+  h.setHealth(2, 2);
   h.setProbe(true);
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'OFFLINE');
@@ -208,4 +211,58 @@ test('connection-monitor: hysteresis of 1 commits immediately; no sources means 
   await h.monitor.tick();
   assert.equal(h.monitor.state(), 'CONNECTED');
   assert.deepEqual(h.changes, ['OFFLINE', 'CONNECTED']);
+});
+
+test('connection-monitor: started while the OS (or the mode gate) says offline, one good probe after it opens is enough', async () => {
+  // The start screen: the door is shut until the operator chooses, so every source is offline
+  // and the monitor starts OFFLINE. Choosing Online opens it; the sources come back only once
+  // the monitor says so, so a second vote 30 s later (which the throttled probe could also
+  // spoil) kept the app offline for a minute or more.
+  let online = false;
+  const m = new ConnectionMonitor({
+    network: { isOnline: () => online },
+    probe: async () => true,
+    sourceHealth: {
+      connection: () => ({
+        state: 'OFFLINE',
+        networkOnline: online,
+        remoteLive: 0,
+        remoteTotal: 2,
+        localLive: 0,
+        at: '',
+      }),
+    },
+  });
+  assert.equal(m.state(), 'OFFLINE');
+  online = true;
+  await m.tick();
+  assert.equal(m.state(), 'DEGRADED', 'reachable, sources not yet back: they are told to poll now');
+});
+
+test('connection-monitor: a probe-driven OFFLINE still needs two good probes to clear', async () => {
+  let reach = false;
+  const m = new ConnectionMonitor({ network: { isOnline: () => true }, probe: async () => reach });
+  await m.tick();
+  await m.tick();
+  assert.equal(m.state(), 'OFFLINE');
+  reach = true;
+  await m.tick();
+  assert.equal(m.state(), 'OFFLINE', 'one good probe after failed ones is not enough');
+  await m.tick();
+  assert.equal(m.state(), 'CONNECTED');
+});
+
+test('connection-monitor: the probe host down while sources answer is DEGRADED, not OFFLINE', async () => {
+  // The probe asks one host (USGS). OFFLINE stops every remote source, so an outage or a filter
+  // on that one host must not take the whole app offline while the others are reachable.
+  const h = harness();
+  h.setProbe(false);
+  await h.monitor.tick();
+  await h.monitor.tick();
+  assert.equal(h.monitor.state(), 'DEGRADED');
+  // When the sources fail too, it is the network: OFFLINE.
+  h.setHealth(0, 2);
+  await h.monitor.tick();
+  await h.monitor.tick();
+  assert.equal(h.monitor.state(), 'OFFLINE');
 });

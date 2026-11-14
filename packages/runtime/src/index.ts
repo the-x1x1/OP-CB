@@ -10,7 +10,7 @@
  */
 export * from './contract.js';
 export { createWorldRuntime, type ComposedWorldRuntime } from './runtime.js';
-export { RuntimeCore, isLiveMode } from './core.js';
+export { RuntimeCore, isLiveMode, hasLocalAircraftSource } from './core.js';
 export { createHandlers, chooseMode, modeState, prepCsv, readLibraryOpen } from './handlers.js';
 export { ZimLibrary, LIBRARY_DIR_NAME, type ZimLookup, type ZimItem } from './support/zim-library.js';
 export {

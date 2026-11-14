@@ -1,6 +1,6 @@
 import { isValidLatLon, type GeoPosition, type JsonValue, type WorldGeometry } from '@opcb/world-model';
 import { parsePath, readPath, type PathSegment } from './path.js';
-import { resolveTransform, type Transform } from './transforms.js';
+import { isoTimestamp, resolveTransform, type Transform } from './transforms.js';
 
 /**
  * The mapping language: how a connector definition turns one source record into the parts
@@ -595,7 +595,9 @@ export interface MappedRecord {
 }
 
 export type MapResult =
-  { ok: true; record: MappedRecord } | { ok: false; reason: string } | { ok: false; skipped: true };
+  | { ok: true; record: MappedRecord }
+  | { ok: false; reason: string }
+  | { ok: false; skipped: true };
 
 /** Any non-blank string up to 256 characters; identity resolution encodes what the id grammar refuses (a URN's `:` included). */
 const ID_VALUE = /^\S{1,256}$/;
@@ -612,9 +614,11 @@ export function mapRecord(record: unknown, m: CompiledMapping): MapResult {
     const out: MappedRecord = { externalId, labels: {}, properties: {} };
     if (m.observedAt) {
       const t = readField(record, m.observedAt);
-      if (typeof t === 'string' && Number.isFinite(Date.parse(t)))
-        out.observedAt = new Date(Date.parse(t)).toISOString();
-      else if (typeof t === 'number') {
+      if (typeof t === 'string') {
+        // Read as isoTimestamp reads it: a time with no zone is UTC, not this computer's.
+        const iso = isoTimestamp(t);
+        if (iso) out.observedAt = iso;
+      } else if (typeof t === 'number') {
         const iso = resolveTransform('unixSeconds')!(t > 1e11 ? t / 1000 : t);
         if (typeof iso === 'string') out.observedAt = iso;
       }

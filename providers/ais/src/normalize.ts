@@ -216,7 +216,8 @@ export function normalizeAisEnvelope(raw: unknown, opts: AisNormalizeOptions): A
   } else {
     flags.push('static-data');
     const imo = num(fields['ImoNumber']);
-    if (imo !== undefined && imo > 0) payload['imo'] = String(Math.trunc(imo));
+    // The message's IMO field is 30 bits: a larger number is not one (it printed as "1e+308").
+    if (imo !== undefined && imo > 0 && imo < 2 ** 30) payload['imo'] = String(Math.trunc(imo));
     const callSign = aisText(fields['CallSign'], 10);
     if (callSign) payload['callSign'] = callSign;
     const type = num(fields['Type'] ?? fields['ShipType']);
@@ -231,15 +232,22 @@ export function normalizeAisEnvelope(raw: unknown, opts: AisNormalizeOptions): A
     if (destination) payload['destination'] = destination;
     const dim = fields['Dimension'] as Record<string, unknown> | undefined;
     if (dim && typeof dim === 'object') {
-      const a = num(dim['A']) ?? 0,
-        b = num(dim['B']) ?? 0,
-        c = num(dim['C']) ?? 0,
-        d = num(dim['D']) ?? 0;
+      // Each in its field's range (ITU-R M.1371: A and B 0–511 m, C and D 0–63 m); outside it,
+      // none — a sum of two huge ones was an infinite length.
+      const part = (v: unknown, max: number) => {
+        const n = num(v);
+        return n !== undefined && n >= 0 && n <= max ? n : 0;
+      };
+      const a = part(dim['A'], 511),
+        b = part(dim['B'], 511),
+        c = part(dim['C'], 63),
+        d = part(dim['D'], 63);
       if (a + b > 0) payload['lengthM'] = a + b;
       if (c + d > 0) payload['beamM'] = c + d;
     }
     const draught = num(fields['MaximumStaticDraught']);
-    if (draught !== undefined && draught > 0) payload['draughtM'] = round(draught, 1);
+    // 25.5 m is the field's largest (it means 25.5 m or more).
+    if (draught !== undefined && draught > 0 && draught <= 25.5) payload['draughtM'] = round(draught, 1);
     const eta = fields['Eta'] as Record<string, unknown> | undefined;
     if (eta && typeof eta === 'object') {
       const month = num(eta['Month']),

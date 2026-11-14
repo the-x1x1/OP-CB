@@ -234,12 +234,12 @@ export class EventEngine {
   private allOf(types: readonly string[], now: number): WorldObject[] {
     const out: WorldObject[] = [];
     for (const t of types) {
-      if (this.state) out.push(...this.state.ofType(t));
+      if (this.state) for (const item of this.state.ofType(t)) out.push(item);
       else {
         const mem = this.memory.get(t);
         if (mem) {
           this.prune(mem, now);
-          out.push(...mem.values());
+          for (const item of mem.values()) out.push(item);
         }
       }
     }

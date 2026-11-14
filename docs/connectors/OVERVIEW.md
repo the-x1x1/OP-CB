@@ -78,7 +78,7 @@ still a provider: see [Building a provider](../providers/BUILDING-A-PROVIDER.md)
 | `schema`                | Always `oneview.connector.v1`.                                                                                                                                                                |
 | `id`                    | The provider id (lowercase, digits, `-`, `.`); unique across bespoke providers and definitions.                                                                                               |
 | `connector`             | Which connector runs it (`rest-json`, `geojson`, `csv`, `websocket-json`, …).                                                                                                                 |
-| `objectType`            | One of the world model's object types (`aircraft`, `vessel`, `earthquake`, `sensor`, `place`, `imagery-scene`, …). Presentation hides unknown types, so this is checked.                      |
+| `objectType`            | One of the world model's object types (`aircraft`, `vessel`, `earthquake`, `sensor`, `place`, `imagery-scene`, `wind`, …). Presentation hides unknown types, so this is checked.              |
 | `categories`            | Lens categories the source belongs to.                                                                                                                                                        |
 | `endpoint`              | URL (https), method, headers, query, body, credential, `intervalSeconds`, `timeoutSeconds`, `maxBytes`, `emptyStatus`. Polling connectors.                                                    |
 | `websocket`             | URL (wss), subscribe and heartbeat frames, credential, `itemsPath`, `filter`, `flushMs`. Subscription connectors.                                                                             |
@@ -116,6 +116,7 @@ often than the type usually does — a station every hour, a tracker every secon
 | `vessel`                                     | 3 min      | 15 min       | 3 h          |
 | `traffic-segment`                            | 5 min      | 30 min       | 3 h          |
 | `weather-station`                            | 30 min     | 3 h          | 24 h         |
+| `wind`                                       | 3 h        | 6 h          | 12 h         |
 | `storm`, `weather-alert`                     | 30 min     | 6 h          | 48 h         |
 | `earthquake`                                 | 1 h        | 24 h         | never        |
 | `launch`                                     | 1 h        | 24 h         | 30 days      |

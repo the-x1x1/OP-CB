@@ -118,6 +118,12 @@ export function clampBounds(b: GeoBounds): GeoBounds {
   return { west: lon(b.west), south: lat(b.south), east: lon(b.east), north: lat(b.north) };
 }
 
+/** The middle of bounds; across the antimeridian (west > east) it is on the 180° side. */
+export function boundsCenter(b: GeoBounds): { latitude: number; longitude: number } {
+  const east = b.west > b.east ? b.east + 360 : b.east;
+  return { latitude: (b.north + b.south) / 2, longitude: normalizeLongitude((b.west + east) / 2) };
+}
+
 /** Bounds may cross the antimeridian (west > east). */
 export function boundsContain(b: GeoBounds, p: { latitude: number; longitude: number }): boolean {
   if (p.latitude < b.south || p.latitude > b.north) return false;
@@ -140,9 +146,14 @@ export function circleBounds(center: GeoPosition, radiusM: number): GeoBounds {
   const dLat = radiusM / EARTH_RADIUS_M / DEG;
   const south = Math.max(-90, center.latitude - dLat);
   const north = Math.min(90, center.latitude + dLat);
+  // A circle that reaches a pole takes in every longitude round it.
+  if (dLat >= 90 - Math.abs(center.latitude)) return { west: -180, south, east: 180, north };
+  // The widest longitude on the sphere, asin(sin r / cos φ). radius / cos φ fell short of it as
+  // circles grew (±40° instead of ±43.2° at 60°N for 20°), so a corner of the circle lay outside
+  // its own bounds and a bounds lookup missed what was there.
+  const sinR = Math.sin(dLat * DEG);
   const cosLat = Math.cos(center.latitude * DEG);
-  if (cosLat < 1e-9 || dLat >= 90) return { west: -180, south, east: 180, north };
-  const dLon = Math.min(180, radiusM / (EARTH_RADIUS_M * cosLat) / DEG);
+  const dLon = Math.asin(Math.min(1, sinR / cosLat)) / DEG;
   if (dLon >= 180) return { west: -180, south, east: 180, north };
   return {
     west: normalizeLongitude(center.longitude - dLon),
@@ -152,29 +163,78 @@ export function circleBounds(center: GeoPosition, radiusM: number): GeoBounds {
   };
 }
 
+/**
+ * A ring with its longitudes made continuous from its first point, when it crosses the
+ * antimeridian (a step of more than 180°); undefined when it does not.
+ */
+function unwrappedRing(ring: ReadonlyArray<readonly [number, number]>): Array<[number, number]> | undefined {
+  if (!ring.some((p, i) => i > 0 && Math.abs(p[0] - ring[i - 1]![0]) > 180)) return undefined;
+  const out: Array<[number, number]> = [[ring[0]![0], ring[0]![1]]];
+  for (let i = 1; i < ring.length; i++) {
+    let x = ring[i]![0];
+    const prev = out[i - 1]![0];
+    while (x - prev > 180) x -= 360;
+    while (x - prev < -180) x += 360;
+    out.push([x, ring[i]![1]]);
+  }
+  return out;
+}
+
+const wrapLon = (x: number) => ((((x + 180) % 360) + 360) % 360) - 180;
+
+/**
+ * The bounds of a ring. One that crosses the antimeridian (a watch zone or alert area round the
+ * Aleutians) has west > east, the form `boundsContain` reads across 180°; until 2026-11-11 its
+ * bounds were the whole world but that sliver.
+ */
 export function polygonBounds(ring: Array<[number, number]>): GeoBounds {
-  let west = 180,
-    east = -180,
+  const r = unwrappedRing(ring) ?? ring;
+  let west = Infinity,
+    east = -Infinity,
     south = 90,
     north = -90;
-  for (const [lon, lat] of ring) {
-    if (lon < west) west = lon;
-    if (lon > east) east = lon;
+  let westAt = -1,
+    eastAt = -1;
+  r.forEach(([lon, lat], i) => {
+    if (lon < west) [west, westAt] = [lon, i];
+    if (lon > east) [east, eastAt] = [lon, i];
     if (lat < south) south = lat;
     if (lat > north) north = lat;
+  });
+  if (!r.length) return { west: 180, south, east: -180, north };
+  if (east - west >= 360) return { west: -180, south, east: 180, north };
+  // The edges are the extreme vertices' own longitudes, as written: wrapping an unwrapped one
+  // back (+360, −360) lost its last bits, and the vertex fell just outside its own bounds.
+  if (r !== ring || west < -180 || east > 180) {
+    const own = (i: number, unwrapped: number) => {
+      const v = ring[i]![0];
+      return v >= -180 && v <= 180 ? v : wrapLon(unwrapped);
+    };
+    return { west: own(westAt, west), south, east: own(eastAt, east), north };
   }
   return { west, south, east, north };
 }
 
-/** Ray-casting point-in-polygon on lon/lat (planar; adequate for regional polygons that do not cross the antimeridian). */
+/**
+ * Ray-casting point-in-polygon on lon/lat (planar; adequate for regional polygons). A ring that
+ * crosses the antimeridian is unwrapped and the point taken the short way round from it: until
+ * 2026-11-11 such a ring held everywhere but itself.
+ */
 export function pointInPolygon(p: { latitude: number; longitude: number }, ring: Array<[number, number]>): boolean {
+  const r = unwrappedRing(ring) ?? ring;
+  if (!r.length) return false;
+  // The point the short way round from the ring's first vertex: a ring written past 180° (182
+  // for −178), or unwrapped above, is met in its own longitudes.
+  let x = p.longitude;
+  const ref = r[0]![0];
+  while (x - ref > 180) x -= 360;
+  while (x - ref < -180) x += 360;
   let inside = false;
-  const n = ring.length;
+  const n = r.length;
   for (let i = 0, j = n - 1; i < n; j = i++) {
-    const [xi, yi] = ring[i]!;
-    const [xj, yj] = ring[j]!;
-    const intersect =
-      yi > p.latitude !== yj > p.latitude && p.longitude < ((xj - xi) * (p.latitude - yi)) / (yj - yi) + xi;
+    const [xi, yi] = r[i]!;
+    const [xj, yj] = r[j]!;
+    const intersect = yi > p.latitude !== yj > p.latitude && x < ((xj - xi) * (p.latitude - yi)) / (yj - yi) + xi;
     if (intersect) inside = !inside;
   }
   return inside;
@@ -215,24 +275,35 @@ export function geometryCentroid(g: WorldGeometry): GeoPosition | undefined {
       break;
     case 'MultiPoint':
     case 'LineString':
-      pts.push(...g.coordinates);
+      for (const item of g.coordinates) pts.push(item);
       break;
     case 'MultiLineString':
     case 'Polygon':
-      for (const r of g.coordinates) pts.push(...r);
+      for (const r of g.coordinates) for (const item of r) pts.push(item);
       break;
     case 'MultiPolygon':
-      for (const poly of g.coordinates) for (const r of poly) pts.push(...r);
+      for (const poly of g.coordinates) for (const r of poly) for (const item of r) pts.push(item);
       break;
   }
   if (pts.length === 0) return undefined;
+  // Longitudes are averaged the short way round from the first point, then brought back to
+  // −180…180: a shape over the antimeridian (an alert area round the Aleutians, given as 179°
+  // and −179°, or split into two parts there) has its centre at 180°, not at 0° — where until
+  // 2026-11-11 its marker, label and fly-to went, on the other side of the world.
+  const ref = pts[0]![0];
   let lat = 0,
     lon = 0;
   for (const p of pts) {
-    lon += p[0];
+    let x = p[0];
+    while (x - ref > 180) x -= 360;
+    while (x - ref < -180) x += 360;
+    lon += x;
     lat += p[1];
   }
-  return { latitude: lat / pts.length, longitude: lon / pts.length };
+  let mean = lon / pts.length;
+  while (mean >= 180) mean -= 360;
+  while (mean < -180) mean += 360;
+  return { latitude: lat / pts.length, longitude: mean };
 }
 
 export function positionToGeometry(p: GeoPosition): WorldGeometry {

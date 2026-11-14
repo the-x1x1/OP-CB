@@ -287,7 +287,11 @@ function place(
   bounds: GeoBounds | undefined,
   rank: number,
 ): SearchResult {
-  const box = bounds ? usableBounds(bounds) : undefined;
+  // Nominatim and Photon give a place across 180° (Fiji, Russia, Kiribati, the Aleutians) a box
+  // from −180 to 180: framed, that is a strip round the world. Its point and a zoom show it; only
+  // a continent (Antarctica) really is that wide.
+  const roundTheWorld = bounds !== undefined && bounds.west <= -179.99 && bounds.east >= 179.99 && kind !== 'continent';
+  const box = bounds && !roundTheWorld ? usableBounds(bounds) : undefined;
   return {
     kind: 'place',
     id,

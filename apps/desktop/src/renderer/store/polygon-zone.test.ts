@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { regionContains } from '@opcb/world-model';
 import { DemoClient } from '../demo/demo-client.js';
 import type { RendererHostLike } from '../renderer-host-like.js';
 import { loadInitialState } from './bootstrap-state.js';
@@ -42,7 +43,7 @@ async function harness() {
   return { actions, get: () => state };
 }
 
-test('the measured shape becomes a watch zone with that outline; one across 180° is refused', async () => {
+test('the measured shape becomes a watch zone with that outline, one across 180° too', async () => {
   const h = await harness();
   const before = h.get().watchzones.zones.length;
   const ok = await h.actions.createPolygonZone(
@@ -78,9 +79,13 @@ test('the measured shape becomes a watch zone with that outline; one across 180�
     ],
     'Fiji',
   );
-  assert.equal(across, false);
-  assert.equal(h.get().watchzones.zones.length, before + 1, 'nothing saved');
-  assert.ok(h.get().ui.notifications.some((n) => /180° meridian/.test(n.body)));
+  assert.equal(across, true);
+  const fiji = h.get().watchzones.zones.find((z) => z.name === 'Fiji')!;
+  // Watched on both sides of 180°, and only there.
+  assert.ok(regionContains(fiji.geometry, { latitude: -17.5, longitude: 179.95 }));
+  assert.ok(regionContains(fiji.geometry, { latitude: -17.45, longitude: -179.8 }));
+  assert.ok(!regionContains(fiji.geometry, { latitude: -17.5, longitude: 0 }));
+  assert.ok(!regionContains(fiji.geometry, { latitude: -17.5, longitude: 179 }));
 });
 
 test('a zone from a long leg follows the arc the map drew, not the straight line in degrees', async () => {

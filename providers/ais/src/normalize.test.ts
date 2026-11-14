@@ -310,3 +310,27 @@ test('subscription frame: key, bounding boxes ([lat, lon] pairs, antimeridian sp
     'invalid bounds → world',
   );
 });
+
+test('ShipStaticData: values outside their fields are dropped, never infinite', () => {
+  const r = normalizeAisEnvelope(
+    {
+      MessageType: 'ShipStaticData',
+      MetaData: { MMSI: 366123456, latitude: 21.3, longitude: -157.8, time_utc: '2026-09-21 08:00:06 +0000 UTC' },
+      Message: {
+        ShipStaticData: {
+          Dimension: { A: 1e308, B: 1e308, C: -5, D: 13 },
+          ImoNumber: 1e308,
+          MaximumStaticDraught: 1e308,
+          UserID: 366123456,
+        },
+      },
+    },
+    opts,
+  );
+  assert.ok(r.kind === 'observation');
+  const p = r.draft.payload;
+  assert.equal(p['lengthM'], undefined);
+  assert.equal(p['beamM'], 13);
+  assert.equal(p['imo'], undefined);
+  assert.equal(p['draughtM'], undefined);
+});

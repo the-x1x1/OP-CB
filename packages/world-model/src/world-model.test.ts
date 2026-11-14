@@ -306,3 +306,165 @@ test('simplifyRing: small rings survive, altitude rides along, coordinates are r
     ],
   );
 });
+
+test('geometryCentroid: a shape over the antimeridian is centred at 180°, not 0°', async () => {
+  const { geometryCentroid } = await import('./geo.js');
+  // An alert box round the western Aleutians, given in −180…180.
+  const box = geometryCentroid({
+    type: 'Polygon',
+    coordinates: [
+      [
+        [179, 51],
+        [-179, 51],
+        [-179, 53],
+        [179, 53],
+        [179, 51],
+      ],
+    ],
+  })!;
+  assert.ok(Math.abs(Math.abs(box.longitude) - 180) < 0.5, `centre at ${box.longitude}`);
+  assert.ok(box.longitude >= -180 && box.longitude < 180);
+  // The same area split into two parts on the antimeridian, as RFC 7946 asks.
+  const split = geometryCentroid({
+    type: 'MultiPolygon',
+    coordinates: [
+      [
+        [
+          [179, 51],
+          [180, 51],
+          [180, 53],
+          [179, 53],
+          [179, 51],
+        ],
+      ],
+      [
+        [
+          [-180, 51],
+          [-179, 51],
+          [-179, 53],
+          [-180, 53],
+          [-180, 51],
+        ],
+      ],
+    ],
+  })!;
+  assert.ok(Math.abs(Math.abs(split.longitude) - 180) < 0.5, `split centre at ${split.longitude}`);
+  // Anywhere else, the plain mean as before.
+  const plain = geometryCentroid({
+    type: 'Polygon',
+    coordinates: [
+      [
+        [10, 0],
+        [12, 0],
+        [12, 2],
+        [10, 2],
+      ],
+    ],
+  })!;
+  assert.deepEqual(plain, { latitude: 1, longitude: 11 });
+});
+
+test('polygons across the antimeridian: their bounds span 180°, and only what is inside them is', async () => {
+  const { polygonBounds, pointInPolygon, boundsContain } = await import('./geo.js');
+  const ring: Array<[number, number]> = [
+    [179, 51],
+    [-179, 51],
+    [-179, 53],
+    [179, 53],
+    [179, 51],
+  ];
+  const b = polygonBounds(ring);
+  assert.deepEqual(b, { west: 179, south: 51, east: -179, north: 53 }, 'west > east: across 180°');
+  assert.ok(boundsContain(b, { latitude: 52, longitude: 179.5 }));
+  assert.ok(boundsContain(b, { latitude: 52, longitude: -179.5 }));
+  assert.ok(!boundsContain(b, { latitude: 52, longitude: 0 }));
+  for (const lon of [179.5, -179.5, 180, -180])
+    assert.ok(pointInPolygon({ latitude: 52, longitude: lon }, ring), `${lon}`);
+  for (const lon of [0, 178, -178, 90]) assert.ok(!pointInPolygon({ latitude: 52, longitude: lon }, ring), `${lon}`);
+  // Drawn past 180° (a map that reports unwrapped longitudes): the same answers.
+  const unwrapped: Array<[number, number]> = ring.map(([x, y]) => [x < 0 ? x + 360 : x, y]);
+  assert.deepEqual(polygonBounds(unwrapped), b);
+  assert.ok(pointInPolygon({ latitude: 52, longitude: -179.5 }, unwrapped));
+  assert.ok(!pointInPolygon({ latitude: 52, longitude: 0 }, unwrapped));
+  // An ordinary ring as before.
+  const plain: Array<[number, number]> = [
+    [10, 0],
+    [12, 0],
+    [12, 2],
+    [10, 2],
+    [10, 0],
+  ];
+  assert.deepEqual(polygonBounds(plain), { west: 10, south: 0, east: 12, north: 2 });
+  assert.ok(pointInPolygon({ latitude: 1, longitude: 11 }, plain));
+  assert.ok(!pointInPolygon({ latitude: 1, longitude: 13 }, plain));
+});
+
+test('the middle of bounds across the antimeridian is on the 180° side', async () => {
+  const { boundsCenter } = await import('./geo.js');
+  assert.deepEqual(boundsCenter({ west: 170, south: -20, east: -170, north: -10 }), {
+    latitude: -15,
+    longitude: 180,
+  });
+  assert.deepEqual(boundsCenter({ west: 175, south: 50, east: -165, north: 54 }), { latitude: 52, longitude: -175 });
+  assert.deepEqual(boundsCenter({ west: -10, south: 0, east: 10, north: 2 }), { latitude: 1, longitude: 0 });
+});
+
+test('a circle lies inside its own bounds — near a pole, across 180°, small and large', async () => {
+  const { circleBounds, boundsContain } = await import('./geo.js');
+  const R = 6_371_008.8;
+  const rad = Math.PI / 180;
+  const destinationPoint = (c: { latitude: number; longitude: number }, bearing: number, m: number) => {
+    const d = m / R;
+    const f1 = c.latitude * rad;
+    const l1 = c.longitude * rad;
+    const t = bearing * rad;
+    const f2 = Math.asin(Math.sin(f1) * Math.cos(d) + Math.cos(f1) * Math.sin(d) * Math.cos(t));
+    const l2 = l1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(f1), Math.cos(d) - Math.sin(f1) * Math.sin(f2));
+    return { latitude: f2 / rad, longitude: ((((l2 / rad + 180) % 360) + 360) % 360) - 180 };
+  };
+  // A circle reaching a pole takes in every longitude (on 2026-11-13 one at 85°N, 1,000 km, had
+  // bounds −93°…113°, and a point at 88°N 170°W inside it fell outside them).
+  assert.deepEqual(
+    [
+      circleBounds({ latitude: 85, longitude: 10 }, 1_000_000).west,
+      circleBounds({ latitude: 85, longitude: 10 }, 1_000_000).east,
+    ],
+    [-180, 180],
+  );
+  // Edge points of many circles (deterministic sweep), each within the bounds.
+  for (const lat of [-80, -60, -30, 0, 30, 45, 60, 75, 84]) {
+    for (const lon of [-179.5, -90, 0, 120, 179.5]) {
+      for (const r of [1_000, 50_000, 500_000, 2_000_000, 4_000_000]) {
+        const b = circleBounds({ latitude: lat, longitude: lon }, r);
+        for (let deg = 0; deg < 360; deg += 5) {
+          const p = destinationPoint({ latitude: lat, longitude: lon }, deg, r * 0.999);
+          assert.ok(
+            boundsContain(b, p),
+            `${lat},${lon} r=${r} bearing ${deg}: ${JSON.stringify(p)} outside ${JSON.stringify(b)}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test('a polygon lies inside its own bounds, to the last bit — across 180°, near the poles', async () => {
+  const { polygonBounds, boundsContain } = await import('./geo.js');
+  // 2026-11-14: unwrapping a ring across 180° and wrapping its edges back (+360, −360) lost the
+  // last bits, so a vertex fell 6e-14° outside the bounds of its own polygon.
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 4000; i++) {
+    const clon = rnd() * 360 - 180;
+    const clat = rnd() * 170 - 85;
+    const spread = [0.5, 5, 40, 120][i % 4]!;
+    const ring: Array<[number, number]> = [];
+    for (let j = 0, k = 3 + Math.floor(rnd() * 8); j < k; j++) {
+      const lon = ((clon + (rnd() - 0.5) * spread + 540) % 360) - 180;
+      ring.push([lon, Math.max(-89.9, Math.min(89.9, clat + ((rnd() - 0.5) * spread) / 2))]);
+    }
+    const b = polygonBounds(ring);
+    for (const [lon, lat] of ring)
+      assert.ok(boundsContain(b, { latitude: lat, longitude: lon }), `${JSON.stringify(ring)} → ${JSON.stringify(b)}`);
+  }
+});

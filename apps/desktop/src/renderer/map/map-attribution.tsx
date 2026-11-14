@@ -1,3 +1,4 @@
+import type { WorldObject } from '@opcb/world-model';
 import { useState } from 'react';
 import { Icon } from '@opcb/ui';
 
@@ -35,6 +36,35 @@ function writeCollapsed(v: boolean): void {
   }
 }
 
+/**
+ * The credits of the sources whose objects the map draws: those of the shown types and kept
+ * by the per-object switches, an object's own attribution first, else its source's — every
+ * source, once, in the order met. Until 2026-11-11 the shell stopped at the first three found
+ * among all objects, drawn or not, so a fourth source went uncredited on screen.
+ */
+export function sourceCredits(
+  objects: Iterable<WorldObject>,
+  bySource: ReadonlyMap<string, string | undefined>,
+  options: { visibleTypes?: ReadonlySet<string>; keep?: (o: WorldObject) => boolean } = {},
+): string[] {
+  const seen = new Set<string>();
+  const credited = new Set<string>();
+  for (const o of objects) {
+    if (options.visibleTypes && !options.visibleTypes.has(o.type)) continue;
+    if (options.keep && !options.keep(o)) continue;
+    const own = o.provenance.attribution;
+    if (own) {
+      seen.add(own);
+      continue;
+    }
+    if (credited.has(o.provenance.providerId)) continue;
+    credited.add(o.provenance.providerId);
+    const text = bySource.get(o.provenance.providerId);
+    if (text) seen.add(text);
+  }
+  return [...seen];
+}
+
 export function MapAttribution({ credits }: { credits: readonly string[] }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   if (!credits.length) return null;
@@ -60,13 +90,10 @@ export function MapAttribution({ credits }: { credits: readonly string[] }) {
         <Icon name={collapsed ? 'info' : 'chevronDown'} size={12} />
         {collapsed ? <span>Sources ({credits.length})</span> : null}
       </button>
-      {collapsed ? (
-        lead ? (
-          <span className="wv-map__attribution-lead">{lead}</span>
-        ) : null
-      ) : (
-        <span>{credits.join(' · ')}</span>
-      )}
+      {collapsed && lead ? <span className="wv-map__attribution-lead">{lead}</span> : null}
+      {/* Rendered folded too, hidden by CSS: a saved picture of the map unfolds it, so the
+          picture carries every credit whatever the operator folded on screen. */}
+      <span className="wv-map__attribution-full">{credits.join(' · ')}</span>
     </div>
   );
 }

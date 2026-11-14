@@ -2,14 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { keyboardBounds, nearbyOrder } from './nearby.js';
 
-const o = (id: string, latitude: number, longitude: number) => ({ id, position: { latitude, longitude } });
+const o = (id: string, latitude: number, longitude: number, type = 'aircraft') => ({
+  id,
+  type,
+  position: { latitude, longitude },
+});
 
 test('the keyboard meets objects in view nearest the middle first', () => {
   const objects = [
     o('far', 21.9, -157.9),
     o('near', 21.31, -157.86),
     o('mid', 21.5, -157.9),
-    { id: 'nowhere' },
+    { id: 'nowhere', type: 'aircraft' },
     o('outside', 30, -150),
   ];
   const bounds = { west: -158.5, south: 20.8, east: -157.2, north: 22 };
@@ -50,5 +54,22 @@ test("the flat map's bounds clamped at 180° are rebuilt round its unwrapped cen
   assert.deepEqual(
     nearbyOrder(fiji, { latitude: -17, longitude: 185 }, keyboardBounds({ latitude: -17, longitude: 185 }, b)).sort(),
     ['east', 'west'],
+  );
+});
+
+test('the keyboard steps only to what the map draws, and never to a wind grid point', () => {
+  const objects = [
+    o('plane', 21.31, -157.86),
+    o('ship', 21.32, -157.86, 'vessel'),
+    o('gust', 21.3, -157.85, 'wind'),
+    { ...o('jet', 21.33, -157.86), properties: { military: true } },
+  ];
+  const middle = { latitude: 21.3, longitude: -157.85 };
+  assert.deepEqual(nearbyOrder(objects, middle, undefined), ['plane', 'ship', 'jet'], 'the wind point is skipped');
+  assert.deepEqual(nearbyOrder(objects, middle, undefined, { types: new Set(['vessel', 'wind']) }), ['ship']);
+  assert.deepEqual(
+    nearbyOrder(objects, middle, undefined, { keep: (x) => x.type !== 'aircraft' || 'properties' in x }),
+    ['ship', 'jet'],
+    'a per-object switch (Military only) applies',
   );
 });

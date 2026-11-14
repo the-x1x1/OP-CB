@@ -21,8 +21,11 @@ import {
   type EndpointSpec,
 } from '@opcb/connector-sdk';
 import { createPaginator, type PageRequest, type Paginator } from '../pagination.js';
+import { decodeGtfsRealtime, GtfsRealtimeError } from '../gtfs-realtime.js';
 import { parseCsv } from '../csv.js';
 import { contourRecords } from '../contours.js';
+import { windRecords } from '../wind.js';
+import { tableRecords } from '../table.js';
 import { DEFAULT_MAX_BYTES } from '../shared/limits.js';
 import { addUnseen, rejectedMessage, responseOrigin, warnRejected } from '../shared/mapping.js';
 
@@ -86,16 +89,27 @@ export class RestJsonProvider extends PollingProvider {
   ): ProviderHttpRequest {
     const e = this.definition.endpoint!;
     const view = viewValues(bounds, center, this.definition.boundsMaxRadiusKm);
-    const url = new URL(page.url ?? substitute(e.url, view));
-    for (const [k, v] of Object.entries(e.query ?? {})) url.searchParams.set(k, substitute(String(v), view));
-    for (const [k, v] of Object.entries(page.query)) url.searchParams.set(k, v);
+    // Only a definition that asks for the time reads the clock.
+    const timed = JSON.stringify(e).includes('{now');
+    const nowMs = timed ? this.context.clock.now() : 0;
+    const build = (fill: (t: string) => string) => {
+      const u = new URL(page.url ?? fill(substitute(e.url, view)));
+      for (const [k, v] of Object.entries(e.query ?? {})) u.searchParams.set(k, fill(substitute(String(v), view)));
+      for (const [k, v] of Object.entries(page.query)) u.searchParams.set(k, v);
+      return restorePathPlaceholder(u, e.credential);
+    };
     const req: ProviderHttpRequest = {
-      url: restorePathPlaceholder(url, e.credential),
+      url: build((t) => substituteNow(t, nowMs)),
       method: e.method ?? 'GET',
       headers: { Accept: acceptFor(this.definition), ...(e.headers ?? {}) },
       maxBytes: e.maxBytes ?? DEFAULT_MAX_BYTES,
       timeoutMs: this.manifest.refreshPolicy.timeoutMs,
     };
+    // A request that carries the time is a new URL every poll: keyed by it, each poll would
+    // take a new cache entry (pushing out other sources') and a failed poll would have no last
+    // good answer to fall back on. Keyed by the URL with `{now…}` left as written, every poll
+    // of the source shares one entry.
+    if (timed) req.cacheKey = build((t) => t);
     if (e.method === 'POST' && e.body !== undefined) {
       req.body = typeof e.body === 'string' ? e.body : JSON.stringify(e.body);
       req.headers!['Content-Type'] = typeof e.body === 'string' ? 'text/plain' : 'application/json';
@@ -136,7 +150,7 @@ export class RestJsonProvider extends PollingProvider {
         res = await this.context.http.request({
           ...req,
           signal: request.signal,
-          cacheKey: req.url,
+          cacheKey: req.cacheKey ?? req.url,
           ...(this.definition.endpoint?.emptyStatus ? { emptyStatus: this.definition.endpoint.emptyStatus } : {}),
         });
       } catch (err) {
@@ -195,10 +209,19 @@ export class RestJsonProvider extends PollingProvider {
   }
 
   private parseBody(
-    res: { text(): string; json(): unknown },
+    res: { text(): string; json(): unknown; bytes(): Uint8Array },
     url: string,
   ): { records: unknown[]; body: unknown } | { malformed: string } {
     const format = this.definition.response?.format ?? 'json';
+    if (format === 'gtfs-rt') {
+      try {
+        const feed = decodeGtfsRealtime(res.bytes());
+        return { records: feed.vehicles, body: null };
+      } catch (err) {
+        if (err instanceof GtfsRealtimeError) return { malformed: `not a GTFS Realtime feed (${err.message})` };
+        throw err;
+      }
+    }
     if (format === 'csv') {
       const csv = parseCsv(res.text(), { ...(this.definition.response?.csv ?? {}) });
       if (csv.malformed) return { malformed: `not CSV (${csv.malformed})` };
@@ -212,9 +235,21 @@ export class RestJsonProvider extends PollingProvider {
     } catch {
       return { malformed: 'response is not valid JSON' };
     }
+    const wind = this.definition.response?.wind;
+    if (wind) {
+      const read = windRecords(body, wind);
+      if ('malformed' in read) return { malformed: read.malformed };
+      return { records: read.records, body };
+    }
     const contour = this.definition.response?.contour;
     if (contour) {
       const read = contourRecords(body, contour);
+      if ('malformed' in read) return { malformed: read.malformed };
+      return { records: read.records, body };
+    }
+    const table = this.definition.response?.table;
+    if (table) {
+      const read = tableRecords(body, table);
       if ('malformed' in read) return { malformed: read.malformed };
       return { records: read.records, body };
     }
@@ -237,6 +272,8 @@ function acceptFor(d: ConnectorProviderDefinition): string {
       return 'text/csv, text/plain;q=0.9, */*;q=0.1';
     case 'text':
       return 'text/plain, */*;q=0.1';
+    case 'gtfs-rt':
+      return 'application/x-protobuf, application/octet-stream;q=0.9, */*;q=0.1';
     default:
       return 'application/json, application/geo+json;q=0.9, */*;q=0.1';
   }
@@ -301,6 +338,21 @@ export function substitute(text: string, view: Readonly<Record<ViewKey, string>>
   return out;
 }
 
+const NOW_PLACEHOLDER = /\{now(?:-(\d{1,4})([mh]))?\}/g;
+
+/**
+ * `{now}`, `{now-90m}`, `{now-3h}` → the request time (less the offset) as ISO 8601 to the
+ * second, UTC. A forecast grid is asked for its step nearest a time (NOAA ERDDAP rounds a
+ * griddap time to the nearest step; it does not take `now`, read 2026-11-11).
+ */
+export function substituteNow(text: string, nowMs: number): string {
+  if (!text.includes('{now')) return text;
+  return text.replace(NOW_PLACEHOLDER, (_m, n: string | undefined, unit: string | undefined) => {
+    const back = n ? Number(n) * (unit === 'h' ? 3_600_000 : 60_000) : 0;
+    return new Date(nowMs - back).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  });
+}
+
 export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -320,6 +372,24 @@ export function validateRestJson(d: ConnectorProviderDefinition): ConnectorValid
   if (d.boundsMaxRadiusKm !== undefined && !has(RADIUS_KEYS))
     warnings.push('boundsMaxRadiusKm is set but no {radiusKm}/{radiusNm}/{radiusM} placeholder uses it');
   if (d.pagination?.strategy === 'next-link' && !d.endpoint) errors.push('next-link pagination needs an endpoint');
+  // Placeholders — the time, the view, a credential — go in the path or the query, never the
+  // scheme, host or port: the host a source talks to is the one written in its definition.
+  const origin = /^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i.exec(d.endpoint?.url ?? '')?.[0] ?? '';
+  if (origin.includes('{now')) errors.push('{now} may appear only in the path or the query, not the host');
+  else if (origin.includes('{'))
+    errors.push('a placeholder may appear only in the path or the query, not the scheme, host or port');
+  const wind = d.response?.wind;
+  if (wind) {
+    if ((d.response?.format ?? 'json') !== 'json') errors.push('response.wind reads a JSON table: format must be json');
+    if (d.response?.contour) errors.push('response.wind and response.contour cannot both be set');
+    if (d.response?.itemsPath) warnings.push('response.itemsPath is ignored with response.wind');
+  }
+  if (d.response?.table) {
+    if ((d.response.format ?? 'json') !== 'json') errors.push('response.table reads a JSON table: format must be json');
+    if (d.response.wind || d.response.contour)
+      errors.push('response.table cannot be set with response.wind or response.contour');
+    if (d.response.itemsPath) warnings.push('response.itemsPath is ignored with response.table');
+  }
   const contour = d.response?.contour;
   if (contour) {
     if ((d.response?.format ?? 'json') !== 'json')

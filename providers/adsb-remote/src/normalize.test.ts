@@ -207,3 +207,15 @@ test('normalize: navigation integrity (NIC, NACp, version, GPS lost) is kept but
     'out of range values are left out',
   );
 });
+
+test('normalize: a number too large to mean anything is dropped, and never throws or overflows', () => {
+  const row = { hex: 'a4b2c3', lat: 21.5, lon: -157.2, alt_baro: 1e308, gs: 1e308, baro_rate: 1e308, seen_pos: 0 };
+  const d = aircraftRowToDraft(row, opts);
+  assert.ok(typeof d !== 'string');
+  assert.equal(d.position?.altitudeM, undefined);
+  assert.equal(d.payload['speedMps'], undefined);
+  assert.equal(d.payload['verticalSpeedMps'], undefined);
+  // A snapshot time past any date: the row is refused, not thrown on (that lost the whole poll).
+  assert.equal(aircraftRowToDraft(row, { ...opts, nowMs: 1e300 }), 'invalid snapshot time');
+  assert.equal(parseAdsbLolResponse({ ac: [], now: 1e300 }), 'response has no "now" timestamp');
+});

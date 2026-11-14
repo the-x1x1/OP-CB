@@ -69,6 +69,17 @@ export function boundsToRing(b: GeoBounds): Position[] {
 }
 
 /** Geodesic circle approximated with `segments` vertices (closed ring). */
+/** Web Mercator's last latitude: MapLibre draws nothing past it. */
+const MERCATOR_MAX_LAT = 85.051129;
+
+/**
+ * A geodesic circle as a GeoJSON ring, its longitudes continuous round the centre (past ±180°
+ * where it crosses the antimeridian, which MapLibre draws in the next world copy). A circle
+ * that contains a pole (a polar satellite's footprint, range rings near one) cannot close on
+ * itself in Web Mercator: until 2026-11-11 such a ring closed with a line straight across the
+ * map, leaving the polar cap out (or, south, jumped 320° and drew across the whole map). It is
+ * now unwrapped to run once round the world and closed along the map's edge at that pole.
+ */
 export function circleRing(center: GeoPosition, radiusM: number, segments = 48): Position[] {
   const R = 6_371_008.8;
   const lat = (center.latitude * Math.PI) / 180,
@@ -82,7 +93,47 @@ export function circleRing(center: GeoPosition, radiusM: number, segments = 48):
       lon + Math.atan2(Math.sin(brg) * Math.sin(d) * Math.cos(lat), Math.cos(d) - Math.sin(lat) * Math.sin(lat2));
     ring.push([(lon2 * 180) / Math.PI, (lat2 * 180) / Math.PI]);
   }
-  return ring;
+  // Closed exactly: the bearing 2π lands a float's width from 0.
+  ring[segments] = ring[0]!;
+  // The pole is inside when the circle reaches past it: its angular distance from the centre is
+  // 90° − |latitude|.
+  const north = center.latitude >= 0;
+  const toPole = Math.PI / 2 - Math.abs(lat);
+  if (d < toPole) return ring;
+  // Unwrap: every step the short way, so the ring runs once round the world without a jump.
+  const open = ring.slice(0, -1);
+  for (let i = 1; i < open.length; i++) {
+    let x = open[i]![0]!;
+    const prev = open[i - 1]![0]!;
+    while (x - prev > 180) x -= 360;
+    while (x - prev < -180) x += 360;
+    open[i] = [x, open[i]![1]!];
+  }
+  // Westward or eastward as the bearings ran; close through the pole's edge of the map.
+  const first = open[0]!;
+  const last = open[open.length - 1]!;
+  const end: Position = [first[0]! + (last[0]! > first[0]! ? 360 : -360), first[1]!];
+  const edge = north ? MERCATOR_MAX_LAT : -MERCATOR_MAX_LAT;
+  return [...open, end, [end[0]!, edge], [first[0]!, edge], first];
+}
+
+/**
+ * A polygon's ring with its longitudes made continuous: a ring that steps from 179° to −179°
+ * (an alert area over the Aleutians or Fiji) would otherwise be drawn the long way, across the
+ * whole map; unwrapped, it runs past 180° and MapLibre draws it in the next world copy. A ring
+ * that does not cross is returned as it is.
+ */
+export function unwrapRing(ring: Position[]): Position[] {
+  if (!ring.some((p, i) => i > 0 && Math.abs(p[0]! - ring[i - 1]![0]!) > 180)) return ring;
+  const out: Position[] = [ring[0]!];
+  for (let i = 1; i < ring.length; i++) {
+    let x = ring[i]![0]!;
+    const prev = out[i - 1]![0]!;
+    while (x - prev > 180) x -= 360;
+    while (x - prev < -180) x += 360;
+    out.push([x, ...ring[i]!.slice(1)] as Position);
+  }
+  return out;
 }
 
 export function featureGeometry(f: RenderFeature): GeoJsonGeometry | undefined {
@@ -102,7 +153,7 @@ export function featureGeometry(f: RenderFeature): GeoJsonGeometry | undefined {
     }
     case 'polygon':
       return g.rings.length && (g.rings[0]?.length ?? 0) >= 3
-        ? { type: 'Polygon', coordinates: g.rings.map((r) => r.map(toPos)) }
+        ? { type: 'Polygon', coordinates: g.rings.map((r) => unwrapRing(r.map(toPos))) }
         : undefined;
     case 'circle':
       return Number.isFinite(g.radiusM) && g.radiusM > 0

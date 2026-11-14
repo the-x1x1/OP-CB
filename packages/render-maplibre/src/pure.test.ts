@@ -537,3 +537,64 @@ test('a faded line or dot is faded once in 2D, as on the globe: by its colour, n
   assert.equal(props.opacity, 0.5);
   assert.match(props.color, /,0\.500?\)$/, 'the colour itself is at half strength');
 });
+
+test('circleRing: a circle round a pole runs once round the world and closes along the map edge', () => {
+  // A polar satellite's footprint near 82° N (2,500 km), and range rings near the South Pole.
+  for (const [center, edge] of [
+    [{ latitude: 82, longitude: 0 }, 85.051129],
+    [{ latitude: -75, longitude: 100 }, -85.051129],
+  ] as const) {
+    const ring = circleRing(center, center.latitude > 0 ? 2_500_000 : 2_000_000);
+    assert.deepEqual(ring[0], ring.at(-1), 'closed exactly');
+    const lons = ring.map((p) => p[0]!);
+    assert.ok(Math.abs(Math.max(...lons) - Math.min(...lons) - 360) < 1e-9, 'once round the world');
+    for (let i = 1; i < ring.length; i++) {
+      const step = Math.abs(ring[i]![0]! - ring[i - 1]![0]!);
+      // The only long step is the closing run along the map's edge at the pole.
+      if (step > 180) assert.ok(ring[i]![1] === edge && ring[i - 1]![1] === edge, `step ${i}: ${step}°`);
+    }
+    assert.equal(ring.filter((p) => p[1] === edge).length, 2, 'two corners at the pole edge');
+  }
+  // Away from the poles, as before: continuous round the centre, across 180° unwrapped, closed.
+  const pacific = circleRing({ latitude: 21, longitude: 179 }, 2_000_000);
+  assert.ok(Math.max(...pacific.map((p) => p[0]!)) > 180, 'past 180°, for the next world copy');
+  assert.deepEqual(pacific[0], pacific.at(-1));
+  assert.ok(pacific.every((p, i) => i === 0 || Math.abs(p[0]! - pacific[i - 1]![0]!) < 10));
+});
+
+test('a polygon ring across the antimeridian is unwrapped, not drawn across the map', async () => {
+  const { unwrapRing } = await import('./geojson.js');
+  // An alert box over the western Aleutians, given in −180…180.
+  const ring = [
+    [179, 51],
+    [-178, 51],
+    [-178, 53],
+    [179, 53],
+    [179, 51],
+  ];
+  const out = unwrapRing(ring.map((p) => [...p]));
+  assert.deepEqual(
+    out.map((p) => p[0]),
+    [179, 182, 182, 179, 179],
+  );
+  assert.deepEqual(
+    out.map((p) => p[1]),
+    [51, 51, 53, 53, 51],
+  );
+  const plain = [
+    [10, 0],
+    [11, 0],
+    [11, 1],
+    [10, 0],
+  ];
+  assert.equal(unwrapRing(plain), plain, 'a ring that does not cross is the same ring');
+  const g = featureGeometry({
+    id: 'a',
+    objectId: 'a',
+    layerId: 'l',
+    geometry: { kind: 'polygon', rings: [ring.map(([lon, lat]) => ({ latitude: lat!, longitude: lon! }))] },
+    style: { styleClass: 'weather-alert' },
+  } as never)!;
+  const coords = (g as { coordinates: number[][][] }).coordinates[0]!;
+  assert.ok(coords.every((p, i) => i === 0 || Math.abs(p[0]! - coords[i - 1]![0]!) <= 180));
+});

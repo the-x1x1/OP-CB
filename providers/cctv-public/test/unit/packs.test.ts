@@ -367,3 +367,16 @@ test("ontario: without the operator's developer key the pack waits for it instea
   assert.equal(ontarioPack.request.credential?.as, 'query');
   assert.equal(ontarioPack.request.credential?.name, 'key');
 });
+
+test('an empty catalog is reported as empty, not as a new shape', async () => {
+  // 2026-11-13: Taiwan's Highway Bureau served cctvs.xml as a 0-byte file (HTTP 200).
+  const { provider, ctx } = await providerWith((req) =>
+    req.url === TAIWAN_THB_CCTV_URL ? { status: 200, body: '' } : everyPack(req),
+  );
+  await provider.query({ signal: new AbortController().signal, background: true });
+  assert.equal((await provider.health()).status, 'DEGRADED');
+  const failed = ctx.logger.entries.find(
+    (e) => e.message === 'camera pack failed' && e.fields?.['pack'] === 'taiwan-thb',
+  );
+  assert.match(String(failed?.fields?.['message']), /taiwan-thb catalog came back empty/);
+});

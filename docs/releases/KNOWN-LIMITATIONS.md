@@ -101,14 +101,14 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   on another datum (NAD27, ED50) comes out tens to hundreds of metres off, and one in the old
   "AL" lettering names a different square or is refused. In the search box a polar MGRS
   reference (bands A, B, Y, Z) needs six figures or more, or spaces in it — `BAW1234` is read
-  as a flight's callsign. UPS coordinates are shown (HUD, panel) but not read from the search
-  box; give the MGRS reference instead.
+  as a flight's callsign. A UPS coordinate is read from the search box only inside its polar
+  cap (beyond 84° N or 80° S).
 - GPX, KML and GeoJSON: a collected aircraft, ship or other object goes out with its position
   only while it is on the map and every source behind it allows export (in the collection file
-  too, where it otherwise keeps just its name). A watch zone cannot cross the 180° meridian —
-  the measure tool's Watch and the zone import refuse such a shape (draw one each side). A
-  GeoJSON shape across 180° is written whole (a line is cut there). Holes in an imported
-  polygon are not kept.
+  too, where it otherwise keeps just its name). A GeoJSON shape across 180° (a watch zone over
+  Fiji, say) is written whole, each edge the short way round, as OP-CB reads it back; RFC 7946
+  asks for it to be cut in two there, so another tool (QGIS) may draw it the long way round (a
+  line is cut there). Holes in an imported polygon are not kept.
 - What's here names the nearest of the places bundled with the app — Natural Earth's 7,342
   cities and towns and the built-in list — and an installed worldpack's places within 100 km,
   so without a pack, in thinly settled country, the "nearest town" can be a long way off and a
@@ -331,6 +331,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `connectors/examples/` in the source. Copy one into your connectors folder and restart; it
   loads disabled until you switch it on in Sources. A file source reads only the folder you
   name in its settings, and shows nothing until you do.
+- LICENSE_REVIEW_REQUIRED — the wind layer (NOAA GFS 10 m wind from NOAA CoastWatch's ERDDAP,
+  `connectors/examples/weather/noaa-gfs-wind.json`) and the seven transit feeds (MBTA, CapMetro,
+  Metro Transit, OVapi, Entur, TransLink, HSL in `connectors/examples/transit/`) are examples,
+  off, until each licence's wording is confirmed: copy one into your connectors folder to use it.
+  The demo build draws a synthetic trade-wind field. Wind is drawn as arrows every 10°, not as
+  moving particles.
 - Shapefile, GeoPackage and the other GDAL formats need GDAL's `ogr2ogr` on `PATH`; it is
   not bundled, and the conversion has been tested only against a stand-in program.
 - The 2D map draws a WMTS layer only when its tile matrix set is Web Mercator; others are
@@ -457,8 +463,10 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
 - The first start of 0.6.0 turns Update automatically on, once, in every settings file — an
   operator who had switched it off before cannot be told from one who never touched it, since
   the file holds every setting either way. Switch it off again; from then on it stays off.
-- Automatic updates on Windows have been tested against a fake updater only: the first real
-  restart into a new version is the release after the one that brings them.
+- Automatic updates on Windows have run for real once: 0.7.3 to 0.7.4 on the operator's
+  desktop (2026-11-13) — found 3 s after going online, downloaded in 7 s, "Restart to update",
+  back as 0.7.4 in about 15 s. Not yet seen: a portable copy told of an update, a prerelease
+  offered to an opted-in install, and an update after a quit that waits for the runtime to stop.
 - The MCP server and the local API's Windows named pipe have been tested with fakes and over
   stdio in the container, not yet from a real MCP client against a running app.
 - The people of a Home Assistant household are shown only while `home-assistant-people` is on;

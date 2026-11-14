@@ -6,6 +6,15 @@ import { formatMgrs, formatUps, toMgrs, toUps, toUtm } from '@opcb/world-model';
  * camera moves does not make the text beside it jump.
  */
 
+/**
+ * A readout of a place that is not one — NaN or infinite from a camera between frames, a
+ * latitude past a pole — is a dash, as altitude and the grid reference already are, not
+ * "NaN°NaN′0NaN″".
+ */
+function isPlace(latitude: number, longitude: number): boolean {
+  return Math.abs(latitude) <= 90 && Number.isFinite(longitude);
+}
+
 /** Longitude folded into [−180, 180): the 2D map reports an unwrapped one past the antimeridian. */
 export function wrapLongitude(lon: number): number {
   return ((((lon + 180) % 360) + 360) % 360) - 180;
@@ -13,6 +22,7 @@ export function wrapLongitude(lon: number): number {
 
 /** `21.30700° N  157.85831° W` — five decimals, about a metre. */
 export function formatDecimal(latitude: number, longitude: number): string {
+  if (!isPlace(latitude, longitude)) return '—';
   const lon = wrapLongitude(longitude);
   const lat = `${Math.abs(latitude).toFixed(5).padStart(8, ' ')}° ${latitude < 0 ? 'S' : 'N'}`;
   const lng = `${Math.abs(lon).toFixed(5).padStart(9, ' ')}° ${lon < 0 ? 'W' : 'E'}`;
@@ -48,6 +58,7 @@ function dms(value: number, degWidth: number): string {
 
 /** `21°18′25.2″ N  157°51′29.9″ W`. */
 export function formatDms(latitude: number, longitude: number): string {
+  if (!isPlace(latitude, longitude)) return '—';
   const lon = wrapLongitude(longitude);
   return `${dms(latitude, 2)} ${latitude < 0 ? 'S' : 'N'}  ${dms(lon, 3)} ${lon < 0 ? 'W' : 'E'}`;
 }
@@ -68,12 +79,14 @@ export function formatZoom(zoom: number): string {
 
 /** Heading as three digits of whole degrees, 000–359. */
 export function formatHeading(degrees: number): string {
+  if (!Number.isFinite(degrees)) return '—';
   const d = Math.round(((degrees % 360) + 360) % 360) % 360;
   return `${String(d).padStart(3, '0')}°`;
 }
 
 /** Pitch as both renderers report it: −90° looking straight down, 0° level with the horizon. */
 export function formatPitch(degrees: number): string {
+  if (!Number.isFinite(degrees)) return '—';
   const d = Math.round(Math.max(-90, Math.min(90, degrees)));
   return `${d < 0 ? '−' : d > 0 ? '+' : ' '}${String(Math.abs(d)).padStart(2, '0')}°`;
 }

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { WatchZone } from '@opcb/ipc-contract';
-import { haversineMeters } from '@opcb/world-model';
+import { haversineMeters, regionContains } from '@opcb/world-model';
 import { CIRCLE_VERTICES, zoneRing, zonesFromGeodata, zonesToGeodata } from './zone-geodata.js';
 
 const at = '2026-10-05T00:00:00.000Z';
@@ -53,7 +53,7 @@ test('a circle is drawn as a ring of points at its radius; a box as its corners'
   assert.equal(zoneRing(zones[3]!.geometry), undefined, 'an admin region without bounds has no outline');
 });
 
-test('KML: one closed polygon per zone, named and described; and the same shapes read back', () => {
+test('KML: one closed polygon per zone, named and described; and the same shapes read back (a circle as a circle)', () => {
   const out = zonesToGeodata('kml', zones, at);
   assert.equal(out.written, 3);
   assert.equal(out.skipped, 1);
@@ -67,7 +67,7 @@ test('KML: one closed polygon per zone, named and described; and the same shapes
   assert.deepEqual(
     back.zones.map((z) => [z.name, z.geometry.kind]),
     [
-      ['Kīlauea & "summit"', 'polygon'],
+      ['Kīlauea & "summit"', 'circle'],
       ['Big Island box', 'polygon'],
       ['Saddle', 'polygon'],
     ],
@@ -105,7 +105,7 @@ test('GeoJSON: a circle keeps its centre and radius and comes back a circle', ()
   });
 });
 
-test('reading shapes: holes and points are not zones, a multipolygon is several, 180° is refused', () => {
+test('reading shapes: holes and points are not zones, a multipolygon is several, one across 180° is kept', () => {
   const geojson = JSON.stringify({
     type: 'FeatureCollection',
     features: [
@@ -177,8 +177,12 @@ test('reading shapes: holes and points are not zones, a multipolygon is several,
   if ('malformed' in read) return;
   assert.deepEqual(
     read.zones.map((z) => z.name),
-    ['Two islands (1)', 'Two islands (2)'],
+    ['Two islands (1)', 'Two islands (2)', 'Fiji'],
   );
+  const fiji = read.zones[2]!.geometry;
+  assert.ok(regionContains(fiji, { latitude: -17.5, longitude: 179.95 }), 'west of 180°');
+  assert.ok(regionContains(fiji, { latitude: -17.45, longitude: -179.8 }), 'east of 180°');
+  assert.ok(!regionContains(fiji, { latitude: -17.5, longitude: 0 }), 'not round the world');
   assert.equal(
     (read.zones[0]!.geometry as { polygon: unknown[] }).polygon.length,
     3,
@@ -186,7 +190,6 @@ test('reading shapes: holes and points are not zones, a multipolygon is several,
   );
   assert.deepEqual(read.issues, [
     '1 points or lines left out: a zone is a shape',
-    '1 shape across the 180° meridian left out: draw one each side',
     '1 shape with fewer than three points or a point off the globe left out',
   ]);
   assert.ok('malformed' in zonesFromGeodata('geojson', '[1,2'));
@@ -245,4 +248,27 @@ test('a circle goes out counterclockwise (RFC 7946); an outline over 10,000 poin
     }),
   );
   assert.ok(!('malformed' in huge) && huge.zones[0]!.geometry.kind === 'polygon');
+});
+
+test('KML: a circle carries its centre and radius as ExtendedData; values that do not read leave the polygon', () => {
+  const out = zonesToGeodata('kml', [zones[0]!], at);
+  assert.match(out.text, /<Data name="circleRadiusM"><value>20000<\/value><\/Data>/);
+  const back = zonesFromGeodata('kml', out.text);
+  assert.ok(!('malformed' in back));
+  if ('malformed' in back) return;
+  assert.deepEqual(back.zones[0]!.geometry, {
+    kind: 'circle',
+    center: { latitude: 19.41, longitude: -155.28 },
+    radiusM: 20_000,
+  });
+  // Edited in another tool to something that is not a circle: the drawn polygon is kept.
+  const bad = zonesFromGeodata('kml', out.text.replace('<value>20000</value>', '<value>wide</value>'));
+  assert.ok(!('malformed' in bad));
+  if ('malformed' in bad) return;
+  assert.equal(bad.zones[0]!.geometry.kind, 'polygon');
+  // A value left blank is not 0: the circle is not moved to 0° 0°.
+  const blank = zonesFromGeodata('kml', out.text.replace(/(circleLatitude"><value>)[^<]*/, '$1 '));
+  assert.ok(!('malformed' in blank));
+  if ('malformed' in blank) return;
+  assert.equal(blank.zones[0]!.geometry.kind, 'polygon');
 });

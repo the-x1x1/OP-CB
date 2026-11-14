@@ -482,3 +482,34 @@ test('the MCP server is built beside main and shipped outside the asar archive',
   assert.match(buildMain, /dist', 'mcp', 'opcb-mcp\.cjs'/);
   assert.match(builderYml, /^\s*-\s*'dist\/mcp\/opcb-mcp\.cjs'\s*$/m);
 });
+
+test('cesium staging refuses workers from a different engine than the one bundled', async () => {
+  const { mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { cesiumEngineMismatch } = await import('./scripts/renderer-assets.mjs');
+  const root = mkdtempSync(path.join(tmpdir(), 'opcb-cesium-'));
+  const pkg = (dir: string, name: string, version: string) => {
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name, version }));
+  };
+  try {
+    // The pnpm layout: the combined package and its own engine side by side under .pnpm,
+    // the app's direct engine and a link to the combined package in the app's node_modules.
+    const store = path.join(root, 'node_modules', '.pnpm', 'cesium@1.147.0', 'node_modules');
+    pkg(path.join(store, 'cesium'), 'cesium', '1.147.0');
+    mkdirSync(path.join(store, 'cesium', 'Build', 'Cesium'), { recursive: true });
+    pkg(path.join(store, '@cesium', 'engine'), '@cesium/engine', '26.5.0');
+    const app = path.join(root, 'apps', 'desktop');
+    pkg(path.join(app, 'node_modules', '@cesium', 'engine'), '@cesium/engine', '26.3.0');
+    symlinkSync(path.join(store, 'cesium'), path.join(app, 'node_modules', 'cesium'), 'junction');
+    const build = path.join(app, 'node_modules', 'cesium', 'Build', 'Cesium');
+    assert.match(
+      cesiumEngineMismatch(build, app) ?? '',
+      /cesium 1\.147\.0 carries @cesium\/engine 26\.5\.0, but the renderer bundles @cesium\/engine 26\.3\.0/,
+    );
+    pkg(path.join(app, 'node_modules', '@cesium', 'engine'), '@cesium/engine', '26.5.0');
+    assert.equal(cesiumEngineMismatch(build, app), undefined, 'the same engine on both sides passes');
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -5,6 +5,173 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
+  (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
+  (`21.3N157.8W`, `N21.3W157.8`). Without both letters (`21.3N157.8`) it still declines.
+- **The running version at the top left**, under the wordmark on the start screen, the map
+  and in the Command Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
+  update it is the new one; the commit tells a test build from the release it follows.
+- **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
+  readout showing what is round the selection, or the middle of the view, at its bearing and range
+  out to the range rings' outer ring, with a sweep. Off by default; also Show the contact sonar in
+  the palette.
+- **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
+  from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
+  and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
+  wind at the middle of the view. Each arrow is named by its place ("Wind at 25°N 165°W") and,
+  selected, says the wind the way a forecast does: "7.0 m/s (14 kn) from ENE (075°)", its Beaufort
+  force and the forecast step. Add a source drafts a pasted ERDDAP wind URL as a wind source, and reads
+  any ERDDAP table (buoys, stations) by column name. The definition is in `connectors/examples/weather/`, off
+  until its licence wording is confirmed.
+- **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
+  vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
+  occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
+  CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
+  off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
+  been read live; four MBTA vehicles are kept as a recorded test. A selected vehicle
+  has a Transit section: its route, trip, where it is on the trip, how full it is and whether it
+  is accessible, in words. Add a source recognises a pasted GTFS Realtime URL and drafts it with the same
+  mapping.
+- **A Traccar server on your own computer or network can push positions live**, as a public
+  one could: a local definition may have a `websocket` whose URL is
+  `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
+  source's settings, with the same token. Plain `ws://` goes only to this computer or the host
+  you named.
+
+### Changed
+
+- **Taking in a large poll is faster:** the list of the 5,000 most recent observations was
+  trimmed at every one, moving all 5,000 along each time; it is trimmed in batches now (150,000
+  aircraft taken in: 1.5 s instead of 2.4 s).
+
+- **Search and queries over many objects are faster:** when only the first few are wanted (a
+  search row's count and its first match), the best few are kept as the objects are read instead
+  of sorting them all — 150,000 aircraft with different times: about 0.1 s a query instead of 2 s.
+  A search by name builds rows only for the matches it shows.
+
+- **Search says a calendar day is UTC:** "fires today" is titled "Fires (today, UTC)", and so
+  are yesterday, this week and this month — as every time in the app, they are UTC days.
+
+- **A watch zone can cross the 180° meridian**: the measure tool's Watch and the zone import keep
+  a shape over the Aleutians or Fiji as drawn, instead of refusing it and asking for one shape
+  each side.
+
+### Fixed
+
+- **HUD: a position or heading that is not a number shows a dash,** as altitude and the grid
+  reference already did, instead of `NaN°NaN′0NaN″`.
+
+- **Watch zones no longer remember every aircraft or ship that ever entered.** Each entry was
+  kept for as long as the app ran, to stop the same one being announced twice within six hours;
+  past those six hours it is now forgotten (checked once an hour). An event's entry is kept, so
+  an alert upgraded days later is still told as an upgrade.
+
+- **Local API: `since`, `from` and `to` with no zone are UTC,** not the computer's local time (in
+  Hawaii `since` a minute before the objects was read as ten hours after them, and nothing came
+  back).
+
+- **Connector definitions: a time with no zone is UTC however it is written.** With
+  `isoTimestamp`, or an `observedAt` mapped with no transform, `2026-09-23 10:00:00` was read as
+  UTC but `2026-09-23T10:00:00` as the computer's local time — ten hours later in Hawaii. Both are
+  UTC now (`unambiguousTimestamp` still refuses a zone-less time). A number too large to be a
+  date no longer throws (it lost the whole poll), and a unit conversion or `scale:` that
+  overflows gives no value instead of Infinity.
+
+- **Counts read the same on any system:** the layer list, library, map download and Settings
+  wrote numbers in the system's own style (`1.234` on a German Windows) beside the rest of the
+  app's `1,234`.
+
+- **Aircraft and ship feeds: a number too large to mean anything is dropped.** In adsb.lol and
+  readsb, one (a snapshot time, say) could make a time with no date and throw, losing the whole
+  poll, or overflow an altitude or speed to infinity. In AIS static data, a ship's length,
+  beam, draught and IMO number are kept only inside their message fields' ranges (A and B 0–511 m,
+  C and D 0–63 m, draught up to 25.5 m). Found by feeding thousands of altered recorded answers
+  through each reader.
+
+- **Very large lists no longer fail with "Maximum call stack size exceeded".** Joining one list
+  onto another passed every item as an argument, which breaks past about 125,000: a query or
+  search over more aircraft than that ("aircraft above 30000 ft" with 150,000 on hand), a long
+  history read, a big map download's tile list, a shape with that many points. They are added
+  one at a time now (search, events, history, the tile cache, geometry, FIRMS, CelesTrak,
+  cameras, weather zones, MQTT).
+
+- **A satellite's catalogue number written with leading zeros** (`00005`, as in a TLE) is the
+  same satellite as `5`; a source (a connector definition, say) writing it that way would have made a second copy of it on the map.
+
+- **Search: a time span longer than there is data** ("earthquakes last 99999999999 days") starts
+  at 1970; it made the search fail with "Invalid time value".
+
+- **Connection badge: a key refused for a source already waiting for one** changes the badge at
+  once, not at the connection check up to 30 s later (the source's status did not change, so it was not told).
+
+- **A grid reference copied from the HUD reads back in search everywhere.** UTM in latitude band
+  S (32°–40° N: the southern United States, the Mediterranean, Iran, China, Japan) was refused
+  as "band S or south?" even as the HUD wrote it; written with mE and mN it is now the band.
+  UPS (beyond 84° N and 80° S) was not read at all; it is now, inside its polar cap. A test
+  pastes the HUD's decimal, DMS, MGRS and UTM for 400 points back into search.
+
+- A circle's bounds now hold the whole circle: one reaching a pole takes in every longitude, and
+  wide circles use the exact width (the old estimate fell short, ±40° instead of ±43° at 60°N for
+  a 2,200 km circle), so a watch zone or search circle no longer misses what lies near its edge.
+- A circular watch zone exported to KML comes back a circle (its centre and radius go along as
+  ExtendedData, which other tools ignore); before, only GeoJSON kept it.
+- The app no longer goes offline as a whole when only its reachability check fails (one host,
+  USGS) while other sources still answer: an outage or a filter on that host showed OFFLINE and
+  stopped every internet source. It is now DEGRADED and the sources keep running.
+- Quitting waits (up to 4 s) for history, settings and zones to be written; before, the app
+  could end first, and every start repaired the history index.
+- Command Center: the aircraft/ship receiver row says "Setup required" (none found yet) when
+  the receiver source, on by default, has never found one; "Degraded" is for one that answered
+  and stopped.
+- An app that starts offline (the start screen not yet answered, Work offline, no network) no
+  longer lets each internet source try once and log the refusal before it knows.
+- A public camera pack whose catalogue comes back empty says so in the log, instead of calling
+  it an unexpected shape (Taiwan's Highway Bureau served a 0-byte list on 2026-11-13).
+- The search list's "Search places online" row says Enter only when Enter takes it; under a
+  local answer (a pasted coordinate, a satellite by name) it says "online" instead.
+- Enter on a satellite's name selects it when the name has a second one in brackets ("NOAA 20"
+  or "JPSS-1" for NOAA 20 (JPSS-1)); before, the online place search was first and Enter asked
+  OpenStreetMap.
+- Choosing Online on the start screen brings live data in seconds; before, the connection
+  monitor waited for a second check 30 s later (and the throttled probe could spoil that one),
+  so the map stayed offline for up to a minute and a half (seen on jconn, 2026-11-13).
+- Search reads coordinates pasted from Wikipedia (its typeset minus sign), a pair in round
+  brackets, and a Google Maps link (the map's centre or a `q=` point) — the link read here
+  rather than sent to the online place search as text.
+- A local `.tsv` file is read as tab-separated; before, without a delimiter in its definition,
+  each row was read as one column and nothing had a position.
+- Searching for a place that crosses 180° (Fiji, Russia, Kiribati) goes to the place instead of
+  framing a strip round the whole world: both geocoders box such places from −180 to 180.
+- Place search from a view across 180° (Fiji, the Aleutians) favours places there, not ones
+  near longitude 0 off West Africa.
+- A weather alert or other area drawn across 180° now reaches the watch zones inside it; before,
+  it was taken as covering the rest of the world and matched none of them.
+- Areas that cross 180° (an alert or watch zone over the Aleutians or Fiji) now match the
+  objects inside them, report the right bounds, and centre their label on the area instead of
+  halfway round the world.
+- On the flat map, a circle round a pole (a polar satellite's footprint, range rings near a pole)
+  is drawn over the pole instead of closing straight across the map, and an area that crosses
+  180° (an alert over the Aleutians or Fiji) is no longer drawn the long way across the map.
+- The map's credit line credits every source with something drawn. It stopped at the first three
+  sources found among all objects, drawn or not, so a fourth (in the demo: ADS-B, AIS, CelesTrak
+  and the wind field) went uncredited on screen. A saved picture of the map carries every credit, unfolded, even when
+  the credits are folded away on screen.
+- Export visible objects and the ] and [ keys follow the layer switches: with a layer off, its
+  objects are no longer exported or stepped to.
+- A CSV export of the objects on the map writes negative latitudes, longitudes and altitudes as
+  numbers: the guard against spreadsheet formulas turned every one west of Greenwich or south of
+  the equator into text (`'-157.86`).
+- Screen readers are no longer pointed at parts of the window that are not there: the search
+  box, the menu button, the lens rail's group buttons and every tab strip named their list,
+  popover, group or panel even while it was closed (an automated accessibility check of the
+  renderer, docs/releases/A11Y-CHECK-2026-11-10.md).
+- A WebSocket JSON source whose connection fails waits the right time before trying again: one
+  failure, reported as an error and then a close, doubled the wait twice.
+- The build refuses to stage Cesium's workers from a different engine than the one the app
+  bundles (a `cesium` update on its own would have mixed them).
+
 ## [0.7.4] — 2026-11-08
 
 The first screen test's findings fixed, every keyless source read live, and an independent

@@ -75,7 +75,8 @@ export function Tabs({ items, activeId, onChange, label, compact, children, clas
               role="tab"
               id={`${baseId}-tab-${t.id}`}
               aria-selected={active}
-              aria-controls={`${baseId}-panel-${t.id}`}
+              // Only the selected tab's panel is rendered: the others name nothing.
+              aria-controls={active ? `${baseId}-panel-${t.id}` : undefined}
               tabIndex={active ? 0 : -1}
               disabled={t.disabled ?? false}
               className={`wv-tabs__tab${active ? ' wv-tabs__tab--active' : ''}`}

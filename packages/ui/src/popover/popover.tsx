@@ -6,7 +6,7 @@ export interface PopoverProps {
   renderTrigger: (props: {
     onClick: () => void;
     'aria-expanded': boolean;
-    'aria-controls': string;
+    'aria-controls': string | undefined;
     'aria-haspopup': 'dialog';
   }) => ReactNode;
   children: ReactNode;
@@ -62,7 +62,7 @@ export function Popover({
       {renderTrigger({
         onClick: () => setOpen(!isOpen),
         'aria-expanded': isOpen,
-        'aria-controls': id,
+        'aria-controls': isOpen ? id : undefined,
         'aria-haspopup': 'dialog',
       })}
       {isOpen ? (

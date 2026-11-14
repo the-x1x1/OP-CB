@@ -325,9 +325,11 @@ nothing analyses their content.
 
 The box at the top searches as you type, on this machine only: objects on the map (callsign,
 registration, MMSI, name), events, places in the built-in gazetteer (cities, airports by
-name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, an MGRS reference
+name or code, coordinates such as `21.3, -157.9`, `21°18'25"N 157°51'30"W`, `21:18:25N
+157:51:30W` or `21.3N157.8W` (written together, both halves need their N/S/E/W), an MGRS reference
 such as `4QFJ1234567890`, a UTM one such as `4Q 612345 2358765`, or a geo URI such as
-`geo:21.3069,-157.8583` as a phone shares a location), your own places — the
+`geo:21.3069,-157.8583` as a phone shares a location, or a Google Maps link — read here, not
+sent anywhere), your own places — the
 locations in your collections, by title or tag ("Collected · Big Island trip"), and your watch
 zones by name — commands ("switch to 3D", "source health", "aviation lens") and queries ("M5+ earthquakes last 24 hours", "earthquakes near
 Japan"). Enter picks the first row: a command or query named in full runs (a query with one
@@ -338,7 +340,9 @@ four). The letters are checked against the zone and latitude band, and a UTM coo
 point against its band letter; one that cannot be right is not flown to, and the line under
 the list says why. N and S after a UTM zone are read as the hemisphere only when they cannot be
 the band: `18S 585628 4511322` (S for band S, or for south?) is refused as ambiguous — write the
-band (`18T`) or use MGRS. Settings → Rendering → Grid reference in the HUD shows the view
+band (`18T`) or use MGRS. Written as the HUD writes it, with mE and mN (`33S 300000mE
+3800000mN`), S is the band, so what the HUD shows can be pasted back. A UPS coordinate as the
+HUD writes it (`UPS N 2000000mE 1444542mN`) is read too, inside its polar cap. Settings → Rendering → Grid reference in the HUD shows the view
 centre in MGRS or UTM and gives the pointer's position (CUR) in it. Beyond 84° N and 80° S the
 polar grid takes over: MGRS's bands Y and Z (north) and A and B (south), and UPS in place of
 UTM. A polar MGRS reference typed in the search box needs six figures or more, or spaces
@@ -374,7 +378,13 @@ read are named in a notice rather than half read.
   the map shows. Closer in than 2,000 km (zoom 4 in 2D), NEAR says where the middle of the view
   is from the nearest town (`41.4 KM WNW HILO`), looked up offline once the view rests. With something selected, RNG gives the distance and bearing from it to the
   pointer. Settings → Rendering → Grid reference in the HUD adds the centre's MGRS or UTM
-  reference and gives CUR, and the selection's Position, in it.
+  reference and gives CUR, and the selection's Position, in it. With the Wind layer on (under
+  Weather), WND gives the wind at the middle of the view, from where it blows (`FROM 274° 7.4 M/S`).
+  Settings → Rendering → Contact sonar in the HUD (or the palette's Show the contact sonar,
+  which turns the HUD on with it) adds a small north-up scope above the readout:
+  what is round the selection (SEL), or the middle of the view (VIEW), as blips at their bearing
+  and range out to the range rings' outer ring, the nearest 48 of the shown layers, dimmer when not
+  seen lately, with a sweep (none with reduced motion).
 - **Grid** (G): latitude and longitude lines spaced for the view, each named once.
 - **Day and night** (N): the night side shaded, and two points on it — where the Sun stands
   overhead, and where the Moon does, with how much of it is lit — moved once a minute. With the
@@ -403,7 +413,7 @@ read are named in a notice rather than half read.
   the size of a continent); within a fraction of a degree of the antipode a distance is the
   spherical one, within 0.1%. The line is drawn along the great circle. **Export** saves the
   line — or with Area on, the shape — as a GPX route, KML (Google Earth, ATAK) or GeoJSON.
-  With Area on, **Watch** makes the shape a watch zone (not across the 180° meridian).
+  With Area on, **Watch** makes the shape a watch zone (one across the 180° meridian too).
 - **The map by keyboard**: Tab to the map (or click it); then the arrow keys move the view, the
   plus and minus keys zoom, and Shift with the arrows turns and tilts it — on the globe and the
   2D map alike. `]` selects the next object out from the middle of the view and `[` the one
@@ -497,9 +507,9 @@ rises.
 Zones also come from elsewhere: **What's here → Watch here** (50 km round a point), the measure
 tool's **Watch** (its shape, with Area on), and the tab's **import** button, which reads the
 shapes of a KML or GeoJSON file — an area drawn in Google Earth, ATAK or QGIS — as new zones
-(points, lines and shapes across the 180° meridian are left out, and the notice says so). The
-**export** button writes every zone to KML or GeoJSON; a circle goes out as a polygon, and from
-GeoJSON comes back a circle.
+(points and lines are left out, and the notice says so; a shape across the 180° meridian is kept). The
+**export** button writes every zone to KML or GeoJSON; a circle goes out as a polygon with its
+centre and radius alongside, and comes back a circle from either.
 
 **Pass alerts.** On a satellite's panel, **Alert me before it passes over home** (a home view
 must be set) gives a notice a few minutes before it rises over your home view — by default
@@ -556,6 +566,11 @@ downloads in the background, and a card over the map says **OP-CB X is ready —
 update**: press it and the app closes, installs the update without the installer's wizard and
 opens again; press **Later** and it installs the next time you quit. Nothing is asked while
 working offline.
+
+The version running is under the OP-CB wordmark at the top left — on the start screen, the map
+and the Command Center — as `v0.7.4 · f021db71`: the version and the build's commit. It is read
+from the program each time it starts, so after an update it is the new one. The commit tells a
+test build of a branch from the release with the same number.
 
 Settings → Updates: **Update automatically** (on by default; off, the card offers **Download and
 restart** instead), **Include pre-release builds**, and **Check now**. Builds are not code-signed

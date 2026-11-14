@@ -155,6 +155,15 @@ export const DARK_THEME: Theme = {
     launch: dark('#fdba74', 8),
     sensor: dark('#86efac', 5),
     'imagery-scene': { ...dark('#c084fc', 5), fillAlpha: 0.03 },
+    // Wind arrows by strength (Beaufort edges): pale for a calm, through cyan and green to
+    // amber, orange and red for a storm.
+    wind: dark('#cbd5e1', 2),
+    'wind.calm': dark('#94a3b8', 2),
+    'wind.light': dark('#7dd3fc', 2),
+    'wind.moderate': dark('#86efac', 2),
+    'wind.strong': dark('#fde047', 2),
+    'wind.gale': dark('#fb923c', 2),
+    'wind.storm': dark('#f87171', 2),
     place: dark('#cbd5e1', 5),
     trail: dark('#e2e8f0', 2),
     // A predicted path (a satellite's next orbit): dashed (presentation.ts), and dimmer than

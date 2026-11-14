@@ -47,9 +47,13 @@ import { responseOrigin } from '../../shared/mapping.js';
  * the source's `host` setting (ADR-003's local policy: plain http, nothing discovered). The
  * token is a credential reference: `Authorization: Bearer` on the REST calls, `?token=` on
  * the socket URL, put there by the host (ADR-003/ADR-013 amendment for this phase) — the
- * provider never sees it. A local server is read by REST only: the host opens `wss://` to
- * public hosts alone.
+ * provider never sees it. A local server can have a `websocket` too (2026-11-10, under the
+ * ADR-003 amendment of 2026-10-20: `ws://` to loopback or the host the operator named): its
+ * `url` is then `ws://localhost/api/socket`, standing for the same server the REST calls
+ * reach, and the socket dialled is built from the `host` and `port` settings.
  */
+/** What a local definition's `websocket.url` says: "the socket of the server in my settings". */
+export const TRACCAR_LOCAL_SOCKET_URL = 'ws://localhost/api/socket';
 export const TRACCAR_CONNECTOR_ID = 'traccar';
 /** Traccar's default web port, and where a server on this computer is looked for. */
 export const TRACCAR_DEFAULT_PORT = 8082;
@@ -224,7 +228,7 @@ export class TraccarProvider extends PollingProvider {
     this.mapping = compileMapping(definition.mapping);
     this.timers = options.timers ?? realTimers;
     this.flushIntervalMs = options.flushIntervalMs ?? definition.websocket?.flushMs ?? 500;
-    if (definition.websocket && definition.endpoint) this.subscribe = (request, emit) => this.openSocket(request, emit);
+    if (definition.websocket) this.subscribe = (request, emit) => this.openSocket(request, emit);
   }
 
   protected override async onInitialize(context: ProviderContext): Promise<void> {
@@ -263,6 +267,12 @@ export class TraccarProvider extends PollingProvider {
     });
     if (!target.ok) throw new ProviderError('HOST_NOT_ALLOWED', target.reason, { retryable: false });
     return traccarBase(target.url);
+  }
+
+  /** The socket to dial: the definition's, or for a local server the one beside its REST address. */
+  socketUrl(): string {
+    if (this.definition.endpoint) return this.definition.websocket!.url;
+    return `${this.restBase().replace(/^http:/, 'ws:')}/api/socket`;
   }
 
   /** A REST request: the definition's headers, the token by reference (the host attaches it). */
@@ -472,19 +482,24 @@ export class TraccarProvider extends PollingProvider {
     const current = () => session.generation === generation && !session.closed;
     // The host reports one failure as an error and then a close: the socket is dropped once.
     let dropped = false;
+    let opened = false;
     const drop = (error: ProviderError) => {
       if (!current() || dropped) return;
       dropped = true;
-      this.onDrop(session, error);
+      // A socket that never opened may have been refused for its token: the host cannot say
+      // (a WebSocket hides the upgrade's status), so the REST API is asked with the same token.
+      if (!opened) void this.dropUnopened(session, error, current);
+      else this.onDrop(session, error);
     };
     if (session.closed) return;
     let handle: ProviderSocketHandle;
     try {
       handle = await this.context.sockets.open(
-        ws.url,
+        this.socketUrl(),
         {
           onOpen: () => {
             if (!current()) return;
+            opened = true;
             this.socketConnected = true;
             this.socketError = undefined;
             this.socketLastSuccess = this.nowIso();
@@ -595,6 +610,42 @@ export class TraccarProvider extends PollingProvider {
     session.emit(batch, { snapshot: false });
   }
 
+  /**
+   * Phase request 4 (2026-11-11): a socket refused at the upgrade (HTTP 401/403) reached this
+   * provider as an error and a close, like a dropped one, so it was redialled for ever and shown
+   * DEGRADED. When a socket closes without having opened and the socket and the REST API carry
+   * the same token, one REST request settles it: refused there too (AUTH), the socket stops and
+   * the source says AUTH_REQUIRED; otherwise it is a drop like any other and is redialled.
+   */
+  private async dropUnopened(session: Session, error: ProviderError, current: () => boolean): Promise<void> {
+    const ws = this.definition.websocket!;
+    const socketRef = ws.credential ? this.definition.credentials?.[ws.credential.name]?.secretRef : undefined;
+    const restRef =
+      this.definition.credentials?.[this.definition.endpoint?.credential?.name ?? TRACCAR_LOCAL_CREDENTIAL]?.secretRef;
+    if (socketRef && socketRef === restRef) {
+      try {
+        const req = this.buildRequest(this.restBase(), '/api/devices');
+        await this.context.http.request({ ...req, cacheKey: `${req.url}#socket-auth`, timeoutMs: 15_000 });
+      } catch (err) {
+        if (current() && err instanceof ProviderError && err.code === 'AUTH') {
+          const refused = new ProviderError(
+            'AUTH',
+            'the Traccar server refused the token: the live socket did not open and /api/devices was refused too',
+            { retryable: false },
+          );
+          this.socketConnected = false;
+          session.handle = undefined;
+          this.noteSocketError(refused);
+          this.context.logger.warn('traccar socket refused', { message: refused.message });
+          session.emit([], { snapshot: false });
+          this.closeSession(session);
+          return;
+        }
+      }
+    }
+    if (current()) this.onDrop(session, error);
+  }
+
   private onDrop(session: Session, error: ProviderError): void {
     if (session.closed) return;
     session.handle = undefined;
@@ -645,7 +696,12 @@ export class TraccarProvider extends PollingProvider {
   override async health(): Promise<ProviderHealth> {
     const h = await super.health();
     let lead: string | undefined;
-    if (this.subscribe && this.session && h.status !== 'DISABLED' && h.status !== 'AUTH_REQUIRED') {
+    // The socket refused for its token (dropUnopened): the session is closed, nothing redials.
+    if (this.subscribe && !this.socketConnected && this.socketError?.code === 'AUTH' && h.status !== 'DISABLED') {
+      h.status = 'AUTH_REQUIRED';
+      lead = this.socketError.message;
+      if (this.socketErrorAt) h.lastError = this.socketError.toInfo(this.socketErrorAt);
+    } else if (this.subscribe && this.session && h.status !== 'DISABLED' && h.status !== 'AUTH_REQUIRED') {
       if (this.socketConnected) {
         // Connected is LIVE; until a device list is read, the message says what is held back.
         if (!this.directory.listRead)
@@ -719,8 +775,16 @@ export function validateTraccar(d: ConnectorProviderDefinition): ConnectorValida
   }
   if (d.websocket) {
     const ws = d.websocket;
-    if (!d.endpoint)
-      errors.push('websocket needs an endpoint: a server on this computer or your network is read by REST only');
+    if (!d.endpoint) {
+      if (ws.url !== TRACCAR_LOCAL_SOCKET_URL)
+        errors.push(
+          `a local server's websocket.url is ${TRACCAR_LOCAL_SOCKET_URL}: the socket is the server in the source's host and port settings`,
+        );
+      if (ws.credential && ws.credential.name !== TRACCAR_LOCAL_CREDENTIAL)
+        errors.push(
+          `a local server's websocket.credential is ${TRACCAR_LOCAL_CREDENTIAL}, the same token as its REST calls`,
+        );
+    }
     let url: URL | undefined;
     try {
       url = new URL(ws.url);

@@ -56,6 +56,9 @@ export const DEFAULT_RETENTION_POLICIES: Readonly<Record<string, RetentionPolicy
   [ObjectTypes.Airport]: { retainSeconds: INDEFINITE },
   [ObjectTypes.Port]: { retainSeconds: INDEFINITE },
   [ObjectTypes.Place]: { retainSeconds: INDEFINITE },
+  // A wind grid is hundreds of points a step, each step superseded by the next forecast: two days
+  // replays a storm's passage; past that the rows are bulk, not history (~14,700 a day at 10°).
+  [ObjectTypes.Wind]: { retainSeconds: 2 * DAY },
 });
 
 export const FALLBACK_RETENTION_POLICY: RetentionPolicy = Object.freeze({ retainSeconds: 7 * DAY });

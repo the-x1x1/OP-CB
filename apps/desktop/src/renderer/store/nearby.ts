@@ -1,4 +1,10 @@
-import { haversineMeters, type GeoBounds, type GeoPosition, type WorldObject } from '@opcb/world-model';
+import {
+  FIELD_OBJECT_TYPES,
+  haversineMeters,
+  type GeoBounds,
+  type GeoPosition,
+  type WorldObject,
+} from '@opcb/world-model';
 
 /** How many objects the keyboard steps through: the nearest this many to the middle. */
 export const NEARBY_MAX = 300;
@@ -34,15 +40,20 @@ export function keyboardBounds(center: GeoPosition, bounds: GeoBounds | undefine
 
 /**
  * The objects in view as the keyboard meets them (`]` and `[`): those with a position inside
- * `bounds` (all, when the view has none), nearest to `middle` first, ties by id; ids only.
+ * `bounds` (all, when the view has none), of the shown `types` and kept by `keep` when given
+ * (what the map draws), never a field's points, nearest to `middle` first, ties by id; ids only.
  */
-export function nearbyOrder(
-  objects: Iterable<Pick<WorldObject, 'id' | 'position'>>,
+export function nearbyOrder<T extends Pick<WorldObject, 'id' | 'type' | 'position'>>(
+  objects: Iterable<T>,
   middle: GeoPosition,
   bounds: GeoBounds | undefined,
+  options: { types?: ReadonlySet<string>; keep?: (o: T) => boolean } = {},
 ): string[] {
   const near: Array<{ id: string; d: number }> = [];
   for (const o of objects) {
+    if (FIELD_OBJECT_TYPES.has(o.type)) continue;
+    if (options.types && !options.types.has(o.type)) continue;
+    if (options.keep && !options.keep(o)) continue;
     const p = o.position;
     if (!p || !Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) continue;
     if (bounds && !inBounds(p, bounds)) continue;

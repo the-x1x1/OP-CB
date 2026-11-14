@@ -2,8 +2,8 @@ import type { AutoUpdaterLike } from './controller.js';
 
 /** What `electron-updater`'s namespace looks like once Node has interop'd it. */
 interface ElectronUpdaterModule {
-  autoUpdater?: AutoUpdaterLike & { logger?: unknown };
-  default?: { autoUpdater?: AutoUpdaterLike & { logger?: unknown } };
+  autoUpdater?: AutoUpdaterLike & { logger?: unknown; disableWebInstaller?: boolean };
+  default?: { autoUpdater?: AutoUpdaterLike & { logger?: unknown; disableWebInstaller?: boolean } };
 }
 
 /**
@@ -27,7 +27,9 @@ interface ElectronUpdaterModule {
  * that a CJS package's named exports are a guess Node makes by reading the source, not a
  * guarantee. Take whichever position holds it.
  */
-function resolveAutoUpdater(mod: ElectronUpdaterModule): AutoUpdaterLike & { logger?: unknown } {
+function resolveAutoUpdater(
+  mod: ElectronUpdaterModule,
+): AutoUpdaterLike & { logger?: unknown; disableWebInstaller?: boolean } {
   const updater = mod.autoUpdater ?? mod.default?.autoUpdater;
   if (!updater) {
     throw new Error(
@@ -51,6 +53,9 @@ export async function loadElectronAutoUpdater(
   const mod = (await import('electron-updater')) as unknown as ElectronUpdaterModule;
   const updater = resolveAutoUpdater(mod);
   if (opts.logger) updater.logger = opts.logger;
+  // OP-CB ships the full NSIS installer, never the web installer; electron-updater warns on
+  // every check until this is said (seen in the jconn log, 2026-11-13).
+  if ('disableWebInstaller' in updater) updater.disableWebInstaller = true;
   // Signature verification of the downloaded installer is electron-updater's job
   // (Windows: verifies the Authenticode signature against the publisher name of the
   // running binary). We never disable it.

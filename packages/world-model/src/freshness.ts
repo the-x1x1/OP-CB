@@ -38,6 +38,9 @@ export const DEFAULT_FRESHNESS_POLICIES: Readonly<Record<string, FreshnessPolicy
   [ObjectTypes.Sensor]: { liveSeconds: 60, recentSeconds: 600, expireSeconds: 24 * 3600 },
   // A scene is a record of a capture: it stays "live" for a day, "recent" for a week, and is kept a month.
   [ObjectTypes.ImageryScene]: { liveSeconds: 24 * 3600, recentSeconds: 7 * 24 * 3600, expireSeconds: 30 * 24 * 3600 },
+  // A grid of wind from a model run every few hours, valid at 3-hourly steps: the step now
+  // showing is live for 3 h, recent to 6 h, and gone after 12 h.
+  [ObjectTypes.Wind]: { liveSeconds: 3 * 3600, recentSeconds: 6 * 3600, expireSeconds: 12 * 3600 },
 });
 
 export const FALLBACK_FRESHNESS_POLICY: FreshnessPolicy = Object.freeze({

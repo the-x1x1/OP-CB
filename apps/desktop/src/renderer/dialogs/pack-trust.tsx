@@ -1,3 +1,4 @@
+import { someOf } from '../store/some-of.js';
 import { useState, type FormEvent } from 'react';
 import { Button, Toggle, formatAgo } from '@opcb/ui';
 import type { OfflineStatus, WorldPackSignatureSummary, WorldPackSummary } from '@opcb/ipc-contract';
@@ -177,7 +178,7 @@ export function installLine(
 ): { text: string; tone: 'ok' | 'bad' } | undefined {
   if (!r) return undefined;
   if (r.installed) return { text: `Installed ${r.installed}${r.issues.length ? ` — ${r.issues[0]}` : ''}`, tone: 'ok' };
-  if (r.issues.length) return { text: `Not installed — ${r.issues.slice(0, 2).join('; ')}`, tone: 'bad' };
+  if (r.issues.length) return { text: `Not installed — ${someOf(r.issues, 2)}`, tone: 'bad' };
   return undefined;
 }
 

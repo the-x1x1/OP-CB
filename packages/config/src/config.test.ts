@@ -462,6 +462,15 @@ test('settings: "3D models when close" is optional — absent, the graphics qual
   assert.equal(DEFAULT_SETTINGS.display.models3d, undefined, 'no pinned choice on a new installation');
 });
 
+test('settings: the contact sonar is optional — absent, off; a boolean', () => {
+  const display = { graphics: 'low', visualStyle: 'standard', hud: true, dayNight: false } as const;
+  assert.equal(appSettingsPatchSchema.parse({ display: { ...display, hudSonar: true } }).ok, true);
+  assert.equal(appSettingsPatchSchema.parse({ display: { ...display, hudSonar: 'on' } }).ok, false);
+  assert.equal(DEFAULT_SETTINGS.display.hudSonar, undefined, 'off on a new installation');
+  const next = applySettingsPatch(DEFAULT_SETTINGS, { display: { ...DEFAULT_SETTINGS.display, hudSonar: true } });
+  assert.equal(next.display.hudSonar, true);
+});
+
 test('settings: the HUD grid reference is optional — absent, degrees only; MGRS or UTM by name', () => {
   const display = { graphics: 'low', visualStyle: 'standard', hud: true, dayNight: false } as const;
   for (const hudGrid of ['none', 'mgrs', 'utm'])

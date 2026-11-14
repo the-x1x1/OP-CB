@@ -9,6 +9,7 @@ import { restJsonConnector } from './connectors/rest-json.js';
 import { webSocketJsonConnector } from './connectors/websocket-json.js';
 import { geoJsonConnector } from './connectors/geojson.js';
 import { csvConnector } from './connectors/csv.js';
+import { gtfsRtConnector } from './connectors/gtfs-rt.js';
 import { OGC_CONNECTORS } from './connectors/ogc/index.js'; // phase:ogc
 import { arcgisFeatureConnector } from './connectors/arcgis/index.js'; // phase:arcgis
 import { stacConnector } from './connectors/stac/index.js'; // phase:stac
@@ -30,6 +31,7 @@ export const BUILT_IN_CONNECTORS: readonly Connector[] = Object.freeze([
   webSocketJsonConnector,
   geoJsonConnector,
   csvConnector,
+  gtfsRtConnector, // GTFS Realtime vehicle positions (2026-11-10)
 
   ...OGC_CONNECTORS, // phase:ogc — wfs, ogc-features, wms, wmts
 

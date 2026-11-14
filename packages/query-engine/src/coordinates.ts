@@ -6,9 +6,11 @@ import { readGridReference } from '@opcb/world-model';
  * for while looking like a success.
  *
  * Decimal degrees: "21.3, -157.9", "21.3 -157.9", "N 21.3 W 157.9", "21.3°N 157.9°W".
- * DMS (basic):     "21°18'25\"N 157°51'30\"W", "21 18 25 N, 157 51 30 W".
+ * DMS (basic):     "21°18'25\"N 157°51'30\"W", "21 18 25 N, 157 51 30 W", "21:18:25N 157:51:30W".
+ * With no gap:     "21.3N157.8W", "N21.3W157.8" — only when both halves carry a hemisphere letter.
  * MGRS:            "4QFJ1234567890", "4Q FJ 12345 67890" (2 to 10 figures) — the middle of the square.
  * UTM:             "4Q 612345 2358765", "4Q 612345mE 2358765mN" — zone, latitude band, easting, northing.
+ * UPS:             "UPS N 2000000mE 1444542mN" — the polar caps, as the HUD writes them.
  * geo URI:         "geo:21.3069,-157.8583", with ";crs=wgs84" and ";u=35" (metres) — RFC 5870, two
  *                  dimensions only — and Android's "?z=15" and "geo:0,0?q=21.3,-157.8(Label)" (what a
  *                  phone's "share location" gives; after God's Eye View 11bc2ec).
@@ -58,9 +60,9 @@ function readDecimal(text: string): Component | undefined {
   };
 }
 
-/** 21°18'25"N or 21 18 25 N or 21°18.5'N — degrees, optional minutes, optional seconds, mandatory hemisphere letter. */
+/** 21°18'25"N, 21 18 25 N, 21:18:25N or 21°18.5'N — degrees, optional minutes, optional seconds, mandatory hemisphere letter. */
 const DMS_COMPONENT =
-  /^(\d{1,3})\s*(?:°|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?\s*([NSEW])$|^([NSEW])\s*(\d{1,3})\s*(?:°|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?$/i;
+  /^(\d{1,3})\s*(?:°|:|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′:]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?\s*([NSEW])$|^([NSEW])\s*(\d{1,3})\s*(?:°|:|\s)\s*(\d{1,2}(?:\.\d+)?)?\s*(?:['′:]|\s)?\s*(\d{1,2}(?:\.\d+)?)?\s*(?:["″])?$/i;
 
 function readDms(text: string): Component | undefined {
   const m = DMS_COMPONENT.exec(text.trim());
@@ -90,8 +92,28 @@ function splitCandidates(text: string): Array<[string, string]> {
     return parts.length === 2 ? [[parts[0]!, parts[1]!]] : [];
   }
   const words = t.split(/\s+/);
+  if (words.length === 1) return letterSplits(t);
   const out: Array<[string, string]> = [];
   for (let i = 1; i < words.length; i++) out.push([words.slice(0, i).join(' '), words.slice(i).join(' ')]);
+  return out;
+}
+
+/**
+ * One word with no gap ("21.3N157.8W", "N21.3W157.8", "21°18'N157°51'W"): split where one
+ * hemisphere letter ends a half or starts the next, and only where both halves carry their own
+ * letter, so the letters say which number is which and nothing is guessed.
+ */
+function letterSplits(t: string): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  for (let i = 1; i < t.length; i++) {
+    const before = t[i - 1]!;
+    const at = t[i]!;
+    const afterLetter = /[NSEW]/i.test(before) && /[\d+-]/.test(at);
+    const beforeLetter = /[NSEW]/i.test(at) && /[\d°'′"″.]/.test(before);
+    if (!afterLetter && !beforeLetter) continue;
+    const pair: [string, string] = [t.slice(0, i), t.slice(i)];
+    if (pair.every((half) => /[NSEW]/i.test(half))) out.push(pair);
+  }
   return out;
 }
 
@@ -102,7 +124,7 @@ export function formatCoordinateLabel(lat: number, lon: number): string {
 function gridReference(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
   const read = readGridReference(t);
   if (!read) return undefined;
-  if ('error' in read) return { kind: 'unsupported', note: gridReferenceNote(read.kind, read.error) };
+  if ('error' in read) return { kind: 'unsupported', note: gridReferenceNote(read.kind, read.error, t) };
   return {
     kind: read.kind,
     latitude: read.latitude,
@@ -113,8 +135,8 @@ function gridReference(t: string): ParsedCoordinate | UnsupportedCoordinate | un
 }
 
 /** "MGRS reference not read: …" — the search box's footer says the same (components/search-items.ts). */
-function gridReferenceNote(kind: 'mgrs' | 'utm', error: string): string {
-  return `${kind === 'mgrs' ? 'MGRS' : 'UTM'} reference not read: ${error}`;
+function gridReferenceNote(kind: 'mgrs' | 'utm', error: string, text: string): string {
+  return `${kind === 'mgrs' ? 'MGRS' : /^UPS\b/i.test(text) ? 'UPS' : 'UTM'} reference not read: ${error}`;
 }
 
 /**
@@ -181,9 +203,35 @@ function geoUri(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined
   };
 }
 
+/**
+ * A Google Maps link: the map's centre in its path (`/maps/@21.3069,-157.8583,12z`, also after
+ * `/place/…`) or a point in its query (`?q=21.3069,-157.8583`). Other links are not places.
+ */
+const MAPS_LINK = /^https?:\/\/(?:(?:www\.)?google\.[a-z.]+\/maps\b|maps\.google\.[a-z.]+\/)/i;
+const MAPS_AT = /\/@([+-]?\d{1,3}(?:\.\d+)?),([+-]?\d{1,3}(?:\.\d+)?)(?:[,/?]|$)/;
+const MAPS_Q = /[?&](?:q|query|ll)=([+-]?\d{1,3}(?:\.\d+)?)(?:,|%2C)\s*([+-]?\d{1,3}(?:\.\d+)?)(?:&|$)/i;
+
+function mapsLink(t: string): ParsedCoordinate | undefined {
+  if (!MAPS_LINK.test(t)) return undefined;
+  const m = MAPS_AT.exec(t) ?? MAPS_Q.exec(t);
+  if (!m) return undefined;
+  const lat = Number(m[1]);
+  const lon = Number(m[2]);
+  if (!(Math.abs(lat) <= 90) || !(Math.abs(lon) <= 180)) return undefined;
+  return { kind: 'decimal', latitude: lat, longitude: lon, label: formatCoordinateLabel(lat, lon) };
+}
+
 export function parseCoordinates(text: string): ParsedCoordinate | UnsupportedCoordinate | undefined {
-  const t = text.trim();
+  // A minus sign as typeset (U+2212, Wikipedia's coordinates) is a minus; one pair of round
+  // brackets round the whole (a tuple printed by a script) is not part of it.
+  const t = text
+    .trim()
+    .replace(/\u2212/g, '-')
+    .replace(/^\((.*)\)$/s, '$1')
+    .trim();
   if (!t) return undefined;
+  const link = mapsLink(t);
+  if (link) return link;
   const uri = geoUri(t);
   if (uri) return uri;
   const grid = gridReference(t);

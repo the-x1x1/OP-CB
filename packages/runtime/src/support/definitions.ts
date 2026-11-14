@@ -238,6 +238,7 @@ export class ConnectorDefinitions {
     const drafted = draftDefinition({
       url,
       text: res.text(),
+      bytes: res.bytes(),
       ...(contentType ? { contentType } : {}),
     });
     const verdict = defaultConnectorRegistry.validate(drafted.definition);

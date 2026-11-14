@@ -72,9 +72,13 @@ on this computer or your network).
 | no `endpoint`            | A server on **this computer** (`http://127.0.0.1:8082`), or on the one host you name in the source's `host` setting, at its `port` setting (default 8082) — ADR-003's local policy: plain http, nothing discovered.    |
 | `websocket.url` (public) | Must be the same server's socket: `wss://host[/prefix]/api/socket`, no query.                                                                                                                                          |
 
-A local server is read by REST only: the host opens `wss://` sockets to public hosts alone
-(ADR-003). Its positions are polled every 30 seconds, and a definition for one may not
-have a `websocket`.
+A local server's positions are polled every 30 seconds. Since 2026-11-10 a definition for
+one may also have a `websocket`, with `"url": "ws://localhost/api/socket"`: that URL stands
+for the same server the REST calls reach, and the socket dialled is
+`ws://<host setting>:<port setting>/api/socket` (`ws://127.0.0.1:8082/api/socket` with the
+settings empty), with the same `token` credential (`"credential": {"name": "token", "as":
+"query"}`). The host opens `ws://` only to loopback or the host you named (ADR-003 amendment,
+2026-10-20); every other socket is `wss://` to a public host.
 
 ## The token
 
@@ -98,9 +102,12 @@ and the REST poll carries on — or use a definition without a `websocket`, like
 `traccar-demo-rest.json`, and a shorter `intervalSeconds`.
 
 A 401 or 403 on a REST call is AUTH_REQUIRED. Without the credential, the socket is not
-opened at all. A socket that refuses the token is not reported as AUTH_REQUIRED: the host
-sees only the connection close, so the source shows DEGRADED (the poll works) or OFFLINE,
-and the socket is dialled again with back-off, up to once a minute.
+opened at all. A socket refused for its token reaches the source only as a close (a
+WebSocket hides the upgrade's status), so when a socket closes without having opened and the
+socket and the REST API carry the same token, the source asks `/api/devices` once: refused
+there too, it stops dialling and shows AUTH_REQUIRED ("the Traccar server refused the token");
+answered, the close was something else and the socket is dialled again with back-off, up to
+once a minute.
 
 ## What a record holds
 
@@ -161,7 +168,8 @@ rest is the operator's responsibility.
 
 - LIVE after a good poll, or while the socket is connected (until the first device list
   is read, the message says positions of devices not yet described are held).
-- DEGRADED when the socket dropped (or was refused) but the poll works: "live socket
+- AUTH_REQUIRED when the socket was refused for its token (above): it is not redialled.
+- DEGRADED when the socket dropped (or would not open) but the poll works: "live socket
   unavailable (…); positions from the poll every N s". The socket is reopened with
   back-off from 2 s to a minute.
 - OFFLINE / ERROR / AUTH_REQUIRED / RATE_LIMITED as the host classifies failures.

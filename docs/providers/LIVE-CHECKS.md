@@ -94,3 +94,35 @@ are US public domain. Each selection was checked against a second read (USGS: th
 byte for byte; NWS: the selection's SHA-256 in the browser and in the repo); Digitraffic's static
 rows matched a second read apart from their timestamps, and its positions, which move by the
 minute, rest on the one read.
+
+## 2026-11-11 (UTC)
+
+GTFS Realtime vehicle feeds, read from the operator's browser with same-origin requests (a
+cross-origin read from the browser is refused by CORS and says nothing about the feed):
+
+| Source                                                              | Answer                                    | Found                                                                                                                                                |
+| ------------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mbta-gtfs-rt`                                                      | 367 entities, 42,343 bytes                | four vehicles decoded by the app's reader equal MBTA's JSON feed of the same minute field for field; kept as `fixtures/connectors/gtfs-rt/recorded/` |
+| `entur-norway-gtfs-rt`                                              | 384,385 bytes, `application/octet-stream` | a protobuf FeedMessage (starts with the header)                                                                                                      |
+| `metro-transit-msp-gtfs-rt`                                         | 34,928 bytes                              | the same                                                                                                                                             |
+| `ovapi-nl-gtfs-rt`                                                  | 66 entities, 9,008 bytes, no content type | the same; the reader does not rely on the content type                                                                                               |
+| `capmetro-gtfs-rt`, `translink-seq-gtfs-rt`, `hsl-helsinki-gtfs-rt` | not read same-origin                      | unchecked                                                                                                                                            |
+
+NOAA's GFS 10 m wind on CoastWatch ERDDAP (`NCEP_Global_Best`), read the same way: the dataset
+is a 3-hourly, 0.5° forecast running eight days ahead (time `(last)` is the end of the forecast,
+not now), latitude is stored north to south, longitude 0 to 359.5, and the answer's columns are
+`time, latitude, longitude, ugrd10m, vgrd10m` in m/s. Its licence reads that the data may be
+used and redistributed for free. A coarse grid (20° by 40°, 90 points) for 2026-11-11 03:00 UTC
+is kept as `fixtures/connectors/wind/gfs-wind-10deg.json` (rows as served; the envelope written
+in ERDDAP's layout; the time moved to 2026-09-23T18:00Z for the suite's clock). `now` in a time
+constraint is refused (400: "Start=NaN"); a time between steps is answered with the nearest step
+(03:34 → 03:00, 04:40 → 06:00); a time past the forecast is 404. Brackets and parentheses may go
+unescaped.
+
+NOAA CoastWatch ERDDAP tabledap (`cwwcNDBCMet`, NDBC buoy observations), read the same way on
+2026-11-11: the answer has griddap's layout — `{ table: { columnNames, columnTypes, columnUnits,
+rows } }`, `null` where a value is missing — so `response.table` reads it. Variable names are
+upper case (`WSPD`, `WD`, `ATMP`, and `WSPU`/`WSPV` for the components); an unknown one is a 400
+naming it; a regular-expression station constraint was answered 503 ("temporary problem") at the
+time. A buoy's rows are a time series (two rows for 51201 from 00:26 and 00:56). The dataset's
+licence line is the same as the GFS grid's (used and redistributed for free, no warranty).

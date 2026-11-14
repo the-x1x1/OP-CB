@@ -217,7 +217,9 @@ export class WorldState {
   }
 
   recentObservations(limit = 100): Observation[] {
-    return this.recent.slice(-limit);
+    const cap = this.opts.recentObservations;
+    const n = limit > 0 ? Math.min(limit, cap) : cap;
+    return n > 0 ? this.recent.slice(-n) : [];
   }
 
   // ---- writes -------------------------------------------------------------
@@ -587,10 +589,14 @@ export class WorldState {
     if (t.length > this.opts.maxTrackPoints) t.splice(0, t.length - this.opts.maxTrackPoints);
   }
 
+  /**
+   * Kept to `recentObservations`, trimmed when it reaches twice that: trimming at every push moved
+   * all 5,000 kept along by one for each observation, most of an ADS-B poll's ingest time.
+   */
   private pushRecent(obs: Observation): void {
     this.recent.push(obs);
-    if (this.recent.length > this.opts.recentObservations)
-      this.recent.splice(0, this.recent.length - this.opts.recentObservations);
+    const cap = this.opts.recentObservations;
+    if (this.recent.length > 2 * cap) this.recent.splice(0, this.recent.length - cap);
   }
 }
 
@@ -618,7 +624,12 @@ export function extractMotion(payload: Record<string, JsonValue>): WorldObject['
   const heading = payload['headingDegrees'] ?? payload['courseDegrees'];
   const vs = payload['verticalSpeedMps'];
   if (typeof speed === 'number' && Number.isFinite(speed)) m.speedMps = speed;
-  if (typeof heading === 'number' && Number.isFinite(heading)) m.headingDegrees = ((heading % 360) + 360) % 360;
+  if (typeof heading === 'number' && Number.isFinite(heading)) {
+    // Into 0–360 without adding 360 to a heading already in range: (114.8 + 360) % 360 is
+    // 114.80000000000001, and that noise reached panels and exports.
+    const h = heading % 360;
+    m.headingDegrees = h < 0 ? h + 360 : h === 0 ? 0 : h;
+  }
   if (typeof vs === 'number' && Number.isFinite(vs)) m.verticalSpeedMps = vs;
   return Object.keys(m).length ? m : undefined;
 }

@@ -37,12 +37,33 @@
 
 .wv-topbar__brand {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--wv-space-2);
+  align-content: center;
+  gap: 0 var(--wv-space-2);
+}
+
+/* Under the wordmark, on its own line: the brand column is 180 px. */
+.wv-topbar__version {
+  flex-basis: 100%;
+  line-height: 1.1;
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .wv-topbar__wordmark {
   height: 22px;
+}
+
+/* The running build (components/version-tag.tsx): small, quiet, always there. */
+.wv-version-tag {
+  font-family: var(--wv-font-mono, ui-monospace, monospace);
+  font-size: var(--wv-text-xs);
+  color: var(--wv-text-muted, rgba(255, 255, 255, 0.6));
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: text;
 }
 
 .wv-topbar__demo {
@@ -1125,6 +1146,24 @@
 
 .wv-map__attribution--collapsed {
   max-width: none;
+}
+
+.wv-map__attribution--collapsed .wv-map__attribution-full {
+  display: none;
+}
+
+/* While a picture of the map is taken (Save a picture of the map): every credit, unfolded. */
+:root[data-capturing='true'] .wv-map__attribution--collapsed {
+  max-width: 70%;
+}
+
+:root[data-capturing='true'] .wv-map__attribution--collapsed .wv-map__attribution-full {
+  display: inline;
+}
+
+:root[data-capturing='true'] .wv-map__attribution--collapsed .wv-map__attribution-lead,
+:root[data-capturing='true'] .wv-map__attribution-toggle {
+  display: none;
 }
 
 .wv-map__attribution-lead {
@@ -2559,11 +2598,19 @@
   border-radius: 2px;
 }
 
-.wv-hud__readout {
+/* The readout, and the contact sonar above it when it is on. */
+.wv-hud__corner {
   position: absolute;
   right: var(--wv-space-3);
   /* Above the foot of the map (credits and view bar); map-host.tsx measures it. */
   bottom: calc(var(--wv-dock-h, 0px) + var(--wv-space-3));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--wv-space-2);
+}
+
+.wv-hud__readout {
   display: grid;
   grid-template-columns: auto auto;
   column-gap: 0.8em;
@@ -2572,6 +2619,92 @@
 
 .wv-hud__readout dd {
   margin: 0;
+}
+
+/* Contact sonar (map/sonar-scope.tsx): drawn in the HUD's ink, so each visual style tints it. */
+.wv-sonar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.wv-sonar svg {
+  overflow: visible;
+  filter: drop-shadow(0 0 1px var(--wv-hud-halo));
+}
+
+/* A short window (a 720p laptop, the field profile's small screens): a smaller scope, so the HUD
+   corner does not take a quarter of the map. The drawing scales with its viewBox. */
+@media (max-height: 820px) {
+  .wv-sonar svg {
+    width: 104px;
+    height: 104px;
+  }
+}
+
+.wv-sonar__grid circle,
+.wv-sonar__grid line {
+  fill: none;
+  stroke: var(--wv-hud-dim);
+  stroke-width: 1;
+}
+
+.wv-sonar__grid circle:last-child {
+  stroke: var(--wv-hud-ink);
+}
+
+.wv-sonar__sweep {
+  animation: wv-sonar-sweep 4s linear infinite;
+}
+
+.wv-sonar__sweep path {
+  fill: var(--wv-hud-ink);
+  opacity: 0.14;
+}
+
+.wv-sonar__sweep line {
+  stroke: var(--wv-hud-ink);
+  stroke-width: 1.2;
+}
+
+@keyframes wv-sonar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wv-sonar__sweep {
+    display: none;
+  }
+}
+
+/* …and with Settings → Reduced motion, which the system setting does not cover. */
+:root[data-reduced-motion='true'] .wv-sonar__sweep {
+  display: none;
+}
+
+.wv-sonar__blip {
+  fill: var(--wv-hud-ink);
+}
+
+.wv-sonar__blip--stale {
+  opacity: 0.45;
+}
+
+.wv-sonar__centre {
+  stroke: var(--wv-hud-ink);
+  stroke-width: 1.2;
+}
+
+.wv-sonar__north {
+  color: var(--wv-hud-dim);
+  line-height: 1;
+}
+
+.wv-sonar__caption {
+  color: var(--wv-hud-dim);
 }
 
 /* A small reticle on the point the coordinates are for: four ticks round an open centre. */

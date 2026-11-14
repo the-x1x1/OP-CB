@@ -1,4 +1,7 @@
 import { parseCsv } from './csv.js';
+import { decodeGtfsRealtime, GtfsRealtimeError } from './gtfs-realtime.js';
+import { tableRecords, windColumns } from './table.js';
+import { GTFS_RT_FREQUENCY_NOTE, GTFS_RT_FRESHNESS, GTFS_RT_VEHICLE_MAPPING } from './connectors/gtfs-rt.js';
 import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 
 /**
@@ -6,7 +9,8 @@ import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/co
  * 2026-09-23, so the desktop's main process can run it for the Add-source dialog; `pnpm
  * connector:add` imports it from here). From one sample of a source (its URL and body), a draft definition
  * the operator finishes by hand. The drafter recognises a GeoJSON FeatureCollection, a JSON
- * document with an array of records somewhere near the top, and CSV; it guesses the record
+ * document with an array of records somewhere near the top, CSV, and (2026-11-11) a GTFS
+ * Realtime vehicle-positions feed, recognised from its bytes; it guesses the record
  * path, the id, the time and the position fields from their names, and writes everything
  * else fail-closed: `review: user-configured`, `enabled: false`, no data policy opened, no
  * attribution claimed. What it could not decide is listed in `todo` so nothing is invented.
@@ -15,6 +19,8 @@ export interface DraftSample {
   url: string;
   contentType?: string;
   text: string;
+  /** The body as received: a binary format (GTFS Realtime protobuf) is read from these. */
+  bytes?: Uint8Array;
 }
 
 export interface DraftOptions {
@@ -38,6 +44,11 @@ const ID_KEYS = [
   'guid',
   'station_id',
   'stationId',
+  // A station's or a site's code (NDBC buoys on ERDDAP, USGS gauges).
+  'station',
+  'site_no',
+  'site',
+  'sensor_id',
   'device_id',
   'deviceId',
   'icao',
@@ -145,6 +156,9 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
   todo.push('attribution.text and termsUrl: name the licence and the rights holder before this source is shown');
   todo.push('freshness: set liveSeconds/recentSeconds/expireSeconds for how quickly this source goes stale');
 
+  const gtfs = gtfsRealtimeDraft(sample, type, base, opts, todo, notes);
+  if (gtfs) return gtfs;
+
   let records: Array<Record<string, unknown>> = [];
   let json: unknown;
   const isCsv = type.includes('csv') || (!type.includes('json') && looksLikeCsv(sample.text));
@@ -170,6 +184,18 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
         .filter((f): f is Record<string, unknown> => Boolean(f && typeof f === 'object'))
         .map((f) => ({ ...((f['properties'] as Record<string, unknown>) ?? {}), _feature: f }));
       notes.push(`GeoJSON FeatureCollection with ${gj.features.length} feature(s); positions come from the geometry`);
+    } else if (tableAt(json)) {
+      // A table of named columns (ERDDAP): a wind field, or rows read by column name.
+      const names = tableAt(json)!;
+      const wind = windColumns(names);
+      if (wind) return windDraft(sample, names, wind, base, opts, todo, notes);
+      const read = tableRecords(json, {});
+      if ('malformed' in read) throw new Error(`the table did not read: ${read.malformed}`);
+      base['response'] = { table: {} };
+      records = read.records;
+      notes.push(
+        `a table of ${read.records.length} row(s) by ${names.length} named column(s) (ERDDAP's layout): ${names.slice(0, 12).join(', ')}${names.length > 12 ? ', …' : ''}; read with response.table`,
+      );
     } else {
       const found = findArray(json);
       if (!found) throw new Error('no array of records found in the JSON (looked three levels deep)');
@@ -194,8 +220,18 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
       todo.push('mapping.externalId: no feature id and no id-like property; name the field that identifies a feature');
     mapping['position'] = { geometry: 'geometry' };
   } else {
-    if (idKey) mapping['externalId'] = idKey;
-    else todo.push('mapping.externalId: no id-like field found; name the field that identifies a record');
+    if (idKey) {
+      mapping['externalId'] = idKey;
+      // A time series: several rows of the same thing, of which the map keeps the last read.
+      const ids = new Set(records.map((r) => String(r[idKey])));
+      if (ids.size < records.length)
+        notes.push(
+          `${records.length} rows for ${ids.size} ${idKey} value(s): a time series; each is drawn at its latest row` +
+            (/\/tabledap\//.test(sample.url)
+              ? `; ERDDAP's &orderByMax("${idKey},time") asks for only the latest row of each`
+              : ''),
+        );
+    } else todo.push('mapping.externalId: no id-like field found; name the field that identifies a record');
     const lat = pick(LAT_KEYS, keys);
     const lon = pick(LON_KEYS, keys);
     if (lat && lon) {
@@ -244,6 +280,138 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
     notes.push(`only the first ${MAX_SAMPLE_KEYS} of ${keys.length} fields were drafted as properties`);
   base['mapping'] = mapping;
   return { definition: base, connector: String(base['connector']), todo, notes };
+}
+
+/**
+ * A GTFS Realtime feed: protobuf, so it is read from the bytes, and only when the answer says
+ * protobuf or binary, or the URL ends in .pb, or it starts as a FeedMessage does (0x0a, the
+ * header) and is not text. A feed of vehicle positions becomes a `gtfs-rt` draft with the
+ * shared mapping (GTFS_RT_VEHICLE_MAPPING) — the field names are the specification's, so
+ * nothing is guessed; a feed with none (trip updates or alerts only) is refused with why.
+ */
+function gtfsRealtimeDraft(
+  sample: DraftSample,
+  type: string,
+  base: Record<string, unknown>,
+  opts: DraftOptions,
+  todo: string[],
+  notes: string[],
+): DraftResult | undefined {
+  const b = sample.bytes;
+  if (!b?.length) return undefined;
+  const binaryType = /protobuf|octet-stream|x-google-protobuf/.test(type);
+  const pbUrl = /\.pb$/i.test(new URL(sample.url).pathname);
+  const looksBinary = b[0] === 0x0a && b.subarray(0, 64).some((x) => x < 0x09 || (x > 0x0d && x < 0x20));
+  if (!binaryType && !pbUrl && !looksBinary) return undefined;
+  let feed;
+  try {
+    feed = decodeGtfsRealtime(b);
+  } catch (err) {
+    if (err instanceof GtfsRealtimeError && (binaryType || pbUrl))
+      throw new Error(`the sample is binary but not a GTFS Realtime feed (${err.message})`);
+    if (err instanceof GtfsRealtimeError) return undefined;
+    throw err;
+  }
+  if (!feed.vehicles.length)
+    throw new Error(
+      `a GTFS Realtime feed with ${feed.entities} entit${feed.entities === 1 ? 'y' : 'ies'} and no vehicle positions ` +
+        '(trip updates or alerts): only a VehiclePositions feed is drawn; the agency usually publishes one beside it',
+    );
+  base['connector'] = 'gtfs-rt';
+  base['description'] =
+    `Drafted by connector:add from ${sample.url}, a GTFS Realtime vehicle-positions feed. Name the agency's licence and terms before enabling.`;
+  base['objectType'] = opts.objectType ?? 'transit-vehicle';
+  base['categories'] = ['transit'];
+  base['endpoint'] = { url: sample.url, intervalSeconds: opts.intervalSeconds ?? 30 };
+  base['mapping'] = structuredClone(GTFS_RT_VEHICLE_MAPPING) as unknown as Record<string, unknown>;
+  base['freshness'] = { ...GTFS_RT_FRESHNESS };
+  // The object type is decided by the format; the freshness too.
+  const placeholder = todo.findIndex((t) => t.startsWith('objectType:'));
+  if (placeholder >= 0) todo.splice(placeholder, 1);
+  const fresh = todo.findIndex((t) => t.startsWith('freshness:'));
+  if (fresh >= 0) todo.splice(fresh, 1);
+  const routes = new Set(feed.vehicles.map((v) => (v.vehicle['trip'] as { route_id?: string } | undefined)?.route_id));
+  routes.delete(undefined);
+  notes.push(
+    `GTFS Realtime ${feed.header.gtfs_realtime_version} feed: ${feed.vehicles.length} vehicle position(s) of ${feed.entities} entities` +
+      (routes.size ? ` on ${routes.size} route(s)` : '') +
+      '; mapped with the shared GTFS Realtime mapping (docs/connectors/gtfs-rt.md)',
+  );
+  notes.push(GTFS_RT_FREQUENCY_NOTE(b.length));
+  return { definition: base, connector: 'gtfs-rt', todo, notes };
+}
+
+/** The column names of a top-level `{ table: { columnNames, rows } }` (ERDDAP), if that is the shape. */
+function tableAt(json: unknown): string[] | undefined {
+  const t = (json as { table?: { columnNames?: unknown; rows?: unknown } } | null)?.table;
+  if (!t || !Array.isArray(t.columnNames) || !Array.isArray(t.rows)) return undefined;
+  return t.columnNames.every((n) => typeof n === 'string') ? (t.columnNames as string[]) : undefined;
+}
+
+/**
+ * A table with a u/v wind pair (an ERDDAP griddap answer): a `wind` source read with
+ * `response.wind`, mapped as `noaa-gfs-wind` is. A time of `(last)` is noted: on a forecast it
+ * is the forecast's far end, days ahead (NCEP_Global_Best, read 2026-11-11), so `({now-90m})`
+ * asks for the step at or before now — but on an analysis it is the latest, so it is not
+ * changed here.
+ */
+function windDraft(
+  sample: DraftSample,
+  names: readonly string[],
+  wind: { u: string; v: string },
+  base: Record<string, unknown>,
+  opts: DraftOptions,
+  todo: string[],
+  notes: string[],
+): DraftResult {
+  const col = (re: RegExp) => names.find((n) => re.test(n));
+  const lat = col(/^lat(itude)?$/i);
+  const lon = col(/^(lon|lng|long|longitude)$/i);
+  const time = col(/^time$/i);
+  if (!lat || !lon) throw new Error(`a wind table needs latitude and longitude columns; it has ${names.join(', ')}`);
+  base['objectType'] = opts.objectType ?? 'wind';
+  base['categories'] = ['weather'];
+  base['endpoint'] = { url: sample.url, intervalSeconds: opts.intervalSeconds ?? 3600 };
+  base['response'] = {
+    wind: {
+      u: wind.u,
+      v: wind.v,
+      ...(lat !== 'latitude' ? { lat } : {}),
+      ...(lon !== 'longitude' ? { lon } : {}),
+      ...(time && time !== 'time' ? { time } : {}),
+    },
+  };
+  base['mapping'] = {
+    externalId: { path: 'id', required: true },
+    ...(time ? { observedAt: { path: 'time', transform: 'isoTimestamp' } } : {}),
+    position: { lat: 'lat', lon: 'lon' },
+    labels: { name: 'name' },
+    properties: {
+      speedMps: 'speedMps',
+      fromDeg: 'fromDeg',
+      towardDeg: 'towardDeg',
+      uMps: 'u',
+      vMps: 'v',
+      ...(time ? { validAt: { path: 'time', transform: 'isoTimestamp' } } : {}),
+    },
+    motion: { headingDegrees: 'towardDeg' },
+  };
+  base['freshness'] = { liveSeconds: 10_800, recentSeconds: 21_600, expireSeconds: 43_200 };
+  base['description'] =
+    `Drafted by connector:add from ${sample.url}, a wind field (${wind.u}, ${wind.v}). Name the licence and terms before enabling.`;
+  for (const k of ['objectType:', 'freshness:']) {
+    const i = todo.findIndex((t) => t.startsWith(k));
+    if (i >= 0) todo.splice(i, 1);
+  }
+  if (!time) todo.push('observedAt: the table has no time column; every point carries the fetch time');
+  if (/\(last\)/.test(decodeURIComponent(sample.url)))
+    todo.push(
+      'endpoint.url: the time (last) is the latest step the server has — for a forecast, its far end, days ahead; ({now-90m}) asks for the step at or before now (ERDDAP rounds to the nearest)',
+    );
+  notes.push(
+    `a wind field: ${wind.u} and ${wind.v} by ${lat} and ${lon}${time ? ` at ${time}` : ''}; read with response.wind, one wind object a grid point (docs/connectors/REST-JSON.md)`,
+  );
+  return { definition: base, connector: 'rest-json', todo, notes };
 }
 
 function looksLikeCsv(text: string): boolean {

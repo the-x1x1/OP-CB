@@ -10,7 +10,9 @@ import {
   fromUtm,
   latitudeBand,
   parseMgrs,
+  parseUps,
   parseUtm,
+  readGridReference,
   toMgrs,
   toUtm,
   utmZone,
@@ -198,6 +200,13 @@ test('reading UTM: the band letter is checked; N and S read as hemispheres only 
   // But a northing that band S could hold is ambiguous.
   assert.match((parseUtm('33S 300000 3800000') as { error: string }).error, /could be latitude band S/);
   assert.match((parseUtm('18S 585628 4511322') as { error: string }).error, /could be latitude band S/);
+  // As the HUD writes it (mE, mN), S is the band: what the app showed reads back.
+  const band = parseUtm('33S 300000mE 3800000mN');
+  const expected = fromUtm(33, 'N', 300_000, 3_800_000)!;
+  assert.ok(band && !('error' in band));
+  assert.ok(expected.latitude > 32 && expected.latitude < 40);
+  assert.deepEqual([band.latitude, band.longitude], [expected.latitude, expected.longitude]);
+  assert.equal(band.text, '33S 300000mE 3800000mN');
   assert.match((parseUtm('4R 612345 2358765') as { error: string }).error, /not in latitude band R/);
   assert.match((parseUtm('4Q 1612345 2358765') as { error: string }).error, /easting/);
   assert.match((parseUtm('0Q 612345 2358765') as { error: string }).error, /no UTM zone 0/);
@@ -247,4 +256,24 @@ test('the polar caps: UPS and MGRS bands A, B, Y and Z, as GeoConvert gives them
   }
   assert.match((parseMgrs('ZAZ1234567890') as { error: string }).error, /not in polar band Z/);
   assert.match((parseMgrs('YAB1234567890') as { error: string }).error, /not in polar band Y/);
+});
+
+test('a UPS coordinate as the HUD writes it is read back (the polar caps only)', () => {
+  // GeoConvert's values above: 85° N 0° is UPS N 2000000 1444542.608617.
+  const north = parseUps('UPS N 2000000mE 1444542mN');
+  assert.ok(north && !('error' in north));
+  assert.ok(Math.abs(north.latitude - 85) < 1e-4 && Math.abs(north.longitude) < 1e-9, `${north.latitude}`);
+  assert.equal(north.text, 'UPS N 2000000mE 1444542mN');
+  const south = parseUps('ups s 1607232 1607232');
+  assert.ok(south && !('error' in south));
+  assert.ok(Math.abs(south.latitude + 85) < 1e-4 && Math.abs(south.longitude + 135) < 1e-4);
+  const typed = readGridReference('UPS S 2000000mE 3101768mN');
+  assert.ok(typed && !('error' in typed) && typed.kind === 'utm' && Math.abs(typed.latitude + 80.1) < 1e-4);
+  // Far from its pole it is not a UPS coordinate: 1,000 km off the North Pole is about 81° N.
+  const far = parseUps('UPS N 2000000mE 1000000mN');
+  assert.ok(far && 'error' in far);
+  assert.match(far.error, /not in the north polar cap/);
+  assert.match((parseUps('UPS S 3900000 2000000') as { error: string }).error, /south polar cap/);
+  assert.equal(parseUps('UPS 2000000 1444542'), undefined);
+  assert.equal(parseUps('4Q 612345 2358765'), undefined);
 });

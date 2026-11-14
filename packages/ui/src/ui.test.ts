@@ -96,6 +96,10 @@ test('Tabs: tablist with roving tabindex and controlled panel', () => {
   assert.ok(html.includes('aria-selected="true"') && html.includes('role="tabpanel"') && html.includes('Body'));
   assert.equal((html.match(/tabindex="-1"/g) ?? []).length, 2);
   assert.ok(html.includes('>3</span>'));
+  // Only the selected tab names a panel: the others' panels are not rendered.
+  const controls = [...html.matchAll(/aria-controls="([^"]+)"/g)].map((m) => m[1]);
+  assert.equal(controls.length, 1);
+  assert.ok(html.includes(`id="${controls[0]}"`) && controls[0]!.endsWith('-panel-sources'));
 });
 
 test('Tabs: a compact tab caps its badge at 99+ and keeps the number in its title', () => {
@@ -182,6 +186,9 @@ test('Popover / Tooltip', () => {
     }),
   );
   assert.ok(!closed.includes('inside'));
+  assert.ok(!closed.includes('aria-controls'), 'a closed popover names no surface that is not there');
+  const openId = /aria-controls="([^"]+)"/.exec(pop)?.[1];
+  assert.ok(openId && pop.includes(`id="${openId}"`));
   const tip = render(h(Tooltip, { text: 'Jump to live', children: h('span', null, 'x') }));
   assert.ok(tip.includes('role="tooltip"') && tip.includes('Jump to live') && /aria-describedby="[^"]+"/.test(tip));
 });
@@ -211,6 +218,10 @@ test('Search: combobox semantics, results list, empty text', () => {
     }),
   );
   assert.ok(empty.includes('Nothing found'));
+  const listId = /aria-controls="([^"]+)"/.exec(html)?.[1];
+  assert.ok(listId && html.includes(`id="${listId}"`), 'the open list is the one the box names');
+  const closed = render(h(Search, { label: 'Search', value: '', onChange: noop, results, onPick: noop }));
+  assert.ok(!closed.includes('aria-controls') && !closed.includes('role="listbox"'));
 });
 
 test('CommandPalette: closed renders nothing; open lists available commands with groups and shortcuts', () => {

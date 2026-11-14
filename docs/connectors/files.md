@@ -85,7 +85,7 @@ declares another `crs` (EPSG:3857, a state plane) is refused with that reason �
 read it with `gdal-import`, which reprojects.
 
 **CSV** — the `csv` connector's reader and options (`response.csv`: delimiter, header,
-columns). The definition must map `position` from latitude and longitude columns: **an address
+columns); a `.tsv` file is tab-separated unless `response.csv.delimiter` says otherwise. The definition must map `position` from latitude and longitude columns: **an address
 is never geocoded**, and a row with only an address is rejected with a reason.
 
 **GPX** (1.0 and 1.1) — a waypoint is a Point; a route is a line through its route points (a

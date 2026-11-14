@@ -41,8 +41,10 @@ if (bad) {
 
 let text: string;
 let contentType: string | undefined;
+let bytes: Uint8Array | undefined;
 if (sampleFile) {
-  text = readFileSync(path.resolve(process.cwd(), sampleFile), 'utf8');
+  bytes = new Uint8Array(readFileSync(path.resolve(process.cwd(), sampleFile)));
+  text = Buffer.from(bytes).toString('utf8');
 } else {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20_000);
@@ -65,6 +67,7 @@ if (sampleFile) {
       console.error(`the sample is ${buf.byteLength} bytes; more than ${MAX_SAMPLE_BYTES} is not drafted`);
       process.exit(1);
     }
+    bytes = new Uint8Array(buf);
     text = buf.toString('utf8');
   } catch (err) {
     console.error(`GET ${url} failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -76,7 +79,7 @@ if (sampleFile) {
 
 const interval = opt('interval');
 const draft = draftDefinition(
-  { url, text, ...(contentType ? { contentType } : {}) },
+  { url, text, ...(bytes ? { bytes } : {}), ...(contentType ? { contentType } : {}) },
   {
     ...(opt('id') ? { id: opt('id')! } : {}),
     ...(opt('name') ? { name: opt('name')! } : {}),

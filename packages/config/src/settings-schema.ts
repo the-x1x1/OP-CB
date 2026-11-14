@@ -84,6 +84,8 @@ const settingsShape = {
     grid: s.optional(s.boolean()),
     // Optional (additive): an MGRS or UTM row in the HUD; absent, none.
     hudGrid: s.optional(s.enum(['none', 'mgrs', 'utm'] as const)),
+    // Optional (additive): the contact sonar in the HUD; absent, off.
+    hudSonar: s.optional(s.boolean()),
     profile: s.optional(s.enum(['field', 'balanced', 'docked'] as const)),
     fieldStatus: s.optional(s.boolean()),
   }),

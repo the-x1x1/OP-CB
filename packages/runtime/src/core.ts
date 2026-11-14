@@ -4,6 +4,7 @@ import path from 'node:path';
 import { existsSync, promises as fs } from 'node:fs';
 import { spawn as nodeSpawn } from 'node:child_process';
 import {
+  boundsCenter,
   systemClock,
   type Clock,
   type GeoBounds,
@@ -681,7 +682,7 @@ export class RuntimeCore {
       flags: () => ({
         history: this.historyOpen,
         collections: true,
-        localAircraft: this.providerHost.list().some((p) => p.running && p.manifest.transport === 'local-process'),
+        localAircraft: hasLocalAircraftSource(this.providerHost.list()),
       }),
     });
     await this.packs.refresh();
@@ -1408,6 +1409,12 @@ export class RuntimeCore {
     if (this.started) return;
     this.started = true;
     this.applyProfile(true);
+    // The network signal is read by the monitor, which announces nothing about its first state:
+    // an app that starts with the signal off (the start screen not yet answered, Work offline,
+    // no network) must tell the host before the sources start, or each tries the internet once
+    // and logs the refusal (some fifteen warnings per start in the jconn log, 2026-11-13). The
+    // monitor's own OFFLINE is not enough: with no source live yet it says OFFLINE online too.
+    if (!this.osOnline || this.deps.network?.isOnline() === false) this.providerHost.setOnline(false);
     await this.providerHost.start();
     this.connection.start();
     this.vaults.start();
@@ -1765,12 +1772,8 @@ export class RuntimeCore {
 
   /** Search bias: the centre of the last reported viewport, else the configured default. */
   defaultBias(): { latitude: number; longitude: number } | undefined {
-    if (this.viewport) {
-      return {
-        latitude: (this.viewport.north + this.viewport.south) / 2,
-        longitude: (this.viewport.east + this.viewport.west) / 2,
-      };
-    }
+    // A view across the antimeridian (Fiji, the Aleutians) runs west > east; its middle is there.
+    if (this.viewport) return boundsCenter(this.viewport);
     return this.deps.defaultSearchBias;
   }
 
@@ -1782,6 +1785,9 @@ export class RuntimeCore {
   setNetworkOnline(online: boolean): void {
     if (this.osOnline === online) return;
     this.osOnline = online;
+    // Back online (the network, or the operator's Online on the start screen): probe now rather
+    // than answer from the throttled result taken while the door was shut.
+    if (online) this.lastProbeAt = 0;
     if (!online) {
       this.providerHost.setOnline(false);
       this.providerHost.health.setNetworkOnline(false);
@@ -1859,6 +1865,20 @@ export class RuntimeCore {
     // and from search for up to half a minute (2026-10-03), and a removed one lingered.
     await this.providerHost.pollNow('cameras-local').catch(() => undefined);
   }
+}
+
+/**
+ * Whether a running source on this computer or the operator's network brings aircraft (a
+ * readsb, a local ADS-B feed): the offline capability the diagnostics report. Any running
+ * local source used to count, so an enabled ingest or Traccar source read as local aircraft
+ * (ingest phase, O1).
+ */
+export function hasLocalAircraftSource(
+  providers: ReadonlyArray<{ running: boolean; manifest: { transport: string; objectTypes: readonly string[] } }>,
+): boolean {
+  return providers.some(
+    (p) => p.running && p.manifest.transport === 'local-process' && p.manifest.objectTypes.includes('aircraft'),
+  );
 }
 
 export function isLiveMode(mode: string): boolean {

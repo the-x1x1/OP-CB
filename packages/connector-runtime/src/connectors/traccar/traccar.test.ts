@@ -123,6 +123,22 @@ for (const name of ['traccar-demo-rest.json', 'traccar-local.json']) {
   });
 }
 
+test('suite: traccar-demo-rest.json with each URL answered as a server does (ADR-013 request 2)', async () => {
+  const r = await runConnectorSuite(rest(), {
+    ...restFixtures(),
+    normalByPath: { '/api/devices': fixture('devices.json'), '/api/positions': fixture('positions.json') },
+    // Device 7 has a position but is in no list: shown under its id (the REST join test).
+    expectObservations: 4,
+    expectIds: ['1', '2', '3', '7'],
+    verify: (obs) => {
+      const one = byId(obs).get('1');
+      if (one?.payload['name'] !== 'Van 12') return `device 1 named ${String(one?.payload['name'])}, not from the list`;
+      return one.payload['category'] === 'van' ? undefined : 'device 1 lost its category';
+    },
+  });
+  assert.ok(r.passed, formatSuite(r));
+});
+
 test('suite: traccar-demo-live.json (the socket)', async () => {
   const r = await runConnectorSuite(live(), {
     normal: [fixture('socket-devices.json'), fixture('socket-positions.json'), fixture('socket-events.json'), '{}'],
@@ -497,7 +513,53 @@ test('socket: one failure reported as an error and a close drops the socket once
   await new Promise((r) => setImmediate(r));
   sockets.opened[1]!.handle.simulateError(new Error('refused'));
   sockets.opened[1]!.handle.simulateClose(1006, '');
+  // It never opened: the REST API is asked first (it answers), then it is redialled.
+  await new Promise((r) => setImmediate(r));
   assert.deepEqual(timers.delays(), [4000]);
+});
+
+test('socket: refused for its token (it never opens, /api/devices is refused too) — AUTH_REQUIRED, not redialled', async () => {
+  for (const status of [401, 403]) {
+    const timers = new ManualTimers();
+    const asked: string[] = [];
+    const responder: testing.FixtureResponder = (req) => {
+      asked.push(pathOf(req));
+      return pathOf(req).endsWith('/api/devices') ? { status } : ok(fixture('positions.json'));
+    };
+    const { provider, sockets } = await start(live(), responder, { timers });
+    await provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+    const s = sockets.opened[0]!.handle;
+    s.simulateError(new Error('Unexpected server response'));
+    s.simulateClose(1006, '');
+    await new Promise((r) => setImmediate(r));
+    assert.deepEqual(timers.delays(), [], `${status}: nothing redials`);
+    assert.equal(sockets.opened.length, 1);
+    assert.equal(asked.filter((p) => p.endsWith('/api/devices')).length, 1, 'one REST request settles it');
+    const h = await provider.health();
+    assert.equal(h.status, 'AUTH_REQUIRED', String(status));
+    assert.match(h.message ?? '', /refused the token/);
+    assert.equal(h.lastError?.code, 'AUTH');
+  }
+});
+
+test('socket: a socket that opened and then dropped is redialled without asking the REST API', async () => {
+  const timers = new ManualTimers();
+  const asked: string[] = [];
+  const base = server();
+  const { provider, sockets } = await start(
+    live(),
+    (req) => {
+      asked.push(pathOf(req));
+      return base(req);
+    },
+    { timers },
+  );
+  await provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  const s = sockets.opened[0]!.handle;
+  s.simulateOpen();
+  s.simulateClose(1006, 'gone');
+  assert.deepEqual(timers.delays(), [2000], 'at once, as before');
+  assert.equal(asked.length, 0);
 });
 
 test('socket: a socket that cannot be opened at start is tried again by the provider', async () => {
@@ -681,6 +743,24 @@ test('local: loopback by default, the named host and port from settings, REST on
   assert.equal(badPort.ctx.http.requests[0]!.url, 'http://127.0.0.1:8082/api/devices');
 });
 
+test('local with a socket: ws:// to the server in the settings, the same token in its URL', async () => {
+  const doc = {
+    ...local(),
+    websocket: { url: 'ws://localhost/api/socket', credential: { name: 'token', as: 'query' } },
+  };
+  const v = defaultConnectorRegistry.validate(doc);
+  assert.ok(v.ok, v.errors.join('; '));
+  const here = await start(doc, server());
+  here.sockets.secrets['traccar-local.token'] = 's3cret';
+  await here.provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  assert.equal(here.sockets.opened[0]!.url, 'ws://127.0.0.1:8082/api/socket?token=s3cret');
+  assert.deepEqual(here.sockets.opened[0]!.credential, { key: 'traccar-local.token', as: 'query', param: 'token' });
+
+  const named = await start(doc, server(), { settings: { host: 'traccar.home.example', port: 8090 } });
+  await named.provider.subscribe!({ signal: new AbortController().signal }, () => undefined);
+  assert.equal(named.sockets.opened[0]!.url, 'ws://traccar.home.example:8090/api/socket');
+});
+
 // ── validation ─────────────────────────────────────────────────────────────
 
 test('validation refuses what a Traccar source cannot be', () => {
@@ -692,9 +772,9 @@ test('validation refuses what a Traccar source cannot be', () => {
   const ep = live()['endpoint'] as Record<string, unknown>;
   const cases: Array<[string, Record<string, unknown>, RegExp]> = [
     [
-      'socket without endpoint',
-      { ...local(), websocket: ws, credentials: live()['credentials'] },
-      /websocket needs an endpoint/,
+      'local socket naming a server',
+      { ...local(), websocket: { ...ws, credential: { name: 'token', as: 'query' } } },
+      /local server's websocket.url is ws:\/\/localhost\/api\/socket/,
     ],
     [
       'socket elsewhere',

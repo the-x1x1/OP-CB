@@ -341,7 +341,7 @@ export class HistoryStore {
       const accepted = item.rows.length > room ? item.rows.slice(0, room) : item.rows;
       receipt.dropped += item.rows.length - accepted.length;
       const existing = this.queue.get(id);
-      if (existing) existing.rows.push(...accepted);
+      if (existing) for (const item of accepted) existing.rows.push(item);
       else this.queue.set(id, { key: item.key, rows: accepted });
       this.stats.queuedRows += accepted.length;
       receipt.queued += accepted.length;
@@ -811,7 +811,7 @@ export class HistoryStore {
         rows: got.length,
         ms: this.clock.now() - readStart,
       });
-      rows.push(...(bounded ? got.filter((r) => !this.reprojectors.has(r.objectType)) : got));
+      for (const item of bounded ? got.filter((r) => !this.reprojectors.has(r.objectType)) : got) rows.push(item);
     }
     if (bounded) {
       const lookbackSeconds = opts.lookbackSeconds ?? Math.max(...moved.map((t) => this.lookbackFor(t)));

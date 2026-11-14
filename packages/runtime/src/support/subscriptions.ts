@@ -1,4 +1,4 @@
-import { boundsContain, type GeoBounds, type WorldObject } from '@opcb/world-model';
+import { boundsContain, type WorldObject } from '@opcb/world-model';
 import type { WorldChangedEvent, WorldSubscription } from '@opcb/ipc-contract';
 import type { StateChange } from '@opcb/state-engine';
 
@@ -126,20 +126,4 @@ export function diffObjectSets(
   }
   for (const id of previous.keys()) if (!next.has(id)) removed.push(id);
   return { added, updated, removed, refreshed: [], at, objectCount: next.size };
-}
-
-export function boundsOfSubscriptions(subscriptions: readonly WorldSubscription[]): GeoBounds | undefined {
-  let out: GeoBounds | undefined;
-  for (const s of subscriptions) {
-    if (!s.bounds) return undefined; // one unbounded client means everything is needed
-    out = out
-      ? {
-          west: Math.min(out.west, s.bounds.west),
-          south: Math.min(out.south, s.bounds.south),
-          east: Math.max(out.east, s.bounds.east),
-          north: Math.max(out.north, s.bounds.north),
-        }
-      : { ...s.bounds };
-  }
-  return out;
 }

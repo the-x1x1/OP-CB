@@ -192,7 +192,8 @@ point marks the centre at every zoom"; that part is not in the code yet — obse
    catalogue; OGC and ArcGIS paging may want it too) cannot be proved from a sidecar; the
    static example's sidecar can only prove the root. Smallest change: a list of
    `{ urlEndsWith, body }` routes in `SuiteFixtures` and the sidecar, consulted before
-   `normal` in "Successful parse".
+   `normal` in "Successful parse". **Landed 2026-11-10** as `normalByPath` (path ending →
+   fixture), in both; the static catalogue's sidecar can now use it.
 4. **Observation for ADR-003 (not blocking this phase).** The HTTP client's response cache
    (`packages/core/src/http.ts`) is a `Map` with no eviction: every cacheable GET stores an
    entry under its cache key (default: the URL). A GET source whose URL changes each poll —

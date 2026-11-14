@@ -1,6 +1,10 @@
 {
   "schema": "oneview.connector-test.v1",
   "normal": "fixtures/connectors/traccar/suite-combined.json",
+  "normalByPath": {
+    "/api/devices": "fixtures/connectors/traccar/devices.json",
+    "/api/positions": "fixtures/connectors/traccar/positions.json"
+  },
   "empty": "fixtures/connectors/traccar/positions-empty.json",
   "malformed": [
     {
@@ -16,8 +20,8 @@
       "inline": "[{\"id\":2,\"deviceId\":9,\"fixTime\":\"2026-09-23T19:00:00.000+00:00\"}]"
     }
   ],
-  "expectObservations": 3,
-  "expectIds": ["1", "2", "3"],
+  "expectObservations": 4,
+  "expectIds": ["1", "2", "3", "7"],
   "expect": [
     {
       "externalId": "1",

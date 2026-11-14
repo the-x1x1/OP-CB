@@ -31,6 +31,11 @@ export interface CredentialRef {
 }
 
 export interface EndpointSpec {
+  /**
+   * `{now}` in the URL or a query value is the request's time, `2026-11-11T03:34:54Z`; `{now-90m}`
+   * or `{now-3h}` that much earlier (minutes or hours, up to 9999). For a source that is asked
+   * for a time, such as a forecast grid's nearest step (connector-runtime `rest-json.ts`).
+   */
   url: string;
   method?: 'GET' | 'POST';
   headers?: Record<string, string>;
@@ -108,7 +113,12 @@ export interface ResponseSpec {
   itemsPath?: string;
   /** `entries`: the value at itemsPath is an object whose keys are ids; each value is a record with `_key`. */
   itemsAs?: 'array' | 'entries';
-  format?: 'json' | 'csv' | 'text';
+  /**
+   * `gtfs-rt` (2026-11-10): a GTFS Realtime FeedMessage in protobuf; each record is one
+   * vehicle position, `{ id, feedTimestamp?, vehicle: { trip, vehicle, position, … } }` with
+   * the proto's field names (connector-runtime `gtfs-realtime.ts`).
+   */
+  format?: 'json' | 'csv' | 'text' | 'gtfs-rt';
   /** CSV: the delimiter (default `,`) and whether the first row names the columns (default true). */
   /**
    * `delimiter`: one character, or `whitespace` for a column-aligned text table (lines split
@@ -123,6 +133,32 @@ export interface ResponseSpec {
    * apply.
    */
   contour?: ContourSpec;
+  /**
+   * A gridded wind field (ADR-013 amendment 2026-11-11): the body is a table of grid points
+   * with the wind's u and v components (ERDDAP griddap JSON), and each record is one point —
+   * `lat`, `lon` (−180…180), `u`, `v`, `speedMps`, `towardDeg`, `fromDeg`, `time` and the
+   * body's top-level values under `source` (connector-runtime `wind.ts`). `itemsPath`, `csv`
+   * and `contour` do not apply.
+   */
+  wind?: WindSpec;
+  /**
+   * A table of named columns (ADR-013 amendment 2026-11-11): `{ columnNames, rows }` at `path`
+   * (default `table`), as ERDDAP serves tabledap and griddap JSON. Each row becomes a record
+   * keyed by column name, then mapped as usual. `itemsPath` does not apply.
+   */
+  table?: { path?: string };
+}
+
+export interface WindSpec {
+  /** Path to the table, an object with `columnNames` and `rows`; default `table`. */
+  tablePath?: string;
+  /** Column names of the eastward and northward components, in m/s. */
+  u: string;
+  v: string;
+  /** Column names of latitude, longitude and time; default `latitude`, `longitude`, `time`. */
+  lat?: string;
+  lon?: string;
+  time?: string;
 }
 
 export interface ContourSpec {
@@ -407,7 +443,7 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
       s.object({
         itemsPath: s.optional(s.string({ min: 1, max: 256 })),
         itemsAs: s.optional(s.enum(['array', 'entries'] as const)),
-        format: s.optional(s.enum(['json', 'csv', 'text'] as const)),
+        format: s.optional(s.enum(['json', 'csv', 'text', 'gtfs-rt'] as const)),
         csv: s.optional(
           s.object({
             delimiter: s.optional(s.union([s.string({ min: 1, max: 1 }), s.enum(['whitespace'] as const)])),
@@ -423,6 +459,17 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
             lat: s.optional(s.string({ min: 1, max: 256 })),
             value: s.optional(s.string({ min: 1, max: 256 })),
             levels: s.array(s.number({ min: -1e9, max: 1e9 }), { min: 1, max: 8 }),
+          }),
+        ),
+        table: s.optional(s.object({ path: s.optional(s.string({ min: 1, max: 256 })) })),
+        wind: s.optional(
+          s.object({
+            tablePath: s.optional(s.string({ min: 1, max: 256 })),
+            u: s.string({ min: 1, max: 64 }),
+            v: s.string({ min: 1, max: 64 }),
+            lat: s.optional(s.string({ min: 1, max: 64 })),
+            lon: s.optional(s.string({ min: 1, max: 64 })),
+            time: s.optional(s.string({ min: 1, max: 64 })),
           }),
         ),
       }),
@@ -479,7 +526,12 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
       if (d.endpoint.credential?.as === 'path' && !d.endpoint.url.includes('{TOKEN}'))
         return 'endpoint.credential "path" needs a {TOKEN} placeholder in the URL';
     }
-    if (d.websocket) {
+    // A definition with no endpoint reads a server on this computer or the operator's network
+    // (the source's host setting); its socket URL is then LOCAL_SOCKET_URL's host and a path,
+    // standing for that same server, and the connector builds the address it dials (ws:// to
+    // loopback or the named host only, ADR-003 amendment 2026-10-20). Only connectors that
+    // read a local server accept it; every other socket is wss:// to a public host.
+    if (d.websocket && !(d.endpoint === undefined && isLocalSocketPlaceholder(d.websocket.url))) {
       const bad = checkUrl(d.websocket.url, ['wss:']);
       if (bad) return `websocket.url ${bad}`;
     }
@@ -508,6 +560,18 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
  * for a remote connector — not loopback, a private range or a link-local metadata address
  * (SSRF, directive §76). Local connectors have their own contract.
  */
+/** A local definition's socket: "the server in this source's settings", at this path. */
+export const LOCAL_SOCKET_ORIGIN = 'ws://localhost';
+export function isLocalSocketPlaceholder(url: string): boolean {
+  if (!url.startsWith(`${LOCAL_SOCKET_ORIGIN}/`)) return false;
+  try {
+    const u = new URL(url);
+    return u.origin === LOCAL_SOCKET_ORIGIN && !u.search && !u.hash && !u.username && !u.password;
+  } catch {
+    return false;
+  }
+}
+
 export function checkUrl(url: string, protocols: string[]): string | undefined {
   let u: URL;
   try {

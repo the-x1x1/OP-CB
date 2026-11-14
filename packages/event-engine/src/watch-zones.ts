@@ -89,6 +89,7 @@ export class WatchZoneEvaluator {
   /** When each zone started watching for entries; inside it before the baseline ends is not news. */
   private readonly entryWatchSince = new Map<string, number>();
   private readonly emitter = new TypedEmitter<{ hit: WatchZoneHit }>();
+  private lastSweep = Number.NEGATIVE_INFINITY;
 
   constructor(opts: WatchZoneEvaluatorOptions = {}) {
     this.clock = opts.clock ?? systemClock;
@@ -147,6 +148,7 @@ export class WatchZoneEvaluator {
   /** Evaluate objects for entry into zones that subscribe to 'watch-zone-entry'. Emits on outside→inside transitions only. */
   evaluateObjects(objects: readonly WorldObject[]): WatchZoneHit[] {
     const now = this.clock.now();
+    this.sweep(now);
     const hits: WatchZoneHit[] = [];
     const zones = this.zoneList.filter((z) => z.enabled && z.eventTypes.includes(EventTypes.WatchZoneEntry));
     if (zones.length === 0) return hits;
@@ -196,6 +198,24 @@ export class WatchZoneEvaluator {
     const key = `${zoneId}|${subjectId}`;
     this.lastEmit.set(key, now);
     this.lastSeverity.set(key, severity ?? 'INFO');
+  }
+
+  /**
+   * An object's entry is remembered only for the dedupe window: past it the next entry is news
+   * anyway. Without this every aircraft that ever entered a busy zone stayed in memory for as
+   * long as the app ran. An event's is kept (with its severity): an upgrade days later is still
+   * told as one. At most once an hour.
+   */
+  private sweep(now: number): void {
+    if (now - this.lastSweep < 3_600_000) return;
+    this.lastSweep = now;
+    for (const [key, at] of this.lastEmit)
+      if (now - at >= this.dedupeMs && !this.lastSeverity.has(key)) this.lastEmit.delete(key);
+  }
+
+  /** How many (zone, subject) pairs are remembered for dedupe (tests). */
+  rememberedCount(): number {
+    return this.lastEmit.size;
   }
 
   private allow(zoneId: string, subjectId: string, now: number): boolean {

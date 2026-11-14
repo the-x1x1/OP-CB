@@ -37,6 +37,16 @@ test('HUD: coordinates in decimal degrees and DMS, hemispheres, fixed width', ()
   assert.equal(formatDms(1, 2).length, formatDms(-89.9, -179.9).length);
   assert.equal(wrapLongitude(190), -170, 'the 2D map past the antimeridian');
   assert.equal(formatDecimal(0, 540), ' 0.00000° N  180.00000° W');
+  // Not a place (a camera between frames): a dash, never "NaN°NaN′0NaN″".
+  for (const [lat, lon] of [
+    [Number.NaN, 0],
+    [0, Number.NaN],
+    [Infinity, 0],
+    [95, 0],
+  ] as const) {
+    assert.equal(formatDecimal(lat, lon), '—');
+    assert.equal(formatDms(lat, lon), '—');
+  }
 });
 
 test('HUD: altitude, zoom, heading, pitch and the UTC clock', () => {
@@ -52,6 +62,8 @@ test('HUD: altitude, zoom, heading, pitch and the UTC clock', () => {
   assert.equal(formatPitch(-90), '−90°');
   assert.equal(formatPitch(-35.2), '−35°');
   assert.equal(formatPitch(0), ' 00°');
+  assert.equal(formatHeading(Number.NaN), '—');
+  assert.equal(formatPitch(Number.NaN), '—');
   assert.equal(formatUtc(Date.parse('2026-09-27T21:04:05.900Z')), '2026-09-27 21:04:05Z');
 });
 

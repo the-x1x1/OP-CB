@@ -43,7 +43,7 @@ import {
 import { Button, EmptyState, Icon, formatObjectType } from '@opcb/ui';
 import { useActions, useAppState, useClient, useDispatch, useHosts } from '../store/store.js';
 import { drawnWhileComparing, visibleOverlays } from '../weather-imagery.js';
-import { MapAttribution } from './map-attribution.js';
+import { MapAttribution, sourceCredits } from './map-attribution.js';
 import { ViewBar } from './view-bar.js';
 import { basemapForMode, overlaysToDraw, resolveMapProvider, sourceBasemapFor, terrainFor } from '../map-providers.js';
 import { BasemapNotice } from './basemap-notice.js';
@@ -57,6 +57,8 @@ import { attributeLongTask, markDelta, takeDecodeMax, takeRenderMax, takeRenderP
 import { observeLongFrames } from './long-frames.js';
 import { SNAPSHOT_PAGE_SIZE, nextSubscriptionBounds, pinnedSelection } from './subscription-bounds.js';
 import { withSelection } from './selection-objects.js';
+import { windPoints } from './wind-readout.js';
+import { sonarPicture } from './sonar.js';
 import { OVERVIEW_LENS_ID, lensFilter } from '../overview-layers.js';
 import { CAMERA_PREVIEWS_LAYER_ID, layerOn, objectFilter } from '../layer-tree.js';
 import { CameraPreviews } from './camera-previews.js';
@@ -978,6 +980,34 @@ export function MapHost() {
 
   // Where the selection is: the centre of range rings and where the HUD's RNG row measures from.
   const selectionAt = selectionPosition(world);
+  // The wind layer's points while it is shown, for the HUD's WND row (wind-readout.ts).
+  const windShown = !visibleTypes || visibleTypes.has('wind');
+  const hudWind = useMemo(
+    () => (display.hud && windShown ? windPoints(world.objects.values()) : undefined),
+    [display.hud, windShown, world.objects],
+  );
+  // The contact sonar's picture (sonar.ts): round the selection, else the middle of the view,
+  // out to the range rings' outer ring; recomputed as the world (four times a second at most)
+  // or the view's ring spacing changes.
+  const sonarOn = display.hud && (display.hudSonar ?? false);
+  const sonarSpacing = sonarOn ? ringSpacingM(world.view) : undefined;
+  const sonarCenter = sonarOn ? (selectionAt ?? world.view.focus ?? world.view.center) : undefined;
+  const sonarKey = sonarCenter ? `${sonarCenter.latitude.toFixed(3)}|${sonarCenter.longitude.toFixed(3)}` : '';
+  const hudSonar = useMemo(
+    () =>
+      sonarOn
+        ? sonarPicture(world.objects.values(), sonarCenter, sonarSpacing, {
+            onSelection: !!selectionAt,
+            excludeId: world.selectedId,
+            ...(visibleTypes ? { visibleTypes } : {}),
+            // The switches that act on single objects too (Aircraft → Military only), as the map.
+            ...(keepObject ? { keep: keepObject } : {}),
+          })
+        : undefined,
+    // sonarCenter by its key: a new object each render with the same place.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sonarOn, sonarKey, sonarSpacing, world.objects, world.selectedId, visibleTypes, keepObject, !!selectionAt],
+  );
   const activeCollection = collections.collections.find((c) => c.id === collections.activeId);
   const ringsCenter = ui.rangeRings ? selectionAt : undefined;
   const ringsSpacing = ui.rangeRings ? ringSpacingM(world.view) : undefined;
@@ -1082,14 +1112,11 @@ export function MapHost() {
 
   // ---- on-screen attribution: sources of what is visible + basemap ----
   const attribution = useMemo(() => {
-    const seen = new Set<string>();
-    for (const o of world.objects.values()) {
-      const text =
-        o.provenance.attribution ??
-        sources.entries.find((s) => s.providerId === o.provenance.providerId)?.meta.attribution;
-      if (text) seen.add(text);
-      if (seen.size >= 3) break;
-    }
+    const seen = sourceCredits(
+      world.objects.values(),
+      new Map(sources.entries.map((e) => [e.providerId, e.meta.attribution])),
+      { ...(visibleTypes ? { visibleTypes } : {}), ...(keepObject ? { keep: keepObject } : {}) },
+    );
     // The basemap actually drawn, not the one configured: 2D on a fresh install is configured
     // for Natural Earth II, which only the globe can show, and credited it over an empty map.
     const credit = basemapEntry?.attribution;
@@ -1101,7 +1128,16 @@ export function MapHost() {
     // they were credited nowhere on screen.
     const models = activeMode === '3D' ? modelCreditLines(modelKinds) : [];
     return [...(credit ? [credit] : []), ...overlayCredits, ...seen, ...models];
-  }, [world.objects, sources.entries, shownOverlays, basemapEntry?.attribution, activeMode, modelKinds]);
+  }, [
+    world.objects,
+    sources.entries,
+    shownOverlays,
+    basemapEntry?.attribution,
+    activeMode,
+    modelKinds,
+    visibleTypes,
+    keepObject,
+  ]);
 
   // The HUD's readout sits above the foot of the map (credits and view bar), however many rows
   // they wrap to: at a fixed offset the view bar covered its second and third lines (2026-10-03).
@@ -1250,6 +1286,8 @@ export function MapHost() {
           {...(display.hudGrid && display.hudGrid !== 'none' ? { grid: display.hudGrid } : {})}
           timeMode={timeline.control.mode}
           shownAtMs={timeline.control.cursorMs}
+          {...(hudWind?.length ? { wind: hudWind } : {})}
+          {...(hudSonar ? { sonar: hudSonar } : {})}
         />
       ) : null}
       <div className="wv-map__controls" role="group" aria-label="Map controls">

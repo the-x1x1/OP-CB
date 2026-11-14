@@ -10,6 +10,7 @@ import {
 } from '@opcb/ipc-contract';
 import { Button, Icon, type IconName } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
+import { VersionTag } from '../components/version-tag.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS } from './checks.js';
 import { completion } from './guide-engine.js';
 import type { GuideDefinition, SectionId } from './guide-types.js';
@@ -98,6 +99,7 @@ export function CommandCenter() {
         <div className="wv-cc__brand">
           <span className="wv-brand-wordmark wv-cc__wordmark" role="img" aria-label="OP-CB" />
           <span className="wv-brand-caption wv-cc__brandline">Command Center</span>
+          <VersionTag className="wv-cc__version" />
         </div>
         <ModeSwitch compact />
         <ul>

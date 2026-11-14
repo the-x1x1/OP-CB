@@ -218,6 +218,10 @@ test('parseSearch: thresholds and time phrases', () => {
   assert.match(noUnit.notes[0]!, /no unit/);
 
   assert.deepEqual(first('fires today', 'query')!.query!.time, { start: '2026-09-21T00:00:00.000Z', end: iso(0) });
+  assert.match(first('fires today', 'query')!.title, /\(today, UTC\)$/);
+  // A span longer than any data starts at 1970 rather than at no date at all (which threw).
+  assert.equal(first('earthquakes last 99999999999 days', 'query')!.query!.time!.start, '1970-01-01T00:00:00.000Z');
+  assert.equal(first('fires last 9999999999999999999999h', 'query')!.query!.time!.start, '1970-01-01T00:00:00.000Z');
   assert.deepEqual(first('fires yesterday', 'query')!.query!.time, {
     start: '2026-09-20T00:00:00.000Z',
     end: '2026-09-21T00:00:00.000Z',
@@ -302,4 +306,21 @@ test('parseSearch is deterministic and pure', () => {
   assert.deepEqual(a, b);
   const later = parseSearch('M5+ earthquakes near Japan last 24 hours', { ...ctx, now: () => T0 + 60_000 });
   assert.notDeepEqual(later, a, 'time phrases are relative to the injected clock');
+});
+
+test('parseSearch: "wind" is the wind layer alone or with a place or time, not inside a compound', () => {
+  const q = (text: string) => {
+    const i = first(text, 'query');
+    return { types: i?.query?.objectTypes ?? [], text: i?.query?.text, region: i?.query?.region?.kind };
+  };
+  assert.deepEqual(q('wind').types, ['wind']);
+  assert.deepEqual(q('show me the wind').types, ['wind']);
+  assert.deepEqual(q('wind near honolulu'), { types: ['wind'], text: undefined, region: 'circle' });
+  assert.deepEqual(q('wind hawaii').types, ['wind'], 'followed by a place name');
+  assert.deepEqual(q('wind in the last hour').types, ['wind']);
+  // Things with the word in their names stay a text search, as before the wind layer existed.
+  assert.deepEqual(q('wind farm'), { types: [], text: 'wind farm', region: undefined });
+  assert.deepEqual(q('wind farms in texas').text, 'wind farms');
+  assert.deepEqual(q('wind advisory'), { types: ['weather-alert'], text: 'wind', region: undefined });
+  assert.deepEqual(q('high wind warning'), { types: ['weather-alert'], text: 'high wind', region: undefined });
 });

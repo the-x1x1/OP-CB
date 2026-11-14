@@ -109,7 +109,10 @@ function timeParam(params: URLSearchParams, key: string): number | undefined {
   const raw = params.get(key);
   if (raw === null) return undefined;
   if (raw.length > 40 || !/^\d{4}-\d{2}-\d{2}T/.test(raw)) throw new BadRequest(`"${key}" must be an ISO time`);
-  const t = Date.parse(raw);
+  // A time with no zone is UTC, as every time here is — not this computer's local time, which
+  // is what Date.parse makes of it.
+  const zoned = /(Z|[+-]\d{2}:?\d{2})$/i.test(raw);
+  const t = Date.parse(zoned ? raw : `${raw}Z`);
   if (!Number.isFinite(t)) throw new BadRequest(`"${key}" must be an ISO time`);
   return t;
 }

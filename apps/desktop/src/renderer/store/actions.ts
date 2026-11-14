@@ -1,3 +1,4 @@
+import { someOf } from './some-of.js';
 import type { Dispatch } from 'react';
 import type {
   GeoBounds,
@@ -70,8 +71,8 @@ import { isCollected } from './collections.js';
 import { zoneEventTypes } from './watch-zones.js';
 import type { HostRegistry } from './store.js';
 import { overlaysToDraw } from '../map-providers.js';
-import { OVERVIEW_LENS_ID, withLayer } from '../overview-layers.js';
-import { allLayersHidden, onlyLayerHidden } from '../layer-tree.js';
+import { OVERVIEW_LENS_ID, lensFilter, withLayer } from '../overview-layers.js';
+import { allLayersHidden, objectFilter, onlyLayerHidden } from '../layer-tree.js';
 import { WEATHER_GROUP_ID, isImageryView, visibleOverlays, withWeatherImagery } from '../weather-imagery.js';
 import { stormsTarget, stormsViewHidden } from '../storms-view.js';
 import { displaySettings } from './display.js';
@@ -159,8 +160,13 @@ export function boundsOfPoints(
   // Wider than half the globe a box frames nothing well: M4+ earthquakes worldwide framed East
   // Africa from 7,000 km (QA 2026-10-04). The caller shows the whole world instead.
   if (span > 180) return undefined;
-  const south = Math.min(...lats);
-  const north = Math.max(...lats);
+  // A loop, not Math.min(...lats): a shape's outline can pass the engine's argument limit.
+  let south = Infinity;
+  let north = -Infinity;
+  for (const lat of lats) {
+    if (lat < south) south = lat;
+    if (lat > north) north = lat;
+  }
   let mid = west + span / 2;
   if (mid > 180) mid -= 360;
   return { bounds: { west, south, east, north }, centre: { latitude: (south + north) / 2, longitude: mid } };
@@ -1018,7 +1024,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           dispatch({ type: 'collections/list', collections: await client.request('collections.list', undefined) });
           notify('Collection imported', r.imported.name);
         }
-        if (r.issues.length) notify('Import issues', r.issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.issues.length) notify('Import issues', someOf(r.issues, 3), 'MINOR');
       } catch (err) {
         fail('Import failed', err);
       }
@@ -1064,24 +1070,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       dispatch({ type: 'ui/contextTab', tab: 'watchzones' });
     },
     /**
-     * A watch zone whose outline is the measured shape (the measure tool with Area on). The
-     * zone is tested in plain longitude and latitude, so an outline across the 180° meridian is
-     * refused, and one that crosses itself encloses nothing.
+     * A watch zone whose outline is the measured shape (the measure tool with Area on). An outline
+     * across the 180° meridian is kept as drawn, each leg the short way round; one that crosses
+     * itself encloses nothing.
      */
     async createPolygonZone(points: readonly GeoPosition[], name: string): Promise<boolean> {
       if (points.length < 3) return false;
-      for (let i = 0; i < points.length; i++) {
-        const a = points[i]!;
-        const b = points[(i + 1) % points.length]!;
-        if (Math.abs(b.longitude - a.longitude) > 180) {
-          notify(
-            'Not watched',
-            'A zone cannot cross the 180° meridian; draw it as two shapes, one each side.',
-            'MINOR',
-          );
-          return false;
-        }
-      }
       const lens = lensById(getState().lenses.activeId, getState().lenses.lenses);
       // The outline as the map drew it: each leg along its great circle.
       const outline = densifyRing(points);
@@ -1175,6 +1169,15 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     // ---- display: HUD, visual style, day/night (saved), clean view, orbit, follow (session) ----
     async toggleHud(): Promise<void> {
       await setDisplay({ hud: !displaySettings(getState().session.settings).hud });
+    },
+    /**
+     * The contact sonar (map/sonar.ts). It is drawn in the HUD, so turning it on shows the HUD
+     * too; turning it off leaves the HUD as it is.
+     */
+    async toggleSonar(): Promise<void> {
+      const d = displaySettings(getState().session.settings);
+      // Shown only with the HUD: with the HUD off it is not on, whatever the setting says.
+      await setDisplay(d.hud && d.hudSonar ? { hudSonar: false } : { hudSonar: true, hud: true });
     },
     /** G: the latitude and longitude grid (map/graticule.ts). */
     async toggleGrid(): Promise<void> {
@@ -1449,7 +1452,16 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       const s = getState();
       const view = hosts.get()?.getView() ?? s.world.view;
       const middle = view.focus ?? view.center;
-      const list = nearbyOrder(s.world.objects.values(), middle, keyboardBounds(view.center, view.bounds));
+      // What the map shows: the lens's types less the layers switched off, and the per-object
+      // switches (Aircraft → Military only) — a hidden object is not stepped to.
+      const lens = lensById(s.lenses.activeId, s.lenses.lenses);
+      const hidden = s.session.settings?.hiddenLayers ?? [];
+      const shown = lens ? lensFilter(lens, hidden).objectTypes : undefined;
+      const keep = lens?.id === OVERVIEW_LENS_ID ? objectFilter(hidden) : undefined;
+      const list = nearbyOrder(s.world.objects.values(), middle, keyboardBounds(view.center, view.bounds), {
+        ...(shown ? { types: shown } : {}),
+        ...(keep ? { keep } : {}),
+      });
       if (!list.length) return false;
       const at = s.world.selectedId ? list.indexOf(s.world.selectedId) : -1;
       const next = at < 0 ? (step > 0 ? 0 : list.length - 1) : (at + step + list.length) % list.length;
@@ -1686,8 +1698,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         const r = await client.request('offline.installPack', undefined);
         const issues = r.issues.filter((i) => i !== 'cancelled');
         // One notice either way: what was installed (and what it replaced), or why not.
-        if (r.installed) notify('Offline pack installed', [r.installed.name, ...issues.slice(0, 2)].join(' — '));
-        else if (issues.length) notify('Pack not installed', issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.installed)
+          notify(
+            'Offline pack installed',
+            [r.installed.name, ...(issues.length ? [someOf(issues, 2, ' — ')] : [])].join(' — '),
+          );
+        else if (issues.length) notify('Pack not installed', someOf(issues, 3), 'MINOR');
         dispatch({ type: 'offline/status', status: await client.request('offline.status', undefined) });
         return { installed: r.installed?.name ?? null, issues };
       } catch (err) {
@@ -1711,7 +1727,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         dispatch({ type: 'offline/status', status: r.status });
         if (r.added) notify('Publisher added', r.added);
         else if (r.issues.length && r.issues[0] !== 'cancelled')
-          notify('Publisher not added', r.issues.slice(0, 2).join('; '), 'MINOR');
+          notify('Publisher not added', someOf(r.issues, 2), 'MINOR');
       } catch (err) {
         fail('Publisher not added', err);
       }
@@ -1736,8 +1752,9 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         const r = await client.request('offline.addVault', undefined);
         dispatch({ type: 'offline/status', status: r.status });
         const issues = r.issues.filter((i) => i !== 'cancelled');
-        if (r.added) notify('Data vault added', [r.added, ...issues.slice(0, 1)].join(' — '));
-        else if (issues.length) notify('Data vault not added', issues.slice(0, 2).join('; '), 'MINOR');
+        if (r.added)
+          notify('Data vault added', [r.added, ...(issues.length ? [someOf(issues, 1, ' — ')] : [])].join(' — '));
+        else if (issues.length) notify('Data vault not added', someOf(issues, 2), 'MINOR');
         return { added: r.added, issues };
       } catch (err) {
         fail('Data vault not added', err);
@@ -1757,8 +1774,12 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         const r = await client.request('offline.installPackTo', { vaultId });
         const issues = r.issues.filter((i) => i !== 'cancelled');
-        if (r.installed) notify('Offline pack installed', [r.installed.name, ...issues.slice(0, 2)].join(' — '));
-        else if (issues.length) notify('Pack not installed', issues.slice(0, 3).join('; '), 'MINOR');
+        if (r.installed)
+          notify(
+            'Offline pack installed',
+            [r.installed.name, ...(issues.length ? [someOf(issues, 2, ' — ')] : [])].join(' — '),
+          );
+        else if (issues.length) notify('Pack not installed', someOf(issues, 3), 'MINOR');
         dispatch({ type: 'offline/status', status: await client.request('offline.status', undefined) });
         return { installed: r.installed?.name ?? null, issues };
       } catch (err) {
@@ -1943,18 +1964,32 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         box && box.width > 0 && box.height > 0
           ? { x: Math.max(0, box.left), y: Math.max(0, box.top), width: box.width, height: box.height }
           : undefined;
+      // The credits go in the picture unfolded, whatever is folded on screen (shell.css).
+      const root = globalThis.document?.documentElement;
+      root?.setAttribute('data-capturing', 'true');
       try {
+        if (root) await new Promise((resolve) => setTimeout(resolve, 60));
         const r = await client.request('view.capture', rect ? { rect } : {});
         if ('path' in r) notify('Picture saved', `${r.width} × ${r.height}: ${r.path}`);
       } catch (err) {
         fail('Picture not saved', err);
+      } finally {
+        root?.removeAttribute('data-capturing');
       }
     },
     async exportVisible(format: 'geojson' | 'json' | 'csv' | 'kml'): Promise<void> {
       const s = getState();
       const lens = lensById(s.lenses.activeId, s.lenses.lenses);
+      // The types the map draws: the lens's less the layers switched off (Overview), so an
+      // export of what is visible leaves out a hidden layer's objects.
+      const shown = lens ? [...lensFilter(lens, s.session.settings?.hiddenLayers ?? []).objectTypes] : undefined;
+      // An empty list would ask for every type: with every layer off, nothing is visible.
+      if (shown && !shown.length) {
+        notify('Nothing to export', 'Every layer is switched off, so nothing is visible on the map.');
+        return;
+      }
       const query: WorldQuery = {
-        ...(lens ? { objectTypes: lens.objectTypes } : {}),
+        ...(shown ? { objectTypes: shown } : {}),
         ...(s.world.view.bounds ? { region: { kind: 'bounds', bounds: s.world.view.bounds } } : {}),
       };
       try {

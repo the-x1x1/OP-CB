@@ -6,8 +6,9 @@ import { xmlText } from './collection-geodata.js';
 /**
  * Watch zones as shapes other tools read and draw — KML (Google Earth, ATAK) and GeoJSON
  * (QGIS) — and shapes drawn there read back as zones. A circle goes out as a polygon of
- * CIRCLE_VERTICES points (GeoJSON also keeps its centre and radius, so it comes back a circle);
- * a box as its four corners; an admin region only when it carries bounds.
+ * CIRCLE_VERTICES points with its centre and radius alongside (GeoJSON properties, KML
+ * ExtendedData), so OP-CB reads it back as a circle; a box as its four corners; an admin region
+ * only when it carries bounds.
  */
 export type ZoneGeoFormat = 'kml' | 'geojson';
 
@@ -119,6 +120,17 @@ export function zonesToGeodata(
         '    <Placemark>',
         `      <name>${xmlText(zone.name)}</name>`,
         `      <description>${xmlText(describe(zone))}</description>`,
+        // A circle's centre and radius ride along as ExtendedData (other tools show the polygon and
+        // ignore it), so a KML read back by OP-CB is a circle again, as a GeoJSON one is.
+        ...(zone.geometry.kind === 'circle'
+          ? [
+              '      <ExtendedData>',
+              `        <Data name="circleLatitude"><value>${num(zone.geometry.center.latitude)}</value></Data>`,
+              `        <Data name="circleLongitude"><value>${num(zone.geometry.center.longitude)}</value></Data>`,
+              `        <Data name="circleRadiusM"><value>${Math.round(zone.geometry.radiusM)}</value></Data>`,
+              '      </ExtendedData>',
+            ]
+          : []),
         `      <Polygon><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>${closed}</coordinates></LinearRing></outerBoundaryIs></Polygon>`,
         '    </Placemark>',
       );
@@ -154,8 +166,11 @@ export interface ZoneDraft {
   geometry: GeoRegion;
 }
 
-/** A ring of [lon, lat] as a zone outline: closing point dropped, at least three points, not across 180°. */
-function outline(coords: unknown): Array<[number, number]> | 'antimeridian' | undefined {
+/**
+ * A ring of [lon, lat] as a zone outline: closing point dropped, at least three points. A ring
+ * across 180° is kept as written, each edge the short way round.
+ */
+function outline(coords: unknown): Array<[number, number]> | undefined {
   if (!Array.isArray(coords)) return undefined;
   const ring: Array<[number, number]> = [];
   for (const c of coords) {
@@ -168,16 +183,19 @@ function outline(coords: unknown): Array<[number, number]> | 'antimeridian' | un
   const last = ring.at(-1);
   if (first && last && ring.length > 1 && first[0] === last[0] && first[1] === last[1]) ring.pop();
   if (ring.length < 3) return undefined;
-  for (let i = 0; i < ring.length; i++)
-    if (Math.abs(ring[(i + 1) % ring.length]![0] - ring[i]![0]) > 180) return 'antimeridian';
   return ring;
+}
+
+/** An ExtendedData value as a number: blank is none (`Number('')` is 0, a circle at 0° 0°). */
+function kmlNumber(v: unknown): number {
+  return typeof v === 'string' && v.trim() !== '' ? Number(v) : typeof v === 'number' ? v : Number.NaN;
 }
 
 /**
  * The shapes of a KML or GeoJSON file as zone drafts: each polygon's outer ring (holes are not
  * kept), each part of a multipolygon its own zone; a GeoJSON feature OP-CB wrote with a
- * `circle` comes back as that circle. Points and lines are not zones; they, shapes across the
- * 180° meridian and bad rings are counted in `issues`.
+ * `circle` comes back as that circle. Points and lines are not zones; they and bad rings are
+ * counted in `issues`. A shape across 180° is kept as drawn.
  */
 export function zonesFromGeodata(
   format: ZoneGeoFormat,
@@ -191,7 +209,18 @@ export function zonesFromGeodata(
     notShapes += read.skipped.length;
     for (const f of read.features) {
       const g = f.geometry;
-      if (g?.type === 'Polygon') shapes.push({ ...(f.name ? { name: f.name } : {}), rings: [g.coordinates[0]] });
+      const props = (f.properties ?? {}) as Record<string, unknown>;
+      const circle =
+        props['circleLatitude'] !== undefined &&
+        props['circleLongitude'] !== undefined &&
+        props['circleRadiusM'] !== undefined
+          ? {
+              center: { latitude: kmlNumber(props['circleLatitude']), longitude: kmlNumber(props['circleLongitude']) },
+              radiusM: kmlNumber(props['circleRadiusM']),
+            }
+          : undefined;
+      if (g?.type === 'Polygon')
+        shapes.push({ ...(f.name ? { name: f.name } : {}), rings: [g.coordinates[0]], ...(circle ? { circle } : {}) });
       else if (g?.type === 'MultiPolygon')
         shapes.push({ ...(f.name ? { name: f.name } : {}), rings: g.coordinates.map((p) => p[0]) });
       else notShapes++;
@@ -233,7 +262,6 @@ export function zonesFromGeodata(
     }
   }
   const zones: ZoneDraft[] = [];
-  let across = 0;
   let bad = 0;
   let simplified = 0;
   for (const shape of shapes) {
@@ -260,8 +288,7 @@ export function zonesFromGeodata(
     }
     shape.rings.forEach((r, i) => {
       const ring = outline(r);
-      if (ring === 'antimeridian') across++;
-      else if (!ring) bad++;
+      if (!ring) bad++;
       else {
         const base = shape.name?.trim() || `Zone ${zones.length + 1}`;
         const fit = withinPointLimit(ring);
@@ -276,9 +303,6 @@ export function zonesFromGeodata(
   const kept = zones.slice(0, MAX_IMPORTED_ZONES);
   const issues = [
     notShapes ? `${notShapes} points or lines left out: a zone is a shape` : undefined,
-    across
-      ? `${across} shape${across === 1 ? '' : 's'} across the 180° meridian left out: draw one each side`
-      : undefined,
     bad
       ? `${bad} shape${bad === 1 ? '' : 's'} with fewer than three points or a point off the globe left out`
       : undefined,

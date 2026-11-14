@@ -30,6 +30,8 @@ export interface ExpectedObservation {
 export interface Sidecar {
   schema?: string;
   normal: SidecarSource | SidecarSource[];
+  /** The good answer for each request whose path ends with the key; others get `normal`. */
+  normalByPath?: Record<string, SidecarSource>;
   empty: SidecarSource;
   malformed: SidecarSource[];
   expectObservations: number;
@@ -43,7 +45,10 @@ export function sidecarPathFor(definitionPath: string): string {
   return path.join(dir, `${base}.test.json`);
 }
 
-function readSource(src: SidecarSource, root: string, what: string): string {
+/** Fixture files read as bytes, not text: a GTFS Realtime feed is protobuf. */
+const BINARY_FIXTURE = /\.(pb|bin)$/i;
+
+function readSource(src: SidecarSource, root: string, what: string): string | Uint8Array {
   if (typeof src === 'object' && src !== null && 'inline' in src) return String(src.inline);
   if (typeof src !== 'string') throw new Error(`${what}: expected a fixture path or { "inline": "…" }`);
   const abs = path.resolve(root, src);
@@ -51,7 +56,7 @@ function readSource(src: SidecarSource, root: string, what: string): string {
   if (rel.startsWith('..') || path.isAbsolute(rel))
     throw new Error(`${what}: fixture ${src} is outside the repository`);
   if (!existsSync(abs)) throw new Error(`${what}: fixture ${src} not found`);
-  return readFileSync(abs, 'utf8');
+  return BINARY_FIXTURE.test(abs) ? new Uint8Array(readFileSync(abs)) : readFileSync(abs, 'utf8');
 }
 
 export function parseSidecar(text: string, file: string): Sidecar {
@@ -79,6 +84,13 @@ export function parseSidecar(text: string, file: string): Sidecar {
     (!Array.isArray(s['expectIds']) || !s['expectIds'].every((x) => typeof x === 'string'))
   )
     throw new Error(`${file}: "expectIds" must be an array of strings`);
+  if (s['normalByPath'] !== undefined) {
+    const m = s['normalByPath'];
+    if (!m || typeof m !== 'object' || Array.isArray(m))
+      throw new Error(`${file}: "normalByPath" must be an object of path endings to fixtures`);
+    for (const key of Object.keys(m))
+      if (!key.startsWith('/')) throw new Error(`${file}: normalByPath key "${key}" must start with /`);
+  }
   if (s['expect'] !== undefined) {
     if (!Array.isArray(s['expect'])) throw new Error(`${file}: "expect" must be an array`);
     for (const [i, e] of s['expect'].entries())
@@ -100,6 +112,10 @@ export function loadSidecar(file: string, root: string): SuiteFixtures {
     malformed: sidecar.malformed.map((s, i) => readSource(s, root, `${name} malformed[${i}]`)),
     expectObservations: sidecar.expectObservations,
   };
+  if (sidecar.normalByPath)
+    fixtures.normalByPath = Object.fromEntries(
+      Object.entries(sidecar.normalByPath).map(([k, src]) => [k, readSource(src, root, `${name} normalByPath[${k}]`)]),
+    );
   if (sidecar.expectIds) fixtures.expectIds = sidecar.expectIds;
   if (sidecar.expect?.length) fixtures.verify = (obs) => verifyExpected(obs, sidecar.expect!);
   return fixtures;

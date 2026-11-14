@@ -506,7 +506,7 @@ export class MqttProvider implements WorldProvider {
         for (const item of at.records) {
           const read = this.preset.read(item, topic, levels);
           if ('skipped' in read) this.stats.skipped++;
-          else records.push(...read.records);
+          else for (const item of read.records) records.push(item);
         }
       } else {
         const found = extractRecords(body, this.spec.itemsPath ? { itemsPath: this.spec.itemsPath } : undefined);

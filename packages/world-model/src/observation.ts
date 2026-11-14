@@ -77,8 +77,17 @@ export const ObjectTypes = {
   Sensor: 'sensor',
   /** One capture by a satellite or aircraft: its footprint, time and collection (STAC items). */
   ImageryScene: 'imagery-scene',
+  /** The wind at one point of a forecast or analysis grid: speed and direction (ADR-002, 2026-11-11). */
+  Wind: 'wind',
 } as const;
 export type ObjectType = (typeof ObjectTypes)[keyof typeof ObjectTypes];
+
+/**
+ * Types whose objects are samples of a field (a wind grid's points), not things in the world:
+ * drawn and readable like any object, but never a contact on the sonar, a step of the ] and [
+ * keys, or "also here" in an object's Related list (ADR-002 amendment 2026-11-11).
+ */
+export const FIELD_OBJECT_TYPES: ReadonlySet<string> = new Set([ObjectTypes.Wind]);
 
 /** Deterministic observation id. */
 export function observationId(providerId: string, externalId: string, observedAt: IsoTimestamp): string {

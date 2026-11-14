@@ -120,10 +120,19 @@ New requests from this phase (none blocks it):
    read by REST alone. Smallest change: for a `local-process` provider, also accept `ws:`
    to loopback in `allowedHosts` or the trusted host, as the HTTP client already does for
    `http:`; the definition schema's `wss`-only rule would then need a local form too.
+   **Landed:** the host side with the 2026-10-20 amendment; the definition side on
+   2026-11-10 (`feature/after-0.7.4`): a definition with no endpoint may give
+   `ws://localhost/<path>` as its socket, standing for the server in its settings
+   (connector-sdk `isLocalSocketPlaceholder`); traccar dials `ws://<host>:<port>/api/socket`,
+   websocket-json refuses it.
 2. **ADR-013 (the suite), same as `ogc`'s request 3:** per-URL fixtures in
    `runConnectorSuite` (a responder keyed by path, or a sidecar map), so a connector that
    makes two different requests per poll is tested with real answers, not
-   `suite-combined.json`.
+   `suite-combined.json`. **Landed 2026-11-10** (`feature/after-0.7.4`): `normalByPath` in
+   `SuiteFixtures` and in the `*.test.json` sidecar — the good answer for each request whose
+   path ends with the key, consulted before `normal` in Successful parse, Cancellation and
+   Mapping error. `traccar-demo-rest.test.json` now answers `/api/devices` and
+   `/api/positions` separately (4 observations, device 7 in no list shown under its id).
 3. **ADR-003 (the host):** `openSubscription`'s retry after a failed `subscribe` sits in
    `h.timer`, which `schedule()` (the poll) clears; a provider with both `query` and
    `subscribe` never gets that retry. This connector retries itself; a separate timer in
@@ -133,12 +142,17 @@ New requests from this phase (none blocks it):
    **First half landed** (feature/field-fixes, 2026-11-08): the host keeps a subscription's retry
    timer and abort controller apart from the poll's (`subTimer`, `subAbort`), so the retry
    survives the next poll and a cancelled poll no longer aborts an open subscription
-   (`host.test.ts`). The `websocket-json` double drop is still open.
+   (`host.test.ts`). Second half landed 2026-11-10 (`feature/after-0.7.4`): `websocket-json`
+   drops a connection once when the host reports an error and then a close.
 4. **ADR-003 (socket auth):** a refused WebSocket upgrade (HTTP 401/403) reaches the
    provider as an error and a close, so a socket that refuses the token cannot be told
    from a dropped one: it shows DEGRADED/OFFLINE and is redialled. Passing the upgrade's
    HTTP status (as a `ProviderError('AUTH')` from `open`, or on `onClose`) would let it
-   stop and say AUTH_REQUIRED.
+   stop and say AUTH_REQUIRED. **Done without a contract change (2026-11-11):** a socket
+   that closes without having opened, when it and the REST API carry the same token, is
+   followed by one `/api/devices` request; refused there too, the socket stops and the
+   source says AUTH_REQUIRED (`dropUnopened` in traccar.ts, three tests). Passing the
+   status through `ProviderSockets` stays open for sockets with no REST API to ask.
 
 ## Evidence
 

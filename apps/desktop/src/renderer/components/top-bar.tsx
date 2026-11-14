@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { SearchResult } from '@opcb/ipc-contract';
 import { IconButton, Popover, Search, StatusBadge, formatUtcTime } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
+import { VersionTag } from './version-tag.js';
 import { useNow } from '../hooks/use-now.js';
 import { useCCStore } from '../command-center/use-cc.js';
 import { ONLINE_ROW_ID, onlinePlaceText, searchList, type OnlineSearchState } from './search-items.js';
@@ -113,6 +114,7 @@ export function TopBar() {
           aria-label="OP-CB — Operation Civilization Backup"
         />
         {demoMode ? <span className="wv-topbar__demo">demo</span> : null}
+        <VersionTag className="wv-topbar__version" />
       </div>
       <div className="wv-topbar__search" id="wv-global-search">
         <Search

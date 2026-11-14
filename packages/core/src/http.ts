@@ -75,6 +75,12 @@ interface CacheEntry {
   headers: Record<string, string>;
   body: Uint8Array;
   storedAt: number;
+  /**
+   * The URL the body answered. A key can hold several URLs (a request that carries the time
+   * keys by its template): validators are sent only for the same URL, or a 304 for an
+   * unchanged dataset would hand back the body of a different question.
+   */
+  url: string;
   /** The previously accepted entry, restored if this one is invalidated by the consumer. */
   previousGood?: CacheEntry;
 }
@@ -315,8 +321,10 @@ export class HttpClient {
       this.sentAt.set(host, clock.now());
       const headers: Record<string, string> = { ...(this.opts.headers ?? {}), ...(req.headers ?? {}) };
       if (this.opts.userAgent && !hasHeader(headers, 'user-agent')) headers['User-Agent'] = this.opts.userAgent;
-      if (cached?.etag) headers['If-None-Match'] = cached.etag;
-      else if (cached?.lastModified) headers['If-Modified-Since'] = cached.lastModified;
+      if (cached?.url === req.url) {
+        if (cached.etag) headers['If-None-Match'] = cached.etag;
+        else if (cached.lastModified) headers['If-Modified-Since'] = cached.lastModified;
+      }
 
       let url = req.url;
       let requestBody = req.body;
@@ -371,7 +379,13 @@ export class HttpClient {
         res.headers.forEach((v, k) => {
           respHeaders[k.toLowerCase()] = v;
         });
-        const entry: CacheEntry = { status: res.status, headers: respHeaders, body, storedAt: clock.now() };
+        const entry: CacheEntry = {
+          status: res.status,
+          headers: respHeaders,
+          body,
+          storedAt: clock.now(),
+          url: req.url,
+        };
         const etag = res.headers.get('etag');
         const lm = res.headers.get('last-modified');
         if (etag) entry.etag = etag;

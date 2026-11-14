@@ -503,3 +503,28 @@ test('withdrawn: what a complete snapshot leaves out; back within the same batch
   assert.deepEqual(partial.removed, [`weather-alert:usgs-volcanoes:b`]);
   assert.equal(partial.withdrawn, undefined);
 });
+
+test('state: the recent observations are the newest, in order, never more than the cap', () => {
+  const state = new WorldState({ clock: new VirtualClock(T0), flushDelayMs: 0, recentObservations: 3 });
+  for (let i = 0; i < 10; i++) {
+    state.ingest(
+      [
+        obs({
+          providerId: 'p',
+          objectType: 'buoy',
+          externalId: `b${i}`,
+          observedAt: new Date(T0 + i * 1000).toISOString(),
+        }),
+      ],
+      { snapshot: false, providerId: 'p' },
+    );
+    const recent = state.recentObservations(100).map((o) => o.externalId);
+    const expected = Array.from({ length: Math.min(3, i + 1) }, (_, k) => `b${i - Math.min(3, i + 1) + 1 + k}`);
+    assert.deepEqual(recent, expected, `after ${i + 1}`);
+  }
+  assert.deepEqual(
+    state.recentObservations(2).map((o) => o.externalId),
+    ['b8', 'b9'],
+  );
+  assert.equal(state.recentObservations(0).length, 3);
+});

@@ -29,6 +29,8 @@ export const ICON_IDS = [
   'sensor',
   'imagery',
   'weather',
+  // Wind: an arrow along the direction the wind blows to, turned by the object's heading.
+  'wind',
   // Storms (storm-style.ts): drawn in 'markers' mode too, so they read at global zoom.
   'cyclone',
   'tornado',
@@ -486,6 +488,22 @@ export function drawGlyph(ctx: GlyphContext, icon: string, size: number, color =
       ctx.fill();
       ctx.beginPath();
       ctx.rect(0.22, 0.58, 0.62, 0.18);
+      ctx.fill();
+      break;
+    case 'wind':
+      // A slim arrow pointing up (north at rotation 0): a shaft and an open head, so a grid of
+      // them reads as flow rather than as a field of markers.
+      ctx.lineWidth = 0.09;
+      ctx.beginPath();
+      ctx.moveTo(0.5, 0.9);
+      ctx.lineTo(0.5, 0.14);
+      ctx.stroke();
+      poly(ctx, [
+        [0.5, 0.06],
+        [0.74, 0.38],
+        [0.5, 0.3],
+        [0.26, 0.38],
+      ]);
       ctx.fill();
       break;
     case 'cyclone':

@@ -37,7 +37,13 @@ test('connection: a source waiting for a key nobody entered does not make the ap
   assert.equal(r.connection().state, 'CONNECTED');
   assert.equal(r.connection().remoteTotal, 1);
 
-  // A key that was entered and refused is a failure the badge should show.
+  // A key that was entered and refused is a failure the badge should show — and is told, though
+  // the source's status did not change.
+  const heard: string[] = [];
+  r.on('connection', (c) => heard.push(c.state));
   r.update(health('ais', { status: 'AUTH_REQUIRED', credentialState: 'invalid' }));
   assert.equal(r.connection().state, 'DEGRADED');
+  assert.deepEqual(heard, ['DEGRADED']);
+  r.update(health('usgs', { lastSuccess: '1970-01-01T00:01:00.000Z' }));
+  assert.deepEqual(heard, ['DEGRADED'], 'an unchanged state is not told again');
 });
