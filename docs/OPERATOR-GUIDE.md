@@ -564,6 +564,11 @@ update**: press it and the app closes, installs the update without the installer
 opens again; press **Later** and it installs the next time you quit. Nothing is asked while
 working offline.
 
+The version running is under the OP-CB wordmark at the top left — on the start screen, the map
+and the Command Center — as `v0.7.4 · f021db71`: the version and the build's commit. It is read
+from the program each time it starts, so after an update it is the new one. The commit tells a
+test build of a branch from the release with the same number.
+
 Settings → Updates: **Update automatically** (on by default; off, the card offers **Download and
 restart** instead), **Include pre-release builds**, and **Check now**. Builds are not code-signed
 yet: a download is checked against the hash the release itself publishes, the same check as
