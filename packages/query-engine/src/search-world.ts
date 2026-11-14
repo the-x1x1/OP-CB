@@ -256,16 +256,19 @@ function scanState(
 ): SearchResult[] {
   const tokens = tokenize(text).filter((t) => !STOP_WORDS.has(t) && t.length >= 2);
   if (tokens.length === 0) return [];
-  const found: Array<{ r: SearchResult }> = [];
+  // Ranked on the score alone and turned into results only for those kept: a short prefix ("ua")
+  // matches most of 150,000 aircraft, and building a result for each was most of the time.
+  const found: Array<{ obj: WorldObject; base: number; bonus: number; score: number }> = [];
   let scanned = 0;
   for (const obj of state.all()) {
     if (++scanned > scanLimit) break;
-    const score = matchScore(obj, tokens);
-    if (score <= 0) continue;
-    found.push({ r: objectResult(obj, score, biasBonus(bias, obj.position)) });
+    const base = matchScore(obj, tokens);
+    if (base <= 0) continue;
+    const bonus = biasBonus(bias, obj.position);
+    found.push({ obj, base, bonus, score: clamp(base + bonus) });
   }
-  found.sort((a, b) => b.r.score - a.r.score || (a.r.id < b.r.id ? -1 : 1));
-  return found.slice(0, keep).map((f) => f.r);
+  found.sort((a, b) => b.score - a.score || (a.obj.id < b.obj.id ? -1 : 1));
+  return found.slice(0, keep).map((f) => objectResult(f.obj, f.base, f.bonus));
 }
 
 /** 0.9 exact label; 0.8 label prefix; 0.7 id-value prefix; 0.6 label word prefix; 0 otherwise. Every token must match. */
