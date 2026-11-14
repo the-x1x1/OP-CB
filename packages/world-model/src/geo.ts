@@ -275,14 +275,14 @@ export function geometryCentroid(g: WorldGeometry): GeoPosition | undefined {
       break;
     case 'MultiPoint':
     case 'LineString':
-      pts.push(...g.coordinates);
+      for (const item of g.coordinates) pts.push(item);
       break;
     case 'MultiLineString':
     case 'Polygon':
-      for (const r of g.coordinates) pts.push(...r);
+      for (const r of g.coordinates) for (const item of r) pts.push(item);
       break;
     case 'MultiPolygon':
-      for (const poly of g.coordinates) for (const r of poly) pts.push(...r);
+      for (const poly of g.coordinates) for (const r of poly) for (const item of r) pts.push(item);
       break;
   }
   if (pts.length === 0) return undefined;

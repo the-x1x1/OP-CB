@@ -51,6 +51,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Very large lists no longer fail with "Maximum call stack size exceeded".** Joining one list
+  onto another passed every item as an argument, which breaks past about 125,000: a query or
+  search over more aircraft than that ("aircraft above 30000 ft" with 150,000 on hand), a long
+  history read, a big map download's tile list, a shape with that many points. They are added
+  one at a time now (search, events, history, the tile cache, geometry, FIRMS, CelesTrak,
+  cameras, weather zones, MQTT).
+
 - **A satellite's catalogue number written with leading zeros** (`00005`, as in a TLE) is the
   same satellite as `5`; a source (a connector definition, say) writing it that way would have made a second copy of it on the map.
 

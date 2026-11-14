@@ -151,7 +151,7 @@ function liveCandidates(query: WorldQuery, state: WorldState): Iterable<WorldObj
   }
   if (types) {
     const out: WorldObject[] = [];
-    for (const t of types) out.push(...state.ofType(t));
+    for (const t of types) for (const item of state.ofType(t)) out.push(item);
     return out;
   }
   return state.all();

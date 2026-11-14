@@ -94,7 +94,7 @@ export function combineZoneGeometries(geometries: readonly WorldGeometry[]): Wor
   const polygons: Array<Array<Array<[number, number] | [number, number, number]>>> = [];
   for (const g of geometries) {
     if (g.type === 'Polygon') polygons.push(g.coordinates);
-    else if (g.type === 'MultiPolygon') polygons.push(...g.coordinates);
+    else if (g.type === 'MultiPolygon') for (const item of g.coordinates) polygons.push(item);
   }
   if (polygons.length === 0) return undefined;
   if (polygons.length === 1) return { type: 'Polygon', coordinates: polygons[0]! };

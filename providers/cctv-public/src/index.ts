@@ -293,14 +293,15 @@ export class PublicCamerasProvider extends PollingProvider {
     settled.forEach((r, i) => {
       const pack = enabled[i]!;
       if (r.status === 'fulfilled') {
-        observations.push(...r.value.observations);
+        for (const item of r.value.observations) observations.push(item);
         cacheAgeMs = Math.max(cacheAgeMs, r.value.cacheAgeMs);
         this.packFailures.delete(pack.id);
         this.lastGood.set(pack.id, { observations: r.value.observations, atMs: this.context.clock.now() });
         if (pack.keepAcrossRestarts) void this.saveLastGood(pack.id, r.value.observations);
       } else {
         const kept = this.lastGood.get(pack.id);
-        if (kept && this.context.clock.now() - kept.atMs <= LAST_GOOD_KEEP_MS) observations.push(...kept.observations);
+        if (kept && this.context.clock.now() - kept.atMs <= LAST_GOOD_KEEP_MS)
+          for (const item of kept.observations) observations.push(item);
         else this.lastGood.delete(pack.id);
         const pe =
           r.reason instanceof ProviderError

@@ -396,10 +396,10 @@ export class DuckDbParquetBackend implements HistoryBackend {
       }
     }
     const staged = await readNdjsonFile(this.file(key, STAGING_EXT));
-    rows.push(...staged.rows);
+    for (const item of staged.rows) rows.push(item);
     malformed += staged.malformed;
     const legacy = await readNdjsonFile(this.file(key, LEGACY_NDJSON_EXT));
-    rows.push(...legacy.rows);
+    for (const item of legacy.rows) rows.push(item);
     malformed += legacy.malformed;
     if (malformed > 0) {
       this.malformedTotal += malformed;
@@ -603,7 +603,8 @@ export class DuckDbParquetBackend implements HistoryBackend {
     }
     const keepInRange = lineWithin(query.range);
     for (const meta of metas)
-      out.push(...(await this.stagingRows(meta, keepInRange, listing)).filter((r) => rowMatchesRange(r, query)));
+      for (const item of (await this.stagingRows(meta, keepInRange, listing)).filter((r) => rowMatchesRange(r, query)))
+        out.push(item);
     sortByObservedAt(out);
     return query.limit !== undefined ? out.slice(0, query.limit) : out;
   }
@@ -730,7 +731,7 @@ export class DuckDbParquetBackend implements HistoryBackend {
       if (listing ? !(await listing.has(f)) : !(await exists(f))) continue;
       const r = await readNdjsonFile(f, keep);
       if (r.malformed) this.malformedTotal += r.malformed;
-      out.push(...r.rows);
+      for (const item of r.rows) out.push(item);
     }
     return out;
   }

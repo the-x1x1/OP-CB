@@ -388,7 +388,7 @@ export class TileCache {
       for (const r of tilesCovering(bounds, z))
         for (let x = r.x0; x <= r.x1; x++) for (let y = r.y0; y <= r.y1; y++) level.push({ sourceId, z, x, y });
       if (level.length > PREFETCH_MAX_PER_LEVEL) continue;
-      queue.push(...level.filter((k) => !this.index.has(this.id(k))));
+      for (const item of level.filter((k) => !this.index.has(this.id(k)))) queue.push(item);
     }
     // Counted before the workers start: they take from this same array as they go.
     const queued = queue.length;

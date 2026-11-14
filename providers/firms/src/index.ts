@@ -69,7 +69,7 @@ export class FirmsProvider extends PollingProvider {
     for (const source of sources) {
       const batch = await this.fetchSource(source, area, dayRange, request);
       cacheAgeMs = Math.max(cacheAgeMs, batch.cacheAgeMs);
-      observations.push(...batch.observations);
+      for (const item of batch.observations) observations.push(item);
     }
     return { observations, cacheAgeMs };
   }

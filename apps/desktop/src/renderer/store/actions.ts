@@ -160,8 +160,13 @@ export function boundsOfPoints(
   // Wider than half the globe a box frames nothing well: M4+ earthquakes worldwide framed East
   // Africa from 7,000 km (QA 2026-10-04). The caller shows the whole world instead.
   if (span > 180) return undefined;
-  const south = Math.min(...lats);
-  const north = Math.max(...lats);
+  // A loop, not Math.min(...lats): a shape's outline can pass the engine's argument limit.
+  let south = Infinity;
+  let north = -Infinity;
+  for (const lat of lats) {
+    if (lat < south) south = lat;
+    if (lat > north) north = lat;
+  }
   let mid = west + span / 2;
   if (mid > 180) mid -= 360;
   return { bounds: { west, south, east, north }, centre: { latitude: (south + north) / 2, longitude: mid } };

@@ -466,3 +466,11 @@ test('filters and field resolution edge cases', () => {
   assert.equal(resolveObjectField(obj, 'labels.name'), undefined);
   assert.equal(resolveObjectField(obj, 'validUntil'), undefined);
 });
+
+test('executeQuery: more objects of a type than a spread call takes (200,000) are still read', () => {
+  const one = objectFrom({ providerId: 'adsb', objectType: 'aircraft', externalId: 'a', lat: 0, lon: 0 });
+  const many = Array.from({ length: 200_000 }, () => one);
+  const state = { ofType: () => many } as unknown as Parameters<typeof executeQuery>[1]['state'];
+  const result = executeQuery({ objectTypes: ['aircraft'], limit: 3 }, { state, now: () => T0 });
+  assert.equal(result.items.length, 3);
+});
