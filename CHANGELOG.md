@@ -45,6 +45,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A circle's bounds now hold the whole circle: one reaching a pole takes in every longitude, and
+  wide circles use the exact width (the old estimate fell short, ±40° instead of ±43° at 60°N for
+  a 2,200 km circle), so a watch zone or search circle no longer misses what lies near its edge.
 - A circular watch zone exported to KML comes back a circle (its centre and radius go along as
   ExtendedData, which other tools ignore); before, only GeoJSON kept it.
 - The app no longer goes offline as a whole when only its reachability check fails (one host,

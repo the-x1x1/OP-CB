@@ -146,9 +146,14 @@ export function circleBounds(center: GeoPosition, radiusM: number): GeoBounds {
   const dLat = radiusM / EARTH_RADIUS_M / DEG;
   const south = Math.max(-90, center.latitude - dLat);
   const north = Math.min(90, center.latitude + dLat);
+  // A circle that reaches a pole takes in every longitude round it.
+  if (dLat >= 90 - Math.abs(center.latitude)) return { west: -180, south, east: 180, north };
+  // The widest longitude on the sphere, asin(sin r / cos φ). radius / cos φ fell short of it as
+  // circles grew (±40° instead of ±43.2° at 60°N for 20°), so a corner of the circle lay outside
+  // its own bounds and a bounds lookup missed what was there.
+  const sinR = Math.sin(dLat * DEG);
   const cosLat = Math.cos(center.latitude * DEG);
-  if (cosLat < 1e-9 || dLat >= 90) return { west: -180, south, east: 180, north };
-  const dLon = Math.min(180, radiusM / (EARTH_RADIUS_M * cosLat) / DEG);
+  const dLon = Math.asin(Math.min(1, sinR / cosLat)) / DEG;
   if (dLon >= 180) return { west: -180, south, east: 180, north };
   return {
     west: normalizeLongitude(center.longitude - dLon),

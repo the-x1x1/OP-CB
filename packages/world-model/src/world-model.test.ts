@@ -408,3 +408,42 @@ test('the middle of bounds across the antimeridian is on the 180° side', async 
   assert.deepEqual(boundsCenter({ west: 175, south: 50, east: -165, north: 54 }), { latitude: 52, longitude: -175 });
   assert.deepEqual(boundsCenter({ west: -10, south: 0, east: 10, north: 2 }), { latitude: 1, longitude: 0 });
 });
+
+test('a circle lies inside its own bounds — near a pole, across 180°, small and large', async () => {
+  const { circleBounds, boundsContain } = await import('./geo.js');
+  const R = 6_371_008.8;
+  const rad = Math.PI / 180;
+  const destinationPoint = (c: { latitude: number; longitude: number }, bearing: number, m: number) => {
+    const d = m / R;
+    const f1 = c.latitude * rad;
+    const l1 = c.longitude * rad;
+    const t = bearing * rad;
+    const f2 = Math.asin(Math.sin(f1) * Math.cos(d) + Math.cos(f1) * Math.sin(d) * Math.cos(t));
+    const l2 = l1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(f1), Math.cos(d) - Math.sin(f1) * Math.sin(f2));
+    return { latitude: f2 / rad, longitude: ((((l2 / rad + 180) % 360) + 360) % 360) - 180 };
+  };
+  // A circle reaching a pole takes in every longitude (on 2026-11-13 one at 85°N, 1,000 km, had
+  // bounds −93°…113°, and a point at 88°N 170°W inside it fell outside them).
+  assert.deepEqual(
+    [
+      circleBounds({ latitude: 85, longitude: 10 }, 1_000_000).west,
+      circleBounds({ latitude: 85, longitude: 10 }, 1_000_000).east,
+    ],
+    [-180, 180],
+  );
+  // Edge points of many circles (deterministic sweep), each within the bounds.
+  for (const lat of [-80, -60, -30, 0, 30, 45, 60, 75, 84]) {
+    for (const lon of [-179.5, -90, 0, 120, 179.5]) {
+      for (const r of [1_000, 50_000, 500_000, 2_000_000, 4_000_000]) {
+        const b = circleBounds({ latitude: lat, longitude: lon }, r);
+        for (let deg = 0; deg < 360; deg += 5) {
+          const p = destinationPoint({ latitude: lat, longitude: lon }, deg, r * 0.999);
+          assert.ok(
+            boundsContain(b, p),
+            `${lat},${lon} r=${r} bearing ${deg}: ${JSON.stringify(p)} outside ${JSON.stringify(b)}`,
+          );
+        }
+      }
+    }
+  }
+});
