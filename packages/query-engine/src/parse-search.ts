@@ -269,8 +269,9 @@ function numberOf(word: string): number | undefined {
   if (/^\d+$/.test(word)) return Number(word);
   return NUMBER_WORDS[word];
 }
+/** From `ms` before now; a span longer than there is data for starts at 1970 (a date at all). */
 function lookback(now: number, ms: number): TimeRange {
-  return { start: iso(now - ms), end: iso(now) };
+  return { start: iso(Math.max(0, now - ms)), end: iso(now) };
 }
 function iso(ms: number): string {
   return new Date(ms).toISOString();

@@ -51,6 +51,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Search: a time span longer than there is data** ("earthquakes last 99999999999 days") starts
+  at 1970; it made the search fail with "Invalid time value".
+
 - **Connection badge: a key refused for a source already waiting for one** changes the badge at
   once, not at the connection check up to 30 s later (the source's status did not change, so it was not told).
 
