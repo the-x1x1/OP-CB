@@ -193,15 +193,25 @@ export function polygonBounds(ring: Array<[number, number]>): GeoBounds {
     east = -Infinity,
     south = 90,
     north = -90;
-  for (const [lon, lat] of r) {
-    if (lon < west) west = lon;
-    if (lon > east) east = lon;
+  let westAt = -1,
+    eastAt = -1;
+  r.forEach(([lon, lat], i) => {
+    if (lon < west) [west, westAt] = [lon, i];
+    if (lon > east) [east, eastAt] = [lon, i];
     if (lat < south) south = lat;
     if (lat > north) north = lat;
-  }
+  });
   if (!r.length) return { west: 180, south, east: -180, north };
   if (east - west >= 360) return { west: -180, south, east: 180, north };
-  if (r !== ring || west < -180 || east > 180) return { west: wrapLon(west), south, east: wrapLon(east), north };
+  // The edges are the extreme vertices' own longitudes, as written: wrapping an unwrapped one
+  // back (+360, −360) lost its last bits, and the vertex fell just outside its own bounds.
+  if (r !== ring || west < -180 || east > 180) {
+    const own = (i: number, unwrapped: number) => {
+      const v = ring[i]![0];
+      return v >= -180 && v <= 180 ? v : wrapLon(unwrapped);
+    };
+    return { west: own(westAt, west), south, east: own(eastAt, east), north };
+  }
   return { west, south, east, north };
 }
 

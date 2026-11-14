@@ -447,3 +447,24 @@ test('a circle lies inside its own bounds — near a pole, across 180°, small a
     }
   }
 });
+
+test('a polygon lies inside its own bounds, to the last bit — across 180°, near the poles', async () => {
+  const { polygonBounds, boundsContain } = await import('./geo.js');
+  // 2026-11-14: unwrapping a ring across 180° and wrapping its edges back (+360, −360) lost the
+  // last bits, so a vertex fell 6e-14° outside the bounds of its own polygon.
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 4000; i++) {
+    const clon = rnd() * 360 - 180;
+    const clat = rnd() * 170 - 85;
+    const spread = [0.5, 5, 40, 120][i % 4]!;
+    const ring: Array<[number, number]> = [];
+    for (let j = 0, k = 3 + Math.floor(rnd() * 8); j < k; j++) {
+      const lon = ((clon + (rnd() - 0.5) * spread + 540) % 360) - 180;
+      ring.push([lon, Math.max(-89.9, Math.min(89.9, clat + ((rnd() - 0.5) * spread) / 2))]);
+    }
+    const b = polygonBounds(ring);
+    for (const [lon, lat] of ring)
+      assert.ok(boundsContain(b, { latitude: lat, longitude: lon }), `${JSON.stringify(ring)} → ${JSON.stringify(b)}`);
+  }
+});
