@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The search list's "Search places online" row says Enter only when Enter takes it; under a
+  local answer (a pasted coordinate, a satellite by name) it says "online" instead.
 - Enter on a satellite's name selects it when the name has a second one in brackets ("NOAA 20"
   or "JPSS-1" for NOAA 20 (JPSS-1)); before, the online place search was first and Enter asked
   OpenStreetMap.

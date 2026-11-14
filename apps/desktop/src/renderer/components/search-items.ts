@@ -133,11 +133,11 @@ export function searchList({ text, local, online, offline, enabled }: SearchList
           : `Search places online for “${q}”`,
       subtitle: answer && answer.status !== 'ok' ? answer.message : 'OpenStreetMap (Nominatim) · sends what you typed',
       icon: 'globe',
-      hint: 'Enter',
       keepOpen: true,
     };
-    if (local.some((r) => answersLocally(r, text))) items.push(row);
-    else items.unshift(row);
+    // "Enter" only on the row Enter takes: below a local answer, the row is a click away.
+    if (local.some((r) => answersLocally(r, text))) items.push({ ...row, hint: 'online' });
+    else items.unshift({ ...row, hint: 'Enter' });
   }
 
   let footer: string;
