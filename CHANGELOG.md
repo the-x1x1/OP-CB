@@ -48,6 +48,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Connection badge: a key refused for a source already waiting for one** changes the badge at
+  once, not at the connection check up to 30 s later (the source's status did not change, so it was not told).
+
 - **A grid reference copied from the HUD reads back in search everywhere.** UTM in latitude band
   S (32°–40° N: the southern United States, the Mediterranean, Iran, China, Japan) was refused
   as "band S or south?" even as the HUD wrote it; written with mE and mN it is now the band.

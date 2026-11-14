@@ -139,8 +139,10 @@ export class SourceHealthRegistry {
       entry.transitions.unshift({ from, to: health.status, at: new Date(this.clock.now()).toISOString() });
       if (entry.transitions.length > this.maxTransitions) entry.transitions.length = this.maxTransitions;
       for (const l of [...this.listeners.change]) l({ providerId: entry.providerId, from, to: health.status, entry });
-      this.recomputeConnection();
     }
+    // Not only on a transition: whether a source counts can change without one (a key entered and
+    // refused while it was already waiting for one). Listeners hear only a changed state.
+    this.recomputeConnection();
     for (const l of [...this.listeners.update]) l({ providerId: entry.providerId, entry });
   }
 
