@@ -331,6 +331,12 @@ directive's blocker taxonomy: `SIGNING_REQUIRED`, `AUTH_REQUIRED`, `HARDWARE_REQ
   `connectors/examples/` in the source. Copy one into your connectors folder and restart; it
   loads disabled until you switch it on in Sources. A file source reads only the folder you
   name in its settings, and shows nothing until you do.
+- LICENSE_REVIEW_REQUIRED — the wind layer (NOAA GFS 10 m wind from NOAA CoastWatch's ERDDAP,
+  `connectors/examples/weather/noaa-gfs-wind.json`) and the seven transit feeds (MBTA, CapMetro,
+  Metro Transit, OVapi, Entur, TransLink, HSL in `connectors/examples/transit/`) are examples,
+  off, until each licence's wording is confirmed: copy one into your connectors folder to use it.
+  The demo build draws a synthetic trade-wind field. Wind is drawn as arrows every 10°, not as
+  moving particles.
 - Shapefile, GeoPackage and the other GDAL formats need GDAL's `ogr2ogr` on `PATH`; it is
   not bundled, and the conversion has been tested only against a stand-in program.
 - The 2D map draws a WMTS layer only when its tile matrix set is Web Mercator; others are
