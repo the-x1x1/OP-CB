@@ -76,7 +76,13 @@ function answersLocally(r: SearchResult, text: string): boolean {
   // An object or event the text names outright: its title is what was typed (a callsign, a
   // ship's name). On 2026-10-03 "CAL101" + Enter asked OpenStreetMap, which offered British
   // postcodes, while the aircraft sat lower in the list.
-  return normaliseQuery(r.title).toLowerCase() === normaliseQuery(text).toLowerCase();
+  // A second name in brackets counts as well: CelesTrak names satellites "NOAA 20 (JPSS-1)",
+  // and on jconn (2026-11-13) "NOAA 20" + Enter would have asked OpenStreetMap.
+  const typed = normaliseQuery(text).toLowerCase();
+  const title = normaliseQuery(r.title).toLowerCase();
+  if (title === typed) return true;
+  const two = /^(.+?)\s*\((.+)\)$/.exec(title);
+  return two !== null && (two[1]!.trim() === typed || two[2]!.trim() === typed);
 }
 
 export interface SearchListInput {

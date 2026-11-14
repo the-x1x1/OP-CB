@@ -216,3 +216,19 @@ test('a grid reference that cannot be right: no online row, and the footer says 
   assert.equal(good.items[0]?.id, read.id);
   assert.match(good.footer, /1 results/);
 });
+
+test('searchList: a satellite named by either of its names keeps Enter', () => {
+  // 2026-11-13 on jconn: "NOAA 20" put the online row above NOAA 20 (JPSS-1).
+  const noaa: SearchResult = {
+    kind: 'object',
+    id: 'satellite:norad:43013',
+    title: 'NOAA 20 (JPSS-1)',
+    subtitle: 'Satellite',
+    source: 'world-state',
+    score: 0.9,
+  };
+  for (const text of ['NOAA 20', 'noaa 20', 'JPSS-1', 'NOAA 20 (JPSS-1)'])
+    assert.equal(searchList({ ...base, text, local: [noaa] }).items[0]?.id, noaa.id, text);
+  // Part of a name is still not a name.
+  assert.equal(searchList({ ...base, text: 'NOAA', local: [{ ...noaa, score: 0.6 }] }).items[0]?.id, ONLINE_ROW_ID);
+});

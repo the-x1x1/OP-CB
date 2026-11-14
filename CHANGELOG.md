@@ -42,6 +42,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Enter on a satellite's name selects it when the name has a second one in brackets ("NOAA 20"
+  or "JPSS-1" for NOAA 20 (JPSS-1)); before, the online place search was first and Enter asked
+  OpenStreetMap.
 - Choosing Online on the start screen brings live data in seconds; before, the connection
   monitor waited for a second check 30 s later (and the throttled probe could spoil that one),
   so the map stayed offline for up to a minute and a half (seen on jconn, 2026-11-13).
