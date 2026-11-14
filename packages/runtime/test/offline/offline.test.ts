@@ -378,3 +378,33 @@ test('offline: OP-CB starts and stops normally with its data vault absent, and f
     await fs.rm(tmp, { recursive: true, force: true });
   }
 });
+
+test('offline: a runtime that starts offline asks the internet nothing, not even once per source', async () => {
+  // The start screen (and Work offline): the network signal is off from the first moment. The
+  // connection monitor knew, but nothing told the provider host before the sources started, so
+  // each remote source polled once and was refused (some fifteen warnings per start on jconn).
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-start-offline-'));
+  const networkCalls = { count: 0 };
+  try {
+    const h = await startRuntime({
+      dataDir: path.join(tmp, 'data'),
+      clock: new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z')),
+      fetchImpl: offlineFetch(networkCalls),
+      network: { isOnline: () => false },
+      providerInstances: [createUsgs()],
+    });
+    try {
+      await settle();
+      // Its turn to poll (what the schedule does a moment after start).
+      await h.client.request('sources.refresh', { providerId: 'usgs-earthquakes' });
+      await settle();
+      assert.equal(networkCalls.count, 0, 'no request left for the internet');
+      const usgs = (await h.client.request('sources.list', undefined)).find((s) => s.providerId === 'usgs-earthquakes');
+      assert.equal(usgs?.health.status, 'OFFLINE');
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
+});

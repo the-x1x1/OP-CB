@@ -1409,6 +1409,12 @@ export class RuntimeCore {
     if (this.started) return;
     this.started = true;
     this.applyProfile(true);
+    // The network signal is read by the monitor, which announces nothing about its first state:
+    // an app that starts with the signal off (the start screen not yet answered, Work offline,
+    // no network) must tell the host before the sources start, or each tries the internet once
+    // and logs the refusal (some fifteen warnings per start in the jconn log, 2026-11-13). The
+    // monitor's own OFFLINE is not enough: with no source live yet it says OFFLINE online too.
+    if (!this.osOnline || this.deps.network?.isOnline() === false) this.providerHost.setOnline(false);
     await this.providerHost.start();
     this.connection.start();
     this.vaults.start();

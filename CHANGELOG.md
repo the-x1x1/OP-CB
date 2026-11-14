@@ -42,6 +42,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An app that starts offline (the start screen not yet answered, Work offline, no network) no
+  longer lets each internet source try once and log the refusal before it knows.
 - A public camera pack whose catalogue comes back empty says so in the log, instead of calling
   it an unexpected shape (Taiwan's Highway Bureau served a 0-byte list on 2026-11-13).
 - The search list's "Search places online" row says Enter only when Enter takes it; under a
