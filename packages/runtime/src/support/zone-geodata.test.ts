@@ -266,4 +266,9 @@ test('KML: a circle carries its centre and radius as ExtendedData; values that d
   assert.ok(!('malformed' in bad));
   if ('malformed' in bad) return;
   assert.equal(bad.zones[0]!.geometry.kind, 'polygon');
+  // A value left blank is not 0: the circle is not moved to 0° 0°.
+  const blank = zonesFromGeodata('kml', out.text.replace(/(circleLatitude"><value>)[^<]*/, '$1 '));
+  assert.ok(!('malformed' in blank));
+  if ('malformed' in blank) return;
+  assert.equal(blank.zones[0]!.geometry.kind, 'polygon');
 });

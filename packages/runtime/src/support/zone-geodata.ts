@@ -186,6 +186,11 @@ function outline(coords: unknown): Array<[number, number]> | undefined {
   return ring;
 }
 
+/** An ExtendedData value as a number: blank is none (`Number('')` is 0, a circle at 0° 0°). */
+function kmlNumber(v: unknown): number {
+  return typeof v === 'string' && v.trim() !== '' ? Number(v) : typeof v === 'number' ? v : Number.NaN;
+}
+
 /**
  * The shapes of a KML or GeoJSON file as zone drafts: each polygon's outer ring (holes are not
  * kept), each part of a multipolygon its own zone; a GeoJSON feature OP-CB wrote with a
@@ -210,8 +215,8 @@ export function zonesFromGeodata(
         props['circleLongitude'] !== undefined &&
         props['circleRadiusM'] !== undefined
           ? {
-              center: { latitude: Number(props['circleLatitude']), longitude: Number(props['circleLongitude']) },
-              radiusM: Number(props['circleRadiusM']),
+              center: { latitude: kmlNumber(props['circleLatitude']), longitude: kmlNumber(props['circleLongitude']) },
+              radiusM: kmlNumber(props['circleRadiusM']),
             }
           : undefined;
       if (g?.type === 'Polygon')
