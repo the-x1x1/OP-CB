@@ -45,6 +45,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A circular watch zone exported to KML comes back a circle (its centre and radius go along as
+  ExtendedData, which other tools ignore); before, only GeoJSON kept it.
 - The app no longer goes offline as a whole when only its reachability check fails (one host,
   USGS) while other sources still answer: an outage or a filter on that host showed OFFLINE and
   stopped every internet source. It is now DEGRADED and the sources keep running.

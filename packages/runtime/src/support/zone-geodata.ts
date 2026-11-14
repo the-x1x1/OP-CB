@@ -6,8 +6,9 @@ import { xmlText } from './collection-geodata.js';
 /**
  * Watch zones as shapes other tools read and draw — KML (Google Earth, ATAK) and GeoJSON
  * (QGIS) — and shapes drawn there read back as zones. A circle goes out as a polygon of
- * CIRCLE_VERTICES points (GeoJSON also keeps its centre and radius, so it comes back a circle);
- * a box as its four corners; an admin region only when it carries bounds.
+ * CIRCLE_VERTICES points with its centre and radius alongside (GeoJSON properties, KML
+ * ExtendedData), so OP-CB reads it back as a circle; a box as its four corners; an admin region
+ * only when it carries bounds.
  */
 export type ZoneGeoFormat = 'kml' | 'geojson';
 
@@ -119,6 +120,17 @@ export function zonesToGeodata(
         '    <Placemark>',
         `      <name>${xmlText(zone.name)}</name>`,
         `      <description>${xmlText(describe(zone))}</description>`,
+        // A circle's centre and radius ride along as ExtendedData (other tools show the polygon and
+        // ignore it), so a KML read back by OP-CB is a circle again, as a GeoJSON one is.
+        ...(zone.geometry.kind === 'circle'
+          ? [
+              '      <ExtendedData>',
+              `        <Data name="circleLatitude"><value>${num(zone.geometry.center.latitude)}</value></Data>`,
+              `        <Data name="circleLongitude"><value>${num(zone.geometry.center.longitude)}</value></Data>`,
+              `        <Data name="circleRadiusM"><value>${Math.round(zone.geometry.radiusM)}</value></Data>`,
+              '      </ExtendedData>',
+            ]
+          : []),
         `      <Polygon><tessellate>1</tessellate><outerBoundaryIs><LinearRing><coordinates>${closed}</coordinates></LinearRing></outerBoundaryIs></Polygon>`,
         '    </Placemark>',
       );
@@ -192,7 +204,18 @@ export function zonesFromGeodata(
     notShapes += read.skipped.length;
     for (const f of read.features) {
       const g = f.geometry;
-      if (g?.type === 'Polygon') shapes.push({ ...(f.name ? { name: f.name } : {}), rings: [g.coordinates[0]] });
+      const props = (f.properties ?? {}) as Record<string, unknown>;
+      const circle =
+        props['circleLatitude'] !== undefined &&
+        props['circleLongitude'] !== undefined &&
+        props['circleRadiusM'] !== undefined
+          ? {
+              center: { latitude: Number(props['circleLatitude']), longitude: Number(props['circleLongitude']) },
+              radiusM: Number(props['circleRadiusM']),
+            }
+          : undefined;
+      if (g?.type === 'Polygon')
+        shapes.push({ ...(f.name ? { name: f.name } : {}), rings: [g.coordinates[0]], ...(circle ? { circle } : {}) });
       else if (g?.type === 'MultiPolygon')
         shapes.push({ ...(f.name ? { name: f.name } : {}), rings: g.coordinates.map((p) => p[0]) });
       else notShapes++;

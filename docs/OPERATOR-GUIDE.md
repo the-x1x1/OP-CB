@@ -505,8 +505,8 @@ Zones also come from elsewhere: **What's here → Watch here** (50 km round a po
 tool's **Watch** (its shape, with Area on), and the tab's **import** button, which reads the
 shapes of a KML or GeoJSON file — an area drawn in Google Earth, ATAK or QGIS — as new zones
 (points and lines are left out, and the notice says so; a shape across the 180° meridian is kept). The
-**export** button writes every zone to KML or GeoJSON; a circle goes out as a polygon, and from
-GeoJSON comes back a circle.
+**export** button writes every zone to KML or GeoJSON; a circle goes out as a polygon with its
+centre and radius alongside, and comes back a circle from either.
 
 **Pass alerts.** On a satellite's panel, **Alert me before it passes over home** (a home view
 must be set) gives a notice a few minutes before it rises over your home view — by default
