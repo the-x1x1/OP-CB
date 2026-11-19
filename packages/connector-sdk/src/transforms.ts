@@ -32,6 +32,11 @@ const numeric =
     return Number.isFinite(out) ? out : undefined;
   };
 
+/** A zone at the end of a date: Z, GMT, UTC, or a named one (PDT, CEST). */
+const NAMES_A_ZONE = /(?:Z|GMT|UTC?|[A-Z]{2,4}T)\s*\)?$/i;
+/** An offset after a time of day: `10:00:00 +0200`, `10:00+02:00`, `10:00-10`. */
+const ENDS_WITH_AN_OFFSET = /\d:\d{2}(?::\d{2}(?:\.\d+)?)?\s*[+-]\d{2}(?::?\d{2})?$/;
+
 /** The last instant a Date holds (±8.64 × 10^15 ms): past it toISOString throws. */
 const MAX_DATE_MS = 8.64e15;
 
@@ -53,8 +58,14 @@ export function isoTimestamp(v: JsonValue): string | undefined {
   const t = v.trim();
   if (!t) return undefined;
   const zoneless = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(t);
-  const ms = Date.parse(zoneless ? `${t.replace(' ', 'T')}Z` : t);
+  let ms = Date.parse(zoneless ? `${t.replace(' ', 'T')}Z` : t);
   if (!Number.isFinite(ms)) return undefined;
+  // The other forms Date.parse takes ("2026/09/23 10:00", "23 Sep 2026 10:00:00") are read in
+  // the computer's own zone too when they name none: read them as UTC as well.
+  if (!zoneless && !NAMES_A_ZONE.test(t) && !ENDS_WITH_AN_OFFSET.test(t)) {
+    const utc = Date.parse(`${t} UTC`);
+    if (Number.isFinite(utc)) ms = utc;
+  }
   return new Date(ms).toISOString();
 }
 

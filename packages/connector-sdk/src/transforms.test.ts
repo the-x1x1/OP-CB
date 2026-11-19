@@ -48,6 +48,14 @@ test('isoTimestamp: a date-time with no zone is UTC whether written with T or a 
     assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23T10:00'), '2026-09-23T10:00:00.000Z');
     assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23 10:00:00.5'), '2026-09-23T10:00:00.500Z');
     assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23T10:00:00-10:00'), '2026-09-23T20:00:00.000Z');
+    // The looser forms Date.parse takes: UTC when they name no zone, theirs when they do.
+    for (const loose of ['2026/09/23 10:00', 'Sep 23 2026 10:00', '23 Sep 2026 10:00:00', '09/23/2026 10:00'])
+      assert.equal(TRANSFORMS['isoTimestamp']!(loose), '2026-09-23T10:00:00.000Z', loose);
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026/09/23'), '2026-09-23T00:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23'), '2026-09-23T00:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('Wed, 23 Sep 2026 10:00:00 GMT'), '2026-09-23T10:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('Sep 23 2026 10:00 PDT'), '2026-09-23T17:00:00.000Z');
+    assert.equal(TRANSFORMS['isoTimestamp']!('2026-09-23 10:00:00 +0200'), '2026-09-23T08:00:00.000Z');
     // And so is an observedAt mapped with no transform at all.
     const m = compileMapping({
       externalId: 'id',

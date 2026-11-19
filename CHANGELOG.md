@@ -10,6 +10,9 @@ Versioning: [semantic versioning](https://semver.org/).
 - A wind direction or a measured bearing given as a negative angle (−15°) is written 0–359
   (`345°`), not `-15°` or an empty compass point.
 - A temperature just below zero reads `0.0 °C`, not `-0.0 °C`.
+- Connector definitions: `isoTimestamp` reads the looser date forms with no zone
+  (`2026/09/23 10:00`, `23 Sep 2026 10:00:00`) as UTC as well; they were still read in the
+  computer's own zone.
 
 ## [0.7.5] — 2026-11-14
 
