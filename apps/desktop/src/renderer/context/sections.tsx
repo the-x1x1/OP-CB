@@ -1507,7 +1507,7 @@ export function windFrom(mps: number | undefined, fromDeg: number | undefined): 
   if (mps === undefined) return undefined;
   if (mps < 0.5 || fromDeg === undefined) return 'Calm';
   const point = COMPASS_16[Math.round((((fromDeg % 360) + 360) % 360) / 22.5) % 16];
-  const deg = String(Math.round(fromDeg) % 360).padStart(3, '0');
+  const deg = String(((Math.round(fromDeg) % 360) + 360) % 360).padStart(3, '0');
   return `${mps.toFixed(1)} m/s (${Math.round(mps / 0.514444)} kn) from ${point} (${deg}°)`;
 }
 

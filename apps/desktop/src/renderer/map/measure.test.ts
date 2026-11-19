@@ -56,6 +56,7 @@ test('measure: distances and bearings in words', () => {
   assert.equal(formatDistanceAlt(1852), '1.0 nm · 1.2 mi');
   assert.equal(formatBearing(63.4), '063° ENE');
   assert.equal(formatBearing(359.7), '000° N');
+  assert.equal(formatBearing(-90), '270° W');
 });
 
 test('measure: distances and bearings on the ellipsoid, as GeographicLib gives them', () => {

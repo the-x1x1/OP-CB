@@ -15,7 +15,7 @@ const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', '
 
 /** "063° ENE" */
 export function formatBearing(deg: number): string {
-  const d = Math.round(deg) % 360;
+  const d = ((Math.round(deg) % 360) + 360) % 360;
   return `${String(d).padStart(3, '0')}° ${COMPASS[Math.round(d / 22.5) % 16]}`;
 }
 

@@ -5,6 +5,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A wind direction or a measured bearing given as a negative angle (−15°) is written 0–359
+  (`345°`), not `-15°` or an empty compass point.
+
 ## [0.7.5] — 2026-11-14
 
 What the first look at 0.7.4 on a screen found, fixed: online in seconds after the start
