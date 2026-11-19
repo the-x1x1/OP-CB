@@ -51,7 +51,10 @@ test('transit: the section for MBTA bus y1832 as its feed gave it, unknowns left
     },
   } as never;
   const html = renderToStaticMarkup(createElement(Fragment, null, section.render({ object } as never)));
-  const text = html.replace(/<[^>]+>/g, '|').replace(/\|+/g, '|').replace(/&#x27;/g, "'");
+  const text = html
+    .replace(/<[^>]+>/g, '|')
+    .replace(/\|+/g, '|')
+    .replace(/&#x27;/g, "'");
   for (const want of [
     '|Route|60|',
     "|Where|Stopped at stop 899 (the trip's 1st)|",
