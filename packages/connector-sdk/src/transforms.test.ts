@@ -77,3 +77,24 @@ test('transforms: a number past what a date or a number holds is no value, never
   assert.equal(TRANSFORMS['feetToMeters']!(1e308), undefined);
   assert.equal(resolveTransform('scale:1e300')!(1e300), undefined);
 });
+
+test('timestamp:<pattern>: a date or a time of day that does not exist is no time', () => {
+  for (const bad of ['2026-02-30T10:00:00Z', '2026-02-31', '2026-04-31 00:00:00', '2026/02/30 10:00'])
+    assert.equal(TRANSFORMS['isoTimestamp']!(bad), undefined, bad);
+  assert.equal(TRANSFORMS['isoTimestamp']!('2028-02-29T10:00:00Z'), '2028-02-29T10:00:00.000Z');
+  const t = resolveTransform('timestamp:YYYY-MM-DD HH:mm:ss')!;
+  assert.equal(t('2026-09-23 10:00:00'), '2026-09-23T10:00:00.000Z');
+  assert.equal(t('2028-02-29 23:59:59'), '2028-02-29T23:59:59.000Z');
+  assert.equal(t('2026-12-31 23:59:60'), '2027-01-01T00:00:00.000Z');
+  for (const bad of [
+    '2026-02-30 10:00:00',
+    '2026-02-29 10:00:00',
+    '2026-13-01 10:00:00',
+    '2026-00-10 10:00:00',
+    '2026-09-23 24:00:00',
+    '2026-09-23 25:61:00',
+    '2026-09-23 10:60:00',
+    '2026-09-00 10:00:00',
+  ])
+    assert.equal(t(bad), undefined, bad);
+});

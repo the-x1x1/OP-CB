@@ -60,6 +60,12 @@ export function isoTimestamp(v: JsonValue): string | undefined {
   const zoneless = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(t);
   let ms = Date.parse(zoneless ? `${t.replace(' ', 'T')}Z` : t);
   if (!Number.isFinite(ms)) return undefined;
+  // Written year first, the date has to exist: Date.parse carries 30 February into March.
+  const ymd = /^(\d{4})[-/](\d{2})[-/](\d{2})(?!\d)/.exec(t);
+  if (ymd) {
+    const day = new Date(Date.UTC(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3])));
+    if (day.getUTCMonth() !== Number(ymd[2]) - 1 || day.getUTCDate() !== Number(ymd[3])) return undefined;
+  }
   // The other forms Date.parse takes ("2026/09/23 10:00", "23 Sep 2026 10:00:00") are read in
   // the computer's own zone too when they name none: read them as UTC as well.
   if (!zoneless && !NAMES_A_ZONE.test(t) && !ENDS_WITH_AN_OFFSET.test(t)) {
@@ -138,6 +144,18 @@ export function patternTimestamp(pattern: string): Transform {
     const parts: Record<string, number> = { YYYY: 1970, MM: 1, DD: 1, HH: 0, mm: 0, ss: 0 };
     tokens.forEach((t, i) => (parts[t] = Number(m[i + 1])));
     let ms = Date.UTC(parts['YYYY']!, parts['MM']! - 1, parts['DD']!, parts['HH']!, parts['mm']!, parts['ss']!);
+    // A date that is not one (30 February, 25:61) is no time: Date.UTC would carry it over into
+    // 2 March or the next day. A leap second (ss 60) is let through as the minute's end.
+    const made = new Date(Date.UTC(parts['YYYY']!, parts['MM']! - 1, parts['DD']!));
+    if (
+      !Number.isFinite(ms) ||
+      made.getUTCMonth() !== parts['MM']! - 1 ||
+      made.getUTCDate() !== parts['DD']! ||
+      parts['HH']! > 23 ||
+      parts['mm']! > 59 ||
+      parts['ss']! > 60
+    )
+      return undefined;
     const zone = m[tokens.length + 1];
     if (zone && zone !== 'Z') {
       const sign = zone.startsWith('-') ? -1 : 1;

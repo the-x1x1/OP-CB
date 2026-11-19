@@ -13,6 +13,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - Connector definitions: `isoTimestamp` reads the looser date forms with no zone
   (`2026/09/23 10:00`, `23 Sep 2026 10:00:00`) as UTC as well; they were still read in the
   computer's own zone.
+- Connector definitions: a date that does not exist (`2026-02-30`, `25:61`) gives no time with
+  `isoTimestamp` and `timestamp:<pattern>`; it was carried over into 2 March or the next day.
 
 ## [0.7.5] — 2026-11-14
 
