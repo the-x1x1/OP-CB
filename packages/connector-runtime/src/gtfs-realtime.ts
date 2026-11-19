@@ -215,9 +215,13 @@ function readVehicleDescriptor(r: Reader): Record<string, unknown> {
 function readPosition(r: Reader): Record<string, unknown> {
   const p: Record<string, unknown> = {};
   eachField(r, (field, wire) => {
-    if (field === 1) (expect(r, wire, 5, 'latitude'), (p['latitude'] = r.float32()));
-    else if (field === 2) (expect(r, wire, 5, 'longitude'), (p['longitude'] = r.float32()));
-    else if (field === 3 && wire === 5) p['bearing'] = r.float32();
+    if (field === 1) {
+      expect(r, wire, 5, 'latitude');
+      p['latitude'] = r.float32();
+    } else if (field === 2) {
+      expect(r, wire, 5, 'longitude');
+      p['longitude'] = r.float32();
+    } else if (field === 3 && wire === 5) p['bearing'] = r.float32();
     else if (field === 4 && wire === 1) p['odometer'] = r.float64();
     else if (field === 5 && wire === 5) p['speed'] = r.float32();
     else return false;
