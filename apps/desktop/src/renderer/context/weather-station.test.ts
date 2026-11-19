@@ -17,6 +17,8 @@ const station = (properties: Record<string, number>) => ({ properties }) as unkn
 test('a local station reads in SI with the US figure beside it', () => {
   assert.equal(formatTemperature(29), '29.0 °C (84.2 °F)');
   assert.equal(formatTemperature(-40), '-40.0 °C (-40.0 °F)');
+  assert.equal(formatTemperature(-0.04), '0.0 °C (31.9 °F)');
+  assert.equal(formatTemperature(-17.79), '-17.8 °C (0.0 °F)');
   assert.equal(formatTemperature(undefined), undefined);
   assert.equal(stationWind(5, 71), '5.0 m/s (11 mph) from ENE (71°)');
   assert.equal(stationWind(9.4, undefined), '9.4 m/s (21 mph)');

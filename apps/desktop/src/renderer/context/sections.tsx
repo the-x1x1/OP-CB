@@ -1053,7 +1053,9 @@ const storm: ContextSection = {
 /** "29.0 °C (84.2 °F)". */
 export function formatTemperature(c: number | undefined): string | undefined {
   if (c === undefined) return undefined;
-  return `${c.toFixed(1)} °C (${((c * 9) / 5 + 32).toFixed(1)} °F)`;
+  // Just below zero rounds to zero, not "-0.0".
+  const one = (n: number) => (Math.round(n * 10) / 10 || 0).toFixed(1);
+  return `${one(c)} °C (${one((c * 9) / 5 + 32)} °F)`;
 }
 
 /** "5.0 m/s (11 mph) from ENE (71°)", "Calm". */

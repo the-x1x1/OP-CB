@@ -9,6 +9,7 @@ Versioning: [semantic versioning](https://semver.org/).
 
 - A wind direction or a measured bearing given as a negative angle (−15°) is written 0–359
   (`345°`), not `-15°` or an empty compass point.
+- A temperature just below zero reads `0.0 °C`, not `-0.0 °C`.
 
 ## [0.7.5] — 2026-11-14
 
