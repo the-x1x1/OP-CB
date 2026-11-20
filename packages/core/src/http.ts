@@ -340,10 +340,12 @@ export class HttpClient {
 
       let url = req.url;
       let requestBody = req.body;
+      let carried: string | undefined;
       if (req.credential) {
         const secret = await this.opts.credentials?.get(req.credential.key);
         if (!secret)
           throw new ProviderError('AUTH', `credential ${req.credential.key} not configured`, { retryable: false });
+        carried = secret;
         if (req.credential.as === 'query') {
           const u = new URL(url);
           u.searchParams.set(req.credential.name ?? 'key', secret);
@@ -429,7 +431,7 @@ export class HttpClient {
           else this.cache.delete(key);
         });
       } catch (err) {
-        const pe = classify(err);
+        const pe = withoutSecret(classify(err), carried);
         if (countsForBreaker(pe)) breaker.recordFailure();
         throw pe;
       } finally {
@@ -634,6 +636,49 @@ function toResponse(
     ...meta,
     invalidate,
   };
+}
+
+/**
+ * The error with the request's own secret taken out of it, by value. Redaction elsewhere goes
+ * by the names secrets usually have (`key=`, `token=`); a service that wants its key as
+ * `appid=` or in the path has it in the address under no such name, and a network error that
+ * quotes the address quotes the key. Here the key is known, so it is removed as written, as
+ * percent-encoded and as XML-escaped; and the error it came from is kept only as its text.
+ */
+function withoutSecret(pe: ProviderError, secret: string | undefined): ProviderError {
+  if (!secret) return pe;
+  const forms = [
+    ...new Set([
+      secret,
+      encodeURIComponent(secret),
+      encodeURI(secret),
+      new URLSearchParams({ k: secret }).toString().slice(2),
+      secret
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;'),
+    ]),
+  ].filter((f) => f.length > 0);
+  const clean = (text: string): string => forms.reduce((t, f) => t.split(f).join('<redacted>'), text);
+  const textOf = (e: unknown, depth = 0): string => {
+    if (depth > 4 || e === null || e === undefined) return '';
+    if (!(e instanceof Error)) return typeof e === 'object' ? '' : String(e);
+    const inner = textOf((e as Error & { cause?: unknown }).cause, depth + 1);
+    return `${e.name}: ${e.message}${inner ? ` (${inner})` : ''}`;
+  };
+  const causeText = textOf((pe as Error & { cause?: unknown }).cause);
+  const message = clean(pe.message);
+  // Nothing to take out and nothing underneath: the error as it is.
+  if (message === pe.message && causeText === '') return pe;
+  return new ProviderError(pe.code, message, {
+    ...(pe.httpStatus !== undefined ? { httpStatus: pe.httpStatus } : {}),
+    ...(pe.retryAfterMs !== undefined ? { retryAfterMs: pe.retryAfterMs } : {}),
+    retryable: pe.retryable,
+    ...(pe.setupRequired ? { setup: true } : {}),
+    ...(causeText ? { cause: new Error(clean(causeText).slice(0, 500)) } : {}),
+  });
 }
 
 function classify(err: unknown): ProviderError {

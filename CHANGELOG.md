@@ -35,6 +35,14 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A source's key could reach a log or an error through the request's own address. Keys
+  are removed from text by the names they usually go under (`key=`, `token=`); a service that
+  takes its key as `appid=` or `subscription-key=`, or in the path, has it in the address
+  under no such name, so an error that quotes the address would carry the key into the
+  source's error and whatever recorded it. (Node's own network errors name the host, not the
+  address; none was seen to do this.) The HTTP layer, which knows the key it added, now
+  removes it by value from every error it raises, and keeps the underlying error as text
+  only.
 - **A password with an @ in it was only half removed from logs and error messages.** A camera
   or broker address typed as `rtsp://admin:p@ssword@192.168.1.20/` was redacted up to the
   first @, leaving `ssword` in the log line and in the source's error text. The password is
