@@ -845,6 +845,9 @@ test('resolveGrantedPath: inside the granted folder by its real path, or a typed
     symlinkSync(path.join(folder, 'loop-b'), path.join(folder, 'loop-a'));
     symlinkSync(path.join(folder, 'loop-a'), path.join(folder, 'loop-b'));
     symlinkSync(path.join(folder, 'sub', 'data.csv'), path.join(folder, 'inside.csv'));
+    symlinkSync(path.parse(outer).root, path.join(outer, 'root-link'));
+    await refused('etc', 'UNSUPPORTED', path.join(outer, 'root-link'));
+    await refused('sub/data.csv', 'UNSUPPORTED', path.parse(outer).root);
     await refused('link.txt', 'HOST_NOT_ALLOWED');
     await refused('loop-a', 'HOST_NOT_ALLOWED');
     assert.ok((await resolveGrantedPath(folder, 'inside.csv')).real.endsWith(path.join('sub', 'data.csv')));

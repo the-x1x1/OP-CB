@@ -1524,14 +1524,23 @@ export function pollBudgetMs(policy: RefreshPolicy): number {
   return policy.pollBudgetMs ?? policy.timeoutMs * (policy.maxRetries + 1) + 5000;
 }
 
+/**
+ * A folder a source may be granted: an absolute path that is not a drive, a share or the file
+ * system as a whole. The root is refused however it is written — `C:\\.`, `/.` and the device
+ * forms (`\\\\?\\`, `\\\\.\\`, which reach a volume's or a share's root under another name)
+ * as well as `C:\\` and `/` themselves.
+ */
 export function isGrantableFolder(folder: string): boolean {
-  if (folder.length > 1024) return false;
+  if (folder.length > 1024 || folder.includes('\0')) return false;
+  if (/^[\\/]{2}[?.][\\/]/.test(folder)) return false;
   const win = /^[A-Za-z]:[\\/]/.test(folder);
   const posix = folder.startsWith('/');
   const unc = /^\\\\[^\\]+\\[^\\]+/.test(folder);
   if (!win && !posix && !unc) return false;
   const parts = folder.split(/[\\/]+/).filter(Boolean);
-  if (parts.some((p) => p === '..')) return false;
+  // `..` climbs out; `.` names the folder it is in, so `C:\.` is the drive. Windows also drops
+  // dots and spaces from the end of a name, so a name of nothing else is one of the two.
+  if (parts.some((p) => /^[. ]+$/.test(p))) return false;
   // A root alone: "C:", "/", "\\\\server\\share".
   if (win && parts.length <= 1) return false;
   if (posix && parts.length === 0) return false;

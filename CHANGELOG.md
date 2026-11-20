@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A source's folder setting refused a whole drive written as `C:\` or `/`, but took it
+  written as `C:\.` or `/.`, through a device path (`\\?\…`), or through a link that leads
+  to the root. Each is now refused: a source is granted a folder, never a drive.
 - A style class named after something every object has (`constructor`, from a saved lens)
   was given that thing as its colours, in place of the fallback colours.
 - A satellite whose next position came out as not-a-number was still handed to the map to

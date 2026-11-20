@@ -46,6 +46,8 @@ async function realFolderOf(folder: string | undefined): Promise<string> {
   try {
     const real = await fs.realpath(folder);
     if (!(await fs.stat(real)).isDirectory()) throw new Error('not a folder');
+    // A link to a drive or to the file system's root grants no more than naming the root would.
+    if (path.parse(real).root === real) throw new Error('a root');
     return real;
   } catch {
     throw new ProviderError('UNSUPPORTED', 'the granted folder does not exist or is not a folder', {
