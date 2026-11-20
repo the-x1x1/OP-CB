@@ -19,6 +19,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A record from a connector source with a good position and a malformed shape (a point with
+  no coordinates, a polygon with no ring, a coordinate of 500°) was dropped whole, for a
+  reason nobody could act on. The shape is now left off and the record kept; a record that
+  has only the bad shape is refused as having no position.
 - The 3D globe no longer asks Cesium to pick from a globe that has no size on screen or is
   hidden behind the 2D map, and a pick that fails is a pointer over nothing. The app's log has
   "normalized result is not a number" from Cesium at a start and at a switch to 2D; this is

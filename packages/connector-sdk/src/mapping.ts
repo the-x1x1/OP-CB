@@ -1,4 +1,4 @@
-import { isValidLatLon, type GeoPosition, type JsonValue, type WorldGeometry } from '@opcb/world-model';
+import { geometrySchema, isValidLatLon, type GeoPosition, type JsonValue, type WorldGeometry } from '@opcb/world-model';
 import { parsePath, readPath, type PathSegment } from './path.js';
 import { isoTimestamp, resolveTransform, type Transform } from './transforms.js';
 
@@ -567,22 +567,23 @@ export function readPosition(record: unknown, p: CompiledPosition): GeoPosition 
   }
 }
 
-/** A GeoJSON geometry, checked to be one of the six types with numeric coordinates. */
+/**
+ * A GeoJSON geometry the world model accepts (geometrySchema: one of the six types, positions
+ * as longitude and latitude on the globe, rings and lines of at least two), or nothing.
+ *
+ * It used to be checked only for its type name and for numbers, so `{"type":"Point",
+ * "coordinates":[]}`, a polygon with no ring or a coordinate of 500° went through here and was
+ * refused when the observation was admitted — taking a record with a good position of its
+ * own down with its bad shape, for a reason ("no union member matched") nobody could act on.
+ */
 export function readGeometry(record: unknown, f: CompiledField): WorldGeometry | undefined {
   const g = readField(record, f);
   if (!g || typeof g !== 'object' || Array.isArray(g)) return undefined;
   const type = (g as { type?: unknown }).type;
   const coordinates = (g as { coordinates?: unknown }).coordinates;
   if (typeof type !== 'string' || !GEOMETRY_TYPES.has(type) || !Array.isArray(coordinates)) return undefined;
-  if (!finiteNumbers(coordinates, 0)) return undefined;
-  return { type, coordinates } as WorldGeometry;
-}
-
-function finiteNumbers(v: unknown, depth: number): boolean {
-  if (depth > 6) return false;
-  if (typeof v === 'number') return Number.isFinite(v);
-  if (!Array.isArray(v)) return false;
-  return v.every((x) => finiteNumbers(x, depth + 1));
+  const parsed = geometrySchema.parse({ type, coordinates });
+  return parsed.ok ? parsed.value : undefined;
 }
 
 export interface MappedRecord {
@@ -595,7 +596,9 @@ export interface MappedRecord {
 }
 
 export type MapResult =
-  { ok: true; record: MappedRecord } | { ok: false; reason: string } | { ok: false; skipped: true };
+  | { ok: true; record: MappedRecord }
+  | { ok: false; reason: string }
+  | { ok: false; skipped: true };
 
 /** Any non-blank string up to 256 characters; identity resolution encodes what the id grammar refuses (a URN's `:` included). */
 const ID_VALUE = /^\S{1,256}$/;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compileMapping, MappingError, mapRecord } from './mapping.js';
+import { compileMapping, MappingError, mapRecord, readGeometry } from './mapping.js';
 import { parsePath, readPath, formatPath } from './path.js';
 import { resolveTransform, TRANSFORMS } from './transforms.js';
 import { parseDefinition, definitionToManifest, checkUrl, openedPolicyFields } from './definition.js';
@@ -640,4 +640,45 @@ test('map: a value looked up after its transforms; no entry is no value, so defa
   );
   const many = Object.fromEntries(Array.from({ length: 65 }, (_, i) => [`k${i}`, i]));
   assert.throws(() => compileMapping({ externalId: { path: 'id', map: many } }), /map lists 1 to 64 entries/);
+});
+
+test('readGeometry: only a shape the world model accepts; a record keeps its position when its shape is bad', () => {
+  const m = compileMapping({ externalId: 'id', position: { lat: 'lat', lon: 'lon' }, geometry: 'geom' });
+  const field = m.geometry!;
+  const ring = [
+    [-158, 21],
+    [-157, 21],
+    [-157, 22],
+    [-158, 21],
+  ];
+  for (const good of [
+    { type: 'Point', coordinates: [-157.8, 21.3] },
+    { type: 'Point', coordinates: [-157.8, 21.3, 40] },
+    { type: 'LineString', coordinates: ring },
+    { type: 'Polygon', coordinates: [ring] },
+    { type: 'MultiPolygon', coordinates: [[ring]] },
+  ])
+    assert.deepEqual(readGeometry({ geom: good }, field), good, good.type);
+  for (const bad of [
+    { type: 'Point', coordinates: [] },
+    { type: 'Point', coordinates: [500, 21] },
+    { type: 'Point', coordinates: [-157.8, 91] },
+    { type: 'Point', coordinates: [[-157.8, 21.3]] },
+    { type: 'LineString', coordinates: [[-158, 21]] },
+    { type: 'LineString', coordinates: [1, 2] },
+    { type: 'Polygon', coordinates: [] },
+    { type: 'Polygon', coordinates: ring },
+    { type: 'MultiPolygon', coordinates: [[]] },
+    { type: 'GeometryCollection', coordinates: [] },
+    { type: 'Point', coordinates: 'x' },
+    { type: 'Point' },
+    'Point',
+    null,
+  ])
+    assert.equal(readGeometry({ geom: bad }, field), undefined, JSON.stringify(bad));
+  const kept = mapRecord({ id: 'a', lat: 21.3, lon: -157.8, geom: { type: 'Polygon', coordinates: [] } }, m);
+  assert.ok(
+    kept.ok && kept.record.position && !('geometry' in kept.record),
+    'the place is kept, the bad shape left off',
+  );
 });

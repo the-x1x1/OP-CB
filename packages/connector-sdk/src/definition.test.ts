@@ -244,7 +244,7 @@ test('readField: the first path with a value, then transforms, the lookup table 
   for (const record of [null, undefined, 5, 'text', []]) assert.equal(readField(record, field('first')), undefined);
 });
 
-test('readGeometry: one of the six GeoJSON types with finite numbers, or nothing', () => {
+test('readGeometry: one of the six GeoJSON types, shaped as its type is, or nothing', () => {
   const m = compileMapping({ externalId: 'id', geometry: 'g' } as never);
   const read = (g: unknown) => readGeometry({ g }, m.geometry!);
   const line = {
@@ -256,8 +256,18 @@ test('readGeometry: one of the six GeoJSON types with finite numbers, or nothing
   };
   assert.deepEqual(read(line), line);
   assert.deepEqual(read({ ...line, bbox: [0, 0, 1, 1], extra: 'dropped' }), line);
-  for (const type of ['Point', 'MultiPoint', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon'])
-    assert.equal(read({ type, coordinates: [1, 2] })?.type, type);
+  const shapes: Record<string, unknown> = {
+    Point: [1, 2],
+    MultiPoint: [[1, 2]],
+    LineString: line.coordinates,
+    MultiLineString: [line.coordinates],
+    Polygon: [[...line.coordinates, [1, 0], [0, 0]]],
+    MultiPolygon: [[[...line.coordinates, [1, 0], [0, 0]]]],
+  };
+  for (const [type, coordinates] of Object.entries(shapes)) assert.equal(read({ type, coordinates })?.type, type);
+  // The type's name over another type's coordinates is not that type.
+  for (const type of ['MultiPoint', 'LineString', 'MultiLineString', 'Polygon', 'MultiPolygon'])
+    assert.equal(read({ type, coordinates: [1, 2] }), undefined, type);
   for (const bad of [
     undefined,
     null,
