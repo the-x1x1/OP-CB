@@ -8,6 +8,7 @@ import {
   leavesThisComputer,
   WorkingOfflineError,
 } from './network-gate.js';
+import { normaliseLocalHost } from '@opcb/ipc-contract';
 
 test('leavesThisComputer: the internet and the LAN do, this computer and the app scheme do not', () => {
   for (const u of ['https://server.arcgisonline.com/x', 'http://192.168.1.20:8080/', 'wss://stream.example/ws'])
@@ -121,4 +122,21 @@ test('launch mode: only --mode=online or --mode=offline exactly; nothing else ch
   assert.equal(launchModeFromArgs(['op-cb.exe', '--mode', 'online']), undefined);
   assert.equal(launchModeFromArgs(['op-cb.exe', '--mode=Online']), undefined);
   assert.equal(launchModeFromArgs(['op-cb.exe', 'opcb://view?mode=online']), undefined);
+});
+
+test('an approved host is matched as the request names it: another spelling of a public address never passes', () => {
+  const approved =
+    (...hosts: string[]) =>
+    () =>
+      new Set(hosts.map(normaliseLocalHost));
+  // 134744072 and 010.1.2.3 are 8.8.8.8 and 8.1.2.3 to the network stack.
+  assert.equal(blockedOffline('http://134744072/', approved('134744072')), true);
+  assert.equal(blockedOffline('http://010.1.2.3/', approved('010.1.2.3')), true);
+  assert.equal(blockedOffline('http://8.8.8.8/', approved('134744072', '010.10.10.10')), true);
+  // An IPv6 address approved in any spelling passes, and only that address.
+  for (const spelling of ['fd00::1', 'FD00:0:0:0:0:0:0:1', '[fd00::0001]']) {
+    assert.equal(blockedOffline('http://[fd00::1]:8080/x', approved(spelling)), false, spelling);
+    assert.equal(blockedOffline('http://[fd00::2]/', approved(spelling)), true, spelling);
+  }
+  assert.equal(blockedOffline('http://Printer.LOCAL./status', approved('printer.local')), false);
 });

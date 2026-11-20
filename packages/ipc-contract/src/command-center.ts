@@ -63,6 +63,9 @@ export function localHostProblem(raw: string): string | undefined {
   if (v4) {
     const [a, b] = [Number(v4[1]), Number(v4[2])];
     if (v4.slice(1).some((p) => Number(p) > 255)) return 'that is not an address';
+    // A request to 010.1.2.3 goes to 8.1.2.3 (a leading zero means octal to the network
+    // stack), so what was approved would not be what is asked.
+    if (v4.slice(1).some((p) => p.length > 1 && p.startsWith('0'))) return 'write the address without leading zeros';
     if (a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 169 && b === 254)) {
       if (a === 169 && b === 254 && Number(v4[3]) === 169 && Number(v4[4]) === 254)
         return 'the cloud metadata address is never approved';
@@ -76,6 +79,8 @@ export function localHostProblem(raw: string): string | undefined {
     return 'only a unique-local (fc00::/7) or link-local (fe80::/10) IPv6 address';
   }
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/.test(host)) return 'that is not a host name';
+  // A bare number is an address to the network stack (134744072 is 8.8.8.8), never a name.
+  if (/^(\d+|0x[0-9a-f]*)$/.test(host)) return 'that is not a host name';
   if (!host.includes('.')) return undefined;
   if (['.local', '.lan', '.home.arpa', '.internal'].some((suffix) => host.endsWith(suffix))) return undefined;
   return 'a name on the internet cannot be approved for offline use; use a .local name or a private address';
@@ -83,11 +88,20 @@ export function localHostProblem(raw: string): string | undefined {
 
 /** The host as it is stored and compared: lower case, no brackets, no trailing dot. */
 export function normaliseLocalHost(raw: string): string {
-  return raw
+  const host = raw
     .trim()
     .toLowerCase()
     .replace(/^\[|\]$/g, '')
     .replace(/\.$/, '');
+  if (!host.includes(':')) return host;
+  // An IPv6 address in the one form a request's URL has it in: `fd00:0:0:0:0:0:0:1` and
+  // `fd00::0001` are `fd00::1` there, and an address approved in another spelling never
+  // matched the request it was approved for.
+  try {
+    return new URL(`http://[${host}]/`).hostname.replace(/^\[|\]$/g, '');
+  } catch {
+    return host;
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -281,7 +295,15 @@ export function readGuideProgress(value: unknown): GuideProgress | undefined {
 // ---------------------------------------------------------------------------------------------
 
 export type PrepCategory =
-  'water' | 'food' | 'medical' | 'power' | 'communications' | 'tools' | 'shelter' | 'documents' | 'other';
+  | 'water'
+  | 'food'
+  | 'medical'
+  | 'power'
+  | 'communications'
+  | 'tools'
+  | 'shelter'
+  | 'documents'
+  | 'other';
 
 export const PREP_CATEGORIES: readonly PrepCategory[] = Object.freeze([
   'water',
@@ -549,7 +571,9 @@ export interface LibraryFindAnswer {
 }
 
 export type LibraryOpenRequest =
-  { kind: 'book'; bookId: string; key?: string } | { kind: 'reference'; id: string } | { kind: 'folder' };
+  | { kind: 'book'; bookId: string; key?: string }
+  | { kind: 'reference'; id: string }
+  | { kind: 'folder' };
 
 /** One book in the Kiwix catalogue (library.kiwix.org). */
 export interface CatalogEntry {
