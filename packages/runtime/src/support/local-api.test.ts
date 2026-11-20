@@ -391,3 +391,127 @@ test('local API on Windows: a named pipe per user, the name made safe', () => {
   assert.equal(isNamedPipe('\\\\.\\pipe\\opcb-api-temp'), true);
   assert.equal(isNamedPipe('/run/user/1000/opcb/api.sock'), false);
 });
+
+test('any request line gets a status and a body that is JSON, never a throw', async () => {
+  // Request paths put together at random from the real endpoints, their parameters, and what
+  // a hostile or broken client sends. From a fixed seed.
+  let s = 2026;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const pick = <T>(list: readonly T[]): T => list[Math.floor(next() * list.length)]!;
+  const paths = [
+    '/v1',
+    '/v1/health',
+    '/v1/sources',
+    '/v1/objects',
+    '/v1/track',
+    '/v1/offline',
+    '/v1/own-position',
+    '/',
+    '',
+    '/v2',
+    '/v1/objects/',
+    '/v1//objects',
+    '/V1/OBJECTS',
+    '/v1/../v1/objects',
+    '/v1/%2e%2e/secret',
+    '//evil.example/v1',
+    'http://evil.example/v1/objects',
+    '/v1/objects%00',
+    '/v1/constructor',
+    '/v1/__proto__',
+    '\\v1\\objects',
+    '/v1/objects#x',
+    '?',
+    '/v1/' + '/'.repeat(1500),
+  ];
+  const keys = [
+    'type',
+    'types',
+    'bbox',
+    'bounds',
+    'limit',
+    'id',
+    'objectId',
+    'from',
+    'to',
+    'start',
+    'end',
+    'since',
+    'near',
+    'radius',
+    'q',
+    'constructor',
+    '__proto__',
+    'limit[]',
+    '',
+  ];
+  const values = [
+    'aircraft',
+    'earthquake',
+    'constructor',
+    '',
+    ' ',
+    '0',
+    '-1',
+    '1e999',
+    'NaN',
+    '5000000',
+    '-157,21,-156,22',
+    '170,-10,-170,10',
+    '1,2,3',
+    'a,b,c,d',
+    '2026-11-20T00:00:00Z',
+    '2026-13-45T99:99:99Z',
+    'aircraft:opensky:a00001',
+    '%',
+    '%ff',
+    '%00',
+    'x'.repeat(300),
+    '../..',
+    '北',
+    '<script>',
+    '\u0000',
+  ];
+  const statuses = new Map<number, number>();
+  for (let i = 0; i < 6000; i++) {
+    let url = pick(paths);
+    const params = Math.floor(next() * 4);
+    for (let k = 0; k < params; k++)
+      url += `${k === 0 ? '?' : '&'}${pick(keys)}${next() < 0.9 ? '=' : ''}${pick(values)}`;
+    const method = next() < 0.95 ? 'GET' : pick(['POST', 'PUT', 'DELETE', 'OPTIONS', 'get', '', 'CONNECT']);
+    let response;
+    try {
+      response = await handleLocalApi({ method, url }, deps());
+    } catch (error) {
+      assert.fail(
+        `${method} ${JSON.stringify(url.slice(0, 200))} threw ${error instanceof Error ? error.stack : String(error)}`,
+      );
+    }
+    assert.ok(
+      Number.isInteger(response.status) && response.status >= 200 && response.status < 600,
+      `${url}: ${response.status}`,
+    );
+    assert.notEqual(
+      response.status,
+      500,
+      `${method} ${JSON.stringify(url.slice(0, 200))} is a server error: ${JSON.stringify(response.body).slice(0, 200)}`,
+    );
+    const sent = JSON.stringify(response.body, (_key, value: unknown) => {
+      if (typeof value === 'number' && !Number.isFinite(value)) throw new Error(`${url} answered with ${value}`);
+      return value;
+    });
+    assert.ok(sent.length > 1);
+    if (method !== 'GET') assert.equal(response.status, 405);
+    statuses.set(response.status, (statuses.get(response.status) ?? 0) + 1);
+  }
+  assert.ok(
+    (statuses.get(200) ?? 0) > 500 && (statuses.get(400) ?? 0) + (statuses.get(404) ?? 0) > 500,
+    JSON.stringify([...statuses]),
+  );
+});
