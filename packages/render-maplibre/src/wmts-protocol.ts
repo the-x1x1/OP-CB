@@ -64,7 +64,10 @@ export async function fadeTileBytes(bytes: ArrayBuffer, ramp: FadeRamp, feather?
   const bitmap = await createImageBitmap(new Blob([bytes]));
   const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) return bytes;
+  if (!ctx) {
+    bitmap.close();
+    return bytes;
+  }
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
   const data = ctx.getImageData(0, 0, canvas.width, canvas.height);

@@ -25,7 +25,8 @@ export function mapLibrePitchToDegrees(pitch: number): number {
 }
 export function normalizeBearing(b: number): number {
   const x = b % 360;
-  return x < 0 ? x + 360 : x;
+  // `+ 0` turns the -0 that -360 % 360 gives into 0.
+  return x < 0 ? x + 360 : x + 0;
 }
 
 export interface MapCameraSample {
