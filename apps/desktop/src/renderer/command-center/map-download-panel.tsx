@@ -27,7 +27,8 @@ const ACTIVE = ['planning', 'downloading', 'verifying', 'installing'];
 const NONE: readonly never[] = Object.freeze([]);
 
 export function bytesText(n: number): string {
-  if (n >= 1e9) return `${(n / 1e9).toFixed(n >= 1e10 ? 0 : 1)} GB`;
+  // From where the megabytes would round to a thousand, it is gigabytes.
+  if (n >= 999.5e6) return `${(n / 1e9).toFixed(n >= 9.95e9 ? 0 : 1)} GB`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(0)} MB`;
   return `${Math.max(1, Math.round(n / 1e3))} kB`;
 }
@@ -35,6 +36,8 @@ export function bytesText(n: number): string {
 export function etaText(done: number, total: number, rate?: number): string {
   if (!rate || rate <= 0) return '';
   const s = (total - done) / rate;
+  // Nothing left, or a total not yet known: no time to give.
+  if (!Number.isFinite(s) || s <= 0) return '';
   if (s < 90) return ` · about ${Math.ceil(s)} s left`;
   if (s < 5400) return ` · about ${Math.ceil(s / 60)} min left`;
   return ` · about ${(s / 3600).toFixed(1)} h left`;

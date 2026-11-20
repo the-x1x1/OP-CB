@@ -59,11 +59,13 @@ const KP_WORDS = ['quiet', 'quiet', 'quiet', 'unsettled', 'active'];
 /** "Kp 3.3 (unsettled) for 21:00 UTC" — the planetary K index, for the whole Earth. */
 export function kpText(answer: SkyOverheadAnswer): string | undefined {
   const k = answer.kp;
-  if (!k) return undefined;
+  if (!k || !Number.isFinite(k.kp) || k.kp < 0) return undefined;
   const value = Number.isInteger(k.kp) ? String(k.kp) : k.kp.toFixed(1);
   const word = k.storm ? `geomagnetic storm ${k.storm}` : (KP_WORDS[Math.floor(k.kp)] ?? 'active');
-  const at = new Date(Date.parse(k.at)).toISOString().slice(11, 16);
-  return `Kp ${value} (${word}) · the three hours from ${at} UTC, whole Earth`;
+  // A time that is not one is left out; `toISOString` on it would throw and take the panel down.
+  const t = Date.parse(k.at);
+  const when = Number.isFinite(t) ? `the three hours from ${new Date(t).toISOString().slice(11, 16)} UTC, ` : '';
+  return `Kp ${value} (${word}) · ${when}whole Earth`;
 }
 
 /** "62° up · 047° NE · 1,120 km". */

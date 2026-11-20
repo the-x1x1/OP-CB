@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The sky panel failed to draw when the Kp index came with a time that is not one; the time
+  is now left out. A map download whose total was not yet known showed a negative time left,
+  and one just under a gigabyte read "1000 MB". An airport with an empty IATA code was
+  labelled with nothing.
 - An object whose id has no provider and type before its value, and no label, was shown
   with an empty name; an empty callsign hid the name beside it. The first label that says
   something is used, then the id.

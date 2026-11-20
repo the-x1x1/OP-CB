@@ -252,7 +252,10 @@ export function cycloneRows(object: WorldObject): Array<{ label: string; value: 
     const gust = num(object, 'gustKt');
     return [
       { label: 'Forecast for', value: date ? `${date}${hours !== undefined ? ` (+${hours} h)` : ''}` : undefined },
-      { label: 'Expected as', value: str(object, 'forecastClass') ?? STORM_TYPES[str(object, 'stormType') ?? ''] },
+      {
+        label: 'Expected as',
+        value: str(object, 'forecastClass') ?? ownEntry(STORM_TYPES, str(object, 'stormType') ?? ''),
+      },
       { label: 'Sustained winds', value: forecastWind(num(object, 'intensityKt')) },
       { label: 'Gusts', value: gust !== undefined ? `${gust} kt (${Math.round(gust * 1.15078)} mph)` : undefined },
       // 9999 is NHC's "not forecast": pressure is given for the current position only.
@@ -261,7 +264,7 @@ export function cycloneRows(object: WorldObject): Array<{ label: string; value: 
   }
   if (layer === 'past-track') {
     const ss = Number(str(object, 'trackCategory'));
-    const type = STORM_TYPES[str(object, 'stormType') ?? ''];
+    const type = ownEntry(STORM_TYPES, str(object, 'stormType') ?? '');
     const hurricane =
       Number.isInteger(ss) && ss >= 1 && ss <= 5
         ? CYCLONE_CATEGORY_NAMES[`cat${ss}` as keyof typeof CYCLONE_CATEGORY_NAMES]

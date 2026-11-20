@@ -74,7 +74,8 @@ export function airportText(a: WorldFlightAirport): string {
 
 /** The short code the map labels an airport with. */
 export function airportCode(a: WorldFlightAirport): string {
-  return a.iata ?? a.icao ?? a.code;
+  // `||`: an empty IATA code (many small fields have none) is not a label.
+  return a.iata || a.icao || a.code;
 }
 
 /** What the panel says about the route when it has none to show. */
