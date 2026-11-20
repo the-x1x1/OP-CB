@@ -204,7 +204,8 @@ export function rankHits(
   opts: PlaceSearchOptions,
   limit: number,
 ): PlaceSearchHit[] {
-  const kinds = opts.kinds ? new Set(opts.kinds) : undefined;
+  // An empty list is no restriction, as it is for `nearestOf` and the SQLite index.
+  const kinds = opts.kinds?.length ? new Set(opts.kinds) : undefined;
   const hits: PlaceSearchHit[] = [];
   for (const { entry, base, match } of matched) {
     if (kinds && !kinds.has(entry.kind)) continue;

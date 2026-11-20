@@ -498,27 +498,105 @@ export function isArticleMime(mime: string | undefined): boolean {
   return mime === undefined || mime.startsWith('text/html') || mime === 'text/plain' || mime === 'application/pdf';
 }
 
-/** Plain text of an HTML article: scripts, styles and tags removed, entities for the common few. */
+const SKIPPED_ELEMENTS: ReadonlySet<string> = new Set(['script', 'style', 'noscript', 'template']);
+const BREAK_AFTER = /^(?:p|div|li|h[1-6]|tr|table|section)$/;
+const ENTITY = /&(#x[0-9a-f]{1,6}|#\d{1,7}|nbsp|amp|lt|gt|quot|apos);/gi;
+const NAMED_ENTITY: Readonly<Record<string, string>> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+
+/**
+ * Plain text of an HTML article: scripts, styles and tags removed, the common entities
+ * decoded (each once: `&amp;lt;` is the text `&lt;`), runs of white space brought down to one
+ * space or one line break.
+ *
+ * One pass over the text, stopping when `maxChars` have been written. It was a chain of
+ * regular expressions before, and a page from a damaged or hostile library file could hold
+ * the app for a minute: a megabyte of `<script>` with no `</script>` took 21 seconds, a
+ * megabyte of `<a ` with no `>` far longer.
+ */
 export function htmlToText(html: string, maxChars = 20_000): string {
-  return html
-    .replace(/<(script|style|noscript|template)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, ' ')
-    .replace(/<br\s*\/?>|<\/(p|div|li|h[1-6]|tr|table|section)>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_, d: string) => {
-      const n = Number(d);
-      return n > 0 && n < 0x110000 ? String.fromCodePoint(n) : ' ';
-    })
-    .replace(/[ \t\r\f\v]+/g, ' ')
-    .replace(/\s*\n\s*/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-    .slice(0, maxChars);
+  const limit = Math.max(0, Math.floor(maxChars));
+  let out = '';
+  // White space waiting to be written before the next character: none, a space, or a line break.
+  let gap: '' | ' ' | '\n' = '';
+  const write = (text: string): void => {
+    for (let i = 0; i < text.length && out.length < limit; i++) {
+      const c = text[i]!;
+      if (c === '\n') gap = '\n';
+      else if (/\s/.test(c)) gap ||= ' ';
+      else {
+        if (gap && out.length > 0) out += gap;
+        gap = '';
+        out += c;
+      }
+    }
+  };
+  const decode = (text: string): string =>
+    text.includes('&')
+      ? text.replace(ENTITY, (whole, ref: string) => {
+          if (ref[0] !== '#') return NAMED_ENTITY[ref.toLowerCase()] ?? whole;
+          const n = ref[1] === 'x' || ref[1] === 'X' ? parseInt(ref.slice(2), 16) : parseInt(ref.slice(1), 10);
+          return n > 0 && n < 0x110000 && !(n >= 0xd800 && n <= 0xdfff) ? String.fromCodePoint(n) : ' ';
+        })
+      : text;
+
+  let lower: string | undefined;
+  /** Elements whose end tag is known not to come: looked for once, not once per start tag. */
+  const neverClosed = new Set<string>();
+  /** The index just past `</name>` at or after `from`, or -1. */
+  const endOfElement = (name: string, from: number): number => {
+    lower ??= html.toLowerCase();
+    const needle = `</${name}`;
+    for (let at = lower.indexOf(needle, from); at >= 0; at = lower.indexOf(needle, at + 1)) {
+      let j = at + needle.length;
+      while (j < html.length && /\s/.test(html[j]!)) j++;
+      if (html[j] === '>') return j + 1;
+    }
+    return -1;
+  };
+
+  let i = 0;
+  while (i < html.length && out.length < limit) {
+    const lt = html.indexOf('<', i);
+    if (lt < 0) {
+      write(decode(html.slice(i)));
+      break;
+    }
+    write(decode(html.slice(i, lt)));
+    // A `<` that does not start a tag (`a < b`) is text.
+    if (!/[a-z/!?]/i.test(html[lt + 1] ?? '')) {
+      write('<');
+      i = lt + 1;
+      continue;
+    }
+    // A comment runs to `-->`, whatever is inside it.
+    if (html.startsWith('<!--', lt) && !neverClosed.has('!--')) {
+      const end = html.indexOf('-->', lt + 4);
+      if (end < 0) neverClosed.add('!--');
+      else {
+        gap ||= ' ';
+        i = end + 3;
+        continue;
+      }
+    }
+    const gt = html.indexOf('>', lt + 1);
+    // No `>` anywhere after it: the rest is text, and there is no point looking again.
+    if (gt < 0) {
+      write(decode(html.slice(lt)));
+      break;
+    }
+    const tag = /^(\/?)([a-z][a-z0-9]*)/i.exec(html.slice(lt + 1, Math.min(gt, lt + 40)));
+    const closing = tag?.[1] === '/';
+    const name = tag?.[2]?.toLowerCase();
+    i = gt + 1;
+    if (name && !closing && SKIPPED_ELEMENTS.has(name) && !neverClosed.has(name)) {
+      const end = endOfElement(name, gt + 1);
+      if (end < 0) neverClosed.add(name);
+      else i = end;
+    }
+    if (name === 'br' || (closing && name !== undefined && BREAK_AFTER.test(name))) gap = '\n';
+    else gap ||= ' ';
+  }
+  return out.slice(0, limit);
 }
 
 /** A ZimSource over an open file handle. */

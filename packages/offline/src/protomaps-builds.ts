@@ -54,6 +54,12 @@ export function httpRangeSource(fetchImpl: typeof fetch, url: string, onBytes?: 
           }
           const range = /^bytes (\d+)-(\d+)\/(\d+)$/.exec(res.headers.get('content-range') ?? '');
           if (!range || Number(range[1]) !== offset) throw new Error('the map server sent another range');
+          // More than was asked for is refused before it is read into memory.
+          const declared = Number(res.headers.get('content-length') ?? Number.NaN);
+          if (Number(range[2]) - offset + 1 > length || (Number.isFinite(declared) && declared > length)) {
+            await res.body?.cancel().catch(() => undefined);
+            throw new Error(`asked for ${length} bytes, offered more`);
+          }
           const bytes = new Uint8Array(await res.arrayBuffer());
           // Short only at the end of the file (the first 16 KiB of a small archive).
           const atEnd = Number(range[2]) + 1 === Number(range[3]);
@@ -65,7 +71,8 @@ export function httpRangeSource(fetchImpl: typeof fetch, url: string, onBytes?: 
           if (signal?.aborted) throw err;
           if ((err as { name?: string })?.name === 'WorkingOfflineError') throw err;
           lastError = err;
-          await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+          // No wait after the last try: there is nothing left to wait for.
+          if (attempt + 1 < RETRIES) await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
         }
       }
       throw lastError instanceof Error ? lastError : new Error(String(lastError));

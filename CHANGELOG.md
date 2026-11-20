@@ -7,6 +7,15 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A library page could hold the app for a minute.** Turning an offline-library article into
+  text (for search results and the assistant) used a chain of patterns that took 21 seconds on
+  a megabyte of `<script>` with no end tag, and far longer on other broken pages. It is one
+  pass now: a megabyte of anything takes a few milliseconds. `&amp;lt;` reads as the text
+  `&lt;` (it was decoded twice), `a < b` keeps its `<`, and comments are skipped whole.
+- A map download refuses a server that offers more bytes than were asked for before reading
+  them, and no longer waits four seconds after its last failed try.
+- A place search asked for a kind of place a map pack has none of returns nothing, not every
+  kind.
 - **A key that goes in the address path.** For a source whose key is part of the path
   (`https://host/{TOKEN}/…`), an address typed with a capital letter in the host, or with a
   user name in it, was put back together one character out: `API.Example.com` became

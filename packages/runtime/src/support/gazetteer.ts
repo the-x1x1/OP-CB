@@ -34,7 +34,9 @@ export class PlaceIndexGazetteer implements Gazetteer {
   lookup(name: string, opts: GazetteerLookupOptions = {}): GazetteerHit[] {
     const index = this.index();
     if (index.size === 0) return [];
-    const kinds = opts.kinds ? packKindsFor(opts.kinds) : undefined;
+    const kinds = opts.kinds?.length ? packKindsFor(opts.kinds) : undefined;
+    // Asked for kinds a pack has none of (a typed coordinate): nothing, not everything.
+    if (kinds && kinds.length === 0) return [];
     const hits = index.search(name, {
       limit: opts.limit ?? 10,
       ...(opts.bias ? { position: opts.bias } : {}),
@@ -60,7 +62,8 @@ export class PlaceIndexGazetteer implements Gazetteer {
   nearest(position: GeoPosition, opts: GazetteerNearestOptions = {}): NearbyPlace[] {
     const index = this.index();
     if (index.size === 0 || !index.nearest) return [];
-    const kinds = packKindsFor(opts.kinds ?? ['city']);
+    const kinds = packKindsFor(opts.kinds?.length ? opts.kinds : ['city']);
+    if (kinds.length === 0) return [];
     const hits = index.nearest(position, {
       limit: Math.max(1, opts.limit ?? 1) * 2,
       ...(opts.maxDistanceM !== undefined ? { maxDistanceM: opts.maxDistanceM } : {}),
