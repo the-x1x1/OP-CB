@@ -9,6 +9,15 @@ import {
   type LibraryHit,
   type LibrarySearchAnswer,
 } from '@opcb/ipc-contract';
+import {
+  BodyTooLarge,
+  firstXmlBlock,
+  readTextCapped,
+  stripXmlTags,
+  withoutXmlBlocks,
+  xmlBlocks,
+  xmlTagText,
+} from './xml-blocks.js';
 
 /**
  * The operator's local services (the Command Center, 2026-10-30): a local AI runner (Ollama),
@@ -234,9 +243,12 @@ export class LocalServices {
       redirect: 'error',
     });
     if (!res.ok) throw new HttpStatusError(res.status);
-    const text = await res.text();
-    if (text.length > MAX_BODY) throw new NotThisService('the answer is too large');
-    return text;
+    try {
+      return await readTextCapped(res, MAX_BODY);
+    } catch (err) {
+      if (err instanceof BodyTooLarge) throw new NotThisService('the answer is too large');
+      throw err;
+    }
   }
 
   private getText(url: string, signal?: AbortSignal): Promise<string> {
@@ -318,27 +330,15 @@ export function readOllamaGenerate(body: unknown): { text: string; tokensPerSeco
   return { text, ...(tokensPerSecond !== undefined ? { tokensPerSecond } : {}) };
 }
 
-const XML_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
-function xmlText(s: string): string {
-  return s
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/&(amp|lt|gt|quot|apos);/g, (_m, e: string) => XML_ENTITIES[e] ?? '')
-    .replace(/&#(\d+);/g, (_m, d: string) => String.fromCodePoint(Math.min(Number(d), 0x10ffff)))
-    .trim();
-}
-function tag(block: string, name: string): string | undefined {
-  const m = new RegExp(`<${name}>([\\s\\S]*?)</${name}>`).exec(block);
-  return m ? xmlText(m[1]!) : undefined;
-}
+const tag = xmlTagText;
 
 /** kiwix-serve's OPDS catalogue: each `<entry>`'s id, title, book name and language. */
 export function readKiwixCatalog(text: string): NonNullable<LocalServiceStatus['books']> {
   if (!/<feed[\s>]/.test(text) || !text.includes('http://www.w3.org/2005/Atom'))
     throw new NotThisService('not an OPDS catalogue');
   const out: NonNullable<LocalServiceStatus['books']> = [];
-  for (const m of text.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
+  for (const { body: block } of xmlBlocks(text, 'entry', 5000)) {
     if (out.length >= 500) break;
-    const block = m[1]!;
     const id = tag(block, 'id')?.replace(/^urn:uuid:/, '');
     const title = tag(block, 'title');
     if (!id || !title || id.length > 100 || title.length > 300) continue;
@@ -380,17 +380,17 @@ export function readKolibriInfo(body: unknown): { version: string; device?: stri
 export function readKiwixSearch(text: string): LibraryHit[] {
   if (!/<rss[\s>]/.test(text)) throw new NotThisService('not search results');
   const out: LibraryHit[] = [];
-  for (const m of text.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
+  for (const { body: block } of xmlBlocks(text, 'item', 500)) {
     if (out.length >= 50) break;
-    const block = m[1]!;
-    const bookBlock = /<book>([\s\S]*?)<\/book>/.exec(block)?.[1];
-    const own = block.replace(/<book>[\s\S]*?<\/book>/, '');
+    const bookBlock = firstXmlBlock(block, 'book')?.body;
+    const own = withoutXmlBlocks(block, 'book');
     const title = tag(own, 'title');
     const link = tag(own, 'link');
     if (!title || !link) continue;
     const path = libraryPath(link);
     if (!path) continue;
-    const snippet = tag(own, 'description')?.replace(/<[^>]*>/g, '');
+    const description = tag(own, 'description');
+    const snippet = description === undefined ? undefined : stripXmlTags(description);
     const bookTitle = bookBlock ? tag(bookBlock, 'title') : undefined;
     out.push({
       title: title.slice(0, 300),

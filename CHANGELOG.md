@@ -7,6 +7,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **The library catalogue, a download's Metalink file and library search could hold the app.**
+  They were read with patterns that start again from every opening tag when the closing tag
+  is missing: 700 kB of such text took twelve seconds, a megabyte half a minute, and the
+  answers were read whole whatever their size. They are read in one pass now (a few
+  milliseconds for the same text) and an answer is refused once it passes a few megabytes.
 - A time in a GPX or KML file on a day that does not exist (30 February) is not read as the
   day it would roll over to; the point simply has no time.
 - A long description cut to fit no longer ends in half an emoji.

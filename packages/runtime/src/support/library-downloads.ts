@@ -11,6 +11,15 @@ import type {
   ReferenceDoc,
 } from '@opcb/ipc-contract';
 import { REFERENCES } from './references.js';
+import {
+  firstXmlBlock,
+  readTextCapped,
+  withoutXmlBlocks,
+  xmlBlocks,
+  xmlStartTags,
+  xmlTagText,
+  xmlText,
+} from './xml-blocks.js';
 
 /**
  * Downloads into the library (2026-10-30): books from the Kiwix catalogue and the public-domain
@@ -42,6 +51,9 @@ const KIWIX_DOWNLOAD_HOST = 'download.kiwix.org';
 const CATALOG_SIZE_SLACK = 1024;
 const ACQUISITION = 'http://opds-spec.org/acquisition/open-access';
 const MAX_REFERENCE_BYTES = 150 * 1024 * 1024;
+/** A catalogue page of a hundred books is about 150 kB; a Metalink file a few kB. */
+const MAX_CATALOG_BYTES = 8 * 1024 * 1024;
+const MAX_METALINK_BYTES = 1024 * 1024;
 const PARTS_DIR = '.downloads';
 export const REFERENCES_DIR = 'references';
 const REFERENCES_FILE = 'references.json';
@@ -61,18 +73,7 @@ export interface LibraryDownloadsDeps {
 
 // ---- reading the catalogue and Metalink files -------------------------------------------------
 
-const ENT: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
-function xmlText(s: string): string {
-  return s
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/&(amp|lt|gt|quot|apos);/g, (_m, e: string) => ENT[e] ?? '')
-    .replace(/&#(\d+);/g, (_m, d: string) => String.fromCodePoint(Math.min(Number(d), 0x10ffff)))
-    .trim();
-}
-function tag(block: string, name: string): string | undefined {
-  const m = new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`).exec(block);
-  return m ? xmlText(m[1]!) : undefined;
-}
+const tag = xmlTagText;
 function attr(el: string, name: string): string | undefined {
   const m = new RegExp(`\\s${name}="([^"]*)"`).exec(el);
   return m ? xmlText(m[1]!) : undefined;
@@ -116,14 +117,14 @@ export function readCatalog(text: string): { entries: CatalogEntry[]; total?: nu
   if (!/<feed[\s>]/.test(text) || !text.includes('http://www.w3.org/2005/Atom'))
     throw new Error('not an OPDS catalogue');
   const entries: CatalogEntry[] = [];
-  for (const m of text.matchAll(/<entry>([\s\S]*?)<\/entry>/g)) {
+  // At most 2,000 entries are looked at for the 200 kept (an entry without a usable link is passed over).
+  for (const { body: block } of xmlBlocks(text, 'entry', 2000)) {
     if (entries.length >= 200) break;
-    const block = m[1]!;
-    const own = block.replace(/<author>[\s\S]*?<\/author>/g, '').replace(/<publisher>[\s\S]*?<\/publisher>/g, '');
+    const own = withoutXmlBlocks(withoutXmlBlocks(block, 'author'), 'publisher');
     const id = tag(own, 'id')?.replace(/^urn:uuid:/, '');
     const title = tag(own, 'title');
     const name = tag(own, 'name');
-    const link = [...own.matchAll(/<link\b[^>]*>/g)].map((x) => x[0]).find((l) => attr(l, 'rel') === ACQUISITION);
+    const link = xmlStartTags(own, 'link', 64).find((l) => attr(l, 'rel') === ACQUISITION);
     const url = link ? kiwixDownloadUrl(attr(link, 'href') ?? '') : undefined;
     if (!id || !title || !name || !url || id.length > 100 || title.length > 300 || name.length > 200) continue;
     const e: CatalogEntry = { id, name, title, url };
@@ -155,15 +156,19 @@ export interface Metalink {
 /** A Metalink 4 file's first `<file>`; piece hashes are ignored. */
 export function readMetalink(text: string): Metalink {
   if (!/<metalink[\s>]/.test(text)) throw new Error('not a Metalink file');
-  const file = /<file\s[^>]*>([\s\S]*?)<\/file>/.exec(text);
+  const file = firstXmlBlock(text, 'file');
   if (!file) throw new Error('the Metalink file names no file');
-  const name = attr(file[0].slice(0, file[0].indexOf('>') + 1), 'name') ?? '';
-  const body = file[1]!.replace(/<pieces[\s\S]*?<\/pieces>/g, '');
+  const name = attr(file.startTag, 'name') ?? '';
+  const body = withoutXmlBlocks(file.body, 'pieces');
   let sha256: string | undefined;
-  for (const h of body.matchAll(/<hash\s+type="([^"]+)"\s*>([^<]*)<\/hash>/g))
-    if (h[1]!.toLowerCase() === 'sha-256' && /^[0-9a-f]{64}$/i.test(h[2]!.trim())) sha256 = h[2]!.trim().toLowerCase();
-  const urls = [...body.matchAll(/<url\b([^>]*)>([^<]+)<\/url>/g)]
-    .map((u) => ({ href: xmlText(u[2]!), priority: Number(attr(u[1]!, 'priority') ?? '999') || 999 }))
+  for (const h of xmlBlocks(body, 'hash', 64)) {
+    const value = h.body.trim();
+    if ((attr(h.startTag, 'type') ?? '').toLowerCase() === 'sha-256' && /^[0-9a-f]{64}$/i.test(value))
+      sha256 = value.toLowerCase();
+  }
+  const urls = xmlBlocks(body, 'url', 64)
+    .filter((u) => u.body.length > 0 && !u.body.includes('<'))
+    .map((u) => ({ href: xmlText(u.body), priority: Number(attr(u.startTag, 'priority') ?? '999') || 999 }))
     .filter((u) => u.href.startsWith('https://'))
     .sort((a, b) => a.priority - b.priority)
     .map((u) => u.href)
@@ -281,7 +286,7 @@ export class LibraryDownloads {
     try {
       const res = await this.deps.fetchImpl(u.toString(), signal ? { signal } : {});
       if (!res.ok) return { ok: false, entries: [], message: `the Kiwix catalogue answered ${res.status}` };
-      const read = readCatalog(await res.text());
+      const read = readCatalog(await readTextCapped(res, MAX_CATALOG_BYTES));
       return { ok: true, ...read };
     } catch (err) {
       return { ok: false, entries: [], message: failureText(err) };
@@ -334,7 +339,7 @@ export class LibraryDownloads {
       if (url.endsWith('.meta4')) {
         try {
           const res = await this.deps.fetchImpl(url, { signal });
-          if (res.ok) meta = readMetalink(await res.text());
+          if (res.ok) meta = readMetalink(await readTextCapped(res, MAX_METALINK_BYTES));
           else this.deps.log.warn('library: the Metalink file was not available', { status: res.status });
         } catch (err) {
           if (signal.aborted) throw err;
