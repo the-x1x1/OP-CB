@@ -72,9 +72,13 @@ class Turnstile {
     if (this.waiting >= MAX_WAITING) return false;
     this.waiting++;
     try {
-      const at = Math.max(this.now(), this.next);
+      // Each request waiting adds one gap, so the next turn is never further off than that.
+      // One that reads further off was set before the clock was put back.
+      const now = this.now();
+      if (this.next - now > this.waiting * MIN_GAP_MS) this.next = now;
+      const at = Math.max(now, this.next);
       this.next = at + MIN_GAP_MS;
-      const wait = at - this.now();
+      const wait = at - now;
       if (wait > 0) await this.sleep(wait);
       return true;
     } finally {
@@ -119,7 +123,10 @@ export class PlaceSearch {
     const first = this.opts.first?.() ?? 'nominatim';
     const key = `${first}|${text.toLowerCase()}|${limit}`;
     const cached = this.cache.get(key);
-    if (cached && cached.expires > this.now()) {
+    // Nothing is kept longer than HIT_TTL_MS; an entry that reads longer was kept before the
+    // clock was put back, and is asked for again.
+    const keptFor = cached ? cached.expires - this.now() : 0;
+    if (cached && keptFor > 0 && keptFor <= HIT_TTL_MS) {
       this.stats.fromCache++;
       // Refreshed as most recently used.
       this.cache.delete(key);

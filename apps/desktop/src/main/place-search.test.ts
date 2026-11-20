@@ -153,6 +153,24 @@ test('place search: at most one request a second to a service, and a pile-up is 
   for (let i = 1; i < h.calls.length; i++) assert.ok(h.calls[i]!.at - h.calls[i - 1]!.at >= MIN_GAP_MS);
 });
 
+test('place search: a clock put back neither holds a request for the old turn nor keeps an old answer', async () => {
+  const h = harness({ 'nominatim.openstreetmap.org': () => json(NOMINATIM_BERLIN) });
+  await h.settle(h.search.search({ text: 'berlin' }));
+  const year = 365 * 86_400_000;
+  h.advance(-year);
+  const putBack = h.calls[0]!.at - year;
+  // A new question: sent within one gap of now, not a year later when the old turn comes round.
+  await h.settle(h.search.search({ text: 'hamburg' }));
+  assert.equal(h.calls.length, 2);
+  assert.ok(h.calls[1]!.at - putBack <= MIN_GAP_MS, `waited ${h.calls[1]!.at - putBack} ms`);
+  // The answer kept before the clock went back would read as good for a year and a day.
+  await h.settle(h.search.search({ text: 'berlin' }));
+  assert.equal(h.calls.length, 3, 'asked again');
+  // And one kept since is still used.
+  await h.settle(h.search.search({ text: 'hamburg' }));
+  assert.equal(h.calls.length, 3);
+});
+
 test('place search: nothing from Nominatim, or Nominatim failing, asks Photon', async () => {
   const empty = harness({
     'nominatim.openstreetmap.org': () => json([]),

@@ -112,3 +112,21 @@ test('the provider cache: switched off, it stores and returns nothing and writes
   await cache.delete('k');
   await assert.rejects(fs.stat(file));
 });
+
+test('the provider cache: an entry with a life, kept while the clock read ahead, has run out once the clock is put right', async () => {
+  const start = Date.parse('2026-11-19T00:00:00.000Z');
+  const { now, open } = await cacheAt({ ms: start + 365 * 86_400_000 });
+  const cache = open();
+  await cache.set('hour', 'h', 3_600_000);
+  await cache.set('kept', 'k');
+  now.ms = start;
+  assert.equal(await cache.get('hour'), undefined, 'not good for a year and an hour');
+  assert.equal((await cache.get('kept'))!.value, 'k', "an entry with no life is its reader's to judge");
+  assert.equal(await open().get('hour'), undefined, 'and it is gone from the file');
+  // An entry kept now is used for its life and no longer.
+  await cache.set('hour', 'h2', 3_600_000);
+  now.ms = start + 3_599_999;
+  assert.equal((await cache.get('hour'))!.value, 'h2');
+  now.ms = start + 3_600_001;
+  assert.equal(await cache.get('hour'), undefined);
+});

@@ -66,7 +66,10 @@ export class FileProviderCache implements ProviderCache {
     const entries = await this.read();
     const entry = entries[key];
     if (!entry) return undefined;
-    if (entry.expiresAt !== undefined && entry.expiresAt < this.clock.now()) {
+    // An entry with a life that was kept at a time the clock now reads as ahead would last
+    // for as long as the clock had been fast on top of its own life; it counts as run out.
+    const now = this.clock.now();
+    if (entry.expiresAt !== undefined && (entry.expiresAt < now || Date.parse(entry.storedAt) > now)) {
       delete entries[key];
       void this.flush();
       return undefined;
