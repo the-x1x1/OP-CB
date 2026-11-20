@@ -42,6 +42,8 @@ import {
   lineMayBeLatest,
   lineWithin,
   lookbackRange,
+  normalRange,
+  normalRangeQuery,
   rangeFilter,
   reduceCounts,
   reduceLatestPerObject,
@@ -503,7 +505,8 @@ export class DuckDbParquetBackend implements HistoryBackend {
     return opts.limit !== undefined ? out.slice(0, opts.limit) : out;
   }
 
-  async track(objectId: string, range: TimeRange): Promise<HistoryRow[]> {
+  async track(objectId: string, givenRange: TimeRange): Promise<HistoryRow[]> {
+    const range = normalRange(givenRange);
     await this.ensureOpen();
     const type = objectId.split(':')[0];
     const metas = this.index.list({ overlapping: range, ...(type ? { objectTypes: [type] } : {}) });
@@ -531,7 +534,8 @@ export class DuckDbParquetBackend implements HistoryBackend {
     return availabilityFromMetas(this.index.list(objectTypes ? { objectTypes } : undefined), objectTypes, this.gapMs);
   }
 
-  async counts(query: RangeQuery): Promise<TypeCounts[]> {
+  async counts(givenQuery: RangeQuery): Promise<TypeCounts[]> {
+    const query = normalRangeQuery(givenQuery);
     await this.ensureOpen();
     const metas = this.index.list(rangeFilter(query));
     const acc = new Map<string, { objects: Set<string>; rows: number }>();
@@ -580,7 +584,8 @@ export class DuckDbParquetBackend implements HistoryBackend {
     return countsToList(acc, query.objectTypes);
   }
 
-  async observationsInRange(query: RangeQuery): Promise<HistoryRow[]> {
+  async observationsInRange(givenQuery: RangeQuery): Promise<HistoryRow[]> {
+    const query = normalRangeQuery(givenQuery);
     await this.ensureOpen();
     const metas = this.index.list(rangeFilter(query));
     const out: HistoryRow[] = [];

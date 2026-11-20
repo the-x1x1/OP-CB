@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- History read for a time range written without milliseconds (`…T08:00:00Z`) kept the row
+  exactly at its start out and took in rows up to 999 ms after its end. The range is now read
+  as the times it names, in both history backends.
 - A wind direction or a measured bearing given as a negative angle (−15°) is written 0–359
   (`345°`), not `-15°` or an empty compass point.
 - A temperature just below zero reads `0.0 °C`, not `-0.0 °C`.

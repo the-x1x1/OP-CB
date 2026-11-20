@@ -28,6 +28,30 @@ export function lookbackRange(cursor: IsoTimestamp, lookbackSeconds: number): Ti
   return { start: new Date(start).toISOString(), end: new Date(end).toISOString() };
 }
 
+/**
+ * A range in the form stored rows use (millisecond-precision UTC), so that comparing as text
+ * compares as time. `…T00:00:00Z` is a valid timestamp, but as text it sorts after
+ * `…T00:00:00.000Z` and after `…T00:00:00.999Z`: a range written that way lost the row
+ * exactly at its start and took in rows up to 999 ms past its end. An unreadable bound is
+ * left as it is (nothing matches it, as before).
+ */
+export function normalRange(range: TimeRange): TimeRange {
+  const start = msIso(range.start);
+  const end = msIso(range.end);
+  return start === range.start && end === range.end ? range : { start, end };
+}
+
+function msIso(iso: IsoTimestamp): IsoTimestamp {
+  const ms = Date.parse(iso);
+  return Number.isFinite(ms) && Math.abs(ms) <= 8.64e15 ? new Date(ms).toISOString() : iso;
+}
+
+/** `query` with its range in the stored form (see `normalRange`). */
+export function normalRangeQuery(query: RangeQuery): RangeQuery {
+  const range = normalRange(query.range);
+  return range === query.range ? query : { ...query, range };
+}
+
 export function inRange(row: HistoryRow, range: TimeRange): boolean {
   return row.observedAt >= range.start && row.observedAt <= range.end;
 }
@@ -171,9 +195,10 @@ export async function scanObjectsAt(
 export async function scanTrack(
   scanner: PartitionScanner,
   objectId: string,
-  range: TimeRange,
+  givenRange: TimeRange,
   readFiltered?: FilteredPartitionReader,
 ): Promise<HistoryRow[]> {
+  const range = normalRange(givenRange);
   const type = parseObjectId(objectId)?.type;
   const filter: PartitionFilter = { overlapping: range, ...(type ? { objectTypes: [type] } : {}) };
   const out: HistoryRow[] = [];
@@ -248,9 +273,10 @@ export function countsToList(
 
 export async function scanCounts(
   scanner: PartitionScanner,
-  query: RangeQuery,
+  givenQuery: RangeQuery,
   readFiltered?: FilteredPartitionReader,
 ): Promise<TypeCounts[]> {
+  const query = normalRangeQuery(givenQuery);
   const acc = new Map<string, { objects: Set<string>; rows: number }>();
   const keep = lineWithin(query.range);
   for (const meta of await scanner.listPartitions(rangeFilter(query))) {
@@ -265,9 +291,10 @@ export async function scanCounts(
 
 export async function scanObservationsInRange(
   scanner: PartitionScanner,
-  query: RangeQuery,
+  givenQuery: RangeQuery,
   readFiltered?: FilteredPartitionReader,
 ): Promise<HistoryRow[]> {
+  const query = normalRangeQuery(givenQuery);
   const out: HistoryRow[] = [];
   const keep = lineWithin(query.range);
   for (const meta of await scanner.listPartitions(rangeFilter(query))) {
