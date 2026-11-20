@@ -74,9 +74,9 @@ test('checkUrl: a public https host, and nothing that could be this computer or 
     ['https://a.b.home.arpa/', /public host/],
     ['https://wiki.corp/', /public host/],
     // A secret belongs in the path, never in a name that is looked up.
-    ['https://{TOKEN}.example.com/', /placeholder in its host/],
-    ['https://example.com:{TOKEN}/', /placeholder in its host/],
-    ['https://{TOKEN}/x', /placeholder in its host/],
+    ['https://{TOKEN}.example.com/', /\{TOKEN\} placeholder in its host/],
+    ['https://example.com:{TOKEN}/', /\{TOKEN\} placeholder in its host/],
+    ['https://{TOKEN}/x', /\{TOKEN\} placeholder in its host/],
   ];
   for (const [url, why] of refused) assert.match(checkUrl(url, HTTPS) ?? 'accepted', why, url);
   assert.equal(checkUrl('wss://stream.example.com/v1', ['wss:']), undefined);
