@@ -266,7 +266,8 @@ export function validateStoredCamera(value: unknown): StoredCamera | undefined {
   if (!r) return undefined;
   const cameraId = typeof r['cameraId'] === 'string' ? r['cameraId'] : typeof r['id'] === 'string' ? r['id'] : '';
   if (!/^[0-9a-f]{12}$/.test(cameraId)) return undefined;
-  const name = typeof r['name'] === 'string' ? r['name'].trim().slice(0, 120) : '';
+  // Cut, then trimmed again: a name cut at a space would lose that space on the next read.
+  const name = typeof r['name'] === 'string' ? r['name'].trim().slice(0, 120).trim() : '';
   const url = typeof r['url'] === 'string' ? r['url'] : '';
   const kind = typeof r['kind'] === 'string' ? r['kind'] : '';
   const objectId = typeof r['objectId'] === 'string' ? r['objectId'] : '';
