@@ -98,3 +98,22 @@ test('watchdog: reset releases the socket but keeps the generation counter monot
   assert.equal(w.snapshot(T0).nextAttemptAt, undefined);
   assert.deepEqual(w.tick(T0), [{ type: 'connect', generation: 9 }]);
 });
+
+test('watchdog: a clock set back neither hides a silent socket nor puts off the next attempt', () => {
+  // Three hours fast, then corrected, while a socket is open and saying nothing.
+  const FAST = 3 * 3_600_000;
+  const w = new AisWatchdog({ silenceMs: 90_000, backoffMs: [5000, 15_000] });
+  w.tick(T0);
+  w.onMessage(1, T0);
+  w.tick(T0 + 30_000);
+  const base = T0 + 30_000 - FAST;
+  assert.deepEqual(w.tick(base), [], 'thirty seconds of silence so far');
+  assert.deepEqual(w.tick(base + 59_999), []);
+  assert.deepEqual(w.tick(base + 60_000), [{ type: 'terminate', generation: 1, reason: 'silent' }]);
+  // And set back again during the back-off: five seconds is still five seconds.
+  w.tick(base + 61_000);
+  const again = base + 61_000 - FAST;
+  assert.deepEqual(w.tick(again), []);
+  assert.deepEqual(w.tick(again + 3999), []);
+  assert.deepEqual(w.tick(again + 4000), [{ type: 'connect', generation: 2 }]);
+});

@@ -45,8 +45,8 @@ export class RateLimiter {
       bucket = [];
       this.buckets.set(key, bucket);
     }
-    prune(bucket, cutoff);
-    prune(this.global, cutoff);
+    prune(bucket, cutoff, now);
+    prune(this.global, cutoff, now);
     if (this.opts.max > 0 && bucket.length >= this.opts.max) return Math.max(1, bucket[0]! + this.opts.windowMs - now);
     if (this.opts.globalMax !== undefined && this.global.length >= this.opts.globalMax)
       return Math.max(1, this.global[0]! + this.opts.windowMs - now);
@@ -82,7 +82,7 @@ export class SharedHostBudget {
       bucket = [];
       this.buckets.set(host, bucket);
     }
-    prune(bucket, now - this.windowMs);
+    prune(bucket, now - this.windowMs, now);
     if (bucket.length >= max) return Math.max(1, bucket[0]! + this.windowMs - now);
     bucket.push(now);
     return 0;
@@ -94,7 +94,14 @@ export class SharedHostBudget {
   }
 }
 
-function prune(list: number[], cutoff: number): void {
+/**
+ * Drop what has left the window. A time ahead of the clock means the clock was set back since
+ * it was written (it ran fast and was corrected); left as it was, it would hold its place in
+ * the window for as long as the clock had been fast, and a full window would turn every
+ * request away for hours. Such a time is counted as now.
+ */
+function prune(list: number[], cutoff: number, now: number): void {
+  for (let k = list.length - 1; k >= 0 && list[k]! > now; k--) list[k] = now;
   let i = 0;
   while (i < list.length && list[i]! <= cutoff) i++;
   if (i > 0) list.splice(0, i);
@@ -119,6 +126,9 @@ export class CircuitBreaker {
 
   state(): CircuitState {
     if (this.openedAt === undefined) return 'closed';
+    // Opened "later than now": the clock was set back. Counted from now, so the circuit stays
+    // open for its own time and not for as long as the clock had been fast.
+    if (this.openedAt > this.clock.now()) this.openedAt = this.clock.now();
     if (this.clock.now() - this.openedAt >= this.currentOpenMs()) return 'half-open';
     return 'open';
   }

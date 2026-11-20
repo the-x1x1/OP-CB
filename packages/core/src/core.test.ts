@@ -889,3 +889,73 @@ test('redactText: a megabyte of anything is read in a moment, and an empty user 
     redactText(text);
   assert.ok(Date.now() - started < 3000, `${Date.now() - started} ms`);
 });
+
+test('a clock set back does not hold a source off for as long as it was fast', async () => {
+  // A computer whose clock ran three hours fast and was then corrected (a time sync, a second
+  // system that keeps the hardware clock differently). Every wait here is counted from a time
+  // that is now three hours ahead; none may last those three hours.
+  const FAST = 3 * 3_600_000;
+  const clock = new VirtualClock(Date.parse('2026-11-20T12:00:00Z'));
+
+  const rl = new RateLimiter({ windowMs: 1000, max: 2, globalMax: 5 }, clock);
+  assert.equal(rl.tryAcquire('h'), 0);
+  assert.equal(rl.tryAcquire('h'), 0);
+  clock.set(clock.now() - FAST);
+  const wait = rl.tryAcquire('h');
+  assert.ok(wait > 0 && wait <= 1000, `the limiter asks for ${wait} ms`);
+  clock.advance(1001);
+  assert.equal(rl.tryAcquire('h'), 0, 'and lets one through once its window has passed');
+
+  const shared = new SharedHostBudget(clock, 1000);
+  assert.equal(shared.tryAcquire('h', 1), 0);
+  clock.set(clock.now() - FAST);
+  assert.ok(shared.tryAcquire('h', 1) <= 1000);
+  clock.advance(1001);
+  assert.equal(shared.tryAcquire('h', 1), 0);
+
+  const cb = new CircuitBreaker({ failureThreshold: 1, openMs: 1000, maxOpenMs: 4000 }, clock);
+  cb.recordFailure();
+  assert.equal(cb.state(), 'open');
+  clock.set(clock.now() - FAST);
+  assert.ok(cb.retryInMs() <= 1000, `the breaker asks for ${cb.retryInMs()} ms`);
+  clock.advance(1000);
+  assert.equal(cb.allow(), true, 'a probe is allowed after its own second');
+
+  // The HTTP client: a 429 with thirty seconds to wait, then the clock corrected.
+  let answer: 'busy' | 'ok' = 'busy';
+  let calls = 0;
+  const client = new HttpClient({
+    allowedHosts: ['a.example'],
+    clock,
+    maxRetries: 0,
+    sleep: noSleep,
+    fetchImpl: fakeFetch(() => {
+      calls++;
+      return answer === 'busy'
+        ? new Response('', { status: 429, headers: { 'retry-after': '30' } })
+        : new Response('good');
+    }),
+  });
+  await assert.rejects(client.request({ url: 'https://a.example/f' }), (e: ProviderError) => e.code === 'RATE_LIMITED');
+  clock.set(clock.now() - FAST);
+  answer = 'ok';
+  await assert.rejects(
+    client.request({ url: 'https://a.example/f' }),
+    (e: ProviderError) => e.code === 'RATE_LIMITED' && (e.retryAfterMs ?? Infinity) <= 15 * 60_000,
+    'still asked to wait, but not for hours',
+  );
+  assert.equal(calls, 1);
+  clock.advance(15 * 60_000 + 1);
+  // Whatever pacing follows a 429 is counted from now, not from the fast clock.
+  let got: string | undefined;
+  for (let i = 0; i < 6 && got === undefined; i++) {
+    try {
+      got = (await client.request({ url: 'https://a.example/f' })).text();
+    } catch (error) {
+      const retry = (error as ProviderError).retryAfterMs ?? 0;
+      assert.ok(retry <= 15 * 60_000, `asked to wait ${retry} ms`);
+      clock.advance(retry + 1);
+    }
+  }
+  assert.equal(got, 'good');
+});

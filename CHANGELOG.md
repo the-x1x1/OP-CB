@@ -35,6 +35,14 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A clock put back stopped sources for as long as it had been fast.** A computer whose
+  clock ran hours ahead and was then corrected (a time sync, or a second system that keeps
+  the hardware clock differently) left every "not before" and "last asked" time in the
+  future, and waits of thirty seconds lasted hours: aircraft stood still, rate-limited hosts
+  were not asked, an open circuit stayed open, a local receiver was not looked for, a silent
+  ship feed was not noticed, files were not re-read, the Kp index, the connection check and
+  the satellite catalogue details were not refreshed. Each of those waits now lasts its own
+  length whatever the clock does.
 - Changes to collections, watch zones, lenses, guides and prepared records that were asked
   for in the same instant could undo one another: of several removals only the last held,
   and saves made while the file was being read for the first time after a start were lost

@@ -184,3 +184,26 @@ test("RequestBudget: keeps the host's own gap after a 429, so no poll is refused
   for (let i = 0; i < 70; i++) b.answered(43_000 + i);
   assert.equal(b.summary(50_000).hostGapMs, undefined, 'narrowed 5 % an answer until it no longer applies');
 });
+
+test('RequestBudget: a clock set back three hours does not stop the aircraft for three hours', () => {
+  const FAST = 3 * 3_600_000;
+  const start = Date.parse('2026-11-20T15:00:00Z');
+  const b = new RequestBudget();
+  // Ten ordinary minutes on a clock that runs fast, ending just after a 429.
+  drive(b, start, 10 * 60_000);
+  const at = start + 10 * 60_000;
+  assert.ok(b.mayPoll(at) || b.mayPoll(at + 10_000));
+  b.sending(at + 10_000);
+  b.refused(at + 10_000, true, 30_000);
+  // The clock is corrected. Within a quarter of an hour of the right time, requests go again,
+  // and over the next ten minutes as many as on any other ten.
+  const right = at + 10_000 - FAST;
+  const sent = drive(b, right, 25 * 60_000);
+  assert.ok(sent.length > 0, 'nothing was sent after the clock was corrected');
+  assert.ok(
+    sent[0]! - right <= 15 * 60_000,
+    `the first request went ${Math.round((sent[0]! - right) / 60_000)} minutes later`,
+  );
+  assert.ok(sent.length >= 20, `${sent.length} requests in twenty-five minutes`);
+  assert.ok(b.summary(right + 25 * 60_000).waitMs <= 15 * 60_000);
+});

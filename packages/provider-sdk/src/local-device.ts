@@ -115,6 +115,9 @@ export class LocalDeviceDetector {
     timeoutMs: number,
   ): Promise<{ newlyDetected: boolean; status?: number }> {
     if (this.detection === 'detected') return { newlyDetected: false };
+    // No back-off is longer than `backoffMs`; one that reads longer was set by a clock since
+    // put back, and would keep a receiver that is now there unlooked-for for hours.
+    if (this.nextProbeAt - nowMs > this.opts.backoffMs) this.nextProbeAt = nowMs + this.opts.backoffMs;
     if (this.detection === 'not-detected' && nowMs < this.nextProbeAt)
       throw this.notDetected(url, this.nextProbeAt - nowMs);
     const probe = await local.probeLocal(url, { timeoutMs });

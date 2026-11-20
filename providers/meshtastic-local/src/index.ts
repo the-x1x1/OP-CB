@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@opcb/world-model';
+import { elapsedMs, type IsoTimestamp, type Observation } from '@opcb/world-model';
 import {
   ProviderError,
   buildObservation,
@@ -484,7 +484,7 @@ export class MeshtasticLocalProvider implements WorldProvider, TestMessageSource
     if (!lora.txEnabled) return answer('refused', "transmitting is turned off in the radio's LoRa settings");
     if (this.pendingSend) return answer('refused', 'a test message is still waiting for its report');
     const now = this.context.clock.now();
-    if (this.lastSendAt && now - this.lastSendAt < TEST_MESSAGE_SPACING_MS)
+    if (this.lastSendAt && elapsedMs(now, this.lastSendAt) < TEST_MESSAGE_SPACING_MS)
       return answer('refused', 'one test message every 30 seconds');
     const text = request.text.trim();
     const bytes = new TextEncoder().encode(text).length;

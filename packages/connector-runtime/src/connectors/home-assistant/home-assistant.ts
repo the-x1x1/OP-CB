@@ -1,4 +1,4 @@
-import type { IsoTimestamp, Observation } from '@opcb/world-model';
+import { elapsedMs, type IsoTimestamp, type Observation } from '@opcb/world-model';
 import {
   ProviderError,
   assertAtomicAdmission,
@@ -439,7 +439,8 @@ export class HomeAssistantProvider implements WorldProvider {
         throw new ProviderError('AUTH', 'the definition declares no token credential', { retryable: false });
       // Not HOST_NOT_ALLOWED: the host stops polling for good on that, and a corrected setting must be read.
       if (!this.endpoint.ok) throw new ProviderError('UNSUPPORTED', this.endpoint.reason);
-      const fromMemory = this.socketState === 'live' && !this.needsResync && now - this.lastRestAt < HA_RESYNC_MS;
+      const fromMemory =
+        this.socketState === 'live' && !this.needsResync && elapsedMs(now, this.lastRestAt) < HA_RESYNC_MS;
       if (fromMemory) this.stats.memoryAnswers++;
       else await this.readStates(request.signal);
       const observations = this.snapshot();

@@ -403,6 +403,10 @@ export class CelestrakProvider extends PollingProvider implements ObjectTrackSou
     } catch {
       /* a cache that cannot be read is a cache miss */
     }
+    // The longest quiet set is CELESTRAK_BLOCK_RETRY_MS; one that reads longer was set by a
+    // clock since put back.
+    if (this.satcatQuietUntil - nowMs > CELESTRAK_BLOCK_RETRY_MS)
+      this.satcatQuietUntil = nowMs + CELESTRAK_BLOCK_RETRY_MS;
     if (nowMs < this.satcatQuietUntil || signal.aborted) return held?.entry;
     let entry: SatcatCacheEntry;
     try {

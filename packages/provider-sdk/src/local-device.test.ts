@@ -84,3 +84,29 @@ test('detection: probe once, back off when nothing answers, probe again after a 
   d.reset();
   assert.equal(d.state, 'unknown');
 });
+
+test('detection: a back-off set by a clock since put back lasts its own length, not the difference', async () => {
+  let probes = 0;
+  let reachable = false;
+  const local: ProviderLocalAccess = {
+    readGrantedFile: async () => new Uint8Array(),
+    probeLocal: async () => {
+      probes++;
+      return reachable ? { reachable: true, status: 200 } : { reachable: false };
+    },
+  };
+  const d = new LocalDeviceDetector({ what: 'Receiver', backoffMs: 30_000 });
+  const url = 'http://127.0.0.1:8080/data/aircraft.json';
+  const fast = Date.parse('2026-11-20T15:00:00Z');
+  await assert.rejects(d.ensure(local, url, fast, 2000), /not detected/);
+  // The clock is corrected by three hours; the receiver is switched on.
+  const right = fast - 3 * 3_600_000;
+  reachable = true;
+  await assert.rejects(
+    d.ensure(local, url, right + 1000, 2000),
+    (e: unknown) => e instanceof ProviderError && (e.retryAfterMs ?? Infinity) <= 30_000,
+    'still inside a back-off, of thirty seconds at most',
+  );
+  assert.deepEqual(await d.ensure(local, url, right + 31_001, 2000), { newlyDetected: true, status: 200 });
+  assert.equal(probes, 2);
+});

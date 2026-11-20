@@ -1813,6 +1813,8 @@ export class RuntimeCore {
    */
   private async probeReachability(): Promise<boolean> {
     const now = this.clock.now();
+    // A last probe "later than now" is a clock since put back: it counts as never.
+    if (this.lastProbeAt > now) this.lastProbeAt = 0;
     if (now - this.lastProbeAt < PROBE_MIN_INTERVAL_MS && this.lastProbeAt !== 0) return this.providerHost.isOnline();
     this.lastProbeAt = now;
     if (!this.probeClient) {

@@ -1,4 +1,11 @@
-import { EventTypes, makeEventId, type IsoTimestamp, type JsonValue, type WorldEvent } from '@opcb/world-model';
+import {
+  EventTypes,
+  elapsedMs,
+  makeEventId,
+  type IsoTimestamp,
+  type JsonValue,
+  type WorldEvent,
+} from '@opcb/world-model';
 import type { SourceHealthEvents } from '@opcb/source-health';
 import { ENGINE_PROVIDER_ID, ENGINE_SOURCE_NAME } from './types.js';
 
@@ -70,7 +77,7 @@ export class SourceStatusTracker {
   consider(change: SourceChange, now: number): WorldEvent | undefined {
     if (!isNotableTransition(change)) return undefined;
     const last = this.lastEmit.get(change.providerId);
-    if (last !== undefined && now - last < this.throttleMs) return undefined;
+    if (last !== undefined && elapsedMs(now, last) < this.throttleMs) return undefined;
     this.lastEmit.set(change.providerId, now);
     return sourceStatusEvent(change, new Date(now).toISOString());
   }

@@ -114,6 +114,12 @@ export class RequestBudget {
   }
 
   private refill(nowMs: number): void {
+    // Times ahead of the clock were written by a clock since put back. Left alone, no token
+    // would be added and no request sent until the clock caught up with them: the aircraft
+    // would stand still for as long as the clock had been fast.
+    if (this.refilledAt !== undefined && this.refilledAt > nowMs) this.refilledAt = nowMs;
+    if (this.lastSentAt !== undefined && this.lastSentAt > nowMs) this.lastSentAt = nowMs;
+    if (this.notBefore - nowMs > MAX_RETRY_AFTER_MS) this.notBefore = nowMs + MAX_RETRY_AFTER_MS;
     if (this.refilledAt !== undefined && nowMs > this.refilledAt)
       this.tokens = Math.min(TOKEN_CAPACITY, this.tokens + ((nowMs - this.refilledAt) * this.rate) / 60_000);
     this.refilledAt = Math.max(nowMs, this.refilledAt ?? nowMs);
@@ -173,6 +179,7 @@ export class RequestBudget {
    * same Retry-After, and one limit met is one decrease.
    */
   refused(nowMs: number, fromAdsbLol: boolean, retryAfterMs: number | undefined): void {
+    this.refill(nowMs);
     const wait = Math.min(MAX_RETRY_AFTER_MS, Math.max(0, retryAfterMs ?? DEFAULT_RETRY_AFTER_MS));
     const fresh = fromAdsbLol && nowMs >= this.notBefore;
     this.notBefore = Math.max(this.notBefore, nowMs + wait);

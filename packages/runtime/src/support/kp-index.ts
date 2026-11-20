@@ -1,3 +1,5 @@
+import { elapsedMs } from '@opcb/world-model';
+
 /**
  * The planetary K index for the Sky tab (operator decision 2026-10-20; ADR-003 amendment): one
  * number for the whole Earth — how disturbed the geomagnetic field is, 0 to 9, every three hours
@@ -90,7 +92,8 @@ export class KpIndex {
    */
   current(): (KpReading & { ageMs: number }) | undefined {
     const now = this.opts.now();
-    const due = this.askedAt === undefined || now - this.askedAt >= (this.lastOk ? KP_REFRESH_MS : KP_RETRY_MS);
+    const due =
+      this.askedAt === undefined || elapsedMs(now, this.askedAt) >= (this.lastOk ? KP_REFRESH_MS : KP_RETRY_MS);
     if (due && !this.inflight && this.opts.isOnline())
       this.inflight = this.refresh(now).finally(() => (this.inflight = undefined));
     if (!this.reading) return undefined;

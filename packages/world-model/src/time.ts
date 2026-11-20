@@ -37,6 +37,17 @@ export function ageMs(observedAt: IsoTimestamp, now: number): number {
   return now - Date.parse(observedAt);
 }
 
+/**
+ * How long ago `then` was, for a wait or a keep-for measured on the wall clock. A `then` ahead
+ * of `now` was written by a clock that has since been put back (it ran fast and was corrected
+ * by a time sync, or by a second system that keeps the hardware clock differently): taken as
+ * it stands, the wait would last as long as the clock had been fast, and a source held off
+ * for thirty seconds would be held off for hours. Such a time counts as long ago.
+ */
+export function elapsedMs(now: number, then: number): number {
+  return then > now ? Number.POSITIVE_INFINITY : now - then;
+}
+
 export function timeRangeContains(range: TimeRange, at: IsoTimestamp): boolean {
   const t = Date.parse(at);
   return t >= Date.parse(range.start) && t <= Date.parse(range.end);

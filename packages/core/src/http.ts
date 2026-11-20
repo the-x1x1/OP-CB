@@ -246,8 +246,15 @@ export class HttpClient {
     // serve used to count as a successful poll, so the provider asked again on its normal
     // interval — adsb.lol every ten seconds, answering 429 to ~290 of the last 300 — and a
     // service throttling us saw us keep knocking.
-    const blockedUntil = this.retryAt.get(host);
+    let blockedUntil = this.retryAt.get(host);
     if (blockedUntil !== undefined) {
+      // No wait is ever set longer than MAX_RETRY_AFTER_MS, so one that reads longer was set
+      // by a clock since put back; it is cut to that longest wait rather than served for as
+      // long as the clock had been fast.
+      if (blockedUntil - clock.now() > MAX_RETRY_AFTER_MS) {
+        blockedUntil = clock.now() + MAX_RETRY_AFTER_MS;
+        this.retryAt.set(host, blockedUntil);
+      }
       const left = blockedUntil - clock.now();
       if (left > 0)
         return serveStale(
@@ -259,7 +266,12 @@ export class HttpClient {
       this.retryAt.delete(host);
     }
     const gap = this.pace.get(host);
-    const lastSent = this.sentAt.get(host);
+    let lastSent = this.sentAt.get(host);
+    // Sent "later than now" is the same put-back clock: the gap is counted from now.
+    if (lastSent !== undefined && lastSent > clock.now()) {
+      lastSent = clock.now();
+      this.sentAt.set(host, lastSent);
+    }
     if (gap !== undefined && lastSent !== undefined) {
       const left = lastSent + gap - clock.now();
       if (left > PACE_SLACK_MS) {

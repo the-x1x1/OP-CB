@@ -30,7 +30,8 @@ export type WatchdogStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | '
 export type FailureKind = 'transport' | 'auth' | 'rate-limit';
 
 export type WatchdogAction =
-  { type: 'connect'; generation: number } | { type: 'terminate'; generation: number; reason: string };
+  | { type: 'connect'; generation: number }
+  | { type: 'terminate'; generation: number; reason: string };
 
 export interface WatchdogSnapshot {
   status: WatchdogStatus;
@@ -53,6 +54,7 @@ export class AisWatchdog {
   private lastMessageAt: number | undefined;
   private attempt = 0;
   private nextAttemptAt = 0;
+  private lastTick = 0;
   private error: string | undefined;
 
   constructor(opts: Partial<WatchdogOptions> = {}, startGeneration = 0) {
@@ -76,6 +78,15 @@ export class AisWatchdog {
 
   /** Advance time. Returns actions in order: at most one terminate followed by at most one connect. */
   tick(now: number): WatchdogAction[] {
+    // The clock was set back since the last tick (it ran fast and was corrected): the times
+    // kept here are ahead by as much, and a silence or a retry measured against them would
+    // last as long as the clock had been fast. They are moved back with it.
+    const back = this.lastTick - now;
+    if (back > 0) {
+      this.silenceSince -= back;
+      this.nextAttemptAt -= back;
+    }
+    this.lastTick = now;
     if (this.owned !== undefined) {
       if (this.status === 'auth-failed') {
         if (now - this.silenceSince >= this.opts.authProbeMs) {

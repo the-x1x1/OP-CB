@@ -2,6 +2,7 @@ import {
   EventTypes,
   ObjectTypes,
   classifyConfidence,
+  elapsedMs,
   positionToGeometry,
   regionContains,
   systemClock,
@@ -207,7 +208,7 @@ export class WatchZoneEvaluator {
    * told as one. At most once an hour.
    */
   private sweep(now: number): void {
-    if (now - this.lastSweep < 3_600_000) return;
+    if (elapsedMs(now, this.lastSweep) < 3_600_000) return;
     this.lastSweep = now;
     for (const [key, at] of this.lastEmit)
       if (now - at >= this.dedupeMs && !this.lastSeverity.has(key)) this.lastEmit.delete(key);
@@ -221,7 +222,7 @@ export class WatchZoneEvaluator {
   private allow(zoneId: string, subjectId: string, now: number): boolean {
     const key = `${zoneId}|${subjectId}`;
     const last = this.lastEmit.get(key);
-    if (last !== undefined && now - last < this.dedupeMs) return false;
+    if (last !== undefined && elapsedMs(now, last) < this.dedupeMs) return false;
     this.lastEmit.set(key, now);
     return true;
   }

@@ -1,4 +1,4 @@
-import { haversineMeters } from '@opcb/world-model';
+import { elapsedMs, haversineMeters } from '@opcb/world-model';
 import type { PointQuery } from './bounds.js';
 import { PRIOR_BASELINE, priorAircraft, type Tile } from './tiles.js';
 
@@ -337,7 +337,7 @@ export class CoveragePlanner {
 
   /** Whether the worldwide military list is due: never asked for, or asked MIL_REFRESH_MS ago. */
   militaryDue(nowMs: number): boolean {
-    return !this.mil || nowMs - this.mil.fetchedAtMs >= MIL_REFRESH_MS;
+    return !this.mil || elapsedMs(nowMs, this.mil.fetchedAtMs) >= MIL_REFRESH_MS;
   }
 
   /** The military list arrived: `count` aircraft with a position. */
@@ -352,7 +352,7 @@ export class CoveragePlanner {
 
   /** Whether an emergency-squawk list is due: EMERGENCY_REFRESH_MS since the last one, or since the first poll. */
   emergencyDue(nowMs: number): boolean {
-    return !!this.sqk && nowMs - this.sqk.fetchedAtMs >= EMERGENCY_REFRESH_MS;
+    return !!this.sqk && elapsedMs(nowMs, this.sqk.fetchedAtMs) >= EMERGENCY_REFRESH_MS;
   }
 
   /** The code the next emergency request asks for (EMERGENCY_SQUAWKS, in turn). */

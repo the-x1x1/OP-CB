@@ -1,4 +1,4 @@
-import { observationId, type Observation } from '@opcb/world-model';
+import { elapsedMs, observationId, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -188,7 +188,7 @@ export abstract class FileBackedProvider extends PollingProvider {
     cancelled();
     const now = this.context.clock.now();
     // Never look more often than the minimum interval, whoever asks.
-    if (this.cache && now - this.lastLookAt < MIN_FILE_INTERVAL_SECONDS * 1000) {
+    if (this.cache && elapsedMs(now, this.lastLookAt) < MIN_FILE_INTERVAL_SECONDS * 1000) {
       if (this.cache.incomplete) this.context.incomplete?.(this.cache.incomplete);
       return { observations: this.cache.observations, cacheAgeMs: now - this.lastLookAt };
     }
