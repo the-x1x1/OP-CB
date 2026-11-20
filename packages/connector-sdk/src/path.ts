@@ -49,7 +49,13 @@ function parse(path: string): PathSegment[] {
   while (i < path.length) {
     const c = path[i]!;
     if (c === '[') {
-      const close = path.indexOf(']', i);
+      // A quoted key ends at its closing quote, so it may hold a `]` (`["c[0]"]`).
+      let close = -1;
+      if (path[i + 1] === '"') {
+        let j = i + 2;
+        while (j < path.length && path[j] !== '"') j += path[j] === '\\' ? 2 : 1;
+        if (path[j] === '"' && path[j + 1] === ']') close = j + 1;
+      } else close = path.indexOf(']', i);
       if (close < 0) throw new Error(`unclosed [ in path "${path}"`);
       const inner = path.slice(i + 1, close);
       if (/^-?\d+$/.test(inner)) out.push({ index: Number(inner) });

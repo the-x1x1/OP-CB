@@ -573,6 +573,9 @@ export function isLocalSocketPlaceholder(url: string): boolean {
 }
 
 export function checkUrl(url: string, protocols: string[]): string | undefined {
+  // `{TOKEN}` stands for a secret that is put in the path when the request is made. In the
+  // host it would never be filled in, and a secret has no business in a name that is looked up.
+  if (/^[a-z][a-z0-9+.-]*:[/\\]{2}[^/\\?#]*\{/i.test(url)) return 'must not have a placeholder in its host';
   let u: URL;
   try {
     u = new URL(url.replace('{TOKEN}', 'TOKEN'));
@@ -598,7 +601,11 @@ export function checkUrl(url: string, protocols: string[]): string | undefined {
       (a === 169 && b === 254) ||
       (a === 172 && b >= 16 && b <= 31) ||
       (a === 192 && b === 168) ||
-      (a === 100 && b >= 64 && b <= 127)
+      (a === 100 && b >= 64 && b <= 127) ||
+      // Benchmarking (198.18/15), multicast and reserved (224 and above, broadcast included):
+      // none is a public service.
+      (a === 198 && (b === 18 || b === 19)) ||
+      a >= 224
     )
       return 'must not be a private, loopback or link-local address';
   }

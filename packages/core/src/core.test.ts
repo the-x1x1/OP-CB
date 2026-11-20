@@ -817,3 +817,56 @@ test('redactText: Basic credentials, any URL scheme, named secrets in any notati
   ])
     assert.equal(redactText(plain), plain, plain);
 });
+
+test('substitutePathCredential: the host stays the host however the URL is written', () => {
+  const secret = 'S/E?C#R ET';
+  const encoded = 'S%2FE%3FC%23R%20ET';
+  const cases: Array<[string, string]> = [
+    ['https://example.com/{TOKEN}/x', `https://example.com/${encoded}/x`],
+    ['https://EXAMPLE.com/{TOKEN}/x', `https://example.com/${encoded}/x`],
+    ['HTTPS://Example.Com/{TOKEN}/x', `https://example.com/${encoded}/x`],
+    ['https://example.com:443/{TOKEN}/x', `https://example.com/${encoded}/x`],
+    ['https://example.com:8443/{TOKEN}', `https://example.com:8443/${encoded}`],
+    ['https://user@example.com/{TOKEN}/x', `https://example.com/${encoded}/x`],
+    ['https://exa%6dple.com/{TOKEN}', `https://example.com/${encoded}`],
+    ['https://bücher.example/{TOKEN}', `https://xn--bcher-kva.example/${encoded}`],
+    ['https://example.com/{TOKEN}?y={TOKEN}#{TOKEN}', `https://example.com/${encoded}?y={TOKEN}#{TOKEN}`],
+    ['https://[::1]/{TOKEN}', `https://[::1]/${encoded}`],
+  ];
+  for (const [url, want] of cases) {
+    const out = substitutePathCredential(url, 'TOKEN', secret);
+    assert.equal(out, want, url);
+    assert.equal(new URL(out).hostname, new URL(url).hostname, `${url} is still for its own host`);
+  }
+  // A placeholder in the host is never filled in.
+  const inHost = substitutePathCredential('https://{TOKEN}.example.com/{TOKEN}', 'TOKEN', 'abc');
+  assert.equal(new URL(inHost).hostname, '{token}.example.com');
+  assert.ok(inHost.endsWith('/abc'));
+  for (const bad of [
+    'https://example.com/a?x={TOKEN}',
+    'https://example.com/a#{TOKEN}',
+    'https://{TOKEN}.example.com/a',
+  ])
+    assert.throws(() => substitutePathCredential(bad, 'TOKEN', 'abc'), /not present in the request path/, bad);
+  assert.throws(() => substitutePathCredential('not a url', 'TOKEN', 'abc'));
+});
+
+test('HttpClient: a path credential is sent to the host that was asked, written in any letter case', async () => {
+  const asked: string[] = [];
+  const client = new HttpClient({
+    allowedHosts: ['api.example.com'],
+    clock: new VirtualClock(),
+    credentials: { get: () => Promise.resolve('k3y/with?odd#chars') },
+    fetchImpl: ((url: string) => {
+      asked.push(String(url));
+      return Promise.resolve(new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }));
+    }) as never,
+  } as never);
+  await client.request({
+    url: 'https://API.Example.com/v1/{TOKEN}/data',
+    credential: { key: 'x', as: 'path' },
+  } as never);
+  assert.equal(asked.length, 1);
+  assert.equal(new URL(asked[0]!).hostname, 'api.example.com');
+  assert.equal(new URL(asked[0]!).pathname, '/v1/k3y%2Fwith%3Fodd%23chars/data');
+});

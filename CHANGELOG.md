@@ -7,6 +7,16 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A key that goes in the address path.** For a source whose key is part of the path
+  (`https://host/{TOKEN}/…`), an address typed with a capital letter in the host, or with a
+  user name in it, was put back together one character out: `API.Example.com` became
+  `api.example.comm`, so the source failed with a name that could not be found — and the
+  request carrying the key was aimed at that other name. The address is rebuilt correctly, a
+  request is checked against the allowed hosts again after its key is added, and a
+  definition with `{TOKEN}` in the host is refused.
+- A connector address in a range that is not a public service (198.18.x, multicast, broadcast)
+  is refused like the private ranges.
+- A field path with a quoted key that contains `]` (`["c[0]"]`) is read as written.
 - **Secrets in logs and error messages.** The redaction that keeps keys and passwords out of
   the log, the Sources panel and the diagnostics export missed several ways they are written:
   `Authorization: Basic …` (the word was replaced and the credentials left), `user:password@`

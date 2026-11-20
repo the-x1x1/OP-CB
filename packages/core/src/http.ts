@@ -342,6 +342,11 @@ export class HttpClient {
         else if (req.credential.as === 'xml-body')
           requestBody = substituteXmlBodyCredential(req.body, req.credential.name ?? 'TOKEN', secret);
         else headers[req.credential.name ?? 'X-API-Key'] = secret;
+        // Checked again as it will be sent: adding the credential must not have moved it.
+        if (url !== req.url && !this.isHostAllowed(url))
+          throw new ProviderError('INTERNAL', 'the request with its credential is for a host that is not allowed', {
+            retryable: false,
+          });
       }
 
       const { signal, dispose } = combineSignals([req.signal], timeoutMs);
@@ -502,7 +507,15 @@ function isLoopback(host: string): boolean {
 export function substitutePathCredential(url: string, name: string, secret: string): string {
   const placeholder = `{${name}}`;
   const origin = new URL(url).origin;
-  const rest = url.slice(url.indexOf(origin) + origin.length);
+  // Where the path begins in the URL as written: after `scheme://authority`. It used to be
+  // found by searching for the parsed origin, which is not in the text when the host is
+  // written with a capital, a user name or an escape; the path was then cut one character
+  // early and that character joined the host (`EXAMPLE.com` became `example.comm`), so the
+  // request and the secret in it went to another name.
+  const written = /^[a-z][a-z0-9+.-]*:[/\\]{2}[^/\\?#]*/i.exec(url);
+  if (!written)
+    throw new ProviderError('INTERNAL', 'a credential in the path needs a URL with a host', { retryable: false });
+  const rest = url.slice(written[0].length);
   const queryAt = Math.min(...[rest.indexOf('?'), rest.indexOf('#')].filter((i) => i >= 0).concat([rest.length]));
   const pathPart = rest.slice(0, queryAt);
   if (!pathPart.includes(placeholder)) {
@@ -510,7 +523,13 @@ export function substitutePathCredential(url: string, name: string, secret: stri
       retryable: false,
     });
   }
-  return origin + pathPart.split(placeholder).join(encodeURIComponent(secret)) + rest.slice(queryAt);
+  const out = origin + pathPart.split(placeholder).join(encodeURIComponent(secret)) + rest.slice(queryAt);
+  // The secret goes to the host the request was checked for, and no other.
+  if (new URL(out).origin !== origin)
+    throw new ProviderError('INTERNAL', 'a credential in the path would change the host of the request', {
+      retryable: false,
+    });
+  return out;
 }
 
 /**
