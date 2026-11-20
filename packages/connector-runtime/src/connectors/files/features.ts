@@ -49,7 +49,12 @@ export function clip(text: string, max?: number): string;
 export function clip(text: string | undefined, max?: number): string | undefined;
 export function clip(text: string | undefined, max = MAX_DESCRIPTION_CHARS): string | undefined {
   if (text === undefined) return undefined;
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+  if (text.length <= max) return text;
+  // Not through the middle of a character written as two units (an emoji, a rare ideograph).
+  let end = Math.max(0, max - 1);
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end--;
+  return `${text.slice(0, end)}…`;
 }
 
 /** A longitude/latitude pair (and altitude) the world model accepts, or undefined. */
@@ -77,7 +82,12 @@ export function isoTime(text: string | undefined): string | undefined {
     iso += `T${m[2]}${zone === 'Z' || zone.includes(':') ? zone : `${zone.slice(0, 3)}:${zone.slice(3)}`}`;
   }
   const ms = Date.parse(iso);
-  return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;
+  if (!Number.isFinite(ms)) return undefined;
+  // A day that does not exist (30 February) is not read as the day it would roll over to.
+  const [year, month, dayOfMonth = 1] = m[1]!.split('-').map(Number) as [number, number, number?];
+  const day = new Date(Date.UTC(year, month - 1, dayOfMonth));
+  if (day.getUTCMonth() !== month - 1 || day.getUTCDate() !== dayOfMonth) return undefined;
+  return new Date(ms).toISOString();
 }
 
 const EARTH_RADIUS_M = 6_371_008.8;

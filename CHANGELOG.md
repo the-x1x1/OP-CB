@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A time in a GPX or KML file on a day that does not exist (30 February) is not read as the
+  day it would roll over to; the point simply has no time.
+- A long description cut to fit no longer ends in half an emoji.
 - **A library page could hold the app for a minute.** Turning an offline-library article into
   text (for search results and the assistant) used a chain of patterns that took 21 seconds on
   a megabyte of `<script>` with no end tag, and far longer on other broken pages. It is one
