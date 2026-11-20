@@ -7,6 +7,7 @@ import {
   type RasterOverlay,
   type WmtsOverlay,
   ownEntry,
+  splitTrailingDigits,
 } from '@opcb/world-model';
 import { ProviderError, type ProviderManifest } from '@opcb/provider-sdk';
 import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
@@ -775,8 +776,8 @@ export class WmtsProvider extends OgcOverlayProvider {
       // level nothing is requested (minZoom), and a level missing in between is said in Source
       // Health. They are written in the first real name's pattern (`EPSG:3857:1` gives
       // `EPSG:3857:0`), since the 2D map derives one template from the whole list.
-      const firstName = /^(.*?)(\d+)$/.exec(levels.get(minZoom)!);
-      const prefix = firstName && Number(firstName[2]) === minZoom ? firstName[1]! : '';
+      const firstName = splitTrailingDigits(levels.get(minZoom)!);
+      const prefix = firstName && Number(firstName.digits) === minZoom ? firstName.prefix : '';
       const labels: string[] = [];
       for (let z = 0; z <= maxZoom; z++) labels.push(levels.get(z) ?? `${prefix}${z}`);
       overlay.tileMatrixLabels = labels;

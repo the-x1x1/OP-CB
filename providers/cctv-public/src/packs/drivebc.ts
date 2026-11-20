@@ -1,4 +1,4 @@
-import { isValidLatLon, type JsonValue } from '@opcb/world-model';
+import { isValidLatLon, type JsonValue, stripTags } from '@opcb/world-model';
 import type { ObservationDraft } from '@opcb/provider-sdk';
 import { directionToHeading } from '../direction.js';
 import { draftFromCamera, type CatalogPack, type PackNormalizeOptions, type PackNormalizeResult } from './types.js';
@@ -110,11 +110,7 @@ export function normalizeDrivebc(payload: unknown, opts: PackNormalizeOptions): 
  */
 export function partnerCredit(raw: unknown): string {
   if (typeof raw !== 'string') return '';
-  const text = raw
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 160);
+  const text = stripTags(raw).replace(/\s+/g, ' ').trim().slice(0, 160);
   return /courtesy|provided by|presented in cooperation|city of|parks canada/i.test(text) ? text : '';
 }
 

@@ -1,3 +1,5 @@
+import { stripTags } from '@opcb/world-model';
+
 /**
  * Reading a few named elements out of an XML answer (an OPDS catalogue, a Metalink file,
  * kiwix-serve's search results) without building a tree.
@@ -129,18 +131,7 @@ export function xmlTagText(block: string, name: string): string | undefined {
 }
 
 /** `text` with its tags removed (a snippet with `<b>` marks). A `<` with no `>` after it stays. */
-export function stripXmlTags(text: string): string {
-  let out = '';
-  let from = 0;
-  for (;;) {
-    const lt = text.indexOf('<', from);
-    const gt = lt < 0 ? -1 : text.indexOf('>', lt + 1);
-    if (gt < 0) break;
-    out += text.slice(from, lt);
-    from = gt + 1;
-  }
-  return out + text.slice(from);
-}
+export const stripXmlTags = (text: string): string => stripTags(text);
 
 export class BodyTooLarge extends Error {
   constructor(readonly maxBytes: number) {

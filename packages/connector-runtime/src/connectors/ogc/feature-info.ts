@@ -171,10 +171,13 @@ function parsePlain(text: string): OverlayValue[] {
       seenRule = true;
       continue;
     }
-    const m = /^\s*([^=\s][^=]*?)\s*=\s*(.*?)\s*$/.exec(line);
-    if (!m) continue;
-    const name = m[1]!;
-    const raw = m[2]!;
+    // `name = value`, split at the first `=` (a pattern for it took a second and a half on a
+    // line of 60,000 spaces, and longer with more).
+    const eq = line.indexOf('=');
+    if (eq < 0) continue;
+    const name = line.slice(0, eq).trim();
+    if (!name) continue;
+    const raw = line.slice(eq + 1).trim();
     if (!raw || isNoData(raw)) continue;
     const n = Number(raw);
     out.push({ name, value: raw !== '' && Number.isFinite(n) && /^[-+]?[\d.]/.test(raw) ? n : raw });

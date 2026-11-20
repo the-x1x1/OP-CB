@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gzipSync } from 'node:zlib';
-import { fetchFailure } from './basemaps/martin.js';
+import { attributionText, fetchFailure } from './basemaps/martin.js';
 import {
   clipFeatureCollection,
   featureTouchesBounds,
@@ -805,4 +805,16 @@ test('httpRangeSource: only a 206 with exactly the bytes asked for is taken', as
     server((s) => partial(s, s + 499, file.subarray(s, s + 500))),
     /offered more/,
   );
+});
+
+test('attributionText: the words of an attribution line, read in a moment whatever it holds', () => {
+  assert.equal(
+    attributionText('&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'),
+    '© OpenStreetMap contributors',
+  );
+  const started = Date.now();
+  attributionText('<'.repeat(900_000));
+  attributionText('<a '.repeat(300_000));
+  attributionText('&'.repeat(900_000));
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
 });

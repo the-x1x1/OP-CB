@@ -292,3 +292,30 @@ test("a value the service calls by an Object method's name is not renamed by it"
 test('a JSON answer that is null, a number or a string is nothing there, not a throw', () => {
   for (const body of ['null', '3', '"x"', 'true']) assert.deepEqual(parseFeatureInfo(body, 'application/json'), []);
 });
+
+test('plain-text feature info: name = value lines split at the first =, read in a moment however they are padded', () => {
+  const text = [
+    "Results for FeatureType 'radar':",
+    '--------------------------------------------',
+    'GRAY_INDEX = 42.5',
+    '  station name   =   Hilo = east side  ',
+    'empty =',
+    'nodata = NaN',
+    ' = no name',
+    'no equals sign here',
+    '--------------------------------------------',
+    'second = feature',
+  ].join('\r\n');
+  assert.deepEqual(parseFeatureInfo(text, 'text/plain'), [
+    { name: 'GRAY_INDEX', value: 42.5 },
+    { name: 'station name', value: 'Hilo = east side' },
+  ]);
+  const started = Date.now();
+  const padded = [
+    `a${' '.repeat(400_000)}b`,
+    `c = ${' '.repeat(400_000)}x${' '.repeat(10)}y`,
+    `${'='.repeat(400_000)}`,
+  ].join('\n');
+  assert.equal(parseFeatureInfo(padded, 'text/plain').length, 1);
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
+});

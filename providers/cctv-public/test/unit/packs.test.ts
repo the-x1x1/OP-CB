@@ -380,3 +380,10 @@ test('an empty catalog is reported as empty, not as a new shape', async () => {
   );
   assert.match(String(failed?.fields?.['message']), /taiwan-thb catalog came back empty/);
 });
+
+test('partnerCredit: a megabyte of markup is read in a moment', () => {
+  const started = Date.now();
+  assert.equal(partnerCredit('<'.repeat(900_000)), '');
+  assert.equal(partnerCredit(`${'<a '.repeat(300_000)}>Images courtesy of TransLink`), 'Images courtesy of TransLink');
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
+});

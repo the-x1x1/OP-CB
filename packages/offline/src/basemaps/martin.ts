@@ -1,4 +1,4 @@
-import { isValidBounds, type GeoBounds } from '@opcb/world-model';
+import { isValidBounds, type GeoBounds, stripTags } from '@opcb/world-model';
 import { isLoopbackHost, isNameableHost } from '@opcb/provider-sdk';
 
 /**
@@ -149,8 +149,7 @@ export function attributionText(html: string): string {
     reg: '®',
     middot: '·',
   };
-  return html
-    .replace(/<[^>]*>/g, ' ')
+  return stripTags(html, ' ')
     .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e: string) => {
       if (e[0] === '#') {
         const code = e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);

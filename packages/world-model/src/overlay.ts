@@ -1,3 +1,4 @@
+import { splitTrailingDigits } from './text.js';
 import { s, type Schema } from './schema.js';
 import type { GeoBounds } from './geo.js';
 
@@ -423,10 +424,10 @@ export function matrixTemplate(labels: readonly string[] | undefined): string | 
   if (!labels?.length) return '{z}';
   let prefix: string | undefined;
   for (const [i, label] of labels.entries()) {
-    const m = /^(.*?)(\d+)$/.exec(label);
-    if (!m || m[2] !== String(i)) return undefined;
-    if (prefix === undefined) prefix = m[1];
-    else if (prefix !== m[1]) return undefined;
+    const m = splitTrailingDigits(label);
+    if (!m || m.digits !== String(i)) return undefined;
+    if (prefix === undefined) prefix = m.prefix;
+    else if (prefix !== m.prefix) return undefined;
   }
   return `${prefix ?? ''}{z}`;
 }

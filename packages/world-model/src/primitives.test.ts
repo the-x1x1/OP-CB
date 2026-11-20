@@ -18,6 +18,8 @@ import {
   regionContains,
   s,
   solarEcliptic,
+  splitTrailingDigits,
+  stripTags,
   subsolarPoint,
   timeRangeContains,
   toIso,
@@ -301,5 +303,37 @@ describe('a name every object has is not an entry in a table', () => {
     const mine = { liveSeconds: 1, recentSeconds: 2, expireSeconds: 3 };
     assert.equal(freshnessPolicyFor('aircraft', { aircraft: mine }), mine);
     assert.notEqual(freshnessPolicyFor('aircraft'), FALLBACK_FRESHNESS_POLICY);
+  });
+});
+
+describe('text read in one pass', () => {
+  it('stripTags takes out every tag and leaves a lone < alone', () => {
+    assert.equal(stripTags('© <a href="x">OpenStreetMap</a> contributors'), '© OpenStreetMap contributors');
+    assert.equal(stripTags('a<b>c</b>d', ' '), 'a c d');
+    assert.equal(stripTags('2 < 3'), '2 < 3');
+    assert.equal(stripTags('a <b unfinished'), 'a <b unfinished');
+    assert.equal(stripTags('<>x<>'), 'x');
+    assert.equal(stripTags(''), '');
+    assert.equal(stripTags('no tags'), 'no tags');
+  });
+
+  it('splitTrailingDigits gives what comes before the last digits, and the digits', () => {
+    assert.deepEqual(splitTrailingDigits('EPSG:3857:12'), { prefix: 'EPSG:3857:', digits: '12' });
+    assert.deepEqual(splitTrailingDigits('7'), { prefix: '', digits: '7' });
+    assert.deepEqual(splitTrailingDigits('a1b22'), { prefix: 'a1b', digits: '22' });
+    assert.deepEqual(splitTrailingDigits('05'), { prefix: '', digits: '05' });
+    assert.equal(splitTrailingDigits('level'), undefined);
+    assert.equal(splitTrailingDigits('12x'), undefined);
+    assert.equal(splitTrailingDigits(''), undefined);
+    assert.equal(splitTrailingDigits('١٢'), undefined, 'ASCII digits only');
+  });
+
+  it('both take a megabyte of the worst input in a moment', () => {
+    const started = Date.now();
+    assert.ok(stripTags('<'.repeat(1_000_000)).length === 1_000_000);
+    assert.ok(stripTags('<a'.repeat(500_000) + '>') === '');
+    assert.ok(splitTrailingDigits(`${'1'.repeat(1_000_000)}x`) === undefined);
+    assert.ok(splitTrailingDigits(`x${'1'.repeat(1_000_000)}`)!.digits.length === 1_000_000);
+    assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
   });
 });

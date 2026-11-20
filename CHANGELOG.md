@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Four more places where text from a server could hold the app, each read in one pass now: a
+  basemap server's attribution line and a camera's credit line (markup removed), a map
+  service's tile-level names, and a plain-text "what is here" answer.
 - **The library catalogue, a download's Metalink file and library search could hold the app.**
   They were read with patterns that start again from every opening tag when the closing tag
   is missing: 700 kB of such text took twelve seconds, a megabyte half a minute, and the

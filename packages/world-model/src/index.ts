@@ -13,6 +13,7 @@
  * Zero runtime dependencies. Pure types and pure functions only.
  */
 export * from './json.js';
+export * from './text.js';
 export * from './geo.js';
 export * from './grid-reference.js';
 export * from './geodesic.js';

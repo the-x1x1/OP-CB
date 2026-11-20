@@ -291,3 +291,11 @@ test('fallbackUrl: on the same host only, and no part of the series', () => {
   } as RasterOverlay;
   assert.equal(overlaySeries(next), overlaySeries(o), 'the next frame is the same layer advancing');
 });
+
+test('matrixTemplate: a megabyte-long level name is read in a moment', () => {
+  const started = Date.now();
+  assert.ok(matrixTemplate([`${'1'.repeat(1_000_000)}x`]) === undefined);
+  const long = matrixTemplate([`${'x'.repeat(1_000_000)}0`]);
+  assert.ok(long !== undefined && long.length === 1_000_003 && long.endsWith('x{z}'));
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
+});
