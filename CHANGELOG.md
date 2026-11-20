@@ -70,11 +70,14 @@ Versioning: [semantic versioning](https://semver.org/).
   ship feed was not noticed, files were not re-read, the Kp index, the connection check and
   the satellite catalogue details were not refreshed. Each of those waits now lasts its own
   length whatever the clock does.
-- Changes to collections, watch zones, lenses, guides and prepared records that were asked
-  for in the same instant could undo one another: of several removals only the last held,
-  and saves made while the file was being read for the first time after a start were lost
-  (of forty at once, one was kept). Each change now works on the list as it is when its turn
-  comes, and the first read is shared.
+- The small document stores (collections, watch zones, lenses, guides, prepared records, the
+  camera list) could lose a change to another made at the same moment. Guides, prepared
+  records and the camera list are first read when first used, and two requests arriving
+  during that read each read the file: a save by the first was dropped when the second's read
+  finished. (Collections, watch zones and lenses are read at start, before any request.)
+  Several removals made in one turn of the program each started from the same list, so only
+  the last held; requests from the window arrive one at a time and did not meet this. Each
+  change now works on the list as it is when its turn comes, and the first read is shared.
 - Trusting a publisher and switching "only trusted publishers" on at the same moment could
   leave the switch off, or lose the publisher: both rewrote the trust file from what each had
   read. They now take turns.
