@@ -311,7 +311,9 @@ export class LibraryDownloads {
         return this.current();
       }
       this.set({ phase: 'downloading', item: req.entry.title, message: 'asking for the file' });
-      void this.runZim(url, name, req.entry, ac.signal);
+      void this.runZim(url, name, req.entry, ac.signal).catch((err: unknown) =>
+        this.endedOutside(req.entry.title, err),
+      );
     } else {
       const ids = req.ids?.length ? req.ids : REFERENCES.map((r) => r.id);
       const unknown = ids.filter((id) => !REFERENCES.some((r) => r.id === id));
@@ -320,9 +322,17 @@ export class LibraryDownloads {
         return this.current();
       }
       this.set({ phase: 'downloading', item: 'emergency references', step: { done: 0, total: ids.length } });
-      void this.runReferences(ids, ac.signal);
+      void this.runReferences(ids, ac.signal).catch((err: unknown) => this.endedOutside('emergency references', err));
     }
     return this.current();
+  }
+
+  /**
+   * A download that threw outside its own handling (its folder could not be made): it ends as
+   * failed, rather than standing at "downloading" and refusing every later one.
+   */
+  private endedOutside(item: string, err: unknown): void {
+    this.set({ phase: 'failed', item, message: failureText(err) });
   }
 
   // ---- one book --------------------------------------------------------------------------------

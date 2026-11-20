@@ -101,6 +101,7 @@ Versioning: [semantic versioning](https://semver.org/).
   for twice is still collected once.
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
+  The same for the emergency references when the library folder could not be made.
   An MQTT source whose password could not be read from the secure store waited out its
   connection timeout; it now fails at once.
 - Trusting a publisher and switching "only trusted publishers" on at the same moment could
