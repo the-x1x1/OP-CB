@@ -29,12 +29,40 @@ export async function writeFileAtomic(
   // with after the rename. Windows keeps only the read-only bit of it.
   const handle = await fs.open(tmp, 'w', options.mode ?? 0o666);
   try {
-    await handle.writeFile(data);
-    await handle.sync();
-  } finally {
-    await handle.close();
+    try {
+      await handle.writeFile(data);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await renameOver(tmp, target);
+  } catch (err) {
+    // A write that failed (a full disk, a target that cannot be replaced) left its temporary
+    // file behind, one more each time the save was tried again.
+    await fs.rm(tmp, { force: true }).catch(() => undefined);
+    throw err;
   }
-  await fs.rename(tmp, target);
+}
+
+const RENAME_RETRY_CODES: ReadonlySet<string> = new Set(['EPERM', 'EBUSY', 'EACCES']);
+const RENAME_RETRY_MS = [10, 25, 50, 100, 200];
+
+/**
+ * Rename over the target, trying again for a moment when Windows refuses because something
+ * (a virus scanner, the search indexer, a backup tool) has the target open right then.
+ */
+async function renameOver(from: string, to: string): Promise<void> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fs.rename(from, to);
+      return;
+    } catch (err) {
+      const wait = RENAME_RETRY_MS[attempt];
+      const code = (err as NodeJS.ErrnoException).code;
+      if (process.platform !== 'win32' || wait === undefined || !code || !RENAME_RETRY_CODES.has(code)) throw err;
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    }
+  }
 }
 
 export async function readJsonFile<T = unknown>(file: string): Promise<T | undefined> {

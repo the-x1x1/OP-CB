@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A file save that failed (a full disk, a file that could not be replaced) left a hidden
+  `.name….tmp` file behind each time it was tried. The temporary file is removed. On Windows,
+  replacing a file that a virus scanner or indexer has open for a moment is tried again for
+  up to about 0.4 s before the save fails.
 - Sorting a column that holds both numbers and numbers written as text (a CSV source beside a
   JSON one) gave an order that depended on the order the rows arrived in: `"10"` came before
   `"9"` as text while both compared with `9.5` as numbers. Numeric text now sorts as the
