@@ -182,6 +182,9 @@ export function decodePmDirectory(bytes: Uint8Array): PmEntry[] {
   const r = new VarintReader(bytes);
   const n = r.next();
   if (n > 50_000_000) throw new PmtilesFormatError('a directory says it has too many entries');
+  // Each entry takes at least four bytes (one per column), so a count the bytes cannot hold is
+  // refused before the table is made: a few bytes claiming 30 million entries took 240 MB.
+  if (n * 4 > bytes.length) throw new PmtilesFormatError('a directory says it has more entries than it holds');
   const entries: PmEntry[] = new Array(n);
   let id = 0;
   for (let i = 0; i < n; i++) {

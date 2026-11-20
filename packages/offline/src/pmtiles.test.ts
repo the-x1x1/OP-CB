@@ -64,6 +64,8 @@ test('directories: encode and decode back, contiguous offsets written as 0, leav
   ];
   const bytes = encodePmDirectory(entries);
   assert.deepEqual(decodePmDirectory(bytes), entries);
+  // A count the bytes cannot hold (30 million entries in five bytes) is refused before any table is made.
+  assert.throws(() => decodePmDirectory(Uint8Array.from([0x80, 0xe1, 0xeb, 0x0e, 1])), /more entries than it holds/);
   // Offsets: 1 (0+1), 0 (contiguous), 1 (0+1, not contiguous), 31 (30+1)
   assert.deepEqual([...bytes.slice(-4)], [1, 0, 1, 31]);
 

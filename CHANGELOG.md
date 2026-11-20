@@ -15,6 +15,8 @@ Versioning: [semantic versioning](https://semver.org/).
   computer's own zone.
 - Connector definitions: a date that does not exist (`2026-02-30`, `25:61`) gives no time with
   `isoTimestamp` and `timestamp:<pattern>`; it was carried over into 2 March or the next day.
+- A damaged or hostile map file (PMTiles) whose directory claims millions of entries in a few
+  bytes is refused at once; reading it took hundreds of megabytes of memory before failing.
 
 ## [0.7.5] — 2026-11-14
 
