@@ -7,6 +7,15 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A large MQTT message arriving in network-sized pieces was copied whole on every piece: a
+  4 MB message took up to two seconds of copying, during which nothing else was read. The
+  pieces are now joined once, when the message is complete (about 50 ms).
+- A saved watch zone, collection, lens or camera with a time that is not a date and time
+  ("1", which reads as the year 2001), a box whose south is above its north or whose
+  latitude is off the globe, or a severity named after something every object has
+  ("constructor") is no longer loaded as valid.
+- A library download whose address has a stray "%" in its file name is reported as having no
+  download, in place of an error.
 - An ArcGIS polygon with thousands of parts, each with a hole, took eight seconds to read (and
   four times that for twice as many): every hole was tested against every part. A hole is now
   tested only against the parts whose box holds it — the same polygon in a sixth of a second.

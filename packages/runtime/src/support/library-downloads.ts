@@ -179,7 +179,13 @@ export function readMetalink(text: string): Metalink {
 
 /** A safe file name for a ZIM: the download's own name, nothing else. */
 export function zimFileName(url: string): string | undefined {
-  const base = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '').replace(/\.meta4$/, '');
+  let base: string;
+  try {
+    // Neither a string that is no URL nor a stray "%" in one is a reason to throw.
+    base = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '').replace(/\.meta4$/, '');
+  } catch {
+    return undefined;
+  }
   return /^[A-Za-z0-9][A-Za-z0-9._-]{0,200}\.zim$/.test(base) ? base : undefined;
 }
 

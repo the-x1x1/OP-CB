@@ -136,10 +136,17 @@ export const CONNACK_REASONS: Record<number, string> = {
  * malformed header, throws — the connection is then closed rather than guessed at.
  */
 export class PacketReader {
-  private buffer: Bytes = new Uint8Array(0);
+  // The bytes not yet read, as the chunks they came in. They are joined only when a packet
+  // spans chunks, and then only that packet's bytes: joining the whole buffer on every push
+  // copied a 4 MB message arriving in network-sized pieces several thousand times over.
+  private chunks: Bytes[] = [];
+  private size = 0;
 
   push(chunk: Bytes): DecodedPacket[] {
-    this.buffer = this.buffer.byteLength ? concat([this.buffer, chunk]) : chunk;
+    if (chunk.byteLength) {
+      this.chunks.push(chunk);
+      this.size += chunk.byteLength;
+    }
     const out: DecodedPacket[] = [];
     for (;;) {
       const framed = this.frame();
@@ -148,15 +155,56 @@ export class PacketReader {
     }
   }
 
+  /** The byte `index` places into what is unread (only the first five are ever asked for). */
+  private byteAt(index: number): number {
+    let at = index;
+    for (const chunk of this.chunks) {
+      if (at < chunk.byteLength) return chunk[at]!;
+      at -= chunk.byteLength;
+    }
+    return 0;
+  }
+
+  /** Removes the first `count` unread bytes and returns them: a view when one chunk holds them all. */
+  private take(count: number): Bytes {
+    this.size -= count;
+    const first = this.chunks[0]!;
+    if (first.byteLength > count) {
+      this.chunks[0] = first.subarray(count);
+      return first.subarray(0, count);
+    }
+    if (first.byteLength === count) {
+      this.chunks.shift();
+      return first;
+    }
+    const out = new Uint8Array(count);
+    let filled = 0;
+    let used = 0;
+    while (filled < count) {
+      const chunk = this.chunks[used]!;
+      const want = count - filled;
+      if (chunk.byteLength <= want) {
+        out.set(chunk, filled);
+        filled += chunk.byteLength;
+        used++;
+      } else {
+        out.set(chunk.subarray(0, want), filled);
+        this.chunks[used] = chunk.subarray(want);
+        filled = count;
+      }
+    }
+    this.chunks.splice(0, used);
+    return out;
+  }
+
   private frame(): { typeAndFlags: number; body: Bytes } | undefined {
-    const b = this.buffer;
-    if (b.byteLength < 2) return undefined;
+    if (this.size < 2) return undefined;
     let length = 0;
     let multiplier = 1;
     let i = 1;
     for (;;) {
-      if (i >= b.byteLength) return undefined;
-      const byte = b[i]!;
+      if (i >= this.size) return undefined;
+      const byte = this.byteAt(i);
       length += (byte & 0x7f) * multiplier;
       if (multiplier > 128 * 128 * 128) throw new Error('MQTT remaining length is malformed');
       multiplier *= 128;
@@ -164,10 +212,9 @@ export class PacketReader {
       if ((byte & 0x80) === 0) break;
     }
     if (length > MAX_PACKET_BYTES) throw new Error(`MQTT packet of ${length} bytes exceeds ${MAX_PACKET_BYTES}`);
-    if (b.byteLength < i + length) return undefined;
-    const body = b.subarray(i, i + length);
-    this.buffer = b.subarray(i + length);
-    return { typeAndFlags: b[0]!, body };
+    if (this.size < i + length) return undefined;
+    const typeAndFlags = this.take(i)[0]!;
+    return { typeAndFlags, body: length ? this.take(length) : new Uint8Array(0) };
   }
 }
 

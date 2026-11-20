@@ -50,8 +50,17 @@ function id(value: unknown, max = 128): string | undefined {
   return typeof value === 'string' && value.trim() && value.length <= max ? value.trim() : undefined;
 }
 
+/**
+ * A date and time as the app writes them. `Date.parse` alone reads "1" as the year 2001 and
+ * "Tue" plus a number as a date, and a time kept in such a form sorts wrongly as text.
+ */
 function iso(value: unknown): string | undefined {
-  return typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : undefined;
+  return typeof value === 'string' &&
+    value.length <= 40 &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value) &&
+    Number.isFinite(Date.parse(value))
+    ? value
+    : undefined;
 }
 
 function position(value: unknown): GeoPosition | undefined {
@@ -75,7 +84,11 @@ function bounds(value: unknown): { west: number; south: number; east: number; no
   if (!b) return undefined;
   const [w, s, e, n] = [b['west'], b['south'], b['east'], b['north']];
   if ([w, s, e, n].some((v) => typeof v !== 'number' || !Number.isFinite(v))) return undefined;
-  return { west: w as number, south: s as number, east: e as number, north: n as number };
+  const [west, south, east, north] = [w, s, e, n] as number[] as [number, number, number, number];
+  // West may be east of east (a box across the 180th meridian); south above north, or a
+  // latitude off the globe, is a box nothing is ever in.
+  if (Math.abs(south) > 90 || Math.abs(north) > 90 || south > north) return undefined;
+  return { west, south, east, north };
 }
 
 export function validateRegion(value: unknown): GeoRegion | undefined {
@@ -101,6 +114,7 @@ export function validateRegion(value: unknown): GeoRegion | undefined {
         const [lon, lat] = point as unknown[];
         if (typeof lon !== 'number' || typeof lat !== 'number' || !Number.isFinite(lon) || !Number.isFinite(lat))
           return undefined;
+        if (Math.abs(lat) > 90) return undefined;
         polygon.push([lon, lat]);
       }
       return { kind: 'polygon', polygon };
@@ -117,7 +131,7 @@ export function validateRegion(value: unknown): GeoRegion | undefined {
 }
 
 function severity(value: unknown): SeverityClass | undefined {
-  return typeof value === 'string' && value in SEVERITY_ORDER ? (value as SeverityClass) : undefined;
+  return typeof value === 'string' && Object.hasOwn(SEVERITY_ORDER, value) ? (value as SeverityClass) : undefined;
 }
 
 const ITEM_KINDS = new Set(['location', 'object', 'event', 'watchzone', 'note', 'lens']);
@@ -211,7 +225,7 @@ export function validateLens(value: unknown): LensDefinition | undefined {
     eventTypes,
     visiblePanels,
     renderingRules: Array.isArray(r['renderingRules'])
-      ? (r['renderingRules'] as LensDefinition['renderingRules']).slice(0, 64)
+      ? (r['renderingRules'].filter((rule) => rec(rule) !== undefined) as LensDefinition['renderingRules']).slice(0, 64)
       : [],
   };
   if (typeof r['description'] === 'string') lens.description = r['description'].slice(0, 500);

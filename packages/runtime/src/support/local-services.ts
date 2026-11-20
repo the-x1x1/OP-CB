@@ -367,7 +367,7 @@ export function readKolibriInfo(body: unknown): { version: string; device?: stri
   const r = obj(body);
   if (r?.['application'] !== 'kolibri') throw new NotThisService('not Kolibri');
   const version = r['kolibri_version'];
-  if (typeof version !== 'string' || version.length > 64) throw new NotThisService('no version');
+  if (typeof version !== 'string' || !version || version.length > 64) throw new NotThisService('no version');
   const device = r['device_name'];
   return { version, ...(typeof device === 'string' && device.length <= 100 ? { device } : {}) };
 }
