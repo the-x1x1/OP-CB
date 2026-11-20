@@ -98,7 +98,13 @@ export function featureToDraft(raw: unknown, minMag: number, opts: NormalizeOpti
   if (!coords) return 'missing point geometry';
   const [lon, lat, depthKm] = coords as unknown[];
   if (!isValidLatLon(lat, lon)) return 'invalid coordinates';
-  if (depthKm !== undefined && depthKm !== null && (typeof depthKm !== 'number' || !Number.isFinite(depthKm)))
+  // The deepest earthquakes are about 700 km down; a few read as slightly above sea level.
+  // A depth far outside that is not a depth, and as an altitude the world model refuses it.
+  if (
+    depthKm !== undefined &&
+    depthKm !== null &&
+    (typeof depthKm !== 'number' || !Number.isFinite(depthKm) || depthKm < -100 || depthKm > 1000)
+  )
     return 'invalid depth';
   const mag = p['mag'];
   if (mag !== null && mag !== undefined && (typeof mag !== 'number' || !Number.isFinite(mag) || mag > 10 || mag < -5))

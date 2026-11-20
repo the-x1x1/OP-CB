@@ -35,6 +35,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An aircraft whose receiver reported an impossible altitude (beyond 200,000 ft, or far below
+  sea level) was admitted by its source and then refused by the world model, so it never
+  appeared. It is now kept and drawn without a height. An earthquake with a depth that is
+  not one (beyond 1,000 km) is rejected by the source with that reason, rather than refused
+  later for its altitude.
 - A transit vehicle whose feed gave a bearing, speed or odometer that is not a number (a
   float's NaN or infinity, which the format allows) was refused whole. The reader now treats
   such a field as not set, and a mapping leaves a property that is not a number out of the

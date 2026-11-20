@@ -60,6 +60,14 @@ function text(v: unknown, max: number): string | undefined {
   return typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : undefined;
 }
 
+/**
+ * Altitudes outside these are a receiver's error, not a height: the aircraft is kept, drawn at
+ * its place on the map without one. (Nothing with a transponder flies above 200,000 ft; the
+ * Dead Sea shore is 1,400 ft below sea level.)
+ */
+const MIN_ALTITUDE_FT = -5000;
+const MAX_ALTITUDE_FT = 200_000;
+
 /** Normalize a list of aircraft rows against one manifest. Never throws; invalid rows are reported. */
 export function normalizeAircraftRows(
   rows: unknown,
@@ -160,7 +168,7 @@ export function aircraftRowToDraft(raw: unknown, opts: AircraftNormalizeOptions)
   if (onGround) {
     position.altitudeM = 0;
     position.altitudeDatum = 'ground';
-  } else if (baroFt !== undefined) {
+  } else if (baroFt !== undefined && baroFt > MIN_ALTITUDE_FT && baroFt < MAX_ALTITUDE_FT) {
     position.altitudeM = round(baroFt * FOOT_TO_M, 1);
     position.altitudeDatum = 'barometric';
   }
