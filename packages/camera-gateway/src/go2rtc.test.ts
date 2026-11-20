@@ -286,3 +286,53 @@ test('a path to a missing binary is reported as not found at once, before any ca
   assert.equal(later.sidecar.status().status, 'not-configured');
   assert.equal(later.sidecar.status().message, undefined, 'no path is simply not configured');
 });
+
+test('a camera login of any characters reaches go2rtc as it was typed, and nowhere else', async () => {
+  const logins: Array<[string, string]> = [
+    ['admin', 'simple'],
+    ['admin', 'p@ssw0rd'],
+    ['admin', 'pa:ss:word'],
+    ['admin', 'sp ace'],
+    ['admin', 'sl/ash?query#hash'],
+    ['admin', '100%sure'],
+    ['admin', '%41%42'],
+    ['admin', 'ünïcödé-密码'],
+    ['admin', `quote"'<>&`],
+    ['admin', ''],
+    ['user@example.org', 'secret'],
+    ['dom\\user', 'back\\slash'],
+    // Not here: a colon in the name. The login is kept as name:password and split at its first
+    // colon (HTTP Basic allows none in a name), so `a:b` with a password comes back as `a`.
+    ['', 'only-a-password'],
+  ];
+  for (const [username, password] of logins) {
+    const { sidecar, api, fetch, sink } = sidecarWith({ binaryPath: '/opt/go2rtc/go2rtc' });
+    const secrets = new MemorySecretStore();
+    const gw = new Go2rtcGateway({
+      sidecar,
+      fetch,
+      secrets,
+      clock: { now: () => 0 },
+      logger: new LoggerHub({ level: 'debug', sinks: [sink] }).logger('camera'),
+    });
+    const typed = `rtsp://${encodeURIComponent(username)}:${encodeURIComponent(password)}@192.168.1.20:554/h264`;
+    const reg = await gw.register({ name: 'Yard', url: typed });
+    await sidecar.start();
+    await gw.snapshot(reg.cameraId).catch(() => undefined);
+    const where = `login ${JSON.stringify([username, password])}`;
+    const pushed = api.streams.get(reg.cameraId);
+    assert.ok(pushed, `${where}: the stream was given to go2rtc (${JSON.stringify(api.calls.map((c) => c.method))})`);
+    const u = new URL(pushed);
+    assert.equal(decodeURIComponent(u.username), username, `${where}: the name go2rtc is given`);
+    assert.equal(decodeURIComponent(u.password), password, `${where}: the password go2rtc is given`);
+    assert.equal(u.host, '192.168.1.20:554', where);
+    // What is kept and shown has no login in it.
+    const kept = JSON.stringify([gw.export(), gw.list(), reg]);
+    const logged = JSON.stringify(sink.records);
+    for (const secret of [password, encodeURIComponent(password)])
+      if (secret.length >= 4) {
+        assert.ok(!kept.includes(secret), `${where}: the password is in what is kept: ${kept}`);
+        assert.ok(!logged.includes(secret), `${where}: the password is in the log`);
+      }
+  }
+});
