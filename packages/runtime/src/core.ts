@@ -1363,7 +1363,11 @@ export class RuntimeCore {
               : {}),
           });
         // Back to live while history was read: live state is what the shell must hold.
-        if (epoch !== this.projectionEpoch || isLiveMode(this.timeline.currentMode) || this.stopped) return;
+        if (isLiveMode(this.timeline.currentMode) || this.stopped) return;
+        // Back to live and into the past again while history was read: this read is for a
+        // time no longer shown, and the one asked for since (`projectAgain`) is made next.
+        // Returning here dropped it, and the map stayed live under a timeline in the past.
+        if (epoch !== this.projectionEpoch) continue;
         const next = new Map(objects.map((o) => [o.id, o] as const));
         // The first projection after leaving live is diffed against what the shell holds —
         // live state — not against an empty set: diffed against nothing it only added, and every

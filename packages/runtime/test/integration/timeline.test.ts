@@ -202,3 +202,49 @@ test('integration: a cursor moved while history is read is projected once the re
     await h.dispose();
   }
 });
+
+test('integration: back to live and into the past again while history is read: the map ends at the new time, not at live', async () => {
+  const body = await readFixture('usgs', 'normal.geojson');
+  const { impl: fetchImpl } = tableFetch({
+    'https://earthquake.usgs.gov/': () =>
+      new Response(body, { status: 200, headers: { 'content-type': 'application/geo+json' } }),
+  });
+  const h = await startRuntime({ fetchImpl, providerInstances: [createUsgs()] });
+  try {
+    await h.client.request('sources.refresh', { providerId: 'usgs-earthquakes' });
+    await settle();
+    await h.client.request('world.subscribe', { objectTypes: ['earthquake'] });
+    const onMap = new Set(
+      (await h.client.request('world.query', { objectTypes: ['earthquake'] })).items.map((o) => o.id),
+    );
+    assert.ok(onMap.size > 0);
+    h.runtime.on('world.changed', (d, clientId) => {
+      if (clientId !== 'test-client') return;
+      for (const id of d.removed) onMap.delete(id);
+      for (const o of d.objects) onMap.add(o.id);
+    });
+    const timeline = h.runtime.core.timeline as unknown as { snapshotAt: (cursor: string) => Promise<unknown[]> };
+    const asked: string[] = [];
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    timeline.snapshotAt = async (cursor) => {
+      asked.push(cursor);
+      await held;
+      return [];
+    };
+    // Into the past (the read is slow), back to live, and into the past at another time,
+    // all before the first read ends.
+    const first = h.client.request('timeline.set', { mode: 'HISTORICAL', cursor: '2020-01-01T00:00:00.000Z' });
+    await settle();
+    await h.client.request('timeline.set', { mode: 'LIVE' });
+    await h.client.request('timeline.set', { mode: 'HISTORICAL', cursor: '2020-02-01T00:00:00.000Z' });
+    release();
+    await first;
+    await settle();
+    assert.equal((await h.client.request('timeline.get', undefined)).mode, 'HISTORICAL');
+    assert.equal(asked.at(-1), '2020-02-01T00:00:00.000Z', 'history was read for the time the timeline shows');
+    assert.equal(onMap.size, 0, 'and the live earthquakes, which have no history then, are off the map');
+  } finally {
+    await h.dispose();
+  }
+});
