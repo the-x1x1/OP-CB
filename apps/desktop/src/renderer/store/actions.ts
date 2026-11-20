@@ -236,6 +236,26 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     notify(what, describeError(err), 'MINOR');
   };
 
+  /**
+   * One change at a time per document. A change that is built from the state — a collection
+   * with one more item, a source's settings with one more key — and saved whole must not be
+   * built while an earlier one is still on its way: both would start from the same state and
+   * the second save would undo the first. `change` reads the state when its turn comes.
+   */
+  const turns = new Map<string, Promise<void>>();
+  function inTurn(key: string, change: () => Promise<void>): Promise<void> {
+    const run = (turns.get(key) ?? Promise.resolve()).then(change, change);
+    const settled = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    turns.set(key, settled);
+    void settled.then(() => {
+      if (turns.get(key) === settled) turns.delete(key);
+    });
+    return run;
+  }
+
   async function updateSettings(partial: Partial<AppSettings>): Promise<AppSettings | null> {
     try {
       const settings = await client.request('settings.set', partial);
@@ -803,16 +823,18 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       }
       return true;
     },
-    async setProviderSetting(providerId: string, key: string, value: JsonValue | undefined): Promise<void> {
-      const current = ownEntry(getState().sources.providerSettings, providerId) ?? {};
-      const next = setByPath(current as Record<string, JsonValue>, key, value);
-      try {
-        await client.request('sources.settings.set', { providerId, settings: next });
-        dispatch({ type: 'sources/settings', providerId, settings: next });
-        notify('Source updated', 'The source is asked again with the new setting now.');
-      } catch (err) {
-        fail('Source settings not saved', err);
-      }
+    setProviderSetting(providerId: string, key: string, value: JsonValue | undefined): Promise<void> {
+      return inTurn(`source:${providerId}`, async () => {
+        const current = ownEntry(getState().sources.providerSettings, providerId) ?? {};
+        const next = setByPath(current as Record<string, JsonValue>, key, value);
+        try {
+          await client.request('sources.settings.set', { providerId, settings: next });
+          dispatch({ type: 'sources/settings', providerId, settings: next });
+          notify('Source updated', 'The source is asked again with the new setting now.');
+        } catch (err) {
+          fail('Source settings not saved', err);
+        }
+      });
     },
     async loadManifest(providerId: string): Promise<void> {
       if (providerId in getState().sources.manifests) return;
@@ -930,9 +952,11 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     setActiveCollection(id: string | null) {
       dispatch({ type: 'collections/activate', id });
     },
-    async renameCollection(id: string, name: string): Promise<void> {
-      const c = getState().collections.collections.find((x) => x.id === id);
-      if (c) await actions.saveCollection({ ...c, name: name.trim() || c.name });
+    renameCollection(id: string, name: string): Promise<void> {
+      return inTurn(`collection:${id}`, async () => {
+        const c = getState().collections.collections.find((x) => x.id === id);
+        if (c) await actions.saveCollection({ ...c, name: name.trim() || c.name });
+      });
     },
     async deleteCollection(id: string): Promise<void> {
       try {
@@ -941,32 +965,37 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         fail('Collection not deleted', err);
       }
     },
-    async addToCollection(
-      collectionId: string,
-      item: Omit<CollectionItem, 'id' | 'createdAt' | 'updatedAt'>,
-    ): Promise<void> {
-      const c = getState().collections.collections.find((x) => x.id === collectionId);
-      if (!c) return;
-      const iso = new Date(now()).toISOString();
-      await actions.saveCollection({
-        ...c,
-        items: [
-          ...c.items,
-          { ...item, id: `item-${now().toString(36)}-${c.items.length}`, createdAt: iso, updatedAt: iso },
-        ],
+    addToCollection(collectionId: string, item: Omit<CollectionItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<void> {
+      return inTurn(`collection:${collectionId}`, async () => {
+        const c = getState().collections.collections.find((x) => x.id === collectionId);
+        if (!c) return;
+        // Asked for twice before the first was saved (a button pressed twice): once is enough.
+        if (isCollected(c.items, item.objectId ?? item.eventId)) return;
+        const iso = new Date(now()).toISOString();
+        await actions.saveCollection({
+          ...c,
+          items: [
+            ...c.items,
+            { ...item, id: `item-${now().toString(36)}-${c.items.length}`, createdAt: iso, updatedAt: iso },
+          ],
+        });
       });
     },
-    async removeFromCollection(collectionId: string, itemId: string): Promise<void> {
-      const c = getState().collections.collections.find((x) => x.id === collectionId);
-      if (c) await actions.saveCollection({ ...c, items: c.items.filter((i) => i.id !== itemId) });
+    removeFromCollection(collectionId: string, itemId: string): Promise<void> {
+      return inTurn(`collection:${collectionId}`, async () => {
+        const c = getState().collections.collections.find((x) => x.id === collectionId);
+        if (c) await actions.saveCollection({ ...c, items: c.items.filter((i) => i.id !== itemId) });
+      });
     },
-    async setItemNote(collectionId: string, itemId: string, note: string): Promise<void> {
-      const c = getState().collections.collections.find((x) => x.id === collectionId);
-      if (!c) return;
-      const iso = new Date(now()).toISOString();
-      await actions.saveCollection({
-        ...c,
-        items: c.items.map((i) => (i.id === itemId ? { ...i, note, updatedAt: iso } : i)),
+    setItemNote(collectionId: string, itemId: string, note: string): Promise<void> {
+      return inTurn(`collection:${collectionId}`, async () => {
+        const c = getState().collections.collections.find((x) => x.id === collectionId);
+        if (!c) return;
+        const iso = new Date(now()).toISOString();
+        await actions.saveCollection({
+          ...c,
+          items: c.items.map((i) => (i.id === itemId ? { ...i, note, updatedAt: iso } : i)),
+        });
       });
     },
     async addSelectionToCollection(collectionId: string): Promise<void> {

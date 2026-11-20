@@ -90,6 +90,12 @@ Versioning: [semantic versioning](https://semver.org/).
   Several removals made in one turn of the program each started from the same list, so only
   the last held; requests from the window arrive one at a time and did not meet this. Each
   change now works on the list as it is when its turn comes, and the first read is shared.
+- In the window, two changes to one collection, or to one source's settings, made one
+  straight after the other could lose the first: each was built from what the window showed
+  and saved whole, and the second was built before the first had come back. Ticking two
+  camera regions quickly could leave only the second ticked; a second place added to a
+  collection could replace the first. Such changes now wait their turn, and an object asked
+  for twice is still collected once.
 - Trusting a publisher and switching "only trusted publishers" on at the same moment could
   leave the switch off, or lose the publisher: both rewrote the trust file from what each had
   read. They now take turns.
