@@ -19,6 +19,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The 3D globe no longer asks Cesium to pick from a globe that has no size on screen or is
+  hidden behind the 2D map, and a pick that fails is a pointer over nothing. The app's log has
+  "normalized result is not a number" from Cesium at a start and at a switch to 2D; this is
+  the likely path (the logged stack is cut short), not a confirmed one.
 - When a frame of the 3D globe fails, the globe no longer stays a still picture until the app
   is restarted. The first failure takes the areas off the globe (polygons, circles, density
   cells — the shapes whose geometry can make Cesium fail), says so, and goes on drawing

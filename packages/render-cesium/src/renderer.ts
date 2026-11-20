@@ -782,11 +782,22 @@ export class CesiumWorldRenderer implements WorldRenderer {
 
   private pickAt(screen: { x: number; y: number }): PickResult | null {
     const v = this.viewer;
-    if (!v || !this.layers) return null;
+    if (!v || !this.layers || this.suspended) return null;
+    // A globe with no size on screen (hidden behind the 2D map, or not laid out yet at start)
+    // has no picture to pick from: Cesium's pick frustum divides by the canvas size and throws
+    // "normalized result is not a number" (in the field at a start and at a switch to 2D).
+    if (v.canvas?.clientWidth === 0 || v.canvas?.clientHeight === 0) return null;
     const at = this.scenePoint(screen);
     if (!at) return null;
     const windowPosition = new this.cesium.Cartesian2(at.x, at.y);
-    const featureId = resolvePickedFeatureId(v.scene.pick(windowPosition));
+    let picked: unknown;
+    try {
+      picked = v.scene.pick(windowPosition);
+    } catch {
+      // A pick that fails is a pointer over nothing, not an error for the pointer's handler.
+      return null;
+    }
+    const featureId = resolvePickedFeatureId(picked);
     // A place name (reference-overlay.ts) is scenery, not something to select.
     if (!featureId || featureId.startsWith(REFERENCE_LABEL_ID_PREFIX)) return null;
     const feature = this.layers.store.get(featureId);

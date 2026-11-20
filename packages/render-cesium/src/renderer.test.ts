@@ -1048,3 +1048,45 @@ test('a throwing frame while the globe is hidden does not start it drawing behin
   renderer.resume();
   assert.equal(viewer.useDefaultRenderLoop, true);
 });
+
+test('a click on a globe with no size, behind the 2D map, or that Cesium cannot pick from is a click on nothing', async () => {
+  const { cesium, renderer, viewer, events } = await mounted();
+  renderer.update({ upsert: [pt('obj:a', 10, 20)], remove: [] });
+  const handler = cesium.handlers[0]!;
+  const click = () => {
+    const before = events.filter((e) => e.type === 'pick').length;
+    handler.fire(cesium.ScreenSpaceEventType.LEFT_CLICK, { position: { x: 100, y: 200 } });
+    const picks = events.filter((e) => e.type === 'pick');
+    assert.equal(picks.length, before + 1);
+    return picks.at(-1)!.payload as PickResult | null;
+  };
+  viewer.scene.pickResult = { id: 'obj:a' };
+  assert.equal(click()?.featureId, 'obj:a');
+
+  const canvas = viewer.scene.canvas as unknown as { clientWidth: number; clientHeight: number };
+  const asked = () => viewer.scene.pickedAt.length;
+  let before = asked();
+  canvas.clientHeight = 0;
+  assert.equal(click(), null);
+  canvas.clientHeight = 768;
+  canvas.clientWidth = 0;
+  assert.equal(click(), null);
+  canvas.clientWidth = 1024;
+  assert.equal(asked(), before, 'Cesium is not asked to pick from a canvas with no size');
+
+  renderer.suspend();
+  before = asked();
+  assert.equal(click(), null);
+  assert.equal(asked(), before, 'nor from a globe that is not showing');
+  renderer.resume();
+  assert.equal(click()?.featureId, 'obj:a');
+
+  const scene = viewer.scene as unknown as { pick: () => unknown };
+  const pick = scene.pick;
+  scene.pick = () => {
+    throw new Error('normalized result is not a number');
+  };
+  assert.equal(click(), null, 'a pick that throws is not passed on to the pointer handler');
+  scene.pick = pick;
+  assert.equal(click()?.featureId, 'obj:a');
+});
