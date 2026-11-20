@@ -38,6 +38,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A key written into a source's address under a name other than `key` or `token` stayed in
+  log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
+  `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,
+  `jwt=`, `client_secret=` and `signature=` are now removed like the others.
 - When storing a key failed, the failure was written to the application log in its own
   words, and a failure that quoted the value being stored would have put the key there. The
   value is now removed from the error before it is logged or answered.

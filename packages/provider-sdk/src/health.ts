@@ -143,7 +143,7 @@ function defaultRetryable(code: ProviderErrorCode): boolean {
 const SECRET_NAME = String.raw`(?:x-api-key|api[_-]?key|map[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|auth[_-]?token|client[_-]?secret|x-amz-(?:signature|credential|security-token)|password|passwd|secret|token|signature)`;
 const SECRET_PATTERNS = [
   // ?key=… and &token=… in a URL: the short names too, which mean something else in prose.
-  /([?&](?:key|api_key|apikey|token|access_token|map_key|mapkey|password|pwd|pass|secret|sig|session)=)[^&\s"']+/gi,
+  /([?&](?:key|api[_-]?key|app[_-]?(?:id|key)|token|access[_-]?token|auth[_-]?(?:key|token)?|map[_-]?key|subscription[_-]?key|ocp-apim-subscription-key|x-api-key|user[_-]?key|private[_-]?token|licen[sc]e[_-]?key|jwt|password|passwd|pwd|pass|secret|client[_-]?secret|sig|signature|session)=)[^&\s"']+/gi,
   // name=value, name: value and "name":"value" anywhere, for names that end in a word that is
   // only ever a secret (password, db_password, MQTT_PASSWORD, client_secret).
   new RegExp(
