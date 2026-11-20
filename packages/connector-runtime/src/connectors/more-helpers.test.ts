@@ -532,7 +532,7 @@ test('TopoJSON: arcs joined and reversed, quantized arcs decoded, and what is wr
   assert.ok(!('malformed' in readTopologyDocument({ type: 'Topology', objects: { n: nested(8) } })));
   assert.ok('malformed' in readTopologyDocument({ type: 'Topology', objects: { n: nested(12) } }));
   assert.ok('malformed' in readTopoJson('{ not json'));
-  assert.ok(!('malformed' in readTopoJson('﻿{"type":"Topology","objects":{}}')));
+  assert.ok(!('malformed' in readTopoJson('\uFEFF{"type":"Topology","objects":{}}')));
 });
 
 test('TopoJSON: a small file whose shapes all name one long arc is refused, not written out', () => {
