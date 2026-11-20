@@ -35,6 +35,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A password with an @ in it was only half removed from logs and error messages.** A camera
+  or broker address typed as `rtsp://admin:p@ssword@192.168.1.20/` was redacted up to the
+  first @, leaving `ssword` in the log line and in the source's error text. The password is
+  now taken to the last @ before the path. A bearer token is removed to its end whatever
+  characters it holds.
 - A pack signed by a trusted publisher read as "signed, not trusted" when its signature file
   wrote the publisher's key without its base64 padding. A publisher is now matched by the
   key itself. The signature check is tested against 6,000 tamperings of a manifest and its

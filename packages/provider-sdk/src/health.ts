@@ -152,13 +152,14 @@ const SECRET_PATTERNS = [
   ),
   // Authorization: Basic …, Bearer …, or a bare value.
   /(authorization["']?\s*[:=]\s*["']?(?:(?:basic|bearer|digest|token)\s+)?)[^\s"',;]+/gi,
-  /(bearer\s+)[a-z0-9._~+/=-]+/gi,
+  /(bearer\s+)[^\s"',;]+/gi,
   // Cookie and Set-Cookie, to the end of the line.
   /((?:set-)?cookie["']?\s*[:=]\s*)[^\r\n]+/gi,
   // user:password@ in a URL of any scheme (http, rtsp, mqtt, ws, ftp…). The scheme and the two
   // parts are bounded in length so that a long run of letters (a key, a base64 body) is
   // passed over once, not once from each of its characters.
-  /((?<![a-z0-9+.-])[a-z][a-z0-9+.-]{0,15}:\/\/)[^\s/@"'<>:]{0,256}:[^\s/@"'<>]{0,256}@/gi,
+  // The password runs to the last @ before the path (one typed with an @ in it).
+  /((?<![a-z0-9+.-])[a-z][a-z0-9+.-]{0,15}:\/\/)[^\s/@"'<>:]{0,256}:[^\s/"'<>]{0,256}@/gi,
 ];
 
 /** Remove anything that looks like a credential from an error message. */
