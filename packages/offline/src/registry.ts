@@ -507,18 +507,24 @@ export class WorldPackRegistry {
     if (raw.length !== 32 || raw.toString('base64') !== publicKey) throw new Error('not a 32-byte Ed25519 public key');
     const keyId = keyIdOf(raw);
     const label = name.trim().slice(0, 80) || `Publisher ${formatKeyId(keyId)}`;
-    const trust = await this.readTrust();
-    const existing = trust.publishers.find((p) => p.publicKey === publicKey);
-    let publisher: TrustedPublisher;
-    if (existing) {
-      existing.name = label;
-      publisher = existing;
-    } else {
-      if (trust.publishers.length >= MAX_PUBLISHERS) throw new Error(`at most ${MAX_PUBLISHERS} publishers`);
-      publisher = { keyId, publicKey, name: label, addedAt: new Date(this.clock.now()).toISOString() };
-      trust.publishers.push(publisher);
-    }
-    await this.writeTrust(trust);
+    // trust.json is read, changed and written back; one such change at a time (with the scans,
+    // which read it), or two asked for together each write back what the other did not see: a
+    // publisher added as "only trusted publishers" was switched on left that switch off.
+    const publisher = await this.exclusive(async () => {
+      const trust = await this.readTrust();
+      const existing = trust.publishers.find((p) => p.publicKey === publicKey);
+      let entry: TrustedPublisher;
+      if (existing) {
+        existing.name = label;
+        entry = existing;
+      } else {
+        if (trust.publishers.length >= MAX_PUBLISHERS) throw new Error(`at most ${MAX_PUBLISHERS} publishers`);
+        entry = { keyId, publicKey, name: label, addedAt: new Date(this.clock.now()).toISOString() };
+        trust.publishers.push(entry);
+      }
+      await this.writeTrust(trust);
+      return entry;
+    });
     this.log.info('worldpack publisher trusted', { keyId, name: label });
     await this.refresh();
     this.emitChanged();
@@ -526,11 +532,15 @@ export class WorldPackRegistry {
   }
 
   async removePublisher(keyId: string): Promise<boolean> {
-    const trust = await this.readTrust();
-    const before = trust.publishers.length;
-    trust.publishers = trust.publishers.filter((p) => p.keyId !== keyId);
-    if (trust.publishers.length === before) return false;
-    await this.writeTrust(trust);
+    const removed = await this.exclusive(async () => {
+      const trust = await this.readTrust();
+      const before = trust.publishers.length;
+      trust.publishers = trust.publishers.filter((p) => p.keyId !== keyId);
+      if (trust.publishers.length === before) return false;
+      await this.writeTrust(trust);
+      return true;
+    });
+    if (!removed) return false;
     this.log.info('worldpack publisher removed', { keyId });
     await this.refresh();
     this.emitChanged();
@@ -538,9 +548,11 @@ export class WorldPackRegistry {
   }
 
   async setRequireTrusted(required: boolean): Promise<void> {
-    const trust = await this.readTrust();
-    trust.requireTrusted = required;
-    await this.writeTrust(trust);
+    await this.exclusive(async () => {
+      const trust = await this.readTrust();
+      trust.requireTrusted = required;
+      await this.writeTrust(trust);
+    });
     this.log.info('worldpack trust policy', { requireTrusted: required });
     await this.refresh();
     this.emitChanged();

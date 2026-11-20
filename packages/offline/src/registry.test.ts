@@ -158,3 +158,33 @@ test('registry: invalid installed directories are listed with a message, never s
   assert.equal(reg.capabilities().localSearch, false);
   await fs.rm(dir, { recursive: true, force: true });
 });
+
+test('registry: trust changes asked for at the same moment are all kept', async () => {
+  const dataDir = await tempDir();
+  try {
+    const reg = registry(dataDir);
+    await reg.refresh();
+    const keys = Array.from({ length: 6 }, (_, i) => Buffer.alloc(32, i + 1).toString('base64'));
+    // Six publishers and the policy, none waiting for another's answer.
+    await Promise.all([...keys.map((key, i) => reg.addPublisher(`Publisher ${i}`, key)), reg.setRequireTrusted(true)]);
+    const trust = reg.trustState();
+    assert.equal(trust.requireTrusted, true, 'the policy was not lost to a publisher written after it');
+    assert.deepEqual(trust.publishers.map((p) => p.publicKey).sort(), [...keys].sort());
+    // And on disk, for the next start.
+    const again = registry(dataDir);
+    await again.refresh();
+    assert.equal(again.trustState().requireTrusted, true);
+    assert.equal(again.trustState().publishers.length, 6);
+    // Removing three while renaming the others.
+    const ids = again.trustState().publishers.map((p) => p.keyId);
+    await Promise.all([
+      ...ids.slice(0, 3).map((id) => again.removePublisher(id)),
+      ...keys.map((key, i) => again.addPublisher(`Renamed ${i}`, key).catch(() => undefined)),
+      again.setRequireTrusted(false),
+    ]);
+    assert.equal(again.trustState().requireTrusted, false);
+    assert.ok(again.trustState().publishers.every((p) => p.name.startsWith('Renamed ')));
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

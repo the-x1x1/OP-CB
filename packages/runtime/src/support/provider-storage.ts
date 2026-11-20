@@ -98,8 +98,20 @@ export class FileProviderCache implements ProviderCache {
     await this.flush();
   }
 
-  private async read(): Promise<Record<string, CacheEntry>> {
-    if (this.entries) return this.entries;
+  /**
+   * The table, read from the file once. Callers that arrive while that read is under way wait
+   * for the same one: each used to start its own, and a later read finishing replaced the
+   * table an earlier caller had already written an entry into.
+   */
+  private read(): Promise<Record<string, CacheEntry>> {
+    if (this.entries) return Promise.resolve(this.entries);
+    this.reading ??= this.readFile();
+    return this.reading;
+  }
+
+  private reading: Promise<Record<string, CacheEntry>> | undefined;
+
+  private async readFile(): Promise<Record<string, CacheEntry>> {
     const doc = await readJsonFile<CacheFile>(this.file).catch(() => undefined);
     // A table with no inherited members, so a key is only ever an entry: on a plain object a
     // key of `constructor` read as a hit and one of `__proto__` was never stored. What the file

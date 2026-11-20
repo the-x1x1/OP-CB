@@ -35,6 +35,14 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Changes to collections, watch zones, lenses, guides and prepared records that were asked
+  for in the same instant could undo one another: of several removals only the last held,
+  and saves made while the file was being read for the first time after a start were lost
+  (of forty at once, one was kept). Each change now works on the list as it is when its turn
+  comes, and the first read is shared.
+- Trusting a publisher and switching "only trusted publishers" on at the same moment could
+  leave the switch off, or lose the publisher: both rewrote the trust file from what each had
+  read. They now take turns.
 - **The app could not start when the history index file held the single word `null`** (valid
   JSON, though nothing the app writes): reading it threw before the runtime was built. It is now read as an index in an unknown format, reported, and rebuilt
   from the history files. A test now starts the whole runtime on its own data folder damaged

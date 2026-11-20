@@ -15,6 +15,7 @@ interface Envelope<T> {
  */
 export class JsonDocStore<T extends { id: string }> {
   private items: T[] | undefined;
+  private loading: Promise<T[]> | undefined;
   private writing: Promise<void> = Promise.resolve();
 
   constructor(
@@ -23,29 +24,42 @@ export class JsonDocStore<T extends { id: string }> {
     private readonly log: Logger = silentLogger,
   ) {}
 
+  /**
+   * The list, read from the file the first time it is wanted. Everyone who asks while that
+   * first read is under way waits for the same read: each used to start its own, and each
+   * read, as it finished, replaced the list the one before had already handed out and been
+   * changed through — of forty saves made at once into a new store, one was kept.
+   */
   async load(): Promise<T[]> {
     if (this.items) return this.items;
+    this.loading ??= this.read().then((items) => {
+      this.items = items;
+      return items;
+    });
+    await this.loading;
+    // Not the read's own result: a remove or replaceAll since then has put a new list in place.
+    return this.items ?? [];
+  }
+
+  private async read(): Promise<T[]> {
     let raw: string;
     try {
       raw = await fs.readFile(this.file, 'utf8');
     } catch {
-      this.items = [];
-      return this.items;
+      return [];
     }
     let parsed: unknown;
     try {
       parsed = JSON.parse(raw) as unknown;
     } catch {
       await this.preserveCorrupt('not valid JSON');
-      this.items = [];
-      return this.items;
+      return [];
     }
     const envelope = parsed as Partial<Envelope<unknown>>;
     const list = Array.isArray(envelope?.items) ? envelope.items : Array.isArray(parsed) ? parsed : undefined;
     if (!list) {
       await this.preserveCorrupt('not a { version, items } document');
-      this.items = [];
-      return this.items;
+      return [];
     }
     const valid: T[] = [];
     let dropped = 0;
@@ -56,16 +70,20 @@ export class JsonDocStore<T extends { id: string }> {
     }
     if (dropped)
       this.log.warn('user document: entries dropped as invalid', { file: path.basename(this.file), dropped });
-    this.items = valid;
-    return this.items;
+    return valid;
   }
 
   async list(): Promise<T[]> {
-    return structuredClone(await this.load());
+    await this.load();
+    return structuredClone(this.items ?? []);
   }
 
   async save(item: T): Promise<T[]> {
-    const items = await this.load();
+    // The list is taken after the wait and changed in the same turn. The value `load` gives
+    // is the list as it was when `load` was called: several changes asked for together each
+    // got the same one, and every removal but the last was undone by the change after it.
+    await this.load();
+    const items = (this.items ??= []);
     const index = items.findIndex((i) => i.id === item.id);
     if (index >= 0) items[index] = item;
     else items.push(item);
@@ -74,7 +92,8 @@ export class JsonDocStore<T extends { id: string }> {
   }
 
   async remove(id: string): Promise<T[]> {
-    const items = await this.load();
+    await this.load();
+    const items = this.items ?? [];
     const next = items.filter((i) => i.id !== id);
     this.items = next;
     await this.persist();
@@ -94,7 +113,8 @@ export class JsonDocStore<T extends { id: string }> {
   }
 
   async get(id: string): Promise<T | undefined> {
-    return (await this.load()).find((i) => i.id === id);
+    await this.load();
+    return (this.items ?? []).find((i) => i.id === id);
   }
 
   /** Serialized writes: a save never races another save on the same file. */
