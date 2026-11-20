@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- The live spatial index answers a question whose south edge is exactly 90°N, or whose west
+  edge is exactly 180°E, with what lies on that edge; it looked one row or column past the
+  grid and found nothing. No screen asks such a question in ordinary use. The index is now
+  tested against a plain search of everything it holds.
 - The map's presentation pass leaves out an object whose position is not on the globe, and
   turns no icon by a heading that is not a number. Positions are checked where they come in,
   so this is a second line: one such value handed to the 3D globe is an error on every frame.

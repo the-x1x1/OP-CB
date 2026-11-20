@@ -141,10 +141,14 @@ export class GridSpatialIndex implements SpatialIndex {
           ];
     const seen = new Set<string>();
     for (const b of ranges) {
-      const r0 = Math.max(0, Math.floor((b.south + 90) / this.cellSize));
-      const r1 = Math.min(Math.ceil(180 / this.cellSize) - 1, Math.floor((b.north + 90) / this.cellSize));
-      const c0 = Math.max(0, Math.floor((b.west + 180) / this.cellSize));
-      const c1 = Math.min(Math.ceil(360 / this.cellSize) - 1, Math.floor((b.east + 180) / this.cellSize));
+      // The last row and column take in their far edge (an item at 90°N or 180°E is kept there),
+      // so a question that starts on that edge starts in them and not one past.
+      const lastRow = Math.ceil(180 / this.cellSize) - 1;
+      const lastCol = Math.ceil(360 / this.cellSize) - 1;
+      const r0 = Math.min(lastRow, Math.max(0, Math.floor((b.south + 90) / this.cellSize)));
+      const r1 = Math.min(lastRow, Math.floor((b.north + 90) / this.cellSize));
+      const c0 = Math.min(lastCol, Math.max(0, Math.floor((b.west + 180) / this.cellSize)));
+      const c1 = Math.min(lastCol, Math.floor((b.east + 180) / this.cellSize));
       // When the query is wider than the cell population, iterate populated cells instead.
       const span = (r1 - r0 + 1) * (c1 - c0 + 1);
       if (span > this.cells.size) {
