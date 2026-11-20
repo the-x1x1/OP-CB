@@ -71,6 +71,29 @@ export interface IpcRouterOptions {
 
 const GENERIC_INTERNAL_MESSAGE = 'internal error (details are in the application log)';
 
+/** The secret a request carries in the clear, by channel: today only a key being stored. */
+function secretIn(channel: string, request: unknown): string | undefined {
+  if (channel !== 'credentials.set' || !request || typeof request !== 'object') return undefined;
+  const value = (request as { value?: unknown }).value;
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+/** The same failure with `secret` taken out of what it says; what it was caused by is dropped. */
+function withoutValue(err: unknown, secret: string): unknown {
+  const clean = (text: string) => text.split(secret).join('<redacted>');
+  if (typeof err === 'string') return clean(err);
+  if (!(err instanceof Error)) return err;
+  const copy = new Error(clean(err.message));
+  copy.name = err.name;
+  for (const key of ['code', 'ipcCode'] as const) {
+    const v = (err as unknown as Record<string, unknown>)[key];
+    if (v !== undefined) (copy as unknown as Record<string, unknown>)[key] = v;
+  }
+  if (err instanceof ProviderError)
+    return new ProviderError(err.code, clean(err.message), { retryable: err.retryable });
+  return copy;
+}
+
 /**
  * IpcRouter — the only bridge between renderer requests and the runtime.
  *
@@ -183,7 +206,7 @@ export class IpcRouter {
       const value = await Promise.race([handler(parsed.value, ctx), aborted]);
       return okEnvelope(responseToWire(channel as RequestChannel, value));
     } catch (err) {
-      return errorEnvelope(this.toIpcError(err, channel, controller.signal.aborted));
+      return errorEnvelope(this.toIpcError(err, channel, controller.signal.aborted, secretIn(channel, parsed.value)));
     } finally {
       clearTimeout(timer);
     }
@@ -191,9 +214,11 @@ export class IpcRouter {
 
   private resolveHandler(channel: RequestChannel): (request: unknown, ctx: RequestContext) => Promise<unknown> {
     const override = this.opts.overrides?.[channel] as
-      ((request: unknown, ctx: RequestContext) => Promise<unknown>) | undefined;
+      | ((request: unknown, ctx: RequestContext) => Promise<unknown>)
+      | undefined;
     const base = this.opts.runtime.handlers[channel] as
-      ((request: unknown, ctx: RequestContext) => Promise<unknown>) | undefined;
+      | ((request: unknown, ctx: RequestContext) => Promise<unknown>)
+      | undefined;
     const fn = override ?? base;
     if (!fn)
       return async () => {
@@ -203,8 +228,14 @@ export class IpcRouter {
   }
 
   /** Never leaks stack traces, file paths or secrets to the renderer. */
-  private toIpcError(err: unknown, channel: string, timedOut: boolean): IpcError {
+  private toIpcError(err: unknown, channel: string, timedOut: boolean, secret?: string): IpcError {
     if (timedOut) return { code: 'UNAVAILABLE', message: 'request timed out', channel };
+    // The request's own secret (the value of a key being stored), taken out by value: an error
+    // from storing it may quote it, under no name a pattern would know it by.
+    if (secret) {
+      const out = this.toIpcError(withoutValue(err, secret), channel, false);
+      return { ...out, message: out.message.split(secret).join('<redacted>') };
+    }
     if (isIpcError(err)) return { code: err.code, message: redactText(String(err.message)).slice(0, 300), channel };
     if (err instanceof ProviderError)
       return { code: mapProviderCode(err), message: redactText(err.message).slice(0, 300), channel };

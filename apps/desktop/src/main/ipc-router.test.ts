@@ -549,3 +549,48 @@ test('router: a world.subscribe snapshot is answered as JSON; small responses ar
   });
   router.dispose();
 });
+
+test('router: a key being stored is in no answer and no log line, however storing it fails', async () => {
+  const { LoggerHub, RingBufferSink } = await import('@opcb/core');
+  const SECRET = 'Qz7hPk2mVn9sXj4wRt8yBc3dLf6gUa5e';
+  const failures: unknown[] = [
+    new Error(`could not encrypt the value ${SECRET}`),
+    new Error(`safeStorage: ${JSON.stringify({ key: 'firms.mapKey', value: SECRET })}`),
+    Object.assign(new Error(`refused ${SECRET}`), { ipcCode: 'DENIED' as const }),
+    new ProviderError('INTERNAL', `store failed for ${SECRET}`),
+    `a string thrown with ${SECRET}`,
+    Object.assign(new Error('outer'), { cause: new Error(SECRET) }),
+  ];
+  for (const failure of failures) {
+    const sink = new RingBufferSink();
+    const ipcMain = new FakeIpcMain();
+    const router = new IpcRouter({
+      ipcMain,
+      runtime: new StubRuntime({ failures: { 'credentials.set': failure } }),
+      isTrustedSender: trustedSender,
+      logger: new LoggerHub({ level: 'debug', sinks: [sink] }).logger('app'),
+    });
+    router.register();
+    const answer = await router.handle('credentials.set', { key: 'firms.mapKey', value: SECRET }, trusted());
+    assert.equal(answer.ok, false);
+    const said = `${JSON.stringify(answer)} ${JSON.stringify(sink.records)}`;
+    assert.ok(!said.includes(SECRET), `after ${String(failure).slice(0, 40)}…: ${said.slice(0, 400)}`);
+  }
+  // And when the request itself is refused for its shape, with the key where it does not belong.
+  const sink = new RingBufferSink();
+  const ipcMain = new FakeIpcMain();
+  const router = new IpcRouter({
+    ipcMain,
+    runtime: new StubRuntime(),
+    isTrustedSender: trustedSender,
+    logger: new LoggerHub({ level: 'debug', sinks: [sink] }).logger('app'),
+  });
+  router.register();
+  for (const payload of [{ key: 'firms.mapKey', value: [SECRET] }, SECRET, [SECRET]]) {
+    const answer = await router.handle('credentials.set', payload, trusted());
+    assert.ok(
+      !`${JSON.stringify(answer)} ${JSON.stringify(sink.records)}`.includes(SECRET),
+      JSON.stringify(payload).slice(0, 80),
+    );
+  }
+});

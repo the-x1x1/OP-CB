@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- When storing a key failed, the failure was written to the application log in its own
+  words, and a failure that quoted the value being stored would have put the key there. The
+  value is now removed from the error before it is logged or answered.
 - A source's key could reach a log or an error through the request's own address. Keys
   are removed from text by the names they usually go under (`key=`, `token=`); a service that
   takes its key as `appid=` or `subscription-key=`, or in the path, has it in the address
