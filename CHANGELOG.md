@@ -7,6 +7,19 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Sorting a column that holds both numbers and numbers written as text (a CSV source beside a
+  JSON one) gave an order that depended on the order the rows arrived in: `"10"` came before
+  `"9"` as text while both compared with `9.5` as numbers. Numeric text now sorts as the
+  number it is, everywhere.
+- A filter or sort on a field named `constructor`, `toString` or the like read what every
+  JavaScript object has instead of what the source sent, so `constructor exists` matched
+  everything. A field path reads the object's own values only, and `list.` no longer reads a
+  list's first element.
+- Fire detections a few kilometres apart on either side of the 180° meridian (Chukotka, Fiji)
+  were never joined into one cluster. They are now, and a cluster that lies across 180° gets a
+  footprint, bounds and area of its real size.
+- A coordinate label within 0.00005° south or west of zero reads `0.0000° N` / `0.0000° E`,
+  not `0.0000° S` / `0.0000° W`.
 - An object replayed from history gets its labels and heading the way a live one does: no
   control or text-direction characters in a label, and no `114.80000000000001` heading.
 - A damaged entry in the history index (a key that is not a partition's) is skipped and
