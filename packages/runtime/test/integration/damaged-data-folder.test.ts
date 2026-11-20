@@ -4,7 +4,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createProvider as createUsgs } from '@opcb/provider-usgs';
-import { readFixture, settle, startRuntime, tableFetch } from '../helpers/harness.js';
+import { readFixture, repoRoot, settle, startRuntime, tableFetch } from '../helpers/harness.js';
 
 /**
  * The app's own data folder after something has been at it. Everything the runtime keeps
@@ -226,4 +226,88 @@ test('integration: the runtime starts and goes on saving whatever state its data
     await fs.rm(pristine, { recursive: true, force: true });
   }
   assert.equal(started, 40);
+});
+
+test('integration: damaged source definitions and a damaged camera list are reported, and the runtime starts', async () => {
+  const examples = path.join(repoRoot, 'connectors', 'examples');
+  const good: Record<string, string> = {};
+  for (const name of ['citibike-stations-rest.json', 'usgs-earthquakes-geojson.json', 'usgs-earthquakes-csv.json'])
+    good[path.join('connectors', name)] = await fs.readFile(path.join(examples, name), 'utf8');
+  good['cameras.json'] = JSON.stringify({
+    version: 1,
+    items: [
+      {
+        id: '0123456789ab',
+        cameraId: '0123456789ab',
+        objectId: 'camera:cameras-local:0123456789ab',
+        name: 'Gate',
+        url: 'http://192.168.1.20/mjpg/video.mjpg',
+        kind: 'mjpeg',
+        registeredAt: '2026-09-21T00:00:00.000Z',
+      },
+    ],
+  });
+  const next = rng(31);
+  // No source answers: this is about what is read from the folder at start.
+  const noNetwork = () => tableFetch({}).impl;
+  for (let round = 0; round < 25; round++) {
+    const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-definitions-'));
+    try {
+      const damaged: string[] = [];
+      for (const [relative, original] of Object.entries(good)) {
+        let text = original;
+        const roll = round === 0 ? 1 : next();
+        if (roll < 0.5) {
+          const times = 1 + Math.floor(next() * 3);
+          for (let k = 0; k < times; k++) {
+            const at = Math.floor(next() * text.length);
+            const len = Math.floor(next() * 40);
+            const how = next();
+            text =
+              how < 0.3
+                ? text.slice(0, at)
+                : how < 0.5
+                  ? text.slice(0, at) + text.slice(at + len)
+                  : text.slice(0, at) +
+                    BITS[Math.floor(next() * BITS.length)]! +
+                    text.slice(at + (next() < 0.5 ? 0 : len));
+          }
+          damaged.push(relative);
+        } else if (roll < 0.7) {
+          text = WHOLE[Math.floor(next() * WHOLE.length)]!;
+          damaged.push(`${relative} (replaced)`);
+        }
+        const file = path.join(dataDir, relative);
+        await fs.mkdir(path.dirname(file), { recursive: true });
+        await fs.writeFile(file, text);
+      }
+      const where = `with ${damaged.join(', ') || 'nothing'} damaged`;
+      let h;
+      try {
+        h = await startRuntime({ dataDir, fetchImpl: noNetwork() });
+      } catch (error) {
+        assert.fail(`the runtime did not start ${where}: ${error instanceof Error ? error.stack : String(error)}`);
+      }
+      try {
+        const listed = await h.client.request('sources.definitions.list', undefined);
+        JSON.stringify(listed);
+        if (round === 0)
+          assert.ok(
+            JSON.stringify(listed).includes('citibike'),
+            `an undamaged folder lists its definitions: ${JSON.stringify(listed).slice(0, 300)}`,
+          );
+        await h.client.request('sources.definitions.reload', undefined);
+        assert.ok((await h.client.request('sources.list', undefined)).length > 5, `sources ${where}`);
+        const cameras = await h.client.request('camera.list', undefined);
+        assert.ok(Array.isArray(cameras), `cameras ${where}`);
+        if (round === 0) assert.equal(cameras.length, 1, 'an undamaged camera list is read');
+      } catch (error) {
+        assert.fail(`a question failed ${where}: ${error instanceof Error ? error.stack : String(error)}`);
+      } finally {
+        await h.dispose();
+      }
+    } finally {
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
+  }
 });
