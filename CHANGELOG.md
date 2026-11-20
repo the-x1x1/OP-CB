@@ -25,6 +25,9 @@ Versioning: [semantic versioning](https://semver.org/).
   on the map, in lists and in search.
 - CSV sources: a header name used twice gives two columns (`name`, `name_2`) instead of one
   key both were written to, where which cell a row kept depended on which was empty.
+- A key named `__proto__` in data from outside (a table's column, a record checked by the shared
+  validator) is refused or left out: an object under it became the record's prototype, and its
+  keys then read as the record's own without having been checked.
 
 ## [0.7.5] — 2026-11-14
 

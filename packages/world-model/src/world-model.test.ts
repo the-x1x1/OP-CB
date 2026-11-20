@@ -201,6 +201,11 @@ test('schema combinators: strict objects, unions, records', () => {
   assert.equal(u.parse('x').ok, true);
   assert.equal(u.parse(1.5).ok, false);
   assert.equal(s.record(s.number(), { keyPattern: /^[a-z]+$/ }).parse({ ok: 1, 'no-good': 2 }).ok, false);
+  // A `__proto__` key is refused: it would be the result's prototype, its keys read unchecked.
+  const hostile = JSON.parse('{"a":{"x":1},"__proto__":{"admin":{"x":2}}}') as unknown;
+  assert.equal(s.record(s.object({ x: s.number() })).parse(hostile).ok, false);
+  const fine = s.record(s.object({ x: s.number() })).parse({ a: { x: 1 } });
+  assert.ok(fine.ok && Object.getPrototypeOf(fine.value) === Object.prototype);
 });
 
 test('time helpers', () => {

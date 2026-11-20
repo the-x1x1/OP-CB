@@ -128,7 +128,9 @@ export const s = {
       const out: Record<string, T> = {};
       const issues: SchemaIssue[] = [];
       for (const [k, val] of entries) {
-        if (opts.keyPattern && !opts.keyPattern.test(k)) {
+        // `__proto__` is refused whatever the pattern: written with `out[k] =`, an object under
+        // it became the result's prototype, and its keys read as the record's own unchecked.
+        if (k === '__proto__' || (opts.keyPattern && !opts.keyPattern.test(k))) {
           issues.push({ path: join(p, k), message: 'invalid key' });
           continue;
         }
