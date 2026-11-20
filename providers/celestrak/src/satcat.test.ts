@@ -124,3 +124,27 @@ test('cache entries round-trip and are re-validated', () => {
   assert.equal(restoreSatcatEntry({ record: { noradId: 1 } }, 25544), undefined, 'another object');
   assert.equal(restoreSatcatEntry('x', 25544), undefined);
 });
+
+test('a code that is not in a table gives no text, whatever the code', () => {
+  for (const code of ['constructor', '__proto__', 'toString', 'ZZZ']) {
+    const p = satcatProperties({
+      noradId: 1,
+      objectType: code,
+      opsStatus: code,
+      owner: code,
+      launchSite: code,
+      dataStatus: code,
+      orbitType: code,
+    } as never);
+    for (const key of [
+      'objectTypeText',
+      'opsStatusText',
+      'ownerName',
+      'launchSiteName',
+      'dataStatusText',
+      'orbitTypeText',
+    ])
+      assert.equal(p[key], undefined, `${key} for ${code}`);
+    assert.doesNotThrow(() => JSON.stringify(p));
+  }
+});

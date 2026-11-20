@@ -1,4 +1,4 @@
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 import type { TelemetryDescriptor, TelemetrySeries } from '@opcb/provider-sdk';
 import { DEFAULT_READINGS, DISCOVERED_TYPES, KNOWN_READINGS } from './known.js';
 
@@ -76,7 +76,7 @@ export function resolveTelemetry(input: TelemetryInput): ResolvedTelemetry | und
   }
   if (fromSources.length) return { series: fromSources.slice(0, MAX_SERIES), origin: 'source' };
 
-  const defaults = DEFAULT_READINGS[input.objectType];
+  const defaults = ownEntry(DEFAULT_READINGS, input.objectType);
   if (defaults) {
     const series: TelemetrySeries[] = [];
     for (const alternatives of defaults) {
@@ -107,6 +107,6 @@ export function discoverReadings(properties: Readonly<Record<string, JsonValue>>
 
 /** The known name, units and format for a key, or the key itself as the name. */
 export function knownSeries(key: string): TelemetrySeries {
-  const known = KNOWN_READINGS[key];
+  const known = ownEntry(KNOWN_READINGS, key);
   return known ? { key, ...known } : { key, name: key };
 }

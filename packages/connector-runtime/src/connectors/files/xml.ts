@@ -1,3 +1,4 @@
+import { ownEntry } from '@opcb/world-model';
 /**
  * A tolerant XML tag scanner for GPX and KML — no dependency, no DOM (the main process has
  * none), no entity expansion. It builds a small element tree from the text: element names
@@ -186,7 +187,7 @@ export function decodeEntities(s: string): string {
         ? String.fromCodePoint(code)
         : whole;
     }
-    return NAMED[body] ?? whole;
+    return ownEntry(NAMED, body) ?? whole;
   });
 }
 

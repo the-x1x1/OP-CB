@@ -13,6 +13,7 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
+  ownEntry,
 } from '@opcb/world-model';
 import type { ProviderDataPolicy } from '@opcb/provider-sdk';
 import { IdentityResolver, defaultIdentityResolver } from '@opcb/identity';
@@ -913,7 +914,9 @@ export class HistoryStore {
   private lookbackFor(objectType: string | undefined): number {
     if (objectType === undefined) return DEFAULT_SNAPSHOT_LOOKBACK;
     return (
-      this.lookbacks[objectType] ?? DEFAULT_FRESHNESS_POLICIES[objectType]?.expireSeconds ?? DEFAULT_SNAPSHOT_LOOKBACK
+      ownEntry(this.lookbacks, objectType) ??
+      ownEntry(DEFAULT_FRESHNESS_POLICIES, objectType)?.expireSeconds ??
+      DEFAULT_SNAPSHOT_LOOKBACK
     );
   }
 

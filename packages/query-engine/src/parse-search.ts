@@ -1,4 +1,11 @@
-import { ObjectTypes, type GeoRegion, type TimeRange, type WorldFilter, type WorldQuery } from '@opcb/world-model';
+import {
+  ObjectTypes,
+  type GeoRegion,
+  type TimeRange,
+  type WorldFilter,
+  type WorldQuery,
+  ownEntry,
+} from '@opcb/world-model';
 import { parseCoordinates } from './coordinates.js';
 import type { Gazetteer, GazetteerHit, PlaceKind } from './gazetteer.js';
 import { DEFAULT_COMMANDS, STOP_WORDS, TYPE_VOCABULARY, typeLabel, type CommandDefinition } from './vocabulary.js';
@@ -230,12 +237,12 @@ function extractTime(tokens: Token[], now: number, draft: Draft): void {
     } else if (t.lower === 'last' || t.lower === 'past' || t.lower === 'previous') {
       if (a !== undefined) {
         const n = numberOf(a);
-        if (n !== undefined && b !== undefined && UNIT_MS[b] !== undefined) {
-          range = lookback(now, n * UNIT_MS[b]!);
+        if (n !== undefined && b !== undefined && ownEntry(UNIT_MS, b) !== undefined) {
+          range = lookback(now, n * ownEntry(UNIT_MS, b)!);
           label = `last ${n} ${b}`;
           consumed = 3;
-        } else if (n === undefined && UNIT_MS[a] !== undefined && a.length > 1) {
-          range = lookback(now, UNIT_MS[a]!);
+        } else if (n === undefined && ownEntry(UNIT_MS, a) !== undefined && a.length > 1) {
+          range = lookback(now, ownEntry(UNIT_MS, a)!);
           label = `last ${a}`;
           consumed = 2;
         } else {
@@ -267,7 +274,7 @@ function extractTime(tokens: Token[], now: number, draft: Draft): void {
 
 function numberOf(word: string): number | undefined {
   if (/^\d+$/.test(word)) return Number(word);
-  return NUMBER_WORDS[word];
+  return ownEntry(NUMBER_WORDS, word);
 }
 /** From `ms` before now; a span longer than there is data for starts at 1970 (a date at all). */
 function lookback(now: number, ms: number): TimeRange {
@@ -497,7 +504,7 @@ function extractThresholds(tokens: Token[], draft: Draft, out: ParsedSearch): vo
     // above/over/below/under/>/</at least/at most/faster than/slower than N [unit]
     const r = readThreshold(tokens, i);
     if (r && r.explicitOp) {
-      const unit = r.unit ? UNIT_TO_FIELD[r.unit] : undefined;
+      const unit = r.unit ? ownEntry(UNIT_TO_FIELD, r.unit) : undefined;
       if (unit) {
         for (let k = i; k <= r.end; k++) tokens[k]!.used = true;
         addFilter(draft, unit.field, r.op, round(r.value * unit.factor), `${opWord(r.op)} ${r.value} ${unit.label}`);
@@ -574,11 +581,11 @@ function readThreshold(tokens: Token[], i: number): Threshold | undefined {
   let unit = m[3]?.toLowerCase();
   let end = j;
   const after = tokens[j + 1];
-  if (!unit && after && !after.used && UNIT_TO_FIELD[after.lower]) {
+  if (!unit && after && !after.used && ownEntry(UNIT_TO_FIELD, after.lower)) {
     unit = after.lower;
     end = j + 1;
   }
-  if (unit && !UNIT_TO_FIELD[unit]) return undefined;
+  if (unit && !ownEntry(UNIT_TO_FIELD, unit)) return undefined;
   return { op, value, end, explicitOp, ...(unit ? { unit } : {}) };
 }
 

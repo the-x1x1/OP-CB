@@ -1,3 +1,4 @@
+import { ownEntry } from '@opcb/world-model';
 import type { Migration } from './runner.js';
 
 /**
@@ -18,7 +19,8 @@ export const renamedBasemapsMigration: Migration = {
     const settings =
       typeof doc.settings === 'object' && doc.settings !== null && !Array.isArray(doc.settings) ? doc.settings : {};
     const id = settings['basemapId'];
-    if (typeof id === 'string' && RENAMED_BASEMAPS[id]) settings['basemapId'] = RENAMED_BASEMAPS[id];
+    const renamed = typeof id === 'string' ? ownEntry(RENAMED_BASEMAPS, id) : undefined;
+    if (renamed) settings['basemapId'] = renamed;
     doc.settings = settings;
   },
 };

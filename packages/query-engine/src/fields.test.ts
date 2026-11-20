@@ -25,6 +25,7 @@ import {
   objectSearchStrings,
   tokenize,
 } from './text-match.js';
+import { parseSearch } from './parse-search.js';
 import { typeLabel } from './vocabulary.js';
 import { T0, eventFrom, objectFrom } from './test-fixtures.js';
 
@@ -567,4 +568,30 @@ test('typeLabel and formatCoordinateLabel', () => {
   assert.equal(formatCoordinateLabel(0, 0), '0.0000° N, 0.0000° E');
   assert.equal(formatCoordinateLabel(-0.00001, -0.00004), '0.0000° N, 0.0000° E');
   assert.equal(formatCoordinateLabel(-0.00005, -0.0001), '0.0001° S, 0.0001° W');
+});
+
+test('a search for a word every object has (constructor, __proto__) is a search for that word', () => {
+  const ctx = { gazetteer: { search: () => [], lookup: () => [] } as never, now: () => T0, commands: [] };
+  for (const word of ['constructor', '__proto__', 'tostring', 'valueof', 'hasownproperty']) {
+    for (const text of [
+      `last 5 ${word}`,
+      `last ${word}`,
+      `in the last ${word} ${word}`,
+      `aircraft over 5 ${word}`,
+      `aircraft faster than 300 ${word}`,
+      `${word} 5`,
+      `${word} ago`,
+      word,
+    ]) {
+      const parsed = parseSearch(text, ctx);
+      const json = JSON.stringify(parsed);
+      assert.ok(!/NaN|null|undefined|native code/.test(json), `${text}: ${json}`);
+      for (const intent of parsed.intents)
+        if (intent.kind === 'query')
+          for (const f of intent.query?.filters ?? []) assert.equal(typeof f.field, 'string', text);
+    }
+  }
+  // The real units still read.
+  const real = parseSearch('aircraft last 5 minutes', ctx).intents.find((i) => i.kind === 'query');
+  assert.ok(real && real.kind === 'query' && real.query?.time, 'a time range');
 });

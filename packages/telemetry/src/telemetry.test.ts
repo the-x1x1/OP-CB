@@ -17,6 +17,10 @@ import {
   discoverReadings,
   formatReading,
   gapThreshold,
+  hasReading,
+  knownSeries,
+  limitText,
+  seriesUnits,
   limitBands,
   limitState,
   readingAt,
@@ -311,4 +315,37 @@ test('limit bands: warning between the limits, critical beyond, clipped to the d
   assert.deepEqual(limitBands({ warnHigh: 100, critHigh: 150 }, { min: 0, max: 80 }, 100), []);
   assert.deepEqual(limitBands({ warnLow: 5 }, { min: 0, max: 10 }, 100), [{ kind: 'warn', y: 50, height: 50 }]);
   assert.deepEqual(limitBands(undefined, { min: 0, max: 10 }, 100), []);
+});
+
+test('seriesUnits, limitText, hasReading, knownSeries', () => {
+  assert.equal(seriesUnits({ units: 'kPa', format: 'celsius' }), 'kPa', "a series' own units come first");
+  assert.equal(seriesUnits({ format: 'celsius' }), '°C');
+  assert.equal(seriesUnits({ format: 'number:1' }), undefined);
+  assert.equal(seriesUnits({}), undefined);
+  assert.equal(limitText('normal'), undefined);
+  assert.equal(limitText('crit-high'), 'above the critical limit');
+  assert.equal(limitText('crit-low'), 'below the critical limit');
+  assert.equal(limitText('warn-high'), 'above the warning limit');
+  assert.equal(limitText('warn-low'), 'below the warning limit');
+  const payload = { a: 1, zero: 0, text: '5', nan: Number.NaN, none: null, flag: true };
+  assert.equal(hasReading(payload, 'a'), true);
+  assert.equal(hasReading(payload, 'zero'), true);
+  for (const key of ['text', 'nan', 'none', 'flag', 'missing', 'constructor', 'toString'])
+    assert.equal(hasReading(payload, key), false, key);
+  const known = Object.keys(KNOWN_READINGS)[0]!;
+  assert.deepEqual(knownSeries(known), { key: known, ...KNOWN_READINGS[known] });
+  assert.deepEqual(knownSeries('flowRate'), { key: 'flowRate', name: 'flowRate' });
+});
+
+test('a type or a reading named like something every object has is read as a name, not as a table entry', () => {
+  for (const name of ['constructor', 'toString', 'valueOf', '__proto__', 'hasOwnProperty']) {
+    assert.deepEqual(knownSeries(name), { key: name, name }, name);
+    assert.equal(resolveTelemetry({ objectType: name, properties: { temperatureC: 20 } }), undefined, name);
+    const payload = JSON.parse(`{"${name}": 3}`) as Record<string, number>;
+    assert.deepEqual(
+      resolveTelemetry({ objectType: 'sensor', properties: payload }),
+      { series: [{ key: name, name }], origin: 'discovered' },
+      name,
+    );
+  }
 });

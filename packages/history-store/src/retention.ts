@@ -1,4 +1,4 @@
-import { ObjectTypes } from '@opcb/world-model';
+import { ObjectTypes, ownEntry } from '@opcb/world-model';
 import { retentionCapSeconds, type ProviderDataPolicy } from '@opcb/provider-sdk';
 import type { HistoryRow } from './row.js';
 
@@ -69,8 +69,8 @@ export const USER_DATA_PROVIDER_IDS: readonly string[] = Object.freeze(['user', 
 export type RetentionOverrides = Readonly<Record<string, Partial<RetentionPolicy>>>;
 
 export function retentionPolicyFor(objectType: string, overrides?: RetentionOverrides): RetentionPolicy {
-  const base = DEFAULT_RETENTION_POLICIES[objectType] ?? FALLBACK_RETENTION_POLICY;
-  const o = overrides?.[objectType];
+  const base = ownEntry(DEFAULT_RETENTION_POLICIES, objectType) ?? FALLBACK_RETENTION_POLICY;
+  const o = ownEntry(overrides, objectType);
   return o ? { ...base, ...o } : base;
 }
 

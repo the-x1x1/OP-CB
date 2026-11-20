@@ -1,4 +1,4 @@
-import type { JsonValue, Observation } from '@opcb/world-model';
+import { ownEntry, type JsonValue, type Observation } from '@opcb/world-model';
 import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { NHC_MANIFEST } from './manifest.js';
 
@@ -137,7 +137,7 @@ export function stormToDraft(raw: unknown, opts: NormalizeOptions): ObservationD
   };
   if (classification) {
     payload['classification'] = classification;
-    payload['classificationLabel'] = CLASSIFICATIONS[classification] ?? classification;
+    payload['classificationLabel'] = ownEntry(CLASSIFICATIONS, classification) ?? classification;
   }
   const kt = num(s['intensity']);
   if (kt !== undefined && kt >= 0 && kt < 250) payload['intensityKt'] = kt;

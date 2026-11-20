@@ -1,4 +1,4 @@
-import type { GeoBounds, WorldObject } from '@opcb/world-model';
+import { ownEntry, type GeoBounds, type WorldObject } from '@opcb/world-model';
 import type { SourceHealthEntry } from '@opcb/source-health';
 import { OVERVIEW_LAYERS, typeLayerId, type OverviewLayer } from './overview-layers.js';
 import { WEATHER_GROUP_ID, WEATHER_IMAGERY, type WeatherImageryLayer } from './weather-imagery.js';
@@ -98,7 +98,7 @@ const CHILDREN: Readonly<Record<string, readonly LayerChild[]>> = {
 };
 
 export function typeName(objectType: string): string {
-  return TYPE_NAMES[objectType] ?? objectType.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  return ownEntry(TYPE_NAMES, objectType) ?? objectType.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 export function buildLayerGroups(categories: readonly OverviewLayer[] = OVERVIEW_LAYERS): LayerGroup[] {
@@ -109,7 +109,7 @@ export function buildLayerGroups(categories: readonly OverviewLayer[] = OVERVIEW
       id: typeLayerId(t),
       objectType: t,
       name: typeName(t),
-      children: CHILDREN[t] ?? [],
+      children: ownEntry(CHILDREN, t) ?? [],
     })),
     ...(c.id === WEATHER_GROUP_ID ? { imagery: WEATHER_IMAGERY } : {}),
   }));

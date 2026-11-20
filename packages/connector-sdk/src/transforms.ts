@@ -1,4 +1,4 @@
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 
 /**
  * The transform registry: every conversion a mapping may apply, by name. Each is a pure
@@ -226,7 +226,9 @@ export const TRANSFORMS: Readonly<Record<string, Transform>> = Object.freeze({
 
 /** Resolve a transform by name, including the parametrised forms; undefined for an unknown name. */
 export function resolveTransform(name: string): Transform | undefined {
-  const direct = TRANSFORMS[name];
+  // By its own name only: `constructor` is on every object, and as a transform it passed the
+  // definition check and turned each value into an object.
+  const direct = ownEntry(TRANSFORMS, name);
   if (direct) return direct;
   const colon = name.indexOf(':');
   if (colon < 0) return undefined;

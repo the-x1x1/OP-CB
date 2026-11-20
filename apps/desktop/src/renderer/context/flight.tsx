@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import type { WorldObject } from '@opcb/world-model';
+import { ownEntry, type WorldObject } from '@opcb/world-model';
 import type { WorldFlightAirport, WorldFlightInfo } from '@opcb/ipc-contract';
 import {
   FieldList,
@@ -168,7 +168,11 @@ export function aircraftRows(
     },
     {
       label: 'Squawk',
-      value: squawk ? (SPECIAL_SQUAWKS[squawk] ? `${squawk} — ${SPECIAL_SQUAWKS[squawk]}` : squawk) : undefined,
+      value: squawk
+        ? ownEntry(SPECIAL_SQUAWKS, squawk)
+          ? `${squawk} — ${ownEntry(SPECIAL_SQUAWKS, squawk)}`
+          : squawk
+        : undefined,
       mono: true,
     },
     {

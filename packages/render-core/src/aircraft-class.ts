@@ -1,4 +1,4 @@
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 
 /**
  * What kind of aircraft an object is, for its silhouette on the map and a line in the
@@ -131,7 +131,7 @@ export function aircraftClass(properties: Readonly<Record<string, JsonValue>>): 
   const hit = MEMO.get(key);
   if (hit) return hit;
   const byType = type ? classFromType(type) : undefined;
-  const byCategory = category ? BY_CATEGORY[category] : undefined;
+  const byCategory = category ? ownEntry(BY_CATEGORY, category) : undefined;
   let out: AircraftClass;
   if (byType) out = byType;
   else if (byCategory) out = byCategory;

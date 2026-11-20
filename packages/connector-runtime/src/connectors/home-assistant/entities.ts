@@ -1,4 +1,4 @@
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 import { resolveTransform } from '@opcb/connector-sdk';
 
 /**
@@ -310,7 +310,7 @@ export function toSi(
   opts: { temperature?: boolean } = {},
 ): { value: number; unit: string } | undefined {
   if (unit === 'K' && !opts.temperature) return undefined;
-  const c = UNITS[unit];
+  const c = ownEntry(UNITS, unit);
   if (!c) return undefined;
   if (!c.transform) return { value, unit: c.to };
   const out = resolveTransform(c.transform)!(value);

@@ -1,3 +1,4 @@
+import { ownEntry } from '@opcb/world-model';
 /**
  * What a satellite is for, as far as the catalogue says: one category per object, carried as
  * `payload.satelliteCategory` so the map can colour satellites apart and the context panel
@@ -83,7 +84,7 @@ export function satelliteCategory(
   if (byName === 'station' || group === 'stations') return 'station';
   if (memberOf?.('military', e.noradId)) return 'military';
   if (memberOf?.('gnss', e.noradId)) return 'navigation';
-  return GROUP_CATEGORY[group] ?? byName ?? 'other';
+  return ownEntry(GROUP_CATEGORY, group) ?? byName ?? 'other';
 }
 
 function escape(word: string): string {

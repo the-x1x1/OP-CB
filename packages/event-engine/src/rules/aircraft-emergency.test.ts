@@ -162,3 +162,8 @@ test('the engine ends a quiet emergency on its own minute, with no aircraft repo
   engine.endQuiet();
   assert.equal(engine.store.ofType('aircraft-emergency')[0]?.endAt, at(0));
 });
+
+test('emergencyOf: a squawk that is not a code (constructor, __proto__) is no emergency', () => {
+  for (const squawk of ['constructor', '__proto__', 'toString', 'valueOf'])
+    assert.equal(emergencyOf(aircraft('a1b2c3', { squawk }, 0)), undefined, squawk);
+});

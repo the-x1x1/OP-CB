@@ -36,6 +36,17 @@ interface CacheFile {
   entries: Record<string, CacheEntry>;
 }
 
+function isCacheEntry(v: unknown): v is CacheEntry {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return false;
+  const e = v as Record<string, unknown>;
+  return (
+    'value' in e &&
+    e['value'] !== undefined &&
+    typeof e['storedAt'] === 'string' &&
+    (e['expiresAt'] === undefined || typeof e['expiresAt'] === 'number')
+  );
+}
+
 const MAX_CACHE_ENTRIES = 256;
 
 /** File-backed JSON cache under `<dataDir>/cache/<providerId>.json`. */
@@ -90,8 +101,15 @@ export class FileProviderCache implements ProviderCache {
   private async read(): Promise<Record<string, CacheEntry>> {
     if (this.entries) return this.entries;
     const doc = await readJsonFile<CacheFile>(this.file).catch(() => undefined);
-    this.entries =
-      doc && typeof doc === 'object' && doc.entries && typeof doc.entries === 'object' ? { ...doc.entries } : {};
+    // A table with no inherited members, so a key is only ever an entry: on a plain object a
+    // key of `constructor` read as a hit and one of `__proto__` was never stored. What the file
+    // holds is kept only where it has the shape of an entry.
+    const entries = Object.create(null) as Record<string, CacheEntry>;
+    const stored: unknown = doc && typeof doc === 'object' ? doc.entries : undefined;
+    if (stored && typeof stored === 'object' && !Array.isArray(stored))
+      for (const [key, entry] of Object.entries(stored as Record<string, unknown>))
+        if (isCacheEntry(entry)) entries[key] = entry;
+    this.entries = entries;
     return this.entries;
   }
 

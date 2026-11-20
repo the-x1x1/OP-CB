@@ -1,3 +1,4 @@
+import { ownEntry } from '@opcb/world-model';
 /**
  * A small, tolerant XML tag scanner for OGC GetCapabilities documents.
  *
@@ -34,12 +35,15 @@ export function decodeEntities(s: string): string {
   return s.replace(/&(#x[0-9a-fA-F]{1,6}|#[0-9]{1,7}|[a-zA-Z]{2,6});/g, (whole, ref: string) => {
     if (ref.startsWith('#x')) return fromCodePoint(parseInt(ref.slice(2), 16), whole);
     if (ref.startsWith('#')) return fromCodePoint(parseInt(ref.slice(1), 10), whole);
-    return NAMED_ENTITIES[ref] ?? whole;
+    return ownEntry(NAMED_ENTITIES, ref) ?? whole;
   });
 }
 
 function fromCodePoint(n: number, fallback: string): string {
-  return Number.isInteger(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : fallback;
+  // Not half of a surrogate pair either: a lone one is not text, and encodeURIComponent throws on it.
+  return Number.isInteger(n) && n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff)
+    ? String.fromCodePoint(n)
+    : fallback;
 }
 
 function splitName(qname: string): { prefix: string; name: string } {

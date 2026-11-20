@@ -50,3 +50,17 @@ test('a storm needs an id, a position and a time that has happened', () => {
   assert.equal(normalizeCurrentStorms({ storms: [] }, opts).rejected[0]?.index, -1);
   assert.equal(normalizeCurrentStorms(load('empty.json'), opts).observations.length, 0);
 });
+
+test('a classification that is not in the table is labelled with its own text, whatever the text', () => {
+  const base = { id: 'al012026', latitudeNumeric: 20, longitudeNumeric: -60, lastUpdate: '2026-09-23T03:00:00Z' };
+  for (const classification of ['constructor', '__proto__', 'toString', 'XX']) {
+    const draft = stormToDraft({ ...base, classification }, opts);
+    assert.equal(typeof draft, 'object', classification);
+    if (typeof draft === 'object') {
+      assert.equal(typeof draft.payload['classificationLabel'], 'string', classification);
+      assert.equal(draft.payload['classificationLabel'], draft.payload['classification']);
+    }
+  }
+  const hurricane = stormToDraft({ ...base, classification: 'HU' }, opts);
+  assert.equal(typeof hurricane === 'object' && hurricane.payload['classificationLabel'], 'Hurricane');
+});

@@ -1,4 +1,4 @@
-import { EventTypes, ObjectTypes, type SeverityClass, type WorldObject } from '@opcb/world-model';
+import { EventTypes, ObjectTypes, type SeverityClass, type WorldObject, ownEntry } from '@opcb/world-model';
 import { episodeRule } from './episodes.js';
 import { shortUtc, stringProp } from './types.js';
 
@@ -52,7 +52,7 @@ const FOLLOWS_SQUAWK: ReadonlySet<EmergencyKind> = new Set(['unlawful', 'general
 export function emergencyOf(o: WorldObject): EmergencyKind | undefined {
   const squawk = o.properties['squawk'];
   const status = o.properties['emergency'];
-  const bySquawk = typeof squawk === 'string' ? BY_SQUAWK[squawk] : undefined;
+  const bySquawk = typeof squawk === 'string' ? ownEntry(BY_SQUAWK, squawk) : undefined;
   let byStatus: EmergencyKind | undefined;
   if (typeof status === 'string') {
     const s = status.toLowerCase();

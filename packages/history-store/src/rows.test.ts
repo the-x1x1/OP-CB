@@ -5,7 +5,9 @@ import path from 'node:path';
 import { defaultIdentityResolver } from '@opcb/identity';
 import {
   HISTORY_ROW_COLUMNS,
+  FALLBACK_RETENTION_POLICY,
   PartitionIndex,
+  retentionPolicyFor,
   compactRow,
   errorMessage,
   isHistoryRow,
@@ -321,4 +323,12 @@ test('pruneEmptyDirs: removes empty folders up to the root, and nothing outside 
   await pruneEmptyDirs(sibling, root);
   assert.deepEqual((await fs.readdir(base)).sort(), ['history', 'history2']);
   assert.deepEqual(await fs.readdir(path.join(base, 'history2')), ['empty']);
+});
+
+test('retentionPolicyFor: an object type named like something every object has gets the fallback policy', () => {
+  for (const name of ['constructor', 'toString', '__proto__', 'valueOf']) {
+    assert.equal(retentionPolicyFor(name), FALLBACK_RETENTION_POLICY, name);
+    assert.deepEqual(retentionPolicyFor(name, {}), FALLBACK_RETENTION_POLICY, name);
+  }
+  assert.equal(retentionPolicyFor('aircraft', { aircraft: { retainSeconds: 5 } }).retainSeconds, 5);
 });

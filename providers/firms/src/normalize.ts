@@ -1,4 +1,4 @@
-import { stableStringify, type JsonValue, type Observation } from '@opcb/world-model';
+import { stableStringify, type JsonValue, type Observation, ownEntry } from '@opcb/world-model';
 import { buildObservation, type ObservationDraft } from '@opcb/provider-sdk';
 import { FIRMS_MANIFEST, type FirmsSource } from './manifest.js';
 import { acquisitionMsUtc, type FirmsRow } from './csv.js';
@@ -104,7 +104,9 @@ export function rowToDraft(row: FirmsRow, opts: NormalizeOptions): ObservationDr
     quality: {
       complete: true,
       sourceQuality: 'authoritative',
-      ...(PIXEL_ACCURACY_M[instrument] !== undefined ? { positionAccuracyM: PIXEL_ACCURACY_M[instrument]! } : {}),
+      ...(ownEntry(PIXEL_ACCURACY_M, instrument) !== undefined
+        ? { positionAccuracyM: ownEntry(PIXEL_ACCURACY_M, instrument)! }
+        : {}),
       ...(flags.length ? { flags } : {}),
     },
     origin: opts.origin ?? 'live',

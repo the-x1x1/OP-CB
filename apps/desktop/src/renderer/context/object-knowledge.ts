@@ -1,5 +1,5 @@
 import type { GeoPosition, JsonValue, WorldObject } from '@opcb/world-model';
-import { lookAngles, MMSI_STATION_KIND_TEXT, mmsiFlag, type MmsiStationKind } from '@opcb/world-model';
+import { lookAngles, MMSI_STATION_KIND_TEXT, mmsiFlag, type MmsiStationKind, ownEntry } from '@opcb/world-model';
 import { formatDuration, formatUtcDateTime, formatUtcTime } from '@opcb/ui';
 
 /**
@@ -261,7 +261,7 @@ export function vesselRows(o: WorldObject): Row[] {
   const { flag, kind } = vesselFlag(o);
   return [
     { label: 'MMSI', value: s(p, 'mmsi') ?? o.id.split(':')[2], mono: true },
-    { label: 'Station', value: kind ? MMSI_STATION_KIND_TEXT[kind] : undefined },
+    { label: 'Station', value: kind ? ownEntry(MMSI_STATION_KIND_TEXT, kind) : undefined },
     { label: 'Flag (from MMSI)', value: flag },
     { label: 'Name', value: o.labels['name'] ?? s(p, 'name') },
     { label: 'IMO (as broadcast)', value: imo, mono: true },
@@ -313,7 +313,7 @@ const MAG_TYPE_TEXT: Readonly<Record<string, string>> = Object.freeze({
 export function magnitudeText(mag: number | undefined, magType: string | undefined): string | undefined {
   if (mag === undefined || !Number.isFinite(mag)) return undefined;
   const t = magType?.toLowerCase();
-  const words = t ? MAG_TYPE_TEXT[t] : undefined;
+  const words = t ? ownEntry(MAG_TYPE_TEXT, t) : undefined;
   return `M ${mag.toFixed(1)}${t ? ` ${t}` : ''}${words ? ` — ${words}` : ''}`;
 }
 
@@ -330,7 +330,7 @@ const PAGER_TEXT: Readonly<Record<string, string>> = Object.freeze({
 
 export function pagerText(alert: string | undefined): string | undefined {
   if (!alert) return undefined;
-  return PAGER_TEXT[alert.toLowerCase()] ?? alert;
+  return ownEntry(PAGER_TEXT, alert.toLowerCase()) ?? alert;
 }
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];

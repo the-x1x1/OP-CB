@@ -13,6 +13,7 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
+  ownEntry,
 } from '@opcb/world-model';
 import type { TrackPoint } from '@opcb/state-engine';
 import { mayExport } from '@opcb/provider-sdk';
@@ -201,7 +202,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       );
       const out: EventTypeInfo[] = [];
       for (const type of Object.values(EventTypes) as string[]) {
-        const label = EVENT_TYPE_LABELS[type] ?? type;
+        const label = ownEntry(EVENT_TYPE_LABELS, type) ?? type;
         if (type === EventTypes.WatchZoneEntry || type === EventTypes.SourceStatusChange) {
           out.push({ type, label, available: true, objectTypes: [] });
           continue;

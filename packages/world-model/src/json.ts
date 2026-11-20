@@ -11,6 +11,16 @@ export function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * `table[key]` for a key that came from outside the program (a source's text, a typed word,
+ * a file's column): the table's own entry, or undefined. A plain lookup also finds what every
+ * object inherits, so `constructor` or `__proto__` as a unit, a code or a type name came
+ * back as a function or an object where a number or a label was expected.
+ */
+export function ownEntry<T>(table: Readonly<Record<string, T>> | undefined, key: string | number): T | undefined {
+  return table !== undefined && Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
 /** Deep-freeze helper used for frozen contract defaults. */
 export function deepFreeze<T>(value: T): Readonly<T> {
   if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {

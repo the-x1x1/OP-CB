@@ -7,6 +7,18 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Typing `last 5 constructor` (or `__proto__`) in search stopped the search with an error, and
+  `aircraft over 5 constructor` built a filter on nothing. The same mistake — a word, code or
+  name from outside looked up in a table and finding what every JavaScript object has — is
+  closed in the other places it could happen: a connector transform named `constructor` passed
+  the definition check, an XML entity `&constructor;` put program text into a title, a Home
+  Assistant unit, a fire instrument, an aircraft category, a squawk, a storm classification, a
+  satellite catalogue code, a reading's name, an object type's freshness and retention, and a
+  provider cache key.
+- A provider's cache file that holds something other than cache entries is read for the
+  entries it does hold, instead of handing back empty values.
+- A numeric character reference for half a surrogate pair (`&#xD800;`) in a map service's XML
+  is left as written rather than turned into a character that is not text.
 - A file save that failed (a full disk, a file that could not be replaced) left a hidden
   `.name….tmp` file behind each time it was tried. The temporary file is removed. On Windows,
   replacing a file that a virus scanner or indexer has open for a moment is tried again for

@@ -1,7 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  FALLBACK_FRESHNESS_POLICY,
   assertSchema,
+  freshnessPolicyFor,
+  ownEntry,
   compareFeedTime,
   deepFreeze,
   isBasemapOverlay,
@@ -273,5 +276,30 @@ describe('the Sun', () => {
     close((now.epsilon * 180) / Math.PI, 23.437, 2);
     close(((next.lambda - now.lambda) * 180) / Math.PI, 1.019, 2);
     close(next.gmstDeg - now.gmstDeg, 360.98564736629, 6);
+  });
+});
+
+const INHERITED = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', '__defineGetter__'];
+
+describe('a name every object has is not an entry in a table', () => {
+  it('ownEntry reads own entries only', () => {
+    const table = { a: 1, zero: 0, 7: 7 };
+    assert.equal(ownEntry(table, 'a'), 1);
+    assert.equal(ownEntry(table, 'zero'), 0);
+    assert.equal(ownEntry(table, 7), 7);
+    assert.equal(ownEntry(table, 'missing'), undefined);
+    assert.equal(ownEntry(undefined, 'a'), undefined);
+    for (const name of INHERITED) assert.equal(ownEntry(table, name), undefined, name);
+    assert.equal(ownEntry({ constructor: 'own' }, 'constructor'), 'own');
+  });
+
+  it('freshnessPolicyFor gives an object type with such a name the fallback policy', () => {
+    for (const name of INHERITED) {
+      assert.equal(freshnessPolicyFor(name), FALLBACK_FRESHNESS_POLICY, name);
+      assert.equal(freshnessPolicyFor(name, {}), FALLBACK_FRESHNESS_POLICY, name);
+    }
+    const mine = { liveSeconds: 1, recentSeconds: 2, expireSeconds: 3 };
+    assert.equal(freshnessPolicyFor('aircraft', { aircraft: mine }), mine);
+    assert.notEqual(freshnessPolicyFor('aircraft'), FALLBACK_FRESHNESS_POLICY);
   });
 });

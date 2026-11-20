@@ -98,3 +98,9 @@ test('timestamp:<pattern>: a date or a time of day that does not exist is no tim
   ])
     assert.equal(t(bad), undefined, bad);
 });
+
+test('resolveTransform: a name every object has is not a transform', () => {
+  for (const name of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', 'isPrototypeOf'])
+    assert.equal(resolveTransform(name), undefined, name);
+  assert.equal(typeof resolveTransform('number'), 'function');
+});

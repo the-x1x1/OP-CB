@@ -6,6 +6,7 @@ import {
   type JsonValue,
   type RasterOverlay,
   type WmtsOverlay,
+  ownEntry,
 } from '@opcb/world-model';
 import { ProviderError, type ProviderManifest } from '@opcb/provider-sdk';
 import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
@@ -707,7 +708,7 @@ export class WmtsProvider extends OgcOverlayProvider {
       const filled = new Set<string>();
       url = resource.template.replace(/\{([A-Za-z]+)\}/g, (_whole, name: string) => {
         const key = name.toLowerCase();
-        const kept = RENDERER_PLACEHOLDERS[key];
+        const kept = ownEntry(RENDERER_PLACEHOLDERS, key);
         if (kept) return kept;
         if (key === 'tilematrixset') return encodeURIComponent(set.identifier);
         if (key === 'style') return encodeURIComponent(style);

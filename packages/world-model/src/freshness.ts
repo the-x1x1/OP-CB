@@ -1,3 +1,4 @@
+import { ownEntry } from './json.js';
 import { ObjectTypes } from './observation.js';
 
 /**
@@ -53,7 +54,9 @@ export function freshnessPolicyFor(
   objectType: string,
   overrides?: Readonly<Record<string, FreshnessPolicy>>,
 ): FreshnessPolicy {
-  return overrides?.[objectType] ?? DEFAULT_FRESHNESS_POLICIES[objectType] ?? FALLBACK_FRESHNESS_POLICY;
+  return (
+    ownEntry(overrides, objectType) ?? ownEntry(DEFAULT_FRESHNESS_POLICIES, objectType) ?? FALLBACK_FRESHNESS_POLICY
+  );
 }
 
 /** Classify by age. `observedAtMs` NaN → UNKNOWN. */

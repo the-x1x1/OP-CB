@@ -1,4 +1,4 @@
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 
 /**
  * CelesTrak SATCAT — the satellite catalogue record for one object: who owns it, when and
@@ -356,22 +356,22 @@ export function satcatProperties(r: SatcatRecord): Record<string, JsonValue> {
   put('satcatName', r.name);
   put('satcatIntlDesignator', r.intlDesignator);
   put('objectType', r.objectType);
-  put('objectTypeText', r.objectType ? OBJECT_TYPE_TEXT[r.objectType] : undefined);
+  put('objectTypeText', r.objectType ? ownEntry(OBJECT_TYPE_TEXT, r.objectType) : undefined);
   put('opsStatus', r.opsStatus);
-  put('opsStatusText', r.opsStatus ? OPS_STATUS_TEXT[r.opsStatus] : undefined);
+  put('opsStatusText', r.opsStatus ? ownEntry(OPS_STATUS_TEXT, r.opsStatus) : undefined);
   put('owner', r.owner);
-  put('ownerName', r.owner ? OWNER_TEXT[r.owner] : undefined);
+  put('ownerName', r.owner ? ownEntry(OWNER_TEXT, r.owner) : undefined);
   put('launchDate', r.launchDate);
   put('launchSite', r.launchSite);
-  put('launchSiteName', r.launchSite ? LAUNCH_SITE_TEXT[r.launchSite] : undefined);
+  put('launchSiteName', r.launchSite ? ownEntry(LAUNCH_SITE_TEXT, r.launchSite) : undefined);
   put('decayDate', r.decayDate);
   put('satcatPeriodMinutes', r.periodMinutes);
   put('satcatInclination', r.inclination);
   put('satcatApogeeKm', r.apogeeKm);
   put('satcatPerigeeKm', r.perigeeKm);
   put('rcsM2', r.rcsM2);
-  put('dataStatusText', r.dataStatus ? DATA_STATUS_TEXT[r.dataStatus] : undefined);
-  put('orbitTypeText', r.orbitType ? ORBIT_TYPE_TEXT[r.orbitType] : undefined);
+  put('dataStatusText', r.dataStatus ? ownEntry(DATA_STATUS_TEXT, r.dataStatus) : undefined);
+  put('orbitTypeText', r.orbitType ? ownEntry(ORBIT_TYPE_TEXT, r.orbitType) : undefined);
   if (r.orbitCenter && /^\d+$/.test(r.orbitCenter)) put('dockedTo', Number(r.orbitCenter));
   return out;
 }

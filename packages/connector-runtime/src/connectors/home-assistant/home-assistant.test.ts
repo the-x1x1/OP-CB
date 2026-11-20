@@ -1000,3 +1000,8 @@ test('home-assistant: no frame other than auth, subscribe_events and ping is eve
     assert.match(new URL(r.url).pathname, /^\/api\/states$/);
   }
 });
+
+test('toSi: a unit that is not one (constructor, __proto__) converts to nothing', () => {
+  for (const unit of ['constructor', '__proto__', 'toString', 'valueOf', ''])
+    assert.equal(toSi(5, unit), undefined, unit);
+});

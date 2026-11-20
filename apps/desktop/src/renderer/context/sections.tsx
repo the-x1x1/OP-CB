@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { WorldObject } from '@opcb/world-model';
+import { ownEntry, type WorldObject } from '@opcb/world-model';
 import type { CameraPictureHealth, CameraStreamDescriptor } from '@opcb/ipc-contract';
 import {
   Button,
@@ -377,9 +377,9 @@ export function hazardRows(
     // GDACS's figure is the most the storm has reached, not its wind now.
     { label: 'Peak wind (its life so far)', value: cycloneWind(num(object, 'maxWindKmh')) },
     ...cycloneRows(object),
-    { label: 'Risk', value: category ? (SPC_RISK[category] ?? category) : undefined },
+    { label: 'Risk', value: category ? (ownEntry(SPC_RISK, category) ?? category) : undefined },
     { label: 'Tornado', value: detection ? titleCase(detection) : undefined },
-    { label: 'Damage threat', value: threat ? (DAMAGE_THREAT[threat] ?? titleCase(threat)) : undefined },
+    { label: 'Damage threat', value: threat ? (ownEntry(DAMAGE_THREAT, threat) ?? titleCase(threat)) : undefined },
     { label: 'Wind gusts to', value: str(object, 'maxWindGust') },
     { label: 'Hail up to', value: hail ? `${hail}${/^[\d.]+$/.test(hail) ? ' in' : ''}` : undefined },
     { label: 'Report', value: str(object, 'reportType') },
@@ -1413,7 +1413,7 @@ export function transitStop(
   sequence: number | undefined,
 ): string | undefined {
   if (!stopId) return status ? gtfsWords(status) : undefined;
-  const lead = (status && STOP_STATUS[status]) ?? 'At or near';
+  const lead = (status && ownEntry(STOP_STATUS, status)) ?? 'At or near';
   const nth = (n: number) => {
     const tail = n % 100 >= 11 && n % 100 <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
     return `${n}${tail}`;
@@ -1462,7 +1462,7 @@ const transitVehicle: ContextSection = {
           { label: 'Trip', value: str(object, 'tripId'), mono: true },
           { label: 'Direction', value: direction !== undefined ? String(direction) : undefined },
           { label: 'Trip starts', value: transitTripStart(str(object, 'tripStart')) },
-          { label: 'Timetable', value: schedule ? (SCHEDULE[schedule] ?? gtfsWords(schedule)) : undefined },
+          { label: 'Timetable', value: schedule ? (ownEntry(SCHEDULE, schedule) ?? gtfsWords(schedule)) : undefined },
           { label: 'How full', value: occupancyText },
           { label: 'Traffic', value: gtfsWords(known('congestion')) },
           {
