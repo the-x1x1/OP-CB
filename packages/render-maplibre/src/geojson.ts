@@ -59,10 +59,13 @@ const toPos = (p: GeoPosition): Position =>
   p.altitudeM !== undefined ? [p.longitude, p.latitude, p.altitudeM] : [p.longitude, p.latitude];
 
 export function boundsToRing(b: GeoBounds): Position[] {
+  // Bounds across the 180th meridian (west of east) run on past 180°, as an unwrapped outline
+  // does; drawn as written they would cover every longitude the bounds leave out.
+  const east = b.west > b.east ? b.east + 360 : b.east;
   return [
     [b.west, b.south],
-    [b.east, b.south],
-    [b.east, b.north],
+    [east, b.south],
+    [east, b.north],
     [b.west, b.north],
     [b.west, b.south],
   ];
@@ -82,9 +85,23 @@ const MERCATOR_MAX_LAT = 85.051129;
  */
 export function circleRing(center: GeoPosition, radiusM: number, segments = 48): Position[] {
   const R = 6_371_008.8;
-  const lat = (center.latitude * Math.PI) / 180,
+  // At a pole itself every bearing is a longitude and the arithmetic below divides nothing by
+  // nothing; a hair off it (a metre) the same circle comes out as a ring.
+  const POLE_LIMIT = 89.99999;
+  const lat = (Math.max(-POLE_LIMIT, Math.min(POLE_LIMIT, center.latitude)) * Math.PI) / 180,
     lon = (center.longitude * Math.PI) / 180,
     d = radiusM / R;
+  // A circle that reaches past the far pole too holds all the world but a cap round the point
+  // opposite its centre. Its outline is that small cap's, which does not run round the world,
+  // and closing it as if it did drew a band across the map: the whole map is filled instead.
+  if (d >= Math.PI / 2 + Math.abs(lat))
+    return [
+      [-180, -MERCATOR_MAX_LAT],
+      [180, -MERCATOR_MAX_LAT],
+      [180, MERCATOR_MAX_LAT],
+      [-180, MERCATOR_MAX_LAT],
+      [-180, -MERCATOR_MAX_LAT],
+    ];
   const ring: Position[] = [];
   for (let i = 0; i <= segments; i++) {
     const brg = (i / segments) * 2 * Math.PI;

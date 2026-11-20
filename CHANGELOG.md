@@ -35,6 +35,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- On the 2D map, a circle large enough to reach past both poles (a watch zone drawn with a
+  radius over about 10,000 km) was filled only up to the latitude of the small cap it leaves
+  out, as a band the width of the map. It now fills the map, which is what it covers but for
+  that cap. A density cell or box across the 180th meridian is drawn across it rather than
+  the long way round.
 - A mesh node that sent a reading that is not a number (a failed sensor's NaN for
   temperature, humidity, voltage or signal) or an impossible altitude disappeared from the
   map: the whole node was refused for the one value. Such a value is now treated as not sent.
