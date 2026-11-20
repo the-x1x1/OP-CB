@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An object whose id has no provider and type before its value, and no label, was shown
+  with an empty name; an empty callsign hid the name beside it. The first label that says
+  something is used, then the id.
 - A source's folder setting refused a whole drive written as `C:\` or `/`, but took it
   written as `C:\.` or `/.`, through a device path (`\\?\…`), or through a link that leads
   to the root. Each is now refused: a source is granted a folder, never a drive.

@@ -2020,7 +2020,8 @@ export function setByPath(
   value: JsonValue | undefined,
 ): Record<string, JsonValue> {
   const [head, ...rest] = path.split('.');
-  if (!head) return source;
+  // `__proto__` as a key would set the copy's prototype, not a setting.
+  if (!head || head === '__proto__') return source;
   const out: Record<string, JsonValue> = { ...source };
   if (rest.length === 0) {
     if (value === undefined) delete out[head];
@@ -2041,6 +2042,8 @@ export function getByPath(source: Readonly<Record<string, JsonValue>>, path: str
   let cursor: JsonValue | undefined = source as JsonValue;
   for (const part of path.split('.')) {
     if (!cursor || typeof cursor !== 'object' || Array.isArray(cursor)) return undefined;
+    // Own keys only: `constructor` is not a setting every object has.
+    if (!Object.hasOwn(cursor, part)) return undefined;
     cursor = (cursor as Record<string, JsonValue>)[part];
   }
   return cursor;

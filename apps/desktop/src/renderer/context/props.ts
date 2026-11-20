@@ -27,15 +27,13 @@ export function strList(o: WorldObject, key: string): string[] | undefined {
 
 /** Best display name for an object: callsign, name, title, registration, place, then id value. */
 export function displayName(o: WorldObject): string {
-  return (
-    o.labels['callsign'] ??
-    o.labels['name'] ??
-    o.labels['title'] ??
-    o.labels['registration'] ??
-    o.labels['place'] ??
-    o.id.split(':').slice(2).join(':') ??
-    o.id
-  );
+  // The first label that says something: an empty callsign does not hide the name, and an id
+  // with no `provider:type:` before its value is shown whole rather than as nothing.
+  for (const key of ['callsign', 'name', 'title', 'registration', 'place']) {
+    const label = Object.hasOwn(o.labels, key) ? o.labels[key] : undefined;
+    if (typeof label === 'string' && label.trim()) return label;
+  }
+  return o.id.split(':').slice(2).join(':') || o.id;
 }
 
 /** Only https links to known hosts are surfaced as clickable (renderer never opens arbitrary schemes). */
