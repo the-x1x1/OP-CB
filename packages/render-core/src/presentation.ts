@@ -607,6 +607,17 @@ export function restyleHover(
   return out;
 }
 
+/** Latitude and longitude on the globe, and an altitude that is a number when there is one. */
+function drawablePosition(p: GeoPosition): boolean {
+  return (
+    Number.isFinite(p.latitude) &&
+    Number.isFinite(p.longitude) &&
+    Math.abs(p.latitude) <= 90 &&
+    Math.abs(p.longitude) <= 180 &&
+    (p.altitudeM === undefined || Number.isFinite(p.altitudeM))
+  );
+}
+
 export function presentObjects(input: PresentationInput): PresentationResult {
   const rules = input.rules ?? DEFAULT_RULES;
   const band = lodBand(input.view.zoom);
@@ -646,6 +657,13 @@ export function presentObjects(input: PresentationInput): PresentationResult {
   let selectedAltitudeM: number | undefined;
   for (const obj of input.objects) {
     stats.objects++;
+    // A position off the globe is not drawn. The observation schema and the history reader
+    // both refuse one, so this is a second line: a NaN handed to the globe is an error on
+    // every frame, for every object.
+    if (obj.position && !drawablePosition(obj.position)) {
+      stats.hidden++;
+      continue;
+    }
     if (obj.id === input.selectedId) {
       selectedType = obj.type;
       selectedAltitudeM = obj.position?.altitudeM;
@@ -1273,7 +1291,13 @@ function objectFeature(
       rule.iconFrom === 'aircraft-class' && obj.type === 'aircraft' ? aircraftIcon(obj.properties) : rule.icon;
   // A balloon drifts with the wind and has no nose to point along its track; a storm glyph
   // is a symbol, not a shape with a front.
-  if (obj.motion?.headingDegrees !== undefined && drawn && style.icon !== 'balloon' && !hazard?.icon)
+  if (
+    obj.motion?.headingDegrees !== undefined &&
+    Number.isFinite(obj.motion.headingDegrees) &&
+    drawn &&
+    style.icon !== 'balloon' &&
+    !hazard?.icon
+  )
     style.rotationDegrees = obj.motion.headingDegrees;
   // A ship's length from its AIS dimensions, for the 3D model close in (render-cesium models.ts).
   const length = obj.properties['lengthM'];

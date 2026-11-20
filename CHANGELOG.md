@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- The map's presentation pass leaves out an object whose position is not on the globe, and
+  turns no icon by a heading that is not a number. Positions are checked where they come in,
+  so this is a second line: one such value handed to the 3D globe is an error on every frame.
 - Tables keyed by an object type or a source id are read by their own entries only, so a
   name every JavaScript object already answers to (`constructor`) is an ordinary name there.
   A source can be given that id and worked before this too (there is now a test that runs
