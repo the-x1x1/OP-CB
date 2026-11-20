@@ -182,3 +182,89 @@ test('integration: objects with hostile names export as well-formed KML, GeoJSON
     await h.dispose();
   }
 });
+
+test('integration: collections, watch zones and a measured line with hostile names export well formed', async () => {
+  const h = await startRuntime({ providerInstances: [] });
+  const at = '2026-09-21T00:00:00.000Z';
+  try {
+    await h.client.request('collections.save', {
+      id: 'c1',
+      name: NAMES[2]!,
+      createdAt: at,
+      updatedAt: at,
+      items: NAMES.map((title, i) => ({
+        id: `i${i}`,
+        kind: 'location' as const,
+        title,
+        note: NAMES[(i + 1) % NAMES.length]!,
+        tags: [NAMES[(i + 2) % NAMES.length]!.slice(0, 40)],
+        position: { latitude: 21 + i * 0.01, longitude: i % 2 ? 179.99 : -179.99 },
+        createdAt: at,
+        updatedAt: at,
+      })),
+    });
+    for (const [i, name] of NAMES.entries())
+      await h.client.request('watchzones.save', {
+        id: `z${i}`,
+        name,
+        geometry:
+          i % 2
+            ? { kind: 'circle', center: { latitude: 21, longitude: 179.9 }, radiusM: 50_000 }
+            : { kind: 'bounds', bounds: { west: 179, south: -1, east: -179, north: 1 } },
+        eventTypes: ['earthquake'],
+        notifications: { inApp: true, desktop: false },
+        enabled: true,
+        createdAt: at,
+      });
+    const save = async (name: string, run: () => Promise<unknown>): Promise<string> => {
+      const file = path.join(h.dataDir, name);
+      h.host.saveQueue.push(file);
+      const result = await run();
+      assert.ok(result && typeof result === 'object' && 'path' in result, `${name}: ${JSON.stringify(result)}`);
+      return fs.readFile(file, 'utf8');
+    };
+    for (const format of ['kml', 'gpx'] as const) {
+      const xml = await save(`collection.${format}`, () =>
+        h.client.request('collections.export', { id: 'c1', format }),
+      );
+      assert.equal(xmlProblem(xml), undefined, `collection ${format}: ${xmlProblem(xml)}`);
+      assert.equal(
+        (xml.match(format === 'kml' ? /<Placemark[\s>]/g : /<wpt[\s>]/g) ?? []).length,
+        NAMES.length,
+        format,
+      );
+    }
+    for (const format of ['json', 'geojson'] as const)
+      JSON.parse(
+        await save(`collection.${format}`, () => h.client.request('collections.export', { id: 'c1', format })),
+      );
+    const zonesKml = await save('zones.kml', () => h.client.request('watchzones.export', { format: 'kml' }));
+    assert.equal(xmlProblem(zonesKml), undefined, `zones: ${xmlProblem(zonesKml)}`);
+    assert.equal((zonesKml.match(/<Placemark[\s>]/g) ?? []).length, NAMES.length);
+    const zonesJson = JSON.parse(
+      await save('zones.geojson', () => h.client.request('watchzones.export', { format: 'geojson' })),
+    ) as { features: unknown[] };
+    assert.equal(zonesJson.features.length, NAMES.length);
+    const points = [
+      { latitude: 21, longitude: 179.9 },
+      { latitude: 21.5, longitude: -179.9 },
+      { latitude: 22, longitude: 179.8 },
+    ];
+    for (const name of NAMES.slice(1, 6))
+      for (const format of ['gpx', 'kml'] as const) {
+        const xml = await save(`line.${format}`, () =>
+          h.client.request('export.line', { points, name, format, closed: format === 'kml' }),
+        );
+        assert.equal(
+          xmlProblem(xml),
+          undefined,
+          `line ${format} named ${JSON.stringify(name.slice(0, 30))}: ${xmlProblem(xml)}`,
+        );
+      }
+    JSON.parse(
+      await save('line.geojson', () => h.client.request('export.line', { points, name: NAMES[2]!, format: 'geojson' })),
+    );
+  } finally {
+    await h.dispose();
+  }
+});
