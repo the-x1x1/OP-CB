@@ -340,3 +340,53 @@ test('no change to the manifest or to the signature file passes as signed by a t
     }
   assert.ok(tried > 5000, `${tried} tamperings tried`);
 });
+
+test('a signed pack with any byte of the archive changed is refused, or is still what was signed', async () => {
+  // One bit flipped anywhere in the archive: the manifest, a file, the signature, the zip's own
+  // tables. Verification either fails, or passes with the same manifest, the same signer and
+  // every file's bytes as the manifest lists them.
+  let s = 7;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const dir = await tempDir();
+  try {
+    const good = path.join(dir, 'good.worldpack');
+    await writeTestPack(good, { signWith: ALICE.privateKeyPem });
+    const bytes = await fs.readFile(good);
+    const publishers = [trusted(ALICE, 'Alice')];
+    const whole = await verifyWorldPack(good, { trustedPublishers: publishers });
+    assert.ok(whole.ok && whole.signature?.status === 'signed' && whole.signature.trusted, whole.issues.join('; '));
+    const wholeManifest = JSON.stringify(whole.manifest);
+    const wholeEntries = JSON.stringify(whole.entries);
+    let refused = 0;
+    let passed = 0;
+    for (let i = 0; i < 400; i++) {
+      const changed = Buffer.from(bytes);
+      const at = Math.floor(next() * changed.length);
+      changed[at] = changed[at]! ^ (1 << Math.floor(next() * 8));
+      const file = path.join(dir, 'changed.worldpack');
+      await fs.writeFile(file, changed);
+      const result = await verifyWorldPack(file, { trustedPublishers: publishers });
+      if (!result.ok) {
+        assert.ok(result.issues.length > 0, 'refused with a reason');
+        refused++;
+        continue;
+      }
+      passed++;
+      assert.equal(JSON.stringify(result.manifest), wholeManifest, `byte ${at}: passed with another manifest`);
+      assert.equal(JSON.stringify(result.entries), wholeEntries, `byte ${at}: passed with other file hashes`);
+      assert.ok(
+        result.signature?.status === 'signed' && result.signature.keyId === ALICE.keyId,
+        `byte ${at}: passed as ${JSON.stringify(result.signature)}`,
+      );
+    }
+    assert.ok(refused > 300, `${refused} refused, ${passed} passed unchanged in what matters`);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
