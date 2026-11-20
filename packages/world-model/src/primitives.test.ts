@@ -19,6 +19,7 @@ import {
   s,
   solarEcliptic,
   splitTrailingDigits,
+  trimChar,
   stripTags,
   subsolarPoint,
   timeRangeContains,
@@ -315,6 +316,20 @@ describe('text read in one pass', () => {
     assert.equal(stripTags('<>x<>'), 'x');
     assert.equal(stripTags(''), '');
     assert.equal(stripTags('no tags'), 'no tags');
+  });
+
+  it('trimChar takes the run of one character off each end, and only there', () => {
+    assert.equal(trimChar('--a--b--', '-'), 'a--b');
+    assert.equal(trimChar('a', '-'), 'a');
+    assert.equal(trimChar('---', '-'), '');
+    assert.equal(trimChar('', '-'), '');
+    assert.equal(trimChar('-a', '-'), 'a');
+    assert.equal(trimChar('a-', '-'), 'a');
+    assert.equal(trimChar('..a.', '.'), 'a');
+    assert.equal(trimChar(' -a- ', '-'), ' -a- ');
+    const started = Date.now();
+    assert.equal(trimChar(`a${'-'.repeat(500_000)}b`, '-').length, 500_002);
+    assert.ok(Date.now() - started < 200);
   });
 
   it('splitTrailingDigits gives what comes before the last digits, and the digits', () => {

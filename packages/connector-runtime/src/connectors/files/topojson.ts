@@ -26,6 +26,16 @@ interface TopoGeometry {
 }
 
 class TopoError extends Error {}
+/** The topology as a whole is refused (not one geometry of it skipped). */
+class TopoTooLarge extends Error {}
+
+/**
+ * Most positions a topology's lines and rings may come to once its arcs are written out.
+ * Arcs are shared: twenty thousand geometries of thirty bytes each, all naming one arc of
+ * fifty thousand points, are a megabyte of file and a thousand million positions in memory.
+ * Two million is about what the largest GeoJSON file the host will read can hold.
+ */
+export const MAX_TOPOLOGY_POSITIONS = 2_000_000;
 
 export function readTopoJson(
   text: string,
@@ -72,6 +82,7 @@ export function readTopologyDocument(
     return { malformed: `not TopoJSON: ${err instanceof Error ? err.message : String(err)}` };
   }
   const out: FeatureReadResult = { features: [], skipped: [], notes: [] };
+  const budget = { left: MAX_TOPOLOGY_POSITIONS };
   for (const name of wanted) {
     let n = 0;
     const visit = (g: unknown, depth: number) => {
@@ -90,8 +101,9 @@ export function readTopologyDocument(
         : {};
       let geometry: WorldGeometry | undefined;
       try {
-        geometry = toGeometry(geom, arcs, transform);
+        geometry = toGeometry(geom, arcs, transform, budget);
       } catch (err) {
+        if (err instanceof TopoTooLarge) throw err;
         out.skipped.push({ id, reason: err instanceof Error ? err.message : String(err) });
         return;
       }
@@ -105,6 +117,7 @@ export function readTopologyDocument(
     try {
       visit(objects[name], 0);
     } catch (err) {
+      if (err instanceof TopoTooLarge) return { malformed: err.message };
       return { malformed: `not TopoJSON: ${err instanceof Error ? err.message : String(err)}` };
     }
   }
@@ -141,6 +154,7 @@ function toGeometry(
   g: TopoGeometry,
   arcs: Array<Array<[number, number]>>,
   transform: { scale: [number, number]; translate: [number, number] } | undefined,
+  budget: { left: number },
 ): WorldGeometry | undefined {
   const point = (p: unknown): Coordinate => {
     if (!Array.isArray(p) || typeof p[0] !== 'number' || typeof p[1] !== 'number')
@@ -163,6 +177,11 @@ function toGeometry(
     const out: Coordinate[] = [];
     for (const i of indexes) {
       const pts = arc(i);
+      budget.left -= pts.length;
+      if (budget.left < 0)
+        throw new TopoTooLarge(
+          `the topology's shapes come to more than ${MAX_TOPOLOGY_POSITIONS} positions once its shared arcs are written out`,
+        );
       for (let j = out.length ? 1 : 0; j < pts.length; j++) {
         const [lon, lat] = pts[j]!;
         const c = coordinate(lon, lat);

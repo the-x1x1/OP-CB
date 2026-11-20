@@ -7,6 +7,12 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A TopoJSON file of a megabyte could ask for a thousand million positions in memory (many
+  shapes all naming one long shared arc) and take the app down. A topology whose shapes
+  come to more than two million positions is now refused, with that reason.
+- A map layer whose name held a long run of hyphens took seconds to give an id (80,000
+  hyphens: two and a half seconds; twice as many, four times that).
+- A file with an extension such as `.constructor` was given a format that is not one.
 - Importing the same collection file twice, when a different collection of that id is
   already kept, made a second copy ("imported 2"). The copy made the first time is now
   recognised and kept as it is.

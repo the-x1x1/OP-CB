@@ -1,5 +1,6 @@
 import type { ConnectorProviderDefinition, MappingSpec } from '@opcb/connector-sdk';
 import { extractRecords } from '@opcb/connector-sdk';
+import { ownEntry } from '@opcb/world-model';
 import { parseCsv } from '../../csv.js';
 import { FILE_FORMATS, type FileFormat, type FileSpec } from './contract.js';
 import { extensionOf } from './path-policy.js';
@@ -27,7 +28,8 @@ const BY_EXTENSION: Readonly<Record<string, FileFormat | 'json'>> = Object.freez
 
 /** The format a spec names or its extension implies; `json` is decided by the content. */
 export function formatOf(spec: FileSpec, path: string): FileFormat | 'json' | undefined {
-  return spec.format ?? BY_EXTENSION[extensionOf(path)];
+  // An own entry: a file named `data.constructor` has no format, not Object's constructor for one.
+  return spec.format ?? ownEntry(BY_EXTENSION, extensionOf(path));
 }
 
 export function isFileFormat(v: unknown): v is FileFormat {

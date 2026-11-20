@@ -31,3 +31,16 @@ export function splitTrailingDigits(text: string): { prefix: string; digits: str
   }
   return i === text.length ? undefined : { prefix: text.slice(0, i), digits: text.slice(i) };
 }
+
+/**
+ * `text` without the run of `char` at its start and at its end. In place of
+ * `/^-+|-+$/g`, which starts again from every hyphen of a run that is not at the end: two and
+ * a half seconds on 80,000 hyphens inside a layer name.
+ */
+export function trimChar(text: string, char: string): string {
+  let start = 0;
+  let end = text.length;
+  while (start < end && text[start] === char) start++;
+  while (end > start && text[end - 1] === char) end--;
+  return text.slice(start, end);
+}

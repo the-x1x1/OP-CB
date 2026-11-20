@@ -1,4 +1,4 @@
-import { rasterOverlaySchema, type JsonValue, type Observation, type RasterOverlay } from '@opcb/world-model';
+import { rasterOverlaySchema, trimChar, type JsonValue, type Observation, type RasterOverlay } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -152,11 +152,7 @@ const OVERLAY_ID_PART = /[^a-z0-9._:-]+/g;
 
 /** `<definition id>:<layer>`, in the characters an overlay id allows (the contract's convention). */
 export function overlayIdFor(definitionId: string, layer: string): string {
-  const part =
-    layer
-      .toLowerCase()
-      .replace(OVERLAY_ID_PART, '-')
-      .replace(/^-+|-+$/g, '') || 'layer';
+  const part = trimChar(layer.toLowerCase().replace(OVERLAY_ID_PART, '-'), '-') || 'layer';
   return `${definitionId}:${part}`.slice(0, 128);
 }
 

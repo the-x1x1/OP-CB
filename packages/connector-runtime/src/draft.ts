@@ -3,6 +3,7 @@ import { decodeGtfsRealtime, GtfsRealtimeError } from './gtfs-realtime.js';
 import { tableRecords, windColumns } from './table.js';
 import { GTFS_RT_FREQUENCY_NOTE, GTFS_RT_FRESHNESS, GTFS_RT_VEHICLE_MAPPING } from './connectors/gtfs-rt.js';
 import { DEFINITION_SCHEMA_ID, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
+import { trimChar } from '@opcb/world-model';
 
 /**
  * The drafter (moved here from the connector-validator tool by the ADR-013 amendment of
@@ -94,11 +95,7 @@ export function slugFromUrl(url: string): string {
       .filter(Boolean)
       .pop()
       ?.replace(/\.[a-z0-9]+$/i, '') ?? '';
-  return `${host}${last ? `-${last}` : ''}`
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
+  return trimChar(`${host}${last ? `-${last}` : ''}`.toLowerCase().replace(/[^a-z0-9-]+/g, '-'), '-').slice(0, 48);
 }
 
 function findArray(doc: unknown, depth = 0, prefix = ''): { path: string; items: unknown[] } | undefined {

@@ -1,4 +1,4 @@
-import { isValidBounds, type GeoBounds, stripTags } from '@opcb/world-model';
+import { isValidBounds, type GeoBounds, stripTags, trimChar } from '@opcb/world-model';
 import { isLoopbackHost, isNameableHost } from '@opcb/provider-sdk';
 
 /**
@@ -237,7 +237,7 @@ export function parseMartinTileJson(
   return {
     ok: true,
     value: {
-      id: `martin-${sourceId.replace(/^-+|-+$/g, '') || 'source'}`.slice(0, 64),
+      id: `martin-${trimChar(sourceId, '-') || 'source'}`.slice(0, 64),
       name,
       tileJsonUrl: source.url.toString(),
       access: source.access,
