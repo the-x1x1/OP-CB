@@ -128,6 +128,10 @@ export function checkSignature(
   const raw = typeof file.publicKey === 'string' ? rawKey(file.publicKey) : undefined;
   if (!raw) return { status: 'invalid', reason: 'public key is not a 32-byte Ed25519 key' };
   const keyId = keyIdOf(raw);
+  // The key in its one spelling. Base64 reads the same 32 bytes from text with its padding
+  // left off, and a publisher is trusted by key, not by how a file happens to write it: a
+  // pack signed by a trusted publisher read as untrusted when its signature file did.
+  const publicKey = Buffer.from(raw).toString('base64');
   if (file.keyId !== keyId) return { status: 'invalid', reason: 'key id does not belong to the public key' };
   const sig =
     typeof file.signature === 'string' && B64.test(file.signature) ? Buffer.from(file.signature, 'base64') : null;
@@ -140,17 +144,17 @@ export function checkSignature(
     return {
       status: 'unchecked',
       keyId,
-      publicKey: file.publicKey!,
+      publicKey,
       reason: `Ed25519 is not available here: ${err instanceof Error ? err.message : String(err)}`,
     };
   }
   if (!ok)
     return { status: 'invalid', reason: 'signature does not match the manifest — the pack changed after signing' };
-  const publisher = trusted.find((t) => t.publicKey === file.publicKey);
+  const publisher = trusted.find((t) => t.publicKey === publicKey);
   return {
     status: 'signed',
     keyId,
-    publicKey: file.publicKey!,
+    publicKey,
     trusted: publisher !== undefined,
     ...(publisher ? { publisher: publisher.name } : {}),
   };

@@ -35,6 +35,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A pack signed by a trusted publisher read as "signed, not trusted" when its signature file
+  wrote the publisher's key without its base64 padding. A publisher is now matched by the
+  key itself. The signature check is tested against 6,000 tamperings of a manifest and its
+  signature file: none reads as signed by anyone else, or as trusted when it is not.
 - **A clock put back stopped sources for as long as it had been fast.** A computer whose
   clock ran hours ahead and was then corrected (a time sync, or a second system that keeps
   the hardware clock differently) left every "not before" and "last asked" time in the

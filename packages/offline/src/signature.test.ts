@@ -262,3 +262,81 @@ test('registry: publishers are trusted by the operator, persist, and a trust req
   assert.match(again.get('hawaii-test')?.summary.message ?? '', /signature: .*changed after signing/);
   await fs.rm(dir, { recursive: true, force: true });
 });
+
+test('no change to the manifest or to the signature file passes as signed by a trusted publisher', () => {
+  // Fixed-seed tampering: one or two bytes of the manifest changed, added or removed; the
+  // signature file changed the same ways, or its fields swapped for another signer's.
+  let s = 2026;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const tamper = (good: Uint8Array): Uint8Array => {
+    let b = new Uint8Array(good);
+    const times = 1 + Math.floor(next() * 2);
+    for (let k = 0; k < times; k++) {
+      const at = Math.floor(next() * b.length);
+      const roll = next();
+      if (roll < 0.6) b[at] = b[at]! ^ (1 << Math.floor(next() * 8));
+      else if (roll < 0.8) b = Uint8Array.from([...b.subarray(0, at), Math.floor(next() * 256), ...b.subarray(at)]);
+      else b = Uint8Array.from([...b.subarray(0, at), ...b.subarray(at + 1)]);
+    }
+    return b;
+  };
+  const same = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((v, i) => v === b[i]);
+  const manifest = new TextEncoder().encode(JSON.stringify(buildTestPack().manifest, null, 2));
+  const signature = signManifest(manifest, ALICE.privateKeyPem);
+  const publishers = [trusted(ALICE, 'Alice')];
+  const good = checkSignature(manifest, signature, publishers);
+  assert.ok(good.status === 'signed' && good.trusted && good.publisher === 'Alice');
+
+  let tried = 0;
+  for (let i = 0; i < 3000; i++) {
+    const changedManifest = tamper(manifest);
+    if (same(changedManifest, manifest)) continue;
+    tried++;
+    const verdict = checkSignature(changedManifest, signature, publishers);
+    assert.equal(verdict.status, 'invalid', `a changed manifest read as ${JSON.stringify(verdict)}`);
+  }
+  for (let i = 0; i < 3000; i++) {
+    const changedSignature = tamper(signature);
+    if (same(changedSignature, signature)) continue;
+    tried++;
+    const verdict = checkSignature(manifest, changedSignature, publishers);
+    // A change to the file's white space or to nothing the check reads can leave it signed by
+    // Alice; anything else is invalid. It is never signed by, or trusted as, anyone else.
+    if (verdict.status === 'signed') {
+      assert.equal(verdict.keyId, ALICE.keyId, `signed by ${verdict.keyId}`);
+      assert.equal(verdict.publicKey, ALICE.publicKey);
+    } else assert.ok(verdict.status === 'invalid', JSON.stringify(verdict));
+  }
+  // Bob's signature under Alice's name, and Alice's signature claimed with Bob's key.
+  const bobs = JSON.parse(new TextDecoder().decode(signManifest(manifest, BOB.privateKeyPem))) as Record<
+    string,
+    unknown
+  >;
+  const alices = JSON.parse(new TextDecoder().decode(signature)) as Record<string, unknown>;
+  for (const key of Object.keys(alices))
+    for (const swap of [
+      { ...alices, [key]: bobs[key] },
+      { ...bobs, [key]: alices[key] },
+    ]) {
+      const verdict = checkSignature(manifest, new TextEncoder().encode(JSON.stringify(swap)), publishers);
+      const isAlices = JSON.stringify(swap) === JSON.stringify(alices);
+      const isBobs = JSON.stringify(swap) === JSON.stringify(bobs);
+      if (verdict.status === 'signed') {
+        assert.ok(isAlices || isBobs || verdict.keyId === ALICE.keyId || verdict.keyId === BOB.keyId);
+        assert.equal(
+          verdict.trusted,
+          verdict.keyId === ALICE.keyId,
+          `trusted wrongly: ${JSON.stringify(verdict)} from ${key}`,
+        );
+        // What is signed is checked against the key it names: a mixture verifies only if it is whole.
+        assert.ok(isAlices || isBobs || bobs[key] === alices[key], `a mixture of two signatures verified (${key})`);
+      }
+    }
+  assert.ok(tried > 5000, `${tried} tamperings tried`);
+});
