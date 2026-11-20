@@ -19,6 +19,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An event made from a source's own words could be refused by the event store and never
+  appear: a title over 300 characters or a summary over 2,000 (an alert's long headline), a
+  blank title, or an end time before the start. Titles and summaries are now cut to length, a
+  blank title takes the event's type, and an end before the start is left off so the event
+  shows as open.
+- A fire cluster whose detections carried an impossible radiative power (a source's fill
+  value) was refused whole. Such values are now left out of the cluster's total.
 - A record from a connector source with a good position and a malformed shape (a point with
   no coordinates, a polygon with no ring, a coordinate of 500°) was dropped whole, for a
   reason nobody could act on. The shape is now left off and the record kept; a record that

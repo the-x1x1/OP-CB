@@ -238,6 +238,9 @@ const RAISE: Record<SeverityClass, SeverityClass> = {
   EXTREME: 'EXTREME',
 };
 
+/** More than any one detection's radiative power could be (the largest measured are a few thousand MW). */
+const MAX_FRP_MW = 1_000_000;
+
 export function clusterSeverity(count: number, frpSumMw: number | undefined): SeverityClass {
   if (count >= 50 || (frpSumMw !== undefined && frpSumMw >= 500)) return 'SEVERE';
   if (count >= 10) return 'MODERATE';
@@ -249,7 +252,9 @@ function clusterEvent(id: string, members: Detection[], ctx: RuleContext, previo
   const points = members.map((m) => [roundCoord(m.lon), roundCoord(m.lat)] as [number, number]);
   const first = members[0]!,
     last = members[members.length - 1]!;
-  const frpValues = members.map((m) => m.frp).filter((v): v is number => v !== undefined);
+  // A fire's radiative power is some megawatts, up to thousands; a value that is negative or
+  // beyond any fire (a source's fill value) is not added to the cluster's total.
+  const frpValues = members.map((m) => m.frp).filter((v): v is number => v !== undefined && v >= 0 && v <= MAX_FRP_MW);
   const frpSum = frpValues.length ? Math.round(frpValues.reduce((a, b) => a + b, 0) * 10) / 10 : undefined;
   const count = members.length;
   const providers = [...new Set(objects.map((o) => o.provenance.providerId))].sort();

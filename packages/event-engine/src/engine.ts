@@ -53,6 +53,36 @@ export const DEFAULT_RULES: readonly ObjectRule[] = Object.freeze([
   gnssInterferenceRule,
 ]);
 
+/** The world model's limits on an event's words (eventSchema). */
+const MAX_TITLE = 300;
+const MAX_SUMMARY = 2000;
+
+/** `text` cut to `max` characters, not through a character written as two units, with an ellipsis. */
+function cut(text: string, max: number): string {
+  if (text.length <= max) return text;
+  let end = max - 1;
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end--;
+  return `${text.slice(0, end)}\u2026`;
+}
+
+/**
+ * An event as the world model takes it: its title and summary inside their limits, and no end
+ * before its start. Rules write all of these from what a source says — a station's name, an
+ * alert's headline and times — and a source may say four thousand characters where a title
+ * holds three hundred, or an end an hour before the onset.
+ */
+function withinLimits(event: WorldEvent): WorldEvent {
+  const title = event.title.trim() ? event.title : event.type;
+  // An end before the start is a source's mistake about one of them; which is not known, so the
+  // event is kept open rather than drawn as over before it began.
+  const backwards = event.endAt !== undefined && Date.parse(event.endAt) < Date.parse(event.startAt);
+  if (!backwards && title === event.title && title.length <= MAX_TITLE && event.summary.length <= MAX_SUMMARY)
+    return event;
+  const { endAt: _endAt, ...open } = event;
+  return { ...(backwards ? open : event), title: cut(title, MAX_TITLE), summary: cut(event.summary, MAX_SUMMARY) };
+}
+
 export class EventEngine {
   readonly store: EventStore;
   private readonly clock: Clock;
@@ -214,7 +244,8 @@ export class EventEngine {
       // goes quiet, still has active events that may need ending.
       if (input.length === 0 && ((rule.scope === 'changed' && !rule.endsWhenQuiet) || !this.hasActive(rule))) continue;
       const events = rule.evaluate(input, ctx);
-      for (const e of events) {
+      for (const made of events) {
+        const e = withinLimits(made);
         const outcome = this.store.upsert(e);
         if (outcome === 'added') result.added.push(e);
         else if (outcome === 'updated') result.updated.push(e);
