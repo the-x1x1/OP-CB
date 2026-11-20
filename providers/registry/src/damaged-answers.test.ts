@@ -6,7 +6,11 @@ import { fileURLToPath } from 'node:url';
 import { observationSchema, type Observation } from '@opcb/world-model';
 import { ADSB_LOL_MANIFEST, normalizeAircraftRows, parseAdsbLolResponse } from '@opcb/provider-adsb-remote';
 import { CircularOrbitPropagator, normalizeElements, parseOmmJson } from '@opcb/provider-celestrak';
+import { AISSTREAM_MANIFEST, normalizeAisEnvelope } from '@opcb/provider-ais';
+import { SEED_AIRPORTS_MANIFEST, normalizeAirportCollection } from '@opcb/provider-infrastructure';
 import { normalizeCurrentStorms } from '@opcb/provider-nhc';
+import { PURPLEAIR_LOCAL_MANIFEST, normalizeSensorJson } from '@opcb/provider-purpleair-local';
+import { buildObservation } from '@opcb/provider-sdk';
 import { normalizeUsgsFeed } from '@opcb/provider-usgs';
 import { normalizeNwsAlerts } from '@opcb/provider-weather';
 
@@ -244,4 +248,67 @@ test('satellites: changed elements are admitted or rejected with a reason', () =
     5,
     3000,
   );
+});
+
+test('airports: a changed dataset is admitted record by record or rejected with a reason', () => {
+  hold(
+    'airports',
+    load('airports', 'seed-airports.geojson'),
+    (p) => {
+      const result = normalizeAirportCollection(p, SEED_AIRPORTS_MANIFEST, { receivedAt: '2026-09-21T08:00:00.000Z' });
+      return typeof result === 'string'
+        ? { observations: [], total: 0, rejected: [{ index: -1, reason: result }] }
+        : result;
+    },
+    6,
+    2000,
+  );
+});
+
+test('an air sensor: a changed answer gives one observation or one reason', () => {
+  const nowMs = Date.parse('2026-09-23T20:00:00.000Z');
+  hold(
+    'purpleair',
+    load('purpleair-local', 'normal.json'),
+    (p) => {
+      const result = normalizeSensorJson(p, PURPLEAIR_LOCAL_MANIFEST, {
+        receivedAt: new Date(nowMs).toISOString(),
+        nowMs,
+        name: 'Porch',
+      });
+      return 'error' in result
+        ? { observations: [], total: 1, rejected: [{ index: 0, reason: result.error }] }
+        : { observations: [result.observation], total: 1, rejected: [] };
+    },
+    7,
+    4000,
+  );
+});
+
+test('ships: a changed frame is an observation, ignored, an error or malformed with a reason', () => {
+  const receivedAt = '2026-09-21T08:00:00.000Z';
+  for (const frame of [
+    '01-position-report.json',
+    '02-position-heading-511.json',
+    '03-position-anchored.json',
+    '04-ship-static-data.json',
+  ])
+    hold(
+      `ais ${frame}`,
+      load('aisstream', 'frames', frame),
+      (p) => {
+        const result = normalizeAisEnvelope(p, { receivedAt });
+        if (result.kind === 'observation')
+          return {
+            observations: [buildObservation(AISSTREAM_MANIFEST, receivedAt, result.draft)],
+            total: 1,
+            rejected: [],
+          };
+        const reason =
+          result.kind === 'malformed' ? result.reason : result.kind === 'error' ? result.message || 'error' : 'ignored';
+        return { observations: [], total: 1, rejected: [{ index: 0, reason }] };
+      },
+      8,
+      2000,
+    );
 });
