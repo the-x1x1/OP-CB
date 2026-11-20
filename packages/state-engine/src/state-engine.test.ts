@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WorldState } from './index.js';
+import { WorldState, extractLabels } from './index.js';
 import { IdentityResolver, encodeValue } from '@opcb/identity';
 import { GridSpatialIndex } from '@opcb/hot-spatial-index';
 import { testing } from '@opcb/provider-sdk';
@@ -527,4 +527,18 @@ test('state: the recent observations are the newest, in order, never more than t
     ['b8', 'b9'],
   );
   assert.equal(state.recentObservations(0).length, 3);
+});
+
+test('labels: a name loses control characters and direction marks; one of nothing else is no label', () => {
+  assert.deepEqual(
+    extractLabels({ name: 'MV\u202e Tiger\u0000\nShark ', callsign: '\u200f\u0007', title: 'x'.repeat(300) }),
+    {
+      name: 'MV Tiger Shark',
+      title: 'x'.repeat(200),
+    },
+  );
+  assert.deepEqual(extractLabels({ name: 'Åland  ferry', callsign: 'UAL123' }), {
+    name: 'Åland ferry',
+    callsign: 'UAL123',
+  });
 });

@@ -609,11 +609,21 @@ function index(map: Map<string, Set<string>>, key: string, id: string): void {
   set.add(id);
 }
 
+/**
+ * Control characters and the marks that turn text's direction round. A label is a source's own
+ * text shown as an object's name on the map, in lists and in search: a name carrying a
+ * right-to-left override reads backwards wherever it is shown, and a line break splits a row.
+ */
+// eslint-disable-next-line no-control-regex -- removing exactly the control characters
+const NOT_LABEL_TEXT = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+
 export function extractLabels(payload: Record<string, JsonValue>): Record<string, string> {
   const labels: Record<string, string> = {};
   for (const k of LABEL_KEYS) {
     const v = payload[k];
-    if (typeof v === 'string' && v.trim()) labels[k] = v.trim().slice(0, 200);
+    if (typeof v !== 'string') continue;
+    const text = v.replace(NOT_LABEL_TEXT, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (text) labels[k] = text;
   }
   return labels;
 }

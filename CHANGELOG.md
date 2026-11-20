@@ -20,6 +20,9 @@ Versioning: [semantic versioning](https://semver.org/).
 - Online place search: a name or address field from Nominatim or Photon is held to 160
   characters and loses control characters (a right-to-left override included) before it is a
   search row.
+- An object's name, callsign or title from any source loses control characters and direction
+  marks (a right-to-left override, a line break) where the label is made, so it reads the same
+  on the map, in lists and in search.
 
 ## [0.7.5] — 2026-11-14
 
