@@ -272,8 +272,8 @@ export function desaturate(c: RgbaColor, t: number): RgbaColor {
 export function themeEntry(styleClass: string, theme: Theme = DARK_THEME): ThemeEntry {
   let key = styleClass;
   for (;;) {
-    const hit = theme.entries[key];
-    if (hit) return hit;
+    // An own entry: a class named `constructor` has no colour of its own, and gets the fallback.
+    if (Object.hasOwn(theme.entries, key)) return theme.entries[key]!;
     const dot = key.lastIndexOf('.');
     if (dot < 0) return theme.fallback;
     key = key.slice(0, dot);

@@ -490,8 +490,10 @@ function ruleFor(rules: RenderingRule[], type: string): RenderingRule | undefine
 function sizeFor(rule: RenderingRule, obj: WorldObject, base: number): number {
   if (!rule.sizeBy) return base;
   const v = obj.properties[rule.sizeBy.property];
-  if (typeof v !== 'number') return base;
-  const t = Math.max(0, Math.min(1, (v - rule.sizeBy.min) / (rule.sizeBy.max - rule.sizeBy.min)));
+  const span = rule.sizeBy.max - rule.sizeBy.min;
+  // A value that is not a number, or a rule whose range has no width, would size the mark NaN.
+  if (typeof v !== 'number' || !Number.isFinite(v) || !(span > 0)) return base;
+  const t = Math.max(0, Math.min(1, (v - rule.sizeBy.min) / span));
   return rule.sizeBy.scale[0] + t * (rule.sizeBy.scale[1] - rule.sizeBy.scale[0]);
 }
 
@@ -1230,6 +1232,9 @@ export function satelliteMotion(obj: WorldObject): RenderMotion | undefined {
     typeof lon !== 'number' ||
     typeof alt !== 'number' ||
     typeof toMs !== 'number' ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    !Number.isFinite(alt) ||
     !Number.isFinite(fromMs) ||
     !(toMs > fromMs) ||
     toMs - fromMs > MAX_MOTION_SPAN_MS ||

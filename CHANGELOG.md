@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A style class named after something every object has (`constructor`, from a saved lens)
+  was given that thing as its colours, in place of the fallback colours.
+- A satellite whose next position came out as not-a-number was still handed to the map to
+  animate towards; a size rule over a value that is not a finite number sized the mark NaN.
 - A TopoJSON file of a megabyte could ask for a thousand million positions in memory (many
   shapes all naming one long shared arc) and take the app down. A topology whose shapes
   come to more than two million positions is now refused, with that reason.
