@@ -35,6 +35,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A mesh node that sent a reading that is not a number (a failed sensor's NaN for
+  temperature, humidity, voltage or signal) or an impossible altitude disappeared from the
+  map: the whole node was refused for the one value. Such a value is now treated as not sent.
 - An aircraft whose receiver reported an impossible altitude (beyond 200,000 ft, or far below
   sea level) was admitted by its source and then refused by the world model, so it never
   appeared. It is now kept and drawn without a height. An earthquake with a depth that is

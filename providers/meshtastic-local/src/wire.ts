@@ -199,6 +199,14 @@ export class ProtoReader {
     this.pos += 4;
     return v;
   }
+  /**
+   * A float handed to `set` when it is a number. NaN and the infinities are valid bit patterns
+   * and a node with a failed sensor sends them; such a field is left as if it were not sent.
+   */
+  finiteFloat(wire: number, set: (value: number) => void): void {
+    const v = this.float(wire);
+    if (Number.isFinite(v)) set(v);
+  }
   bytes(wire: number): Uint8Array {
     this.expect(wire, LENGTH);
     const { lo, hi } = this.varint();
@@ -258,6 +266,10 @@ export interface MeshPosition {
   fixQuality?: number;
   fixType?: number;
 }
+
+/** A balloon carries a node to some 40 km; the Dead Sea shore is 430 m down. */
+const MIN_ALTITUDE_M = -1000;
+const MAX_ALTITUDE_M = 100_000;
 
 /** `Position.location_source` values. */
 export const LOC_UNSET = 0;
@@ -356,9 +368,13 @@ export function readPosition(buf: Uint8Array): MeshPosition {
       case 2:
         p.longitudeI = r.sfixed32(f.wire);
         break;
-      case 3:
-        p.altitudeM = r.int32(f.wire);
+      case 3: {
+        // Metres above sea level, as a node with no fix or a bad one may write any 32-bit
+        // number. Outside what a radio could be carried to, it is not a height.
+        const altitude = r.int32(f.wire);
+        if (altitude > MIN_ALTITUDE_M && altitude < MAX_ALTITUDE_M) p.altitudeM = altitude;
         break;
+      }
       case 4:
         p.time = r.fixed32(f.wire);
         break;
@@ -435,13 +451,13 @@ export function readDeviceMetrics(buf: Uint8Array): MeshDeviceMetrics {
         d.batteryLevel = r.uint32(f.wire);
         break;
       case 2:
-        d.voltage = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (d.voltage = v));
         break;
       case 3:
-        d.channelUtilization = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (d.channelUtilization = v));
         break;
       case 4:
-        d.airUtilTx = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (d.airUtilTx = v));
         break;
       case 5:
         d.uptimeSeconds = r.uint32(f.wire);
@@ -459,13 +475,13 @@ export function readEnvironment(buf: Uint8Array): MeshEnvironment {
   for (let f = r.next(); f; f = r.next()) {
     switch (f.field) {
       case 1:
-        e.temperatureC = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (e.temperatureC = v));
         break;
       case 2:
-        e.relativeHumidity = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (e.relativeHumidity = v));
         break;
       case 3:
-        e.barometricPressureHpa = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (e.barometricPressureHpa = v));
         break;
       default:
         r.skip(f.wire);
@@ -510,7 +526,7 @@ export function readNodeInfo(buf: Uint8Array): MeshNodeInfo {
         n.position = readPosition(r.bytes(f.wire));
         break;
       case 4:
-        n.snr = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (n.snr = v));
         break;
       case 5:
         n.lastHeard = r.fixed32(f.wire);
@@ -601,7 +617,7 @@ export function readMeshPacket(buf: Uint8Array): MeshPacket {
         p.rxTime = r.fixed32(f.wire);
         break;
       case 8:
-        p.rxSnr = r.float(f.wire);
+        r.finiteFloat(f.wire, (v) => (p.rxSnr = v));
         break;
       case 9:
         p.hopLimit = r.uint32(f.wire);
