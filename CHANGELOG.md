@@ -7,6 +7,12 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Secrets in logs and error messages.** The redaction that keeps keys and passwords out of
+  the log, the Sources panel and the diagnostics export missed several ways they are written:
+  `Authorization: Basic …` (the word was replaced and the credentials left), `user:password@`
+  in an `mqtt://`, `ws://` or `ftp://` address, `password=…` or `"password":"…"` outside a
+  URL's query, an `x-api-key` header, `client_secret`, `refresh_token`, signed-URL parameters
+  and cookies. All are replaced now, by the same rules in both places.
 - A live camera stream that went quiet without closing (the camera stops sending but keeps
   the connection) was never let go when its viewer closed: the read waited for a next chunk
   that did not come. Closing the viewer, or the timeout, now ends the read at once.

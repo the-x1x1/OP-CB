@@ -783,3 +783,37 @@ test('SharedHostBudget: clients that declare a budget for a host share one bucke
   await c.request({ url: 'https://api.example/c' });
   assert.equal(sent, 3);
 });
+
+test('redactText: Basic credentials, any URL scheme, named secrets in any notation, cookies; ordinary text untouched', () => {
+  const secrets: Array<[string, string[]]> = [
+    ['Authorization: Basic dXNlcjpwYXNz rejected', ['dXNlcjpwYXNz']],
+    ['{"authorization":"Basic dXNlcjpwYXNz"}', ['dXNlcjpwYXNz']],
+    ['mqtt://user:pass3@host:1883 wss://u:pass4@h ftp://u:pass5@h/f', ['pass3', 'pass4', 'pass5']],
+    ['password=hunter2; secret=s3cr', ['hunter2', 's3cr']],
+    ['{"password":"hunter 3","user":"bob"}', ['hunter 3']],
+    ['db_password=hunter4 MQTT_PASSWORD: hunter5', ['hunter4', 'hunter5']],
+    ['header x-api-key: SECRET1', ['SECRET1']],
+    ['{"APIKey":"SECRET2"}', ['SECRET2']],
+    ['client_secret=XYZ1&refresh_token=RRR1', ['XYZ1', 'RRR1']],
+    ['cookie: session=abcd1234; theme=dark', ['abcd1234', 'dark']],
+  ];
+  for (const [text, hidden] of secrets) {
+    const out = redactText(text);
+    for (const secret of hidden) assert.ok(!out.includes(secret), `${secret} in ${out}`);
+    assert.equal(redactText(out), out, 'redacting twice changes nothing more');
+  }
+  assert.equal(redactText('{"password":"x","user":"bob"}'), '{"password":<redacted>,"user":"bob"}');
+  assert.equal(redactText('Authorization: Basic abc'), 'Authorization: Basic <redacted>');
+  for (const plain of [
+    'Unexpected token < in JSON at position 0',
+    'sort key: magnitude',
+    'http://host:8080/path@x',
+    'tokens: 5 parsed',
+    'author: Jane',
+    'secretary: none',
+    'passwordless: yes',
+    'the token expired',
+    'at 12:30 @home',
+  ])
+    assert.equal(redactText(plain), plain, plain);
+});

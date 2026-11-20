@@ -138,16 +138,34 @@ function defaultRetryable(code: ProviderErrorCode): boolean {
   }
 }
 
+// The same patterns as @opcb/core's redactText (this package does not depend on it; a test in
+// the runtime holds the two to the same answers).
+const SECRET_NAME = String.raw`(?:x-api-key|api[_-]?key|map[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|auth[_-]?token|client[_-]?secret|x-amz-(?:signature|credential|security-token)|password|passwd|secret|token|signature)`;
 const SECRET_PATTERNS = [
-  /([?&](?:key|api_key|apikey|token|access_token|map_key|password|pwd|secret)=)[^&\s]+/gi,
-  /(authorization:\s*)(bearer\s+)?[^\s]+/gi,
-  /(https?:\/\/)[^\s/@]+:[^\s/@]+@/gi,
+  // ?key=… and &token=… in a URL: the short names too, which mean something else in prose.
+  /([?&](?:key|api_key|apikey|token|access_token|map_key|mapkey|password|pwd|pass|secret|sig|session)=)[^&\s"']+/gi,
+  // name=value, name: value and "name":"value" anywhere, for names that end in a word that is
+  // only ever a secret (password, db_password, MQTT_PASSWORD, client_secret).
+  new RegExp(
+    String.raw`((?:^|[^a-z0-9_.-])["']?[a-z0-9_.-]*${SECRET_NAME}["']?\s*[=:]\s*)(?:"[^"]*"|'[^']*'|[^\s"'&,;})\]]+)`,
+    'gi',
+  ),
+  // Authorization: Basic …, Bearer …, or a bare value.
+  /(authorization["']?\s*[:=]\s*["']?(?:(?:basic|bearer|digest|token)\s+)?)[^\s"',;]+/gi,
+  /(bearer\s+)[a-z0-9._~+/=-]+/gi,
+  // Cookie and Set-Cookie, to the end of the line.
+  /((?:set-)?cookie["']?\s*[:=]\s*)[^\r\n]+/gi,
+  // user:password@ in a URL of any scheme (http, rtsp, mqtt, ws, ftp…).
+  /([a-z][a-z0-9+.-]*:\/\/)[^\s/@"'<>]+:[^\s/@"'<>]*@/gi,
 ];
 
 /** Remove anything that looks like a credential from an error message. */
 export function sanitizeMessage(message: string): string {
   let out = message;
-  for (const re of SECRET_PATTERNS) out = out.replace(re, (_m, prefix: string) => `${prefix}<redacted>`);
+  for (const re of SECRET_PATTERNS)
+    out = out.replace(re, (whole: string, prefix: string) =>
+      whole.slice(prefix.length).startsWith('<redacted>') ? whole : `${prefix}<redacted>`,
+    );
   return out.length > 500 ? `${out.slice(0, 500)}…` : out;
 }
 

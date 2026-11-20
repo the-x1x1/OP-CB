@@ -34,16 +34,32 @@ export interface LogSink {
 const LEVEL_ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
 const SECRET_KEY = /(key|token|secret|password|passwd|pwd|authorization|credential|cookie|session)/i;
+const SECRET_NAME = String.raw`(?:x-api-key|api[_-]?key|map[_-]?key|access[_-]?token|refresh[_-]?token|id[_-]?token|auth[_-]?token|client[_-]?secret|x-amz-(?:signature|credential|security-token)|password|passwd|secret|token|signature)`;
 const SECRET_IN_TEXT = [
-  /([?&](?:key|api_key|apikey|token|access_token|map_key|mapkey|password|pwd|secret)=)[^&\s"']+/gi,
+  // ?key=… and &token=… in a URL: the short names too, which mean something else in prose.
+  /([?&](?:key|api_key|apikey|token|access_token|map_key|mapkey|password|pwd|pass|secret|sig|session)=)[^&\s"']+/gi,
+  // name=value, name: value and "name":"value" anywhere, for names that end in a word that is
+  // only ever a secret (password, db_password, MQTT_PASSWORD, client_secret).
+  new RegExp(
+    String.raw`((?:^|[^a-z0-9_.-])["']?[a-z0-9_.-]*${SECRET_NAME}["']?\s*[=:]\s*)(?:"[^"]*"|'[^']*'|[^\s"'&,;})\]]+)`,
+    'gi',
+  ),
+  // Authorization: Basic …, Bearer …, or a bare value.
+  /(authorization["']?\s*[:=]\s*["']?(?:(?:basic|bearer|digest|token)\s+)?)[^\s"',;]+/gi,
   /(bearer\s+)[a-z0-9._~+/=-]+/gi,
-  /(https?:\/\/)[^\s/@"']+:[^\s/@"']+@/gi,
-  /(rtsps?:\/\/)[^\s/@"']+:[^\s/@"']+@/gi,
+  // Cookie and Set-Cookie, to the end of the line.
+  /((?:set-)?cookie["']?\s*[:=]\s*)[^\r\n]+/gi,
+  // user:password@ in a URL of any scheme (http, rtsp, mqtt, ws, ftp…).
+  /([a-z][a-z0-9+.-]*:\/\/)[^\s/@"'<>]+:[^\s/@"'<>]*@/gi,
 ];
 
 export function redactText(text: string): string {
   let out = text;
-  for (const re of SECRET_IN_TEXT) out = out.replace(re, (_m, prefix: string) => `${prefix}<redacted>`);
+  for (const re of SECRET_IN_TEXT)
+    out = out.replace(re, (whole: string, prefix: string) =>
+      // Already redacted by an earlier pattern: left as it is rather than nested.
+      whole.slice(prefix.length).startsWith('<redacted>') ? whole : `${prefix}<redacted>`,
+    );
   return out;
 }
 
