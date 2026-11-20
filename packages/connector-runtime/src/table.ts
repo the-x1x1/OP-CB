@@ -26,7 +26,10 @@ export function tableRecords(
   for (const row of rows) {
     if (!Array.isArray(row)) continue;
     const rec: Record<string, unknown> = {};
-    for (let i = 0; i < names.length && i < row.length; i++) rec[names[i] as string] = row[i];
+    for (let i = 0; i < names.length && i < row.length; i++) {
+      // A column the answer names `__proto__` would be the record's prototype, not a field.
+      if (names[i] !== '__proto__') rec[names[i] as string] = row[i];
+    }
     records.push(rec);
   }
   if (rows.length && !records.length) return { malformed: 'no row is an array of values' };

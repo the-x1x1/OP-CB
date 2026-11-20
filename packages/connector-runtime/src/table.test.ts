@@ -36,6 +36,11 @@ test('table: rows keyed by column name; short rows leave columns out; what is no
   });
   assert.equal('wspd' in r.records[2]!, false);
   assert.deepEqual(tableRecords({ table: { columnNames: ['a'], rows: [] } }, {}), { records: [] });
+  // A column named `__proto__` is not a field, and never the record's prototype.
+  const odd = tableRecords(JSON.parse('{"table":{"columnNames":["__proto__","a"],"rows":[[{"latitude":5},1]]}}'), {});
+  assert.ok('records' in odd);
+  assert.deepEqual(odd.records, [{ a: 1 }]);
+  assert.equal((odd.records[0] as { latitude?: number }).latitude, undefined);
   assert.match((tableRecords({}, {}) as { malformed: string }).malformed, /not a table/);
   assert.match(
     (tableRecords({ t: { columnNames: [1], rows: [] } }, { path: 't' }) as { malformed: string }).malformed,
