@@ -99,6 +99,10 @@ Versioning: [semantic versioning](https://semver.org/).
   camera regions quickly could leave only the second ticked; a second place added to a
   collection could replace the first. Such changes now wait their turn, and an object asked
   for twice is still collected once.
+- A map download whose pack folder could not be made (no permission, a drive gone) stood at
+  "downloading" for good and no other could be started; it now ends as failed and says why.
+  An MQTT source whose password could not be read from the secure store waited out its
+  connection timeout; it now fails at once.
 - Trusting a publisher and switching "only trusted publishers" on at the same moment could
   leave the switch off, or lose the publisher: both rewrote the trust file from what each had
   read. They now take turns.

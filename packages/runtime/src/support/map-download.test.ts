@@ -3,8 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { silentLogger } from '@opcb/core';
 import { readBuildList } from '@opcb/offline';
-import { MAP_PROVIDER_ID, PROTOMAPS_POLICY, packIdentity } from './map-download.js';
+import type { WorldPackRegistry } from '@opcb/offline';
+import type { MapDownloadStatus } from '@opcb/ipc-contract';
+import { MAP_PROVIDER_ID, MapDownloads, PROTOMAPS_POLICY, packIdentity } from './map-download.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
@@ -65,4 +68,47 @@ test('pack names: one world map per detail level, one per named area, one planet
     'map-o-ahu-z14',
   );
   assert.equal(packIdentity({ kind: 'planet', worldMaxZoom: 15, maxZoom: 15 }).id, 'map-planet');
+});
+
+test('a download whose pack folder cannot be prepared ends as failed, not standing at "downloading"', async () => {
+  const unhandled: unknown[] = [];
+  const onUnhandled = (reason: unknown) => unhandled.push(reason);
+  process.on('unhandledRejection', onUnhandled);
+  const seen: MapDownloadStatus[] = [];
+  const downloads = new MapDownloads({
+    fetchImpl: (async () =>
+      new Response(JSON.stringify([{ key: '20261029.pmtiles', size: 1000, version: '4.15.2' }]), {
+        status: 200,
+      })) as typeof fetch,
+    registry: () =>
+      ({
+        downloadDirFor: () => path.join(root, 'artifacts', 'no-such-folder'),
+        prepareDownload: async () => {
+          throw new Error('EPERM: the packs folder could not be written');
+        },
+      }) as unknown as WorldPackRegistry,
+    vaultTarget: () => undefined,
+    appPacksDir: root,
+    now: () => Date.parse('2026-11-20T00:00:00Z'),
+    log: silentLogger,
+    onChange: (status) => seen.push(status),
+    freeBytes: async () => 1e12,
+  });
+  const settled = async (phases: MapDownloadStatus['phase'][]) => {
+    for (let i = 0; i < 200 && !phases.includes(downloads.current().phase); i++)
+      await new Promise((r) => setTimeout(r, 5));
+    return downloads.current();
+  };
+  downloads.startPlan({ kind: 'planet' } as never);
+  assert.equal((await settled(['planned', 'failed'])).phase, 'planned');
+  downloads.start();
+  const end = await settled(['failed', 'done', 'cancelled']);
+  assert.equal(end.phase, 'failed');
+  assert.match(end.message ?? '', /could not be written/);
+  await new Promise((r) => setTimeout(r, 20));
+  process.off('unhandledRejection', onUnhandled);
+  assert.deepEqual(unhandled, []);
+  // And another can be planned: nothing is left "busy".
+  downloads.startPlan({ kind: 'planet' } as never);
+  assert.equal((await settled(['planned', 'failed'])).phase, 'planned');
 });

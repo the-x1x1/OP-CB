@@ -415,7 +415,11 @@ export class MapDownloads {
             : { ...base, phase: 'failed', message: `${failureText(err)}${keptText}` },
         );
       }
-    })();
+    })().catch((err: unknown) => {
+      // Anything thrown outside the download itself (the pack folder could not be prepared,
+      // the vault is gone): the download ends as failed rather than standing at "downloading".
+      this.set({ ...base, phase: 'failed', message: failureText(err) });
+    });
     return this.current();
   }
 
