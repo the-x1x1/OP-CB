@@ -210,3 +210,72 @@ test('every polling example: a changed answer is a provider error or observation
   assert.ok(exercised.length >= 12, `${exercised.length} examples exercised: ${exercised.join(', ')}`);
   assert.ok(observations > 5000 && failures > 200, `${observations} observations, ${failures} failed polls`);
 });
+
+test('every socket example: changed messages are passed over or become observations the world model accepts', async () => {
+  const exercised: string[] = [];
+  let observations = 0;
+  for (const file of definitions(path.join(root, 'connectors', 'examples'))) {
+    const name = path.relative(root, file);
+    const validated = defaultConnectorRegistry.validate(JSON.parse(readFileSync(file, 'utf8')));
+    assert.ok(validated.ok && validated.definition, `${name} validates`);
+    const definition = validated.definition;
+    if (!definition.websocket || definition.mqtt) continue;
+    const fixtures = loadSidecar(sidecarPathFor(file), root);
+    const messages = Array.isArray(fixtures.normal) ? fixtures.normal : [fixtures.normal];
+    const run = async (toSend: Array<string | Uint8Array>): Promise<Observation[]> => {
+      const sockets = new testing.FixtureSockets();
+      const provider = defaultConnectorRegistry.createProvider(definition);
+      const ctx = testing.createFixtureContext({
+        providerId: definition.id,
+        clock: new testing.VirtualClock(NOW),
+        responder: (req) => {
+          const pathname = new URL(req.url).pathname;
+          const match = Object.entries(fixtures.normalByPath ?? {}).find(([suffix]) => pathname.endsWith(suffix));
+          return match ? { status: 200, body: match[1] } : { status: 404, body: '' };
+        },
+        credentials: Object.values(definition.credentials ?? {}).map((c) => c.secretRef),
+        sockets,
+      });
+      await provider.initialize(ctx);
+      await provider.start();
+      const emitted: Observation[] = [];
+      const abort = new AbortController();
+      try {
+        await provider.subscribe!({ signal: abort.signal }, (obs) => emitted.push(...obs));
+        const socket = sockets.opened[0]?.handle;
+        assert.ok(socket, `${name} opened a socket`);
+        socket.simulateOpen({ secret: 'test-secret' });
+        for (const message of toSend) {
+          try {
+            socket.simulateMessage(message);
+          } catch (error) {
+            assert.fail(`${name} threw on a message: ${error instanceof Error ? error.stack : String(error)}`);
+          }
+        }
+        await new Promise((r) => setTimeout(r, (definition.websocket?.flushMs ?? 500) + 80));
+      } finally {
+        abort.abort();
+        await provider.stop?.();
+      }
+      return emitted;
+    };
+    if ((await run(messages)).length === 0) continue;
+    exercised.push(name);
+    const next = rng(77 + exercised.length);
+    const damaged: Array<string | Uint8Array> = [];
+    for (let i = 0; i < 400; i++) damaged.push(changedBody(messages[Math.floor(next() * messages.length)]!, next));
+    // The good messages among them, so the feed is seen to go on after each bad one.
+    const emitted = await run([...damaged.slice(0, 200), ...messages, ...damaged.slice(200), ...messages]);
+    for (const observation of emitted) {
+      const parsed = observationSchema.parse(observation);
+      assert.ok(
+        parsed.ok,
+        `${name} admitted what the world model refuses: ${JSON.stringify(parsed).slice(0, 300)} ${JSON.stringify(observation).slice(0, 400)}`,
+      );
+    }
+    assert.ok(emitted.length > 0, `${name}: nothing came through among the damaged messages`);
+    observations += emitted.length;
+  }
+  assert.ok(exercised.length >= 2, `${exercised.length} socket examples exercised: ${exercised.join(', ')}`);
+  assert.ok(observations > 20, `${observations} observations`);
+});
