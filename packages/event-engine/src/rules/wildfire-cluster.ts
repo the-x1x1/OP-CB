@@ -9,7 +9,7 @@ import {
   type WorldObject,
 } from '@opcb/world-model';
 import { stableHash } from '@opcb/query-engine';
-import { boundsOfPoints, convexHull, footprintGeometry, roundCoord } from '../geometry.js';
+import { boundsOfPoints, continuousPoints, convexHull, footprintGeometry, roundCoord } from '../geometry.js';
 import { confidenceOf } from '../severity.js';
 import { derivedProvenance, numberProp, refsOf, shortUtc, type ObjectRule, type RuleContext } from './types.js';
 
@@ -111,7 +111,10 @@ export function clusterDetections(detections: readonly Detection[]): Detection[]
     if (ra !== rb) parent[Math.max(ra, rb)] = Math.min(ra, rb);
   };
   const cells = new Map<string, number[]>();
-  const key = (r: number, c: number) => `${r}:${c}`;
+  // Columns go round the world: the cell east of 179.9° is the one at −180°, so detections a
+  // kilometre apart on either side of the antimeridian are neighbours like any others.
+  const columns = Math.round(360 / CELL_DEG);
+  const key = (r: number, c: number) => `${r}:${((c % columns) + columns) % columns}`;
   for (let i = 0; i < n; i++) {
     const d = detections[i]!;
     const row = Math.floor(d.lat / CELL_DEG),
@@ -163,7 +166,7 @@ export const GROWTH_HISTORY = 24;
 
 /** Area of the points' convex hull in km² (a local equirectangular projection; fires are small). */
 export function hullAreaKm2(points: ReadonlyArray<[number, number]>): number {
-  const hull = convexHull(points);
+  const hull = convexHull(continuousPoints(points));
   if (hull.length < 3) return 0;
   const meanLat = hull.reduce((n, p) => n + p[1], 0) / hull.length;
   const kx = 111.32 * Math.cos((meanLat * Math.PI) / 180);

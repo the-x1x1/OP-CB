@@ -153,10 +153,17 @@ function index(map: Map<string, Set<string>>, key: string, id: string): void {
 }
 
 export function compareEvents(a: WorldEvent, b: WorldEvent): number {
-  const ta = Date.parse(a.startAt),
-    tb = Date.parse(b.startAt);
-  if (ta !== tb) return tb - ta;
+  // An unreadable start counts as the oldest: NaN made the comparison answer NaN both ways,
+  // and the list this keeps in order by binary search stopped being in order.
+  const ta = startOrLeast(a),
+    tb = startOrLeast(b);
+  if (ta !== tb) return tb > ta ? 1 : -1;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}
+
+function startOrLeast(e: WorldEvent): number {
+  const t = Date.parse(e.startAt);
+  return Number.isFinite(t) ? t : Number.NEGATIVE_INFINITY;
 }
 
 function insertionIndex(list: WorldEvent[], e: WorldEvent): number {
