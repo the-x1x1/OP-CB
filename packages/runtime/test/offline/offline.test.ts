@@ -457,3 +457,100 @@ test('offline: started behind the start screen, choosing Online is online on the
     await fs.rm(tmp, { recursive: true, force: true });
   }
 });
+
+test('offline: the runtime starts and answers with its installed packs damaged in every file', async () => {
+  // Fixed-seed damage to the packs folder as a running app left it: text files cut and spliced,
+  // other files with bytes changed, any of them emptied or gone.
+  let s = 2026;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-packs-'));
+  const calls = { count: 0 };
+  try {
+    const clock = new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z'));
+    const packPath = await buildHawaiiPack(tmp, clock);
+    const pristine = path.join(tmp, 'data');
+    const start = (dataDir: string) =>
+      startRuntime({
+        dataDir,
+        clock: new testing.VirtualClock(clock.now()),
+        fetchImpl: offlineFetch(calls),
+        network: { isOnline: () => false },
+        providerInstances: [createUsgs()],
+      });
+    const first = await start(pristine);
+    first.host.openQueue.push(packPath);
+    const install = await first.client.request('offline.installPack', undefined);
+    assert.ok(install.installed, install.issues.join('; '));
+    await first.dispose();
+
+    const all: string[] = [];
+    const walk = async (dir: string): Promise<void> => {
+      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) await walk(full);
+        else all.push(path.relative(pristine, full));
+      }
+    };
+    await walk(pristine);
+    const packFiles = all.filter((f) => /pack/i.test(f.split(path.sep)[0]!));
+    assert.ok(packFiles.length >= 3, `the packs folder holds ${packFiles.join(', ')} (of ${all.join(', ')})`);
+
+    for (let round = 0; round < 30; round++) {
+      const dataDir = path.join(tmp, `damaged-${round}`);
+      const damaged: string[] = [];
+      for (const relative of all) {
+        let bytes: Buffer = await fs.readFile(path.join(pristine, relative));
+        if (packFiles.includes(relative)) {
+          const roll = round === 0 ? 1 : next();
+          if (roll < 0.4 && bytes.length > 0) {
+            const copy = Buffer.from(bytes);
+            const times = 1 + Math.floor(next() * 3);
+            for (let k = 0; k < times; k++) copy[Math.floor(next() * copy.length)] = Math.floor(next() * 256);
+            bytes = next() < 0.3 ? copy.subarray(0, Math.floor(next() * copy.length)) : copy;
+            damaged.push(relative);
+          } else if (roll < 0.5) {
+            bytes = Buffer.from(['', 'null', '{}', '[]', 'not json'][Math.floor(next() * 5)]!);
+            damaged.push(`${relative} (replaced)`);
+          } else if (roll < 0.58) {
+            damaged.push(`${relative} (gone)`);
+            continue;
+          }
+        }
+        const file = path.join(dataDir, relative);
+        await fs.mkdir(path.dirname(file), { recursive: true });
+        await fs.writeFile(file, bytes);
+      }
+      const where = `with ${damaged.join(', ') || 'nothing'} damaged`;
+      let h;
+      try {
+        h = await start(dataDir);
+      } catch (error) {
+        assert.fail(`the runtime did not start ${where}: ${error instanceof Error ? error.stack : String(error)}`);
+      }
+      try {
+        const status = await h.client.request('offline.status', undefined);
+        JSON.stringify(status);
+        if (round === 0) assert.ok(JSON.stringify(status).includes('hawaii'), 'an undamaged folder has its pack');
+        await h.client.request('field.status', undefined);
+        await h.client.request('search.places', { text: 'Honolulu' });
+        await h.client.request('search.query', { text: 'Hilo' });
+        await h.client.request('history.availability', {});
+        await h.client.request('world.query', { objectTypes: ['earthquake'] });
+      } catch (error) {
+        assert.fail(`a question failed ${where}: ${error instanceof Error ? error.stack : String(error)}`);
+      } finally {
+        await h.dispose();
+      }
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
+    assert.equal(calls.count, 0, 'nothing called out');
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
+});
