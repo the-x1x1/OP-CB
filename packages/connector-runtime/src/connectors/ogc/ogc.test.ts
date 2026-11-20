@@ -419,6 +419,22 @@ test('wfs: a latitude-first page (derived from the Vienna recording) is swapped 
   assert.equal((provider as WfsProvider).axisDecision()!.basis, 'bounds');
 });
 
+test('wfs: the capabilities are read once, and again at the next poll after the clock is put back', async () => {
+  const caps = fx('geoserver-wien-wfs200-capabilities.xml');
+  const page = fx('geoserver-wien-wlan-page1.json').replace('"numberMatched":10', '"numberMatched":4');
+  const { provider, ctx } = await start(example('vienna-wlan-wfs.json'), (req) => ok(isCaps(req) ? caps : page));
+  const capsReads = () => ctx.http.requests.filter(isCaps).length;
+  await query(provider);
+  await query(provider);
+  assert.equal(capsReads(), 1);
+  // A day back: by subtraction the kept reading would be good for a day and six hours.
+  (ctx.clock as testing.VirtualClock).set(ctx.clock.now() - 86_400_000);
+  await query(provider).catch(() => undefined);
+  assert.equal(capsReads(), 2);
+  await query(provider).catch(() => undefined);
+  assert.equal(capsReads(), 2);
+});
+
 test('wfs: a service that ignores srsName and answers in its national grid is refused with the CRS named', async () => {
   // Derived: the recorded page relabelled as EPSG:31256 with its coordinates in metres.
   const fc = JSON.parse(fx('geoserver-wien-wlan-page1.json')) as Record<string, unknown>;

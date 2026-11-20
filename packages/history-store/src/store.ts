@@ -13,6 +13,7 @@ import {
   type WorldObject,
   type WorldQuery,
   type WorldQueryResult,
+  elapsedMs,
   ownEntry,
 } from '@opcb/world-model';
 import type { ProviderDataPolicy } from '@opcb/provider-sdk';
@@ -350,7 +351,7 @@ export class HistoryStore {
     if (receipt.dropped > 0) {
       this.stats.droppedRows += receipt.dropped;
       const now = this.clock.now();
-      if (now - this.lastOverflowLogAt >= 10_000) {
+      if (elapsedMs(now, this.lastOverflowLogAt) >= 10_000) {
         this.lastOverflowLogAt = now;
         this.log.warn('history: write queue full, rows dropped', {
           providerId: batch.providerId,

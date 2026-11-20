@@ -302,6 +302,11 @@ test('WatchZoneEvaluator: what is inside when a zone starts watching was already
   assert.equal(ev.evaluateObjects([at('aircraft:icao24:p1', 21.31, -157.9)]).length, 0, 'still there: nothing');
   assert.equal(ev.evaluateObjects([at('aircraft:icao24:p3', 21.0, -158.0)]).length, 0, 'outside');
   assert.equal(ev.evaluateObjects([at('aircraft:icao24:p3', 21.3, -157.9)]).length, 1, 'crossing in after it is news');
+  // The clock is put back a day: entries are news again one baseline later, not a day later.
+  clock.advance(-DAY);
+  assert.equal(ev.evaluateObjects([at('aircraft:icao24:p5', 21.3, -157.9)]).length, 0, 'the baseline starts again');
+  clock.advance(WATCH_ZONE_ENTRY_BASELINE_MS);
+  assert.equal(ev.evaluateObjects([at('aircraft:icao24:p6', 21.3, -157.9)]).length, 1);
   // Turned off and on again: a new baseline.
   ev.setZones([{ ...trafficBounds, eventTypes: trafficBounds.eventTypes.filter((t) => t !== 'watch-zone-entry') }]);
   ev.setZones([trafficBounds]);

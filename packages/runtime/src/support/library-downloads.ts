@@ -407,7 +407,7 @@ export class LibraryDownloads {
               at += value.length;
               failures = 0;
               const now = this.deps.now();
-              if (now - lastReport >= 500 || at === size) {
+              if (now - lastReport >= 500 || now < lastReport || at === size) {
                 lastReport = now;
                 const secs = Math.max(1, (now - started) / 1000);
                 this.set({

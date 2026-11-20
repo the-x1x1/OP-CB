@@ -1,4 +1,4 @@
-import type { GeoBounds, Observation } from '@opcb/world-model';
+import { elapsedMs, type GeoBounds, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -422,7 +422,7 @@ export class ArcGisFeatureProvider extends PollingProvider {
    */
   private async readLayerInfo(signal: AbortSignal): Promise<ArcGisLayerInfo | undefined> {
     const now = this.context.clock.now();
-    if (this.layerInfo && now - this.layerInfo.fetchedAt < LAYER_INFO_TTL_MS) return this.layerInfo.info;
+    if (this.layerInfo && elapsedMs(now, this.layerInfo.fetchedAt) < LAYER_INFO_TTL_MS) return this.layerInfo.info;
     const url = `${this.layer.layerUrl}?f=json`;
     const req: ProviderHttpRequest = {
       url,

@@ -288,7 +288,7 @@ export class MapDownloads {
         const report = (n: number) => {
           done += n;
           const now = this.deps.now();
-          if (now - lastReport < 500 && done < size) return;
+          if (now >= lastReport && now - lastReport < 500 && done < size) return;
           lastReport = now;
           const secs = Math.max(1, (now - started) / 1000);
           this.set({

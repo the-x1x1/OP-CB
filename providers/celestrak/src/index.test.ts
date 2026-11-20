@@ -119,6 +119,10 @@ test('stale bodies from the network layer are used but not re-requested for 10 m
   ctx.clock.advance(10 * 60_000);
   await provider.query({ signal: signal(), background: true });
   assert.equal(ctx.http.requests.length, 3, 'retried after the gap');
+  // The clock put back a day: the gap is not a day longer for it.
+  ctx.clock.set(ctx.clock.now() - 86_400_000);
+  await provider.query({ signal: signal(), background: true }).catch(() => undefined);
+  assert.equal(ctx.http.requests.length, 4);
 });
 
 test('offline, satellites keep moving from the kept catalogue for up to seven days, labelled cached', async () => {

@@ -20,4 +20,7 @@ test('ErrorToastGate: once per kind per quiet period', () => {
   assert.equal(gate.allow('x 4/5/6', 10), false);
   assert.equal(gate.allow('y', 20), true);
   assert.equal(gate.allow('x 7/8/9', 1500), true, 'again after the quiet period');
+  // The clock put back: the kind is not kept quiet until the old time comes round.
+  assert.equal(gate.allow('x 1/1/1', 100), true);
+  assert.equal(gate.allow('x 1/1/2', 200), false);
 });

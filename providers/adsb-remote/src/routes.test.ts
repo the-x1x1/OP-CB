@@ -124,6 +124,12 @@ test("flightRoute: one GET of the callsign's file, no position sent, attributed,
   ctx.clock.advance(31 * 60_000);
   await p.flightRoute(ask('TST123'));
   assert.equal(ctx.http.requests.length, 2, 'asked again after half an hour');
+  // The clock put back a day: asked again, not remembered a day and half an hour.
+  ctx.clock.set(ctx.clock.now() - 86_400_000);
+  await p.flightRoute(ask('TST123'));
+  assert.equal(ctx.http.requests.length, 3);
+  await p.flightRoute(ask('TST123'));
+  assert.equal(ctx.http.requests.length, 3);
 });
 
 test('flightRoute: a callsign with no file is an answer with no airports, not a failure', async () => {

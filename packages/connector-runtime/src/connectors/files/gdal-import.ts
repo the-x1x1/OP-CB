@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 import { OGR_INPUT_EXTENSIONS, ProviderError, type ProviderContext } from '@opcb/provider-sdk';
 import type { Connector, ConnectorProviderDefinition, ConnectorValidationResult } from '@opcb/connector-sdk';
 import { fileSpecOf, hasGrantedFolder, ogr2ogrOf, type Ogr2ogrAccess, type Ogr2ogrDetection } from './contract.js';
@@ -108,7 +109,7 @@ export class GdalImportProvider extends FileBackedProvider {
   private async ensureDetected(converter: Ogr2ogrAccess, signal: AbortSignal): Promise<void> {
     const now = this.context.clock.now();
     const known = this.detection;
-    if (!known || (!known.result.found && now - known.at >= REDETECT_AFTER_MS)) {
+    if (!known || (!known.result.found && elapsedMs(now, known.at) >= REDETECT_AFTER_MS)) {
       if (signal.aborted) throw new ProviderError('CANCELLED', 'cancelled');
       const result = await converter.detect();
       this.detection = { at: now, result };

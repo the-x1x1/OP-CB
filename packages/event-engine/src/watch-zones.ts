@@ -165,7 +165,13 @@ export class WatchZoneEvaluator {
         }
         this.inside.add(key);
         if (wasInside) continue;
-        const since = this.entryWatchSince.get(zone.id);
+        let since = this.entryWatchSince.get(zone.id);
+        // Marked ahead of the clock (the clock was put back): the baseline starts again from
+        // now, rather than lasting until the clock passes the old mark.
+        if (since !== undefined && since > now) {
+          since = now;
+          this.entryWatchSince.set(zone.id, now);
+        }
         if (since === undefined || now - since < WATCH_ZONE_ENTRY_BASELINE_MS) continue;
         if (!severityAtLeast(OBJECT_ENTRY_SEVERITY, zone.minimumSeverity)) continue;
         if (!this.allow(zone.id, o.id, now)) continue;
@@ -211,7 +217,7 @@ export class WatchZoneEvaluator {
     if (elapsedMs(now, this.lastSweep) < 3_600_000) return;
     this.lastSweep = now;
     for (const [key, at] of this.lastEmit)
-      if (now - at >= this.dedupeMs && !this.lastSeverity.has(key)) this.lastEmit.delete(key);
+      if (elapsedMs(now, at) >= this.dedupeMs && !this.lastSeverity.has(key)) this.lastEmit.delete(key);
   }
 
   /** How many (zone, subject) pairs are remembered for dedupe (tests). */

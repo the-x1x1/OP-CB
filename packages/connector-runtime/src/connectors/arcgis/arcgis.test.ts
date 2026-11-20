@@ -627,6 +627,12 @@ test('paging: exceededTransferLimit carries on even after a short page; a short 
   clock.advance(LAYER_INFO_TTL_MS + 1);
   await poll();
   assert.equal(ctx.http.requests.filter((r) => !isQuery(r)).length, 2);
+  // The clock put back a day: read at the next poll, not a day and six hours on.
+  clock.set(clock.now() - 86_400_000);
+  await poll().catch(() => undefined);
+  assert.equal(ctx.http.requests.filter((r) => !isQuery(r)).length, 3);
+  await poll().catch(() => undefined);
+  assert.equal(ctx.http.requests.filter((r) => !isQuery(r)).length, 3);
 });
 
 test('paging: the page size is the smaller of the definition limit and maxRecordCount; a full silent page asks again', async () => {

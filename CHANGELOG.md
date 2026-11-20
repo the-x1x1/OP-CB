@@ -76,8 +76,12 @@ Versioning: [semantic versioning](https://semver.org/).
   was not read again. A Home Assistant connection that had gone quiet was not noticed. A
   camera pack's last good list, an answer kept to cover a failed request, and what a source
   keeps on disk for a set time were used past their time. Traccar's device list and
-  Digitraffic's ship details were not read again. A warning that kept repeating was counted
-  but not written to the log. None of those now outlasts its own length.
+  Digitraffic's ship details were not read again, nor a WFS service's capabilities, an
+  ArcGIS layer's description, a flight's route or an aircraft's trace; the satellite
+  catalogue was not asked for again after a kept copy was used; watch zones reported no
+  entries; a map error shown once was not shown again; a download's progress stood still
+  until it finished. A warning that kept repeating was counted but not written to the log.
+  None of those now outlasts its own length.
 - The small document stores (collections, watch zones, lenses, guides, prepared records, the
   camera list) could lose a change to another made at the same moment. Guides, prepared
   records and the camera list are first read when first used, and two requests arriving

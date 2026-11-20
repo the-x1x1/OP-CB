@@ -1,4 +1,4 @@
-import type { GeoBounds, Observation } from '@opcb/world-model';
+import { elapsedMs, type GeoBounds, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -473,7 +473,7 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     const key = hex.toLowerCase();
     const now = this.context.clock.now();
     let entry = this.traces.get(key);
-    if (!entry || now - entry.atMs > TRACE_CACHE_MS) {
+    if (!entry || elapsedMs(now, entry.atMs) > TRACE_CACHE_MS) {
       entry = { atMs: now, points: await this.foreground(() => this.fetchTrace(url, key, request.signal)) };
       this.traces.delete(key);
       this.traces.set(key, entry);
@@ -542,7 +542,7 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
     if (!callsign) return undefined;
     const now = this.context.clock.now();
     const had = this.routes.get(callsign);
-    if (had && now - had.atMs <= (had.answer ? ROUTE_CACHE_MS : ROUTE_FAILURE_CACHE_MS)) return had.answer;
+    if (had && elapsedMs(now, had.atMs) <= (had.answer ? ROUTE_CACHE_MS : ROUTE_FAILURE_CACHE_MS)) return had.answer;
     const answer = await this.fetchRoute(callsign, request);
     this.routes.delete(callsign);
     this.routes.set(callsign, { atMs: now, answer });

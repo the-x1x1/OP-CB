@@ -1,4 +1,4 @@
-import type { JsonValue, Observation } from '@opcb/world-model';
+import { elapsedMs, type JsonValue, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -489,7 +489,11 @@ export class CelestrakProvider extends PollingProvider implements ObjectTrackSou
       // failed): keep using it without asking again until `retryAfterStaleMs` has passed.
       // A refusal that says how long to wait (CelesTrak's 403: two hours) is waited out.
       const wait = Math.max(this.retryAfterStaleMs, this.honourRetryAfter ? (state.unavailable?.retryAfterMs ?? 0) : 0);
-      if (state.staleServedAt !== undefined && now - state.staleServedAt < wait && ageMs <= this.catalogMaxOfflineMs)
+      if (
+        state.staleServedAt !== undefined &&
+        elapsedMs(now, state.staleServedAt) < wait &&
+        ageMs <= this.catalogMaxOfflineMs
+      )
         return { entry: state.entry, stale: true, ageMs, ...(state.unavailable ? { failure: state.unavailable } : {}) };
     }
 

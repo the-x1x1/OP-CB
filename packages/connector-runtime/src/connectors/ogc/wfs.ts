@@ -1,4 +1,4 @@
-import type { Observation } from '@opcb/world-model';
+import { elapsedMs, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -246,7 +246,7 @@ export class WfsProvider extends PollingProvider {
 
   private async capabilities(signal: AbortSignal): Promise<WfsCapabilities | undefined> {
     const now = this.context.clock.now();
-    if (this.caps && now - this.caps.at < (this.caps.value ? CAPABILITIES_TTL_MS : CAPABILITIES_RETRY_MS))
+    if (this.caps && elapsedMs(now, this.caps.at) < (this.caps.value ? CAPABILITIES_TTL_MS : CAPABILITIES_RETRY_MS))
       return this.caps.value;
     const url = this.capabilitiesUrl();
     let text: string;

@@ -20,7 +20,8 @@ export class ErrorToastGate {
   allow(message: string, now: number): boolean {
     const key = errorToastKey(message);
     const at = this.last.get(key);
-    if (at !== undefined && now - at < this.quietMs) return false;
+    // (`at <= now`: a time ahead of the clock was set before the clock was put back.)
+    if (at !== undefined && at <= now && now - at < this.quietMs) return false;
     this.last.set(key, now);
     if (this.last.size > 200) this.last.delete(this.last.keys().next().value!);
     return true;
