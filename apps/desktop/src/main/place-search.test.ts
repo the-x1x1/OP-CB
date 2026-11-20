@@ -294,3 +294,17 @@ test('place search: a place across 180° (boxed −180…180 by both services) i
   );
   assert.deepEqual(a!.bounds, { west: -180, south: -90, east: 180, north: -60 });
 });
+
+test("place search: a field of the answer is held to a name's length and loses its control characters", () => {
+  const long = 'x'.repeat(5000);
+  const [n] = parseNominatim([{ lat: '1', lon: '2', name: long, display_name: 'Ho\u202enolulu\u0000, Hawaii' }], 5);
+  assert.equal(n!.title.length, 160);
+  assert.ok(n!.title.endsWith('…'));
+  assert.equal(n!.subtitle, 'Honolulu, Hawaii');
+  const [p] = parsePhoton(
+    { features: [{ geometry: { coordinates: [2, 1] }, properties: { name: `A\u0007B${long}`, country: long } }] },
+    5,
+  );
+  assert.ok(p!.title.startsWith('ABx') && p!.title.length === 160);
+  assert.equal(p!.subtitle!.length, 160);
+});

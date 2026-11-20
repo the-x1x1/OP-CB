@@ -304,7 +304,18 @@ function place(
   };
 }
 
-const str = (v: unknown): string => (typeof v === 'string' ? v.trim() : typeof v === 'number' ? String(v) : '');
+/**
+ * A field of the answer as text for a search row: control characters (a right-to-left override
+ * included) taken out, and no longer than a place name is — an answer is another server's
+ * text, and one field of 5,000 characters was the row's title as it came.
+ */
+const MAX_FIELD_CHARS = 160;
+const str = (v: unknown, max = MAX_FIELD_CHARS): string => {
+  const raw = typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '';
+  // eslint-disable-next-line no-control-regex -- removing exactly the control characters
+  const clean = raw.replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '').trim();
+  return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
+};
 
 /** Nominatim's `format=jsonv2` answer → places. Rows that are not real places are dropped. */
 export function parseNominatim(body: unknown, limit: number): SearchResult[] {
@@ -317,10 +328,11 @@ export function parseNominatim(body: unknown, limit: number): SearchResult[] {
     const lat = coordinate(row['lat'], 90);
     const lon = coordinate(row['lon'], 180);
     if (lat === null || lon === null) continue;
-    const display = str(row['display_name']);
+    // The whole address, comma by comma: read long, each part then held to a field's length.
+    const display = str(row['display_name'], 2000);
     const parts = display
       .split(',')
-      .map((p) => p.trim())
+      .map((p) => str(p))
       .filter(Boolean);
     const title = str(row['name']) || parts[0];
     if (!title) continue;

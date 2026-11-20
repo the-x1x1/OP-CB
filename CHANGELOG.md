@@ -17,6 +17,9 @@ Versioning: [semantic versioning](https://semver.org/).
   `isoTimestamp` and `timestamp:<pattern>`; it was carried over into 2 March or the next day.
 - A damaged or hostile map file (PMTiles) whose directory claims millions of entries in a few
   bytes is refused at once; reading it took hundreds of megabytes of memory before failing.
+- Online place search: a name or address field from Nominatim or Photon is held to 160
+  characters and loses control characters (a right-to-left override included) before it is a
+  search row.
 
 ## [0.7.5] — 2026-11-14
 
