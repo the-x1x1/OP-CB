@@ -222,10 +222,28 @@ function holeInside(hole: Position[], ring: Position[]): boolean {
   return inside(mean, ring);
 }
 
+type Box = [minX: number, minY: number, maxX: number, maxY: number];
+
+function boxOf(ring: Position[]): Box {
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  for (const p of ring) {
+    const x = p[0]!;
+    const y = p[1]!;
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  return [minX, minY, maxX, maxY];
+}
+
 function ringsToGeometry(raw: unknown, dims: Dims): GeoJsonGeometry | null | string {
   if (!Array.isArray(raw)) return 'rings is not an array';
-  const outers: Array<{ ring: Position[]; area: number; holes: Position[][] }> = [];
-  const holes: Array<{ ring: Position[]; area: number }> = [];
+  const outers: Array<{ ring: Position[]; area: number; box: Box; holes: Position[][] }> = [];
+  const holes: Array<{ ring: Position[]; area: number; box: Box }> = [];
   for (const r of raw) {
     const ring = positions(r, dims);
     if (!ring) return 'a ring has a coordinate that is not a pair of numbers';
@@ -234,16 +252,23 @@ function ringsToGeometry(raw: unknown, dims: Dims): GeoJsonGeometry | null | str
     if (c.length < 4) continue;
     const area = signedArea2(c);
     if (area === 0) continue;
-    if (area > 0) outers.push({ ring: c, area, holes: [] });
-    else holes.push({ ring: c, area: -area });
+    if (area > 0) outers.push({ ring: c, area, box: boxOf(c), holes: [] });
+    else holes.push({ ring: c, area: -area, box: boxOf(c) });
   }
   for (const hole of holes) {
     let best: (typeof outers)[number] | undefined;
-    for (const o of outers)
-      if (o.area > hole.area && holeInside(hole.ring, o.ring) && (!best || o.area < best.area)) best = o;
+    const [x0, y0, x1, y1] = hole.box;
+    for (const o of outers) {
+      // A hole lies inside its exterior's box: the point-in-ring test is run only for those.
+      // Without this every hole was tested against every exterior, edge by edge — eight
+      // seconds for 4,000 parts each with a hole, and four times that for twice as many.
+      if (o.area <= hole.area || (best && o.area >= best.area)) continue;
+      if (x0 < o.box[0] || y0 < o.box[1] || x1 > o.box[2] || y1 > o.box[3]) continue;
+      if (holeInside(hole.ring, o.ring)) best = o;
+    }
     // A hole no exterior contains is an exterior drawn the other way round.
     if (best) best.holes.push(hole.ring.slice().reverse());
-    else outers.push({ ring: hole.ring.slice().reverse(), area: hole.area, holes: [] });
+    else outers.push({ ring: hole.ring.slice().reverse(), area: hole.area, box: hole.box, holes: [] });
   }
   if (!outers.length) return null;
   // RFC 7946: exterior counter-clockwise, holes clockwise. esriJSON exteriors are clockwise.

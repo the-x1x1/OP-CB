@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An ArcGIS polygon with thousands of parts, each with a hole, took eight seconds to read (and
+  four times that for twice as many): every hole was tested against every part. A hole is now
+  tested only against the parts whose box holds it — the same polygon in a sixth of a second.
 - A map-service definition's `valueNames` / `valueUnits` with a long run of spaces took thirty
   seconds to check; a KML file with a megabyte of blank lines in a coordinate list took
   minutes. Both are read in one pass.

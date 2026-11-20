@@ -46,7 +46,9 @@ export interface HaState {
 }
 
 export function domainOf(entityId: string): string {
-  return entityId.slice(0, entityId.indexOf('.'));
+  // Nothing before a dot that is not there (slice(0, -1) gave all but the last letter).
+  const dot = entityId.indexOf('.');
+  return dot < 0 ? '' : entityId.slice(0, dot);
 }
 
 /** A person's or a phone's entity (PEOPLE_DOMAINS). */
