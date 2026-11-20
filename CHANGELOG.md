@@ -7,6 +7,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A live camera stream that went quiet without closing (the camera stops sending but keeps
+  the connection) was never let go when its viewer closed: the read waited for a next chunk
+  that did not come. Closing the viewer, or the timeout, now ends the read at once.
+- A camera still whose download was cut off by the timeout between two chunks could be taken
+  as the whole picture. It is an error now.
+- Taking the first frame of an MJPEG stream no longer copies everything received so far each
+  time a chunk arrives.
 - **Diagnostics export and your account name.** The export replaces your user folder with `~`,
   but it missed the folder written in another letter case (`c:\users\name`), written with
   doubled backslashes (a path inside JSON inside a log line), under `Documents and Settings`,

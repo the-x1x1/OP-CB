@@ -78,6 +78,12 @@ export function createFetchUpstreamOpener(fetchImpl: typeof fetch = fetch): Upst
 
 async function* iterate(body: ReadableStream<Uint8Array>, signal: AbortSignal): AsyncGenerator<Uint8Array> {
   const reader = body.getReader();
+  // A read that is waiting when the signal fires ends then, whatever the stream behind it
+  // does: the platform's fetch ends its own body on abort, another fetch may not.
+  const stop = () => {
+    reader.cancel().catch(() => undefined);
+  };
+  signal.addEventListener('abort', stop, { once: true });
   try {
     for (;;) {
       if (signal.aborted) return;
@@ -86,6 +92,7 @@ async function* iterate(body: ReadableStream<Uint8Array>, signal: AbortSignal): 
       yield value;
     }
   } finally {
+    signal.removeEventListener('abort', stop);
     try {
       await reader.cancel();
     } catch {
@@ -112,6 +119,9 @@ async function readCapped(res: Response, maxBytes: number, signal: AbortSignal):
     if (total > maxBytes) throw new CameraError('TOO_LARGE', `body exceeded ${maxBytes} bytes`, { retryable: false });
     chunks.push(chunk);
   }
+  // The reader stops quietly when the signal fires between two chunks; what was read so far
+  // is not the body, and a cut-off JPEG still starts like one.
+  if (signal.aborted) throw signal.reason ?? new DOMException('aborted', 'AbortError');
   const out = new Uint8Array(total);
   let off = 0;
   for (const c of chunks) {

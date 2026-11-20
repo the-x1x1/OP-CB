@@ -38,28 +38,36 @@ export function assertImage(bytes: Uint8Array): FrameMimeType {
  * as soon as a frame is complete or `maxBytes` has been consumed.
  */
 export async function firstJpegFrame(body: AsyncIterable<Uint8Array>, maxBytes: number): Promise<Uint8Array> {
-  const chunks: Uint8Array[] = [];
+  // One buffer that grows by doubling. Joining every chunk received so far each time one
+  // arrived copied the whole frame once per chunk: a megabyte frame in 1 kB chunks was half
+  // a gigabyte of copying.
+  let buf = new Uint8Array(64 * 1024);
   let total = 0;
   let start = -1;
   let scanFrom = 0;
   for await (const chunk of body) {
-    chunks.push(chunk);
-    total += chunk.byteLength;
-    if (total > maxBytes)
+    if (total + chunk.byteLength > maxBytes)
       throw new CameraError('TOO_LARGE', `no complete MJPEG frame within ${maxBytes} bytes`, { retryable: false });
-    const buf = concat(chunks);
+    if (total + chunk.byteLength > buf.byteLength) {
+      const grown = new Uint8Array(Math.max(buf.byteLength * 2, total + chunk.byteLength));
+      grown.set(buf.subarray(0, total));
+      buf = grown;
+    }
+    buf.set(chunk, total);
+    total += chunk.byteLength;
+    const seen = buf.subarray(0, total);
     if (start < 0) {
-      const soi = indexOfMarker(buf, 0xd8, scanFrom);
+      const soi = indexOfMarker(seen, 0xd8, scanFrom);
       if (soi < 0) {
-        scanFrom = Math.max(0, buf.byteLength - 1);
+        scanFrom = Math.max(0, total - 1);
         continue;
       }
       start = soi;
       scanFrom = soi + 2;
     }
-    const eoi = indexOfMarker(buf, 0xd9, scanFrom);
-    if (eoi >= 0) return buf.slice(start, eoi + 2);
-    scanFrom = Math.max(start + 2, buf.byteLength - 1);
+    const eoi = indexOfMarker(seen, 0xd9, scanFrom);
+    if (eoi >= 0) return seen.slice(start, eoi + 2);
+    scanFrom = Math.max(start + 2, total - 1);
   }
   throw new CameraError('NOT_AN_IMAGE', 'MJPEG stream ended before a complete frame', { retryable: true });
 }
@@ -67,19 +75,4 @@ export async function firstJpegFrame(body: AsyncIterable<Uint8Array>, maxBytes: 
 function indexOfMarker(buf: Uint8Array, second: number, from: number): number {
   for (let i = from; i + 1 < buf.byteLength; i++) if (buf[i] === 0xff && buf[i + 1] === second) return i;
   return -1;
-}
-
-function concat(chunks: Uint8Array[]): Uint8Array {
-  if (chunks.length === 1) return chunks[0]!;
-  let n = 0;
-  for (const c of chunks) n += c.byteLength;
-  const out = new Uint8Array(n);
-  let off = 0;
-  for (const c of chunks) {
-    out.set(c, off);
-    off += c.byteLength;
-  }
-  chunks.length = 0;
-  chunks.push(out);
-  return out;
 }
