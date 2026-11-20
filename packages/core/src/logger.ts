@@ -152,7 +152,10 @@ export class LoggerHub {
   emit(level: LogLevel, category: LogCategory, message: string, fields?: Record<string, JsonValue>): void {
     if (LEVEL_ORDER[level] < LEVEL_ORDER[this.level]) return;
     const now = this.now();
-    if (now >= this.nextRepeatDue) this.drainRepeats(now, false);
+    // A window never closes further off than its own length; one that reads further off was
+    // opened before the clock was put back, and is closed now.
+    if (now >= this.nextRepeatDue || (this.repeats.size > 0 && this.nextRepeatDue - now > this.repeatWindowMs))
+      this.drainRepeats(now, false);
     const record: LogRecord = { ts: new Date(now).toISOString(), level, category, message: redactText(message) };
     if (fields) record.fields = redactFields(fields);
     if (level === 'warn' && this.repeatWindowMs > 0) {
@@ -193,7 +196,7 @@ export class LoggerHub {
   private drainRepeats(now: number, all: boolean): void {
     let next = Number.POSITIVE_INFINITY;
     for (const [key, r] of this.repeats) {
-      if (!all && now < r.until) {
+      if (!all && now < r.until && r.until - now <= this.repeatWindowMs) {
         if (r.until < next) next = r.until;
         continue;
       }

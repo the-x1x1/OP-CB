@@ -302,7 +302,9 @@ export class TraccarProvider extends PollingProvider {
     // The directory this poll reads with: a settings change replaces it, and then nothing this
     // poll learnt from the last server may land in the new one.
     const dir = this.directory;
-    if (now >= this.nextDevicesReadAt) await this.readDevices(base, request.signal, now, dir);
+    // Due, or due further off than the longest wait there is (set before the clock was put back).
+    if (now >= this.nextDevicesReadAt || this.nextDevicesReadAt - now > TRACCAR_DEVICES_REFRESH_MS)
+      await this.readDevices(base, request.signal, now, dir);
     const req = this.buildRequest(base, '/api/positions');
     const res = await this.context.http.request({ ...req, signal: request.signal, cacheKey: req.url });
     this.assertSameServer(dir);

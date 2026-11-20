@@ -70,13 +70,14 @@ Versioning: [semantic versioning](https://semver.org/).
   ship feed was not noticed, files were not re-read, the Kp index, the connection check and
   the satellite catalogue details were not refreshed. Each of those waits now lasts its own
   length whatever the clock does.
-- The same, in six more places. Place search and street-level pictures: a request waited
+- The same, in more places. Place search and street-level pictures: a request waited
   for a turn set before the clock went back (so for as long as the clock had been fast) and
   an answer was kept that long instead of its day or hour; the list of street-level hosts
   was not read again. A Home Assistant connection that had gone quiet was not noticed. A
   camera pack's last good list, an answer kept to cover a failed request, and what a source
-  keeps on disk for a set time were used past their time. None of those now outlasts its
-  own length.
+  keeps on disk for a set time were used past their time. Traccar's device list and
+  Digitraffic's ship details were not read again. A warning that kept repeating was counted
+  but not written to the log. None of those now outlasts its own length.
 - The small document stores (collections, watch zones, lenses, guides, prepared records, the
   camera list) could lose a change to another made at the same moment. Guides, prepared
   records and the camera list are first read when first used, and two requests arriving

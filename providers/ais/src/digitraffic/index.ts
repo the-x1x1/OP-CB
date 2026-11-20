@@ -83,7 +83,9 @@ export class DigitrafficAisProvider extends PollingProvider {
       throw new ProviderError('MALFORMED', `Digitraffic ${features}`, { retryable: false });
     }
 
-    if (now >= this.staticsDueAt) await this.refreshStatics(request.signal, now);
+    // Due, or due further off than the longest wait there is (set before the clock was put back).
+    if (now >= this.staticsDueAt || this.staticsDueAt - now > METADATA_REFRESH_MS)
+      await this.refreshStatics(request.signal, now);
 
     const receivedAt = new Date(now).toISOString();
     const origin = res.stale || res.fromCache ? 'cached' : 'live';

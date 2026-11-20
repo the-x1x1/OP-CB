@@ -234,6 +234,14 @@ test('REST: the device list is read again only every few minutes', async () => {
   clock.advance(TRACCAR_DEVICES_REFRESH_MS);
   await poll();
   assert.deepEqual(paths().slice(3), ['/api/devices', '/api/positions']);
+  // The clock is put back a day: the list is read at the next poll, not a day and five minutes on.
+  // (The fixture's positions are then dated ahead of the clock and refused; only what is asked matters here.)
+  clock.set(clock.now() - 86_400_000);
+  await poll().catch(() => undefined);
+  assert.deepEqual(paths().slice(5), ['/api/devices', '/api/positions']);
+  clock.advance(30_000);
+  await poll().catch(() => undefined);
+  assert.deepEqual(paths().slice(7), ['/api/positions']);
 });
 
 test('REST: until one device list is read, no position is shown; after, a failing list keeps the last one', async () => {

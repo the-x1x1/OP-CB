@@ -589,6 +589,26 @@ test('http: pacing doubles on repeated refusals and is capped at two minutes', a
   assert.equal(Math.max(...seen), 120_000);
 });
 
+test('logger: a clock put back does not leave a repeating warning uncounted in the log until the old time comes round', async () => {
+  let now = Date.parse('2026-09-23T04:00:00Z');
+  const sink = new RingBufferSink();
+  const hub = new LoggerHub({ sinks: [sink], now: () => now, repeatWindowMs: 60_000 });
+  const log = hub.logger('provider', { providerId: 'readsb-local' });
+  log.warn('poll failed', { code: 'OFFLINE' });
+  log.warn('poll failed', { code: 'OFFLINE' });
+  // A day back. The window opened above would close a day and a minute from now.
+  now -= 86_400_000;
+  log.warn('poll failed', { code: 'OFFLINE' });
+  const lines = () => sink.records.map((r) => `${r.message} ${r.fields?.['repeated'] ?? ''}`);
+  assert.deepEqual(lines(), ['poll failed ', 'poll failed 1', 'poll failed '], 'summed up, and a new window opened');
+  now += 30_000;
+  log.warn('poll failed', { code: 'OFFLINE' });
+  now += 31_000;
+  log.warn('poll failed', { code: 'OFFLINE' });
+  assert.deepEqual(lines().slice(3), ['poll failed 1', 'poll failed ']);
+  for (const r of sink.records) assert.ok(Number.isFinite(Date.parse(r.ts)));
+});
+
 test('logger: a repeating warning is written once, then summarised once per window', async () => {
   let now = Date.parse('2026-09-23T04:00:00Z');
   const sink = new RingBufferSink();

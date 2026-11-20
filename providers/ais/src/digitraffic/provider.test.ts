@@ -61,6 +61,15 @@ test('provider: identifies itself, asks for static data once, then only what cha
   const again = ctx.http.requests.filter(isVessels);
   assert.equal(again.length, 2);
   assert.equal(again[1]!.url, vesselsUrl(NOW - 60_000 - 5 * 60_000));
+
+  // The clock is put back a day: static data is asked for at the next poll, not a day on.
+  // (The fixture's ship is then dated ahead of the clock and refused; only what is asked matters here.)
+  clock.set(clock.now() - 86_400_000);
+  await poll().catch(() => undefined);
+  assert.equal(ctx.http.requests.filter(isVessels).length, 3);
+  clock.advance(60_000);
+  await poll().catch(() => undefined);
+  assert.equal(ctx.http.requests.filter(isVessels).length, 3);
 });
 
 test('provider: a static-data failure does not fail the poll and is retried in two minutes', async () => {
