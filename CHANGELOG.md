@@ -35,6 +35,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A history index entry whose times were damaged (a date cut off, leaving "28:00:00.000Z") was
+  taken as it stood, and the timeline was then told history was available from a time that is
+  not one. Such an entry is now skipped and rebuilt from the files, like one with a damaged
+  name. The history folder is now tested damaged in every part: it opens, and still records.
 - On the 2D map, a circle large enough to reach past both poles (a watch zone drawn with a
   radius over about 10,000 km) was filled only up to the latitude of the small cap it leaves
   out, as a band the width of the map. It now fills the map, which is what it covers but for

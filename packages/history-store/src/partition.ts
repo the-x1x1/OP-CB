@@ -397,6 +397,17 @@ interface HistoryRowLike {
   observedAt: string;
 }
 
+/** An instant exactly as `Date.prototype.toISOString` writes it. */
+function isStoredTime(v: unknown): v is string {
+  if (typeof v !== 'string' || v.length !== 24) return false;
+  const ms = Date.parse(v);
+  return Number.isFinite(ms) && new Date(ms).toISOString() === v;
+}
+
+function isCount(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0;
+}
+
 function isPartitionMeta(v: unknown): v is PartitionMeta {
   if (typeof v !== 'object' || v === null) return false;
   const m = v as Record<string, unknown>;
@@ -406,11 +417,15 @@ function isPartitionMeta(v: unknown): v is PartitionMeta {
     typeof m['providerId'] === 'string' &&
     typeof m['day'] === 'string' &&
     typeof m['slot'] === 'string' &&
-    typeof m['minObservedAt'] === 'string' &&
-    typeof m['maxObservedAt'] === 'string' &&
-    typeof m['rows'] === 'number' &&
-    typeof m['originalRows'] === 'number' &&
-    typeof m['bytes'] === 'number' &&
+    // Times are compared as text and handed to the timeline as they are, so each is a time in
+    // the one form the store writes; counts are counts. An entry with anything else ("28:00:00"
+    // where a date was cut off) is skipped like one with a bad key, and reconciled from disk.
+    isStoredTime(m['minObservedAt']) &&
+    isStoredTime(m['maxObservedAt']) &&
+    m['minObservedAt'] <= m['maxObservedAt'] &&
+    isCount(m['rows']) &&
+    isCount(m['originalRows']) &&
+    isCount(m['bytes']) &&
     typeof m['updatedAt'] === 'string' &&
     // An entry names files by its key. One whose key is not a partition's (a damaged or
     // hand-edited index) made every read that reached it throw; it is skipped and reported,
