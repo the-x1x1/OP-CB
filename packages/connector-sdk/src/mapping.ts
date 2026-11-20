@@ -586,6 +586,10 @@ export function readGeometry(record: unknown, f: CompiledField): WorldGeometry |
   return parsed.ok ? parsed.value : undefined;
 }
 
+function notANumber(v: unknown): boolean {
+  return typeof v === 'number' && !Number.isFinite(v);
+}
+
 export interface MappedRecord {
   externalId: string;
   observedAt?: string;
@@ -632,11 +636,14 @@ export function mapRecord(record: unknown, m: CompiledMapping): MapResult {
     }
     for (const [key, f] of m.labels) {
       const v = readField(record, f);
-      if (v !== undefined && v !== null && typeof v !== 'object') out.labels[key] = String(v).slice(0, 256);
+      if (v !== undefined && v !== null && typeof v !== 'object' && !notANumber(v))
+        out.labels[key] = String(v).slice(0, 256);
     }
     for (const [key, f] of m.properties) {
       const v = readField(record, f);
-      if (v !== undefined) out.properties[key] = v;
+      // JSON cannot carry NaN or an infinity, but a binary feed's float can; the observation
+      // would be refused whole for the one property, so the property is left out instead.
+      if (v !== undefined && !notANumber(v)) out.properties[key] = v;
     }
     return { ok: true, record: out };
   } catch (err) {

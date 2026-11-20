@@ -27,6 +27,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A transit vehicle whose feed gave a bearing, speed or odometer that is not a number (a
+  float's NaN or infinity, which the format allows) was refused whole. The reader now treats
+  such a field as not set, and a mapping leaves a property that is not a number out of the
+  record rather than losing the record.
 - An event made from a source's own words could be refused by the event store and never
   appear: a title over 300 characters or a summary over 2,000 (an alert's long headline), a
   blank title, or an end time before the start. Titles and summaries are now cut to length, a

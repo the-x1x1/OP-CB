@@ -214,16 +214,21 @@ function readVehicleDescriptor(r: Reader): Record<string, unknown> {
 
 function readPosition(r: Reader): Record<string, unknown> {
   const p: Record<string, unknown> = {};
+  // A float that is not a number (NaN and the infinities are valid bit patterns, and a feed
+  // or a damaged byte can hold one) is a field left unset, as the proto's own absence is.
+  const set = (key: string, value: number) => {
+    if (Number.isFinite(value)) p[key] = value;
+  };
   eachField(r, (field, wire) => {
     if (field === 1) {
       expect(r, wire, 5, 'latitude');
-      p['latitude'] = r.float32();
+      set('latitude', r.float32());
     } else if (field === 2) {
       expect(r, wire, 5, 'longitude');
-      p['longitude'] = r.float32();
-    } else if (field === 3 && wire === 5) p['bearing'] = r.float32();
-    else if (field === 4 && wire === 1) p['odometer'] = r.float64();
-    else if (field === 5 && wire === 5) p['speed'] = r.float32();
+      set('longitude', r.float32());
+    } else if (field === 3 && wire === 5) set('bearing', r.float32());
+    else if (field === 4 && wire === 1) set('odometer', r.float64());
+    else if (field === 5 && wire === 5) set('speed', r.float32());
     else return false;
     return true;
   });

@@ -50,6 +50,10 @@ const VALUES: unknown[] = [
   1e308,
   -1e308,
   1e-320,
+  // A binary feed's float can be any of these; JSON's cannot.
+  Number.NaN,
+  Number.POSITIVE_INFINITY,
+  Number.NEGATIVE_INFINITY,
   1_795_000_000,
   1_795_000_000_000,
   9_007_199_254_740_993,
