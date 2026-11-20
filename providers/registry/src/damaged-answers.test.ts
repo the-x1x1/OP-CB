@@ -23,6 +23,11 @@ import { PURPLEAIR_LOCAL_MANIFEST, normalizeSensorJson } from '@opcb/provider-pu
 import { buildObservation } from '@opcb/provider-sdk';
 import { normalizeUsgsFeed } from '@opcb/provider-usgs';
 import { normalizeNwsAlerts } from '@opcb/provider-weather';
+import {
+  WEATHERLINK_LOCAL_MANIFEST,
+  normalizeConditions,
+  parseCurrentConditions,
+} from '@opcb/provider-weatherlink-local';
 
 /**
  * Each built-in source's answer, as recorded, with parts of it changed: a value swapped for
@@ -392,4 +397,26 @@ test('fires: a changed table is admitted row by row or rejected with a reason', 
     rejected += parsed.rejected.length + result.rejected.length;
   }
   assert.ok(admitted > 1000 && rejected > 200, `${admitted} admitted, ${rejected} rejected`);
+});
+
+test('a weather station: a changed answer gives observations or a reason', () => {
+  const nowMs = Date.parse('2026-09-23T20:00:00Z');
+  for (const file of ['normal.json', 'two-transmitters.json'])
+    hold(
+      `weatherlink ${file}`,
+      load('weatherlink-local', file),
+      (p) => {
+        const parsed = parseCurrentConditions(p);
+        if (typeof parsed === 'string')
+          return { observations: [], total: 0, rejected: [{ index: -1, reason: parsed }] };
+        return normalizeConditions(parsed, WEATHERLINK_LOCAL_MANIFEST, {
+          receivedAt: new Date(nowMs).toISOString(),
+          nowMs,
+          position: { latitude: 21.3069, longitude: -157.8583 },
+          name: 'Roof',
+        });
+      },
+      12,
+      3000,
+    );
 });
