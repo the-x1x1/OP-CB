@@ -6,6 +6,10 @@ import path from 'node:path';
 import type { DiagnosticsSnapshot } from '@opcb/ipc-contract';
 import {
   DiagnosticsCollector,
+  buildBundle,
+  readLogTail,
+  redactStructure,
+  redactValueDeep,
   exportBundle,
   fallbackSnapshot,
   redactPathsInText,
@@ -141,4 +145,119 @@ test('todo report: the real production trees are clean', async () => {
   const report = await todoReport(root);
   assert.ok(report.filesScanned > 20);
   assert.deepEqual(report.entries, [], JSON.stringify(report.entries, null, 2));
+});
+
+test('path redaction: the account folder in any letter case, with a space in the name, or with doubled backslashes', () => {
+  const home = { homeDir: 'C:\\Users\\John Smith' };
+  const cases: Array<[string, string]> = [
+    ['C:\\Users\\John Smith\\AppData\\x.log', '~\\AppData\\x.log'],
+    ['c:\\users\\john smith\\AppData\\x.log', '~\\AppData\\x.log'],
+    ['C:/Users/John Smith/AppData', '~/AppData'],
+    ['{"file":"C:\\\\Users\\\\John Smith\\\\a.json"}', '{"file":"~\\\\a.json"}'],
+    ['C:\\Users\\Jane Doe\\Desktop\\a.kml', '~\\Desktop\\a.kml'],
+    ['d:\\users\\jane doe\\a', '~\\a'],
+    ['C:\\\\Users\\\\Jane Doe\\\\a', '~\\\\a'],
+    ['C:\\Users\\JOHNSM~1\\a', '~\\a'],
+    ['C:\\Documents and Settings\\Jane\\x', '~\\x'],
+    ['file:///C:/Users/John%20Smith/a', 'file:///~/a'],
+    ['two: C:\\Users\\a\\x and C:\\Users\\b\\y', 'two: ~\\x and ~\\y'],
+  ];
+  for (const [text, want] of cases) assert.equal(redactPathsInText(text, home), want, text);
+  for (const text of cases.map((c) => c[0])) {
+    const out = redactPathsInText(text, home).toLowerCase();
+    for (const name of ['john', 'smith', 'jane', 'doe', 'johnsm']) assert.ok(!out.includes(name), `${name} in ${out}`);
+  }
+  // What is not an account folder is left alone.
+  for (const text of ['C:\\Program Files\\OP-CB\\app.exe', 'C:\\Users', 'users of the app', '/usr/home', 'D:\\data\\x'])
+    assert.equal(redactPathsInText(text, home), text, text);
+  // A custom data folder given as an extra root goes too, in any case on Windows.
+  assert.equal(
+    redactPathsInText('wrote E:\\OPCB-Data\\history\\x', { ...home, extraRoots: ['E:\\opcb-data'] }),
+    'wrote ~\\history\\x',
+  );
+});
+
+test('redactStructure: values and keys, at any depth, without changing what it was given', () => {
+  const home = { homeDir: '/home/alice' };
+  const given = {
+    files: { '/home/alice/maps/a.kml': { rows: 1 }, '/home/alice/maps/b.kml': { rows: 2 } },
+    list: ['/home/alice/x', 5, null, { deep: [{ apiKey: 'SECRET', note: 'at /home/alice/y' }] }],
+    url: 'https://user:pw@host/x?token=SECRET',
+    missing: undefined,
+    count: 3,
+  };
+  const before = JSON.stringify(given);
+  const out = redactStructure(given, home);
+  const text = JSON.stringify(out);
+  assert.ok(!text.includes('alice') && !text.includes('SECRET') && !text.includes('user:pw'), text);
+  assert.deepEqual(Object.keys(out.files), ['~/maps/a.kml', '~/maps/b.kml']);
+  assert.equal(out.count, 3);
+  assert.equal('missing' in out, false);
+  assert.equal(JSON.stringify(given), before);
+  // Two keys that become the same text both stay.
+  const collide = redactStructure({ '/home/alice': 1, '/home/bob': 2 }, home);
+  assert.deepEqual(Object.values(collide).sort(), [1, 2]);
+  // Things with no JSON at all, and a key named __proto__.
+  assert.equal(redactStructure(undefined), undefined);
+  assert.equal(redactStructure(null), null);
+  assert.equal(redactStructure(7), 7);
+  const odd = redactValueDeep(JSON.parse('{"__proto__":{"path":"/home/alice/z"},"a":1}'), home) as Record<
+    string,
+    unknown
+  >;
+  assert.equal(Object.getPrototypeOf(odd), Object.prototype);
+  assert.deepEqual(JSON.parse(JSON.stringify(odd)), { __proto__: { path: '~/z' }, a: 1 });
+});
+
+test('readLogTail: the last records of the file; a missing file, blank lines and torn lines are not errors', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-tail-'));
+  const file = path.join(dir, 'app.log');
+  assert.deepEqual(await readLogTail(file, 10), { records: [], truncated: false });
+  const record = (n: number) =>
+    JSON.stringify({ ts: '2026-09-21T09:00:00Z', level: 'info', category: 'app', message: `m${n}` });
+  await fs.writeFile(
+    file,
+    [record(1), '', record(2), '   ', '{"no":"message"}', 'null', '5', record(3), '{"message":"to'].join('\n'),
+  );
+  const all = await readLogTail(file, 100);
+  assert.deepEqual(
+    all.records.map((r) => r.message),
+    ['m1', 'm2', 'm3'],
+  );
+  assert.equal(all.truncated, false);
+  const last = await readLogTail(file, 2);
+  assert.deepEqual(
+    last.records.map((r) => r.message),
+    ['m3'],
+    'the last two lines: one record and the torn line',
+  );
+  assert.equal(last.truncated, true);
+  await fs.writeFile(file, '');
+  assert.deepEqual(await readLogTail(file, 10), { records: [], truncated: false });
+});
+
+test('buildBundle: the format, the time, and everything in it redacted', async () => {
+  const snapshot: DiagnosticsSnapshot = await new DiagnosticsCollector(sources()).snapshot();
+  const bundle = buildBundle(
+    {
+      snapshot,
+      homeDir: '/home/alice',
+      now: () => Date.parse('2026-09-21T10:00:00Z'),
+      findings: [{ at: '/home/alice/x' }],
+    },
+    {
+      records: [
+        { ts: '2026-09-21T09:00:00Z', level: 'info', category: 'app', message: 'read /home/alice/settings.json' },
+      ],
+      truncated: true,
+    },
+  );
+  assert.equal(bundle.format, 'opcb/diagnostics-bundle/v1');
+  assert.equal(bundle.exportedAt, '2026-09-21T10:00:00.000Z');
+  assert.deepEqual(bundle.redaction, { secrets: true, userPaths: true, homeDir: '~' });
+  assert.equal(bundle.logTailTruncated, true);
+  assert.equal(bundle.logTail[0]!.message, 'read ~/settings.json');
+  assert.deepEqual(bundle.findings, [{ at: '~/x' }]);
+  assert.ok(!JSON.stringify(bundle).includes('alice'));
+  assert.deepEqual(buildBundle({ snapshot }, { records: [], truncated: false }).findings, []);
 });
