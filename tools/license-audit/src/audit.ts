@@ -188,6 +188,9 @@ export function readDefinitionFacts(text: string): DefinitionFacts | { error: st
   const id = typeof doc['id'] === 'string' ? doc['id'] : '';
   if (!id) return { error: 'definition has no readable id' };
   const review = typeof doc['review'] === 'string' ? doc['review'] : 'user-configured';
+  // Fail closed: a review the audit does not know is not read as some lesser one.
+  if (!Object.hasOwn(REVIEW_TO_COMMERCIAL, review))
+    return { error: `review "${review.slice(0, 40)}" is not user-configured, bundled or commercially-reviewed` };
   const policy = (doc['dataPolicy'] && typeof doc['dataPolicy'] === 'object' ? doc['dataPolicy'] : {}) as Record<
     string,
     unknown
@@ -198,7 +201,7 @@ export function readDefinitionFacts(text: string): DefinitionFacts | { error: st
   return {
     id,
     review,
-    commercialReview: REVIEW_TO_COMMERCIAL[review] ?? 'manual-review-required',
+    commercialReview: REVIEW_TO_COMMERCIAL[review]!,
     enabledByDefault: review !== 'user-configured' && doc['enabled'] === true,
     attributionText: typeof attribution?.text === 'string' ? attribution.text : '',
     dataPolicy,

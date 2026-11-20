@@ -296,3 +296,23 @@ test('the audit reads the same fail-closed defaults and review mapping the conne
       );
   }
 });
+
+test('a definition whose review is not one the audit knows fails closed, whatever the registry says', async () => {
+  const { readDefinitionFacts } = await import('./audit.js');
+  for (const review of ['reviewed', 'Bundled', 'approved', 'constructor', 'toString', '__proto__', '', ' bundled']) {
+    const facts = readDefinitionFacts(JSON.stringify({ ...DEFINITION, review, enabled: true }));
+    assert.ok('error' in facts && /is not user-configured, bundled or commercially-reviewed/.test(facts.error), review);
+  }
+  const long = readDefinitionFacts(JSON.stringify({ ...DEFINITION, review: 'x'.repeat(5000) }));
+  assert.ok('error' in long && long.error.length < 200, 'a long wrong value is cut in the message');
+  // No review at all, or one that is not text, is the unreviewed kind — an error of its own when shipped.
+  for (const review of [undefined, 5, null, ['bundled']]) {
+    const facts = readDefinitionFacts(JSON.stringify({ ...DEFINITION, review }));
+    assert.ok(
+      !('error' in facts) &&
+        facts.review === 'user-configured' &&
+        facts.commercialReview === 'manual-review-required' &&
+        !facts.enabledByDefault,
+    );
+  }
+});
