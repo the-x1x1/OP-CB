@@ -35,6 +35,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **The app could not start when the history index file held the single word `null`** (valid
+  JSON, though nothing the app writes): reading it threw before the runtime was built. It is now read as an index in an unknown format, reported, and rebuilt
+  from the history files. A test now starts the whole runtime on its own data folder damaged
+  in every file, and checks that it starts, answers, polls and goes on saving.
 - A history index entry whose times were damaged (a date cut off, leaving "28:00:00.000Z") was
   taken as it stood, and the timeline was then told history was available from a time that is
   not one. Such an entry is now skipped and rebuilt from the files, like one with a damaged

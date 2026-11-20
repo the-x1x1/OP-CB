@@ -157,3 +157,32 @@ test('a damaged history folder opens, and every question is answered with rows t
   }
   assert.ok(answered > 1000 && rowsSeen > 5000, `${answered} answers, ${rowsSeen} rows`);
 });
+
+test('an index that is valid JSON of the wrong kind is reported and rebuilt, not thrown on', async () => {
+  for (const content of [
+    'null',
+    '5',
+    '"index"',
+    '[]',
+    'true',
+    '{"version":1,"partitions":null}',
+    '{"version":1,"partitions":[null,5,"x",[]]}',
+  ]) {
+    const dataDir = await tempDir();
+    try {
+      await seed(dataDir);
+      await fs.writeFile(path.join(dataDir, 'history', 'index.json'), content);
+      const backend = new NdjsonBackend({ dataDir });
+      await backend.open();
+      await backend.reconcile();
+      assert.ok((await backend.listPartitions()).length >= 2, `${content}: the files on disk are found again`);
+      assert.ok(
+        (await backend.observationsInRange({ range: { start: iso(DAY, -60), end: iso(DAY, 7200) } })).length > 50,
+        content,
+      );
+      await backend.close();
+    } finally {
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
+  }
+});

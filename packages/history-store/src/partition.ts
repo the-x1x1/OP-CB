@@ -221,7 +221,9 @@ export class PartitionIndex {
       issues.push(`index unreadable: ${(err as Error).message}`);
     }
     if (data !== undefined) {
-      const parsed = data as Partial<PartitionIndexFile>;
+      // `null` is valid JSON and is what a file holding the word is read as; a property of it
+      // cannot be read at all, and reading one here stopped the app from starting.
+      const parsed = (typeof data === 'object' && data !== null ? data : {}) as Partial<PartitionIndexFile>;
       if (parsed.version !== 1 || !Array.isArray(parsed.partitions)) issues.push('index has unknown format');
       else
         for (const p of parsed.partitions) {
