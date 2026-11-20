@@ -147,7 +147,8 @@ test('firstJpegFrame: the same frame however the stream is cut into chunks', asy
   all.set(head, head.length + frame.length);
   for (const size of [1, 2, 3, 7, 1000, 65_536, 65_537, all.length]) {
     const chunks = async function* (): AsyncGenerator<Uint8Array> {
-      for (let i = 0; i < all.length; ) {
+      let i = 0;
+      while (i < all.length) {
         const n = size === 7 ? 1 + Math.floor(random() * 5000) : size;
         yield all.subarray(i, i + n);
         i += n;
