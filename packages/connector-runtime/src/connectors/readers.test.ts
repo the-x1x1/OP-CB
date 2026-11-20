@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { clip, coordinate, isoTime, lengthMetres, lineGeometry, MAX_DESCRIPTION_CHARS } from './files/features.js';
+import { parseKmlCoordinates } from './files/kml.js';
 import * as fileXml from './files/xml.js';
 import {
   KvpParams,
@@ -513,4 +514,33 @@ test('parseOpacity, parseFadeBelow and isTimeValue', () => {
     'current/2026',
   ])
     assert.equal(isTimeValue(bad), false, bad);
+});
+
+test('KML coordinates: tuples separated by white space, spaces round the commas tolerated, read in one pass', () => {
+  const read = (text: string) => {
+    const r = parseKmlCoordinates(text);
+    return 'list' in r ? r.list : r.reason;
+  };
+  assert.deepEqual(read('-157.8,21.3,10 -157.9,21.4'), [
+    [-157.8, 21.3, 10],
+    [-157.9, 21.4],
+  ]);
+  assert.deepEqual(read('\n  -157.8 , 21.3 ,10\n\t-157.9,\n21.4  \n'), [
+    [-157.8, 21.3, 10],
+    [-157.9, 21.4],
+  ]);
+  assert.deepEqual(read(''), []);
+  assert.deepEqual(read('   \n '), []);
+  assert.match(String(read('-157.8')), /not lon,lat/);
+  assert.match(String(read('1,2,3,4')), /not lon,lat/);
+  assert.equal(typeof read('a,b'), 'string');
+  assert.equal(typeof read('1,,2'), 'string');
+  const started = Date.now();
+  assert.deepEqual(read(`1,2${' \n'.repeat(500_000)}3,4`), [
+    [1, 2],
+    [3, 4],
+  ]);
+  assert.ok(Array.isArray(read(`${' '.repeat(1_000_000)}`)));
+  assert.equal(typeof read(`1${' '.repeat(500_000)},${'\n'.repeat(500_000)}2 3`), 'string');
+  assert.ok(Date.now() - started < 1500, `${Date.now() - started} ms`);
 });

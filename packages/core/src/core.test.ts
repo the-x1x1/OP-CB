@@ -870,3 +870,22 @@ test('HttpClient: a path credential is sent to the host that was asked, written 
   assert.equal(new URL(asked[0]!).hostname, 'api.example.com');
   assert.equal(new URL(asked[0]!).pathname, '/v1/k3y%2Fwith%3Fodd%23chars/data');
 });
+
+test('redactText: a megabyte of anything is read in a moment, and an empty user name still hides the password', () => {
+  assert.equal(redactText('redis://:s3cret@cache:6379'), 'redis://<redacted>cache:6379');
+  assert.equal(redactText('see a://b:c@d and ftp://u:p@h/f'), 'see a://<redacted>d and ftp://<redacted>h/f');
+  const started = Date.now();
+  for (const text of [
+    'a'.repeat(1_000_000),
+    'QUJD'.repeat(250_000),
+    'http://u:'.repeat(110_000),
+    'password '.repeat(110_000),
+    'authorization: '.repeat(66_000),
+    'cookie: a\n'.repeat(100_000),
+    'a://'.repeat(250_000),
+    '&key='.repeat(200_000),
+    ' '.repeat(1_000_000),
+  ])
+    redactText(text);
+  assert.ok(Date.now() - started < 3000, `${Date.now() - started} ms`);
+});

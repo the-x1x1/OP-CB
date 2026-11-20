@@ -101,14 +101,19 @@ export interface WmsConfig {
 /** `Band1=Reflectivity,Band2=Echo top` → a table; an error for a pair that is not one. */
 function parsePairs(key: string, raw: string | undefined): Record<string, string> | string | undefined {
   if (raw === undefined) return undefined;
-  const out: Record<string, string> = {};
+  // Split at the first `=` by hand: the pattern that did this took thirty seconds on a part
+  // of 6,000 spaces, and a definition is a file someone else may have written.
+  const pairs = new Map<string, string>();
   for (const part of raw.split(',')) {
-    const m = /^\s*([^=]+?)\s*=\s*(.+?)\s*$/.exec(part);
-    if (!m || m[2]!.length > 40)
+    const eq = part.indexOf('=');
+    const name = eq < 0 ? '' : part.slice(0, eq).trim();
+    const text = eq < 0 ? '' : part.slice(eq + 1).trim();
+    if (!name || !text || text.length > 40)
       return `${key} "${raw.slice(0, 60)}" is not name=text pairs (text up to 40 characters)`;
-    out[m[1]!] = m[2]!;
+    pairs.set(name, text);
   }
-  return Object.keys(out).length > 12 ? `${key} names more than 12 values` : out;
+  // fromEntries makes every name an entry of its own, `__proto__` included.
+  return pairs.size > 12 ? `${key} names more than 12 values` : Object.fromEntries(pairs);
 }
 
 /**

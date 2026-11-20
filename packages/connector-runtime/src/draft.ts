@@ -268,6 +268,8 @@ export function draftDefinition(sample: DraftSample, opts: DraftOptions = {}): D
     if (LAT_KEYS.includes(k) || LON_KEYS.includes(k) || ALT_KEYS.includes(k)) continue;
     const v = first[k];
     if (v && typeof v === 'object') continue;
+    // A name longer than any real column's is passed over (and not handed to the pattern below).
+    if (k.length > 128) continue;
     const camel = k.replace(/[^A-Za-z0-9]+(.)/g, (_m, c: string) => c.toUpperCase()).replace(/^[^A-Za-z_]+/, '');
     if (!camel) continue;
     properties[camel] =

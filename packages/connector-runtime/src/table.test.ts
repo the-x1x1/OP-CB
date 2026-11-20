@@ -161,3 +161,15 @@ test('the drafter: NDBC buoy rows as ERDDAP served them (2026-11-11) — keyed b
   assert.match(d.notes.join(' '), /2 rows for 1 station value\(s\).*orderByMax\("station,time"\)/);
   assert.equal(windColumns(live.table.columnNames), undefined, "a buoy's speed and direction are not a grid's u and v");
 });
+
+test('the drafter: a column name of absurd length is passed over, at once', () => {
+  const long = `k${'-'.repeat(300_000)}x`;
+  const started = Date.now();
+  const d = draftDefinition({
+    url: 'https://api.example.com/things.json',
+    text: JSON.stringify([{ id: 'a', lat: 1, lon: 2, [long]: 5, 'wind-speed': 7 }]),
+  });
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
+  const properties = (d.definition['mapping'] as { properties: Record<string, unknown> }).properties;
+  assert.deepEqual(Object.keys(properties), ['windSpeed']);
+});

@@ -270,9 +270,13 @@ function readRing(el: XmlElement): { ring: Coordinate[] } | { reason: string } {
 
 /** `lon,lat[,alt]` tuples, white-space separated (spaces around the commas tolerated). */
 export function parseKmlCoordinates(text: string): { list: Coordinate[] } | { reason: string } {
+  // White space round a comma goes; what is left between tuples separates them. Done by
+  // splitting on the commas: the pattern /\s*,\s*/ walks a long run of white space once from
+  // each of its characters, minutes for a megabyte of blank lines.
   const tokens = text
-    .replace(/\s*,\s*/g, ',')
-    .trim()
+    .split(',')
+    .map((piece) => piece.trim())
+    .join(',')
     .split(/\s+/)
     .filter(Boolean);
   const list: Coordinate[] = [];

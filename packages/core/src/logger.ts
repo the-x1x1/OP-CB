@@ -49,8 +49,10 @@ const SECRET_IN_TEXT = [
   /(bearer\s+)[a-z0-9._~+/=-]+/gi,
   // Cookie and Set-Cookie, to the end of the line.
   /((?:set-)?cookie["']?\s*[:=]\s*)[^\r\n]+/gi,
-  // user:password@ in a URL of any scheme (http, rtsp, mqtt, ws, ftp…).
-  /([a-z][a-z0-9+.-]*:\/\/)[^\s/@"'<>]+:[^\s/@"'<>]*@/gi,
+  // user:password@ in a URL of any scheme (http, rtsp, mqtt, ws, ftp…). The scheme and the two
+  // parts are bounded in length so that a long run of letters (a key, a base64 body) is
+  // passed over once, not once from each of its characters.
+  /((?<![a-z0-9+.-])[a-z][a-z0-9+.-]{0,15}:\/\/)[^\s/@"'<>:]{0,256}:[^\s/@"'<>]{0,256}@/gi,
 ];
 
 export function redactText(text: string): string {

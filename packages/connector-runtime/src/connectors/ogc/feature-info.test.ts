@@ -267,6 +267,23 @@ test('valueNames and valueUnits: name=text pairs, checked', () => {
   assert.equal(bad.ok, false);
   assert.match(bad.errors.join(' '), /valueUnits "dBZ" is not name=text pairs/);
   assert.ok(with_(base).ok);
+  assert.ok(
+    with_({ ...base, valueNames: '  Band1 =  Reflectivity = composite , Band2=Echo top ' }).ok,
+    'split at the first =',
+  );
+  for (const wrong of ['=text', 'name=', ' = ', 'a=b,,c=d', `a=${'x'.repeat(41)}`])
+    assert.equal(with_({ ...base, valueNames: wrong }).ok, false, wrong);
+  assert.match(
+    with_({ ...base, valueNames: Array.from({ length: 13 }, (_, i) => `b${i}=x`).join(',') }).errors.join(' '),
+    /names more than 12 values/,
+  );
+  // A name every object has is a name like any other.
+  assert.ok(with_({ ...base, valueNames: '__proto__=Odd,constructor=Odder' }).ok);
+  // A part that is all padding is refused at once (the pattern that read it took 30 s on 6,000 spaces).
+  const started = Date.now();
+  assert.equal(with_({ ...base, valueNames: ' '.repeat(200_000) }).ok, false);
+  assert.equal(with_({ ...base, valueUnits: `a${' '.repeat(200_000)}b` }).ok, false);
+  assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
 });
 
 test("a value the service calls by an Object method's name is not renamed by it", async () => {

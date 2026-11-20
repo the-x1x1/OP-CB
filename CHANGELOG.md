@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A map-service definition's `valueNames` / `valueUnits` with a long run of spaces took thirty
+  seconds to check; a KML file with a megabyte of blank lines in a coordinate list took
+  minutes. Both are read in one pass.
 - Four more places where text from a server could hold the app, each read in one pass now: a
   basemap server's attribution line and a camera's credit line (markup removed), a map
   service's tile-level names, and a plain-text "what is here" answer.

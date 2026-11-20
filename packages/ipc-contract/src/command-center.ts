@@ -295,15 +295,7 @@ export function readGuideProgress(value: unknown): GuideProgress | undefined {
 // ---------------------------------------------------------------------------------------------
 
 export type PrepCategory =
-  | 'water'
-  | 'food'
-  | 'medical'
-  | 'power'
-  | 'communications'
-  | 'tools'
-  | 'shelter'
-  | 'documents'
-  | 'other';
+  'water' | 'food' | 'medical' | 'power' | 'communications' | 'tools' | 'shelter' | 'documents' | 'other';
 
 export const PREP_CATEGORIES: readonly PrepCategory[] = Object.freeze([
   'water',
@@ -571,9 +563,7 @@ export interface LibraryFindAnswer {
 }
 
 export type LibraryOpenRequest =
-  | { kind: 'book'; bookId: string; key?: string }
-  | { kind: 'reference'; id: string }
-  | { kind: 'folder' };
+  { kind: 'book'; bookId: string; key?: string } | { kind: 'reference'; id: string } | { kind: 'folder' };
 
 /** One book in the Kiwix catalogue (library.kiwix.org). */
 export interface CatalogEntry {
