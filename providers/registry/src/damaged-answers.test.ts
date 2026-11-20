@@ -6,7 +6,17 @@ import { fileURLToPath } from 'node:url';
 import { observationSchema, type Observation } from '@opcb/world-model';
 import { ADSB_LOL_MANIFEST, normalizeAircraftRows, parseAdsbLolResponse } from '@opcb/provider-adsb-remote';
 import { CircularOrbitPropagator, normalizeElements, parseOmmJson } from '@opcb/provider-celestrak';
-import { AISSTREAM_MANIFEST, normalizeAisEnvelope } from '@opcb/provider-ais';
+import {
+  AISSTREAM_MANIFEST,
+  DIGITRAFFIC_AIS_MANIFEST,
+  locationToDraft,
+  normalizeAisEnvelope,
+  parseLocations,
+  parseVessels,
+  vesselStatic,
+  type VesselStatic,
+} from '@opcb/provider-ais';
+import { normalizeFirmsRows, parseFirmsCsv } from '@opcb/provider-firms';
 import { SEED_AIRPORTS_MANIFEST, normalizeAirportCollection } from '@opcb/provider-infrastructure';
 import { normalizeCurrentStorms } from '@opcb/provider-nhc';
 import { PURPLEAIR_LOCAL_MANIFEST, normalizeSensorJson } from '@opcb/provider-purpleair-local';
@@ -311,4 +321,75 @@ test('ships: a changed frame is an observation, ignored, an error or malformed w
       8,
       2000,
     );
+});
+
+test('ships by request: changed locations and vessel details are admitted or rejected with a reason', () => {
+  const nowMs = Date.parse('2026-09-28T10:00:00.000Z');
+  const receivedAt = new Date(nowMs).toISOString();
+  hold(
+    'digitraffic',
+    { locations: load('digitraffic-ais', 'locations.json'), vessels: load('digitraffic-ais', 'vessels.json') },
+    (p) => {
+      const both = (p && typeof p === 'object' ? p : {}) as { locations?: unknown; vessels?: unknown };
+      const statics = new Map<string, VesselStatic>();
+      const vessels = parseVessels(both.vessels);
+      if (typeof vessels !== 'string')
+        for (const row of vessels) {
+          const one = vesselStatic(row);
+          if (one) statics.set(one.mmsi, one.fields);
+        }
+      const locations = parseLocations(both.locations);
+      if (typeof locations === 'string')
+        return { observations: [], total: 0, rejected: [{ index: -1, reason: locations }] };
+      const observations: Observation[] = [];
+      const rejected: Array<{ index: number; reason: string }> = [];
+      const seen = new Set<string>();
+      locations.forEach((feature, index) => {
+        const result = locationToDraft(feature, statics, { receivedAt, nowMs });
+        if (result.kind === 'rejected') rejected.push({ index, reason: result.reason });
+        else if (!seen.has(result.draft.externalId)) {
+          // The provider keeps one report per ship; a doubled list is not two ships.
+          seen.add(result.draft.externalId);
+          observations.push(buildObservation(DIGITRAFFIC_AIS_MANIFEST, receivedAt, result.draft));
+        }
+      });
+      return { observations, total: locations.length, rejected };
+    },
+    9,
+    3000,
+  );
+});
+
+test('fires: a changed table is admitted row by row or rejected with a reason', () => {
+  const good = readFileSync(path.join(fixtures, 'firms', 'viirs-snpp.csv'), 'utf8');
+  const next = rng(10);
+  const bits = ['', ',', ',,', '\n', 'NaN', '-999', '999', '1e999', '0', '-', 'n', 'x', '2026-13-45', '9999', '"', ' '];
+  let admitted = 0;
+  let rejected = 0;
+  for (let i = 0; i < 4000; i++) {
+    let text = good;
+    const times = 1 + Math.floor(next() * 3);
+    for (let k = 0; k < times; k++) {
+      const at = Math.floor(next() * text.length);
+      const len = Math.floor(next() * 12);
+      text = text.slice(0, at) + bits[Math.floor(next() * bits.length)]! + text.slice(at + (next() < 0.5 ? 0 : len));
+    }
+    const parsed = parseFirmsCsv(text);
+    if (!parsed) {
+      rejected++;
+      continue;
+    }
+    const result = normalizeFirmsRows(parsed.rows, {
+      receivedAt: '2026-09-21T08:00:00.000Z',
+      source: 'VIIRS_SNPP_NRT',
+    });
+    for (const observation of result.observations) {
+      const checked = observationSchema.parse(observation);
+      assert.ok(checked.ok, `firms admitted what the world model refuses: ${JSON.stringify(checked).slice(0, 300)}`);
+    }
+    for (const r of [...parsed.rejected, ...result.rejected]) assert.ok(r.reason.length > 0);
+    admitted += result.observations.length;
+    rejected += parsed.rejected.length + result.rejected.length;
+  }
+  assert.ok(admitted > 1000 && rejected > 200, `${admitted} admitted, ${rejected} rejected`);
 });
