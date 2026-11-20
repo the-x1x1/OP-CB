@@ -202,6 +202,43 @@ test('mqtt client: connects, subscribes, delivers publishes (QoS 1 acknowledged)
   await b.close();
 });
 
+test('mqtt client: a secure store that cannot be read ends the connection at once, said by kind', async () => {
+  const b = await broker();
+  const unhandled: unknown[] = [];
+  const onUnhandled = (reason: unknown) => unhandled.push(reason);
+  process.on('unhandledRejection', onUnhandled);
+  const mqtt = createMqtt({
+    allowed: (host) => host === '127.0.0.1',
+    resolveSecret: async () => {
+      throw new Error('keychain locked: item broker.password = hunter2');
+    },
+  });
+  const started = Date.now();
+  await assert.rejects(
+    mqtt.connect(
+      {
+        host: '127.0.0.1',
+        port: b.port,
+        username: 'wv',
+        credential: { key: 'broker.password' },
+        subscriptions: [{ topic: 'a' }],
+      },
+      { onMessage: () => undefined },
+    ),
+    (e: unknown) =>
+      e instanceof ProviderError &&
+      e.code === 'AUTH' &&
+      e.message === 'credential broker.password could not be read' &&
+      !`${e.stack} ${String(e.cause)}`.includes('hunter2'),
+  );
+  assert.ok(Date.now() - started < 2_000, 'not left to the CONNACK timeout');
+  await new Promise((r) => setTimeout(r, 20));
+  process.off('unhandledRejection', onUnhandled);
+  assert.deepEqual(unhandled, []);
+  assert.equal(b.received.length, 0, 'nothing was sent to the broker');
+  await b.close();
+});
+
 test('mqtt client: refused hosts, ports and filters never connect; a bad password, a refused subscription and a dead broker are typed', async () => {
   const mqtt = createMqtt({ allowed: (host) => host === '127.0.0.1', resolveSecret: async () => undefined });
   const events = { onMessage: () => undefined };

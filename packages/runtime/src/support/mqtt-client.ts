@@ -147,7 +147,19 @@ function connectMqtt(
       void (async () => {
         let password: string | undefined;
         if (opts.credential) {
-          password = await o.resolveSecret(opts.credential.key);
+          try {
+            password = await o.resolveSecret(opts.credential.key);
+          } catch {
+            // The secure store could not be read. Said by kind: what it threw is not ours to
+            // repeat, and unanswered it would be a rejection nobody handles and a connection
+            // left to time out.
+            clearTimeout(timer);
+            socket.destroy();
+            fail(
+              new ProviderError('AUTH', `credential ${opts.credential.key} could not be read`, { retryable: false }),
+            );
+            return;
+          }
           if (password === undefined) {
             clearTimeout(timer);
             socket.destroy();
