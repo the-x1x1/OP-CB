@@ -7,6 +7,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- A camera's HLS playlist is rewritten more strictly before the player sees it: a carriage
+  return on its own counts as a line ending, and a tag whose `URI=` value is not in quotes
+  is left out. Neither is valid HLS, and a reference hidden that way went to the player as
+  written rather than through the relay. A test now runs 4,000 hostile playlists through
+  the rewrite and through what the relay would then fetch.
 - A map archive whose directory does not decompress is refused as a damaged map archive,
   in those words, rather than with the compression library's own ("incorrect data check").
   The library, map-archive and pack readers are now tested against damaged files.

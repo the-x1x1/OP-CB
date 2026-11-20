@@ -53,7 +53,9 @@ export function resolveContained(rel: string, base: HlsBase): string | undefined
   return target.toString();
 }
 
-const URI_ATTR = /URI="([^"]*)"/g;
+const URI_ATTR = /URI="([^"]*)"/gi;
+/** A URI attribute whose value is not in quotes: not HLS, but a lenient player may follow it. */
+const BARE_URI_ATTR = /URI=(?!")/i;
 
 /**
  * Rewrite a playlist body. `relayPrefix` is the relay URL prefix that `/r/<rel>` is
@@ -61,7 +63,9 @@ const URI_ATTR = /URI="([^"]*)"/g;
  * tag line immediately preceding them (EXTINF etc.) so the playlist stays valid.
  */
 export function rewritePlaylist(text: string, playlistUrl: string, base: HlsBase, relayPrefix: string): string {
-  const lines = text.split(/\r?\n/);
+  // A carriage return alone ends a line too. HLS does not say so, but a player that reads it
+  // that way would find a reference this had passed over as the tail of a tag.
+  const lines = text.split(/\r\n|\n|\r/);
   const out: string[] = [];
   const toRelay = (ref: string): string | undefined => {
     const rel = containedRelativePath(ref, playlistUrl, base);
@@ -74,7 +78,7 @@ export function rewritePlaylist(text: string, playlistUrl: string, base: HlsBase
       continue;
     }
     if (trimmed.startsWith('#')) {
-      let dropped = false;
+      let dropped = BARE_URI_ATTR.test(trimmed);
       const rewritten = trimmed.replace(URI_ATTR, (_m, uri: string) => {
         const relay = toRelay(uri);
         if (relay === undefined) {
