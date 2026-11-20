@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- When an RTSP camera cannot be handed to go2rtc, the error says only that go2rtc could not
+  be reached or did not answer. The request that failed carries the camera's login in its
+  address, and the error used to be built from whatever the failure said.
 - A camera's HLS playlist is rewritten more strictly before the player sees it: a carriage
   return on its own counts as a line ending, and a tag whose `URI=` value is not in quotes
   is left out. Neither is valid HLS, and a reference hidden that way went to the player as

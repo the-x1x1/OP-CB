@@ -327,12 +327,55 @@ test('a camera login of any characters reaches go2rtc as it was typed, and nowhe
     assert.equal(decodeURIComponent(u.password), password, `${where}: the password go2rtc is given`);
     assert.equal(u.host, '192.168.1.20:554', where);
     // What is kept and shown has no login in it.
-    const kept = JSON.stringify([gw.export(), gw.list(), reg]);
+    const kept = JSON.stringify([gw.export(), await gw.list(), reg]);
     const logged = JSON.stringify(sink.records);
     for (const secret of [password, encodeURIComponent(password)])
       if (secret.length >= 4) {
         assert.ok(!kept.includes(secret), `${where}: the password is in what is kept: ${kept}`);
         assert.ok(!logged.includes(secret), `${where}: the password is in the log`);
       }
+  }
+});
+
+test('a failure to hand go2rtc a stream says nothing of the address it was handing over', async () => {
+  const password = 'Hv3@tR9:kLm2!pQx';
+  for (const failure of ['refused', 'timeout'] as const) {
+    const { sidecar, fetch, sink } = sidecarWith({ binaryPath: '/opt/go2rtc/go2rtc' });
+    await sidecar.start();
+    const failing: typeof fetch = async (url, init) => {
+      if (init?.method === 'PUT' && url.includes('/api/streams'))
+        throw Object.assign(new Error(`fetch failed for ${url}`), {
+          name: failure === 'timeout' ? 'TimeoutError' : 'TypeError',
+          cause: new Error(`connect ECONNREFUSED ${url}`),
+        });
+      return fetch(url, init);
+    };
+    const gw = new Go2rtcGateway({
+      sidecar,
+      fetch: failing,
+      secrets: new MemorySecretStore(),
+      clock: { now: () => 0 },
+      logger: new LoggerHub({ level: 'debug', sinks: [sink] }).logger('camera'),
+    });
+    let said = '';
+    try {
+      await gw.register({ name: 'Yard', url: `rtsp://admin:${encodeURIComponent(password)}@192.168.1.20:554/h264` });
+      const listed = (await gw.list())[0];
+      if (listed) await gw.snapshot(listed.cameraId);
+    } catch (error) {
+      assert.ok(error instanceof CameraError, String(error));
+      assert.equal(error.code, failure === 'timeout' ? 'TIMEOUT' : 'NETWORK');
+      const cause = (error as Error & { cause?: unknown }).cause;
+      said = `${error.message} ${error.stack ?? ''} ${cause instanceof Error ? `${cause.message} ${cause.stack ?? ''}` : String(cause ?? '')}`;
+    }
+    assert.ok(said.length > 0, `${failure}: the failure was reported`);
+    const everything = `${said} ${JSON.stringify(sink.records)}`;
+    for (const form of [
+      password,
+      encodeURIComponent(password),
+      encodeURIComponent(encodeURIComponent(password)),
+      'kLm2',
+    ])
+      assert.ok(!everything.includes(form), `${failure}: ${JSON.stringify(form)} is in ${everything.slice(0, 300)}`);
   }
 });

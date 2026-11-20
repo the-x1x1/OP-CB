@@ -228,7 +228,17 @@ export class Go2rtcGateway implements CameraGateway {
   private async pushStream(record: RegisteredCamera): Promise<void> {
     const src = await this.sourceWithCredential(record);
     const url = `${this.opts.sidecar.apiBase()}/api/streams?name=${encodeURIComponent(record.cameraId)}&src=${encodeURIComponent(src)}`;
-    const res = await this.opts.fetch(url, { method: 'PUT', signal: AbortSignal.timeout(5000) });
+    let res;
+    try {
+      res = await this.opts.fetch(url, { method: 'PUT', signal: AbortSignal.timeout(5000) });
+    } catch (err) {
+      // This address holds the camera's login. Whatever the failure says (an error may quote the
+      // address it could not reach), only its kind is passed on.
+      const name = err && typeof err === 'object' && 'name' in err ? String((err as { name: unknown }).name) : '';
+      throw name === 'TimeoutError' || name === 'AbortError'
+        ? new CameraError('TIMEOUT', 'go2rtc did not answer in time')
+        : new CameraError('NETWORK', 'go2rtc could not be reached');
+    }
     if (res.status < 200 || res.status >= 300)
       throw new CameraError('UPSTREAM_ERROR', `go2rtc refused the stream (HTTP ${res.status})`, {
         httpStatus: res.status,
