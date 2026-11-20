@@ -411,7 +411,12 @@ function isPartitionMeta(v: unknown): v is PartitionMeta {
     typeof m['rows'] === 'number' &&
     typeof m['originalRows'] === 'number' &&
     typeof m['bytes'] === 'number' &&
-    typeof m['updatedAt'] === 'string'
+    typeof m['updatedAt'] === 'string' &&
+    // An entry names files by its key. One whose key is not a partition's (a damaged or
+    // hand-edited index) made every read that reached it throw; it is skipped and reported,
+    // and reconciling with the files on disk writes the right entry back.
+    isValidPartitionKey(m as unknown as PartitionKey) &&
+    m['id'] === partitionId(m as unknown as PartitionKey)
   );
 }
 

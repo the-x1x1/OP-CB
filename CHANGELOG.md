@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- An object replayed from history gets its labels and heading the way a live one does: no
+  control or text-direction characters in a label, and no `114.80000000000001` heading.
+- A damaged entry in the history index (a key that is not a partition's) is skipped and
+  reported when the index is read; it used to make every history read that reached it fail.
 - History read for a time range written without milliseconds (`…T08:00:00Z`) kept the row
   exactly at its start out and took in rows up to 999 ms after its end. The range is now read
   as the times it names, in both history backends.

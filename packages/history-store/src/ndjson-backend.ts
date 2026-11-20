@@ -610,7 +610,12 @@ export async function walkFiles(root: string): Promise<string[]> {
 /** Remove now-empty day/month/year directories after a partition delete (stops at the history root). */
 export async function pruneEmptyDirs(dir: string, stopAt: string): Promise<void> {
   let current = dir;
-  while (current.startsWith(stopAt) && current !== stopAt) {
+  // Inside the root by path, not by spelling: `history2` starts with `history` and is not in it.
+  const inside = (p: string) => {
+    const rel = path.relative(stopAt, p);
+    return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  };
+  while (inside(current)) {
     try {
       const entries = await fs.readdir(current);
       if (entries.length) return;
