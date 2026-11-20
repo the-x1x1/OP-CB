@@ -131,7 +131,9 @@ export function formatMagnitude(mag: number | undefined, magType?: string | unde
 
 export function formatPercent(v: number | undefined, decimals = 0): string | undefined {
   if (v === undefined || !Number.isFinite(v)) return undefined;
-  return `${(v * 100).toFixed(decimals)}%`;
+  const text = (v * 100).toFixed(decimals);
+  // A hair under zero rounds to `-0`; shown, that reads as a fault.
+  return `${Number(text) === 0 ? text.replace('-', '') : text}%`;
 }
 
 /** Human label for object types ("fire-detection" → "Fire detection"). */
@@ -141,7 +143,7 @@ const TYPE_NAMES: Record<string, string> = {
 };
 
 export function formatObjectType(type: string): string {
-  const named = TYPE_NAMES[type];
+  const named = Object.hasOwn(TYPE_NAMES, type) ? TYPE_NAMES[type] : undefined;
   if (named) return named;
   const s = type.replace(/[-_]+/g, ' ');
   return s.charAt(0).toUpperCase() + s.slice(1);

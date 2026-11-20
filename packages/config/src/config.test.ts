@@ -3,11 +3,19 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import type { AppSettings } from '@opcb/ipc-contract';
 import {
   CURRENT_SCHEMA_VERSION,
   DEFAULT_SETTINGS,
   MIGRATIONS,
+  LEGACY_PROVIDER_CACHE_DIR,
   MigrationRunner,
+  appSettingsSchema,
+  assertMigrationSequence,
+  cloneSettings,
+  latestVersion,
+  moveLegacyProviderCache,
+  probeWritable,
   SettingsStore,
   SettingsValidationError,
   StartupValidator,
@@ -579,4 +587,98 @@ test('migrations: 009 carries a chosen built-in vector basemap to its OP-CB id a
     const { store } = await SettingsStore.open({ file: dirs.settingsFile, schemaVersion: CURRENT_SCHEMA_VERSION });
     assert.equal(store.get().basemapId, after);
   }
+});
+
+test('latestVersion and assertMigrationSequence', () => {
+  const m = (version: number) => ({ version, name: `m${version}`, up: () => Promise.resolve() }) as never;
+  assert.equal(latestVersion([]), 0);
+  assert.equal(latestVersion([m(1), m(3), m(2)]), 3);
+  assert.equal(latestVersion(MIGRATIONS), CURRENT_SCHEMA_VERSION);
+  assert.doesNotThrow(() => assertMigrationSequence(MIGRATIONS));
+  assert.doesNotThrow(() => assertMigrationSequence([]));
+  assert.doesNotThrow(() => assertMigrationSequence([m(2), m(1)]));
+  assert.throws(() => assertMigrationSequence([m(1), m(1)]), /duplicate migration version 1/);
+  for (const bad of [0, -1, 1.5, Number.NaN])
+    assert.throws(() => assertMigrationSequence([m(bad)]), /positive integer/, String(bad));
+  // The shipped migrations are numbered 1…n with none missing.
+  assert.deepEqual(
+    MIGRATIONS.map((x) => x.version),
+    MIGRATIONS.map((_, i) => i + 1),
+  );
+});
+
+test('cloneSettings: equal to what it was given and sharing nothing with it', () => {
+  const full: AppSettings = {
+    ...structuredClone(DEFAULT_SETTINGS),
+    providers: { 'adsb-lol': { enabled: true }, usgs: { enabled: false } },
+    hiddenLayers: ['aircraft.military-only'],
+    display: { ...DEFAULT_SETTINGS.display, hudGrid: 'mgrs', profile: 'field' },
+    search: { online: true, service: 'photon' },
+    network: { workOffline: true, chosenAt: '2026-11-19T00:00:00.000Z', localHosts: ['192.168.1.20', 'pi.local'] },
+    services: { ports: { ollama: 11434, kiwix: 8090 }, aiModel: 'llama3:8b' },
+    localApi: { enabled: true, ownPosition: false },
+    storage: { vaults: [{ id: 'a'.repeat(32), label: 'Vault', path: '/mnt/vault' }] },
+    martin: { url: 'http://127.0.0.1:3000', trustedHost: '127.0.0.1', attribution: 'OpenStreetMap' },
+    home: { view: { latitude: 21.3, longitude: -157.8, altitudeM: 5000, zoom: 10 }, flyOnStart: true },
+    passAlerts: {
+      satellites: [{ objectId: 'satellite:norad:25544', name: 'ISS' }],
+      leadMinutes: 10,
+      visibleOnly: true,
+      desktop: true,
+    },
+  };
+  const parsed = appSettingsSchema.parse(full);
+  assert.ok(parsed.ok, parsed.ok ? '' : JSON.stringify(parsed.issues));
+  const copy = cloneSettings(full);
+  assert.deepEqual(copy, full);
+  const shared: string[] = [];
+  const walk = (a: unknown, b: unknown, where: string): void => {
+    if (typeof a !== 'object' || a === null) return;
+    if (a === b) shared.push(where);
+    for (const [k, v] of Object.entries(a)) walk(v, (b as Record<string, unknown>)[k], `${where}.${k}`);
+  };
+  walk(full, copy, 'settings');
+  assert.deepEqual(shared, []);
+  // A null home view stays null, and the defaults clone too.
+  assert.equal(cloneSettings({ ...full, home: { view: null, flyOnStart: false } }).home!.view, null);
+  assert.deepEqual(cloneSettings(DEFAULT_SETTINGS), DEFAULT_SETTINGS);
+});
+
+test('probeWritable: yes for a folder that can be written, no with the reason otherwise, and no probe file left', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-probe-'));
+  assert.deepEqual(await probeWritable(dir), { writable: true });
+  assert.deepEqual(await fs.readdir(dir), []);
+  const missing = await probeWritable(path.join(dir, 'missing', 'deeper'));
+  assert.equal(missing.writable, false);
+  assert.match(missing.error ?? '', /ENOENT/);
+  const file = path.join(dir, 'a-file');
+  await fs.writeFile(file, 'x');
+  assert.equal((await probeWritable(file)).writable, false);
+});
+
+test('moveLegacyProviderCache: moves JSON files that are not already there, and nothing else', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-legacy-'));
+  const dirs = dataDirs(root);
+  await ensureDataDirs(dirs);
+  const legacy = path.join(root, LEGACY_PROVIDER_CACHE_DIR);
+  if (path.resolve(legacy) === path.resolve(dirs.cacheDir)) {
+    assert.equal(await moveLegacyProviderCache(dirs), 0);
+    return;
+  }
+  assert.equal(await moveLegacyProviderCache(dirs), 0, 'no old folder: nothing to do');
+  await fs.mkdir(path.join(legacy, 'Cache_Data'), { recursive: true });
+  await fs.writeFile(path.join(legacy, 'usgs.json'), 'old usgs');
+  await fs.writeFile(path.join(legacy, 'firms.json'), 'old firms');
+  await fs.writeFile(path.join(legacy, 'index'), 'chromium');
+  await fs.writeFile(path.join(legacy, 'Cache_Data', 'x.json'), 'chromium');
+  await fs.writeFile(path.join(dirs.cacheDir, 'firms.json'), 'new firms');
+  assert.equal(await moveLegacyProviderCache(dirs), 1);
+  assert.equal(await fs.readFile(path.join(dirs.cacheDir, 'usgs.json'), 'utf8'), 'old usgs');
+  assert.equal(
+    await fs.readFile(path.join(dirs.cacheDir, 'firms.json'), 'utf8'),
+    'new firms',
+    'a newer file is not replaced',
+  );
+  assert.deepEqual((await fs.readdir(legacy)).sort(), ['Cache_Data', 'firms.json', 'index']);
+  assert.equal(await moveLegacyProviderCache(dirs), 0, 'a second run moves nothing');
 });

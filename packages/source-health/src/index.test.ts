@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { testing, type ProviderHealth, type ProviderManifest } from '@opcb/provider-sdk';
-import { SourceHealthRegistry } from './index.js';
+import { SourceHealthRegistry, describeStatus } from './index.js';
 
 function manifest(id: string, required = false): ProviderManifest {
   return {
@@ -46,4 +46,21 @@ test('connection: a source waiting for a key nobody entered does not make the ap
   assert.deepEqual(heard, ['DEGRADED']);
   r.update(health('usgs', { lastSuccess: '1970-01-01T00:01:00.000Z' }));
   assert.deepEqual(heard, ['DEGRADED'], 'an unchanged state is not told again');
+});
+
+test('describeStatus: words for every status a source can have', () => {
+  const words: Record<string, string> = {
+    LIVE: 'Live',
+    DEGRADED: 'Degraded',
+    STALE: 'Stale',
+    RATE_LIMITED: 'Rate limited',
+    AUTH_REQUIRED: 'Needs a key',
+    NEEDS_SETUP: 'Needs setup',
+    OFFLINE: 'Offline',
+    ERROR: 'Error',
+    STARTING: 'Starting',
+    DISABLED: 'Disabled',
+  };
+  for (const [status, text] of Object.entries(words)) assert.equal(describeStatus(status as never), text);
+  assert.equal(new Set(Object.values(words)).size, Object.keys(words).length, 'no two statuses read the same');
 });

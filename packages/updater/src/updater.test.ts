@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import type { UpdaterState } from '@opcb/ipc-contract';
 import {
   UpdaterController,
+  createInertAutoUpdater,
+  isNoFullReleaseMessage,
+  parseVersion,
   compareVersions,
   isAcceptableUpdate,
   isPrereleaseVersion,
@@ -328,4 +331,35 @@ test('electron-updater interop: autoUpdater is taken from wherever the namespace
 
   // Neither position: fail by name, not with "Cannot set properties of undefined".
   assert.throws(() => __resolveAutoUpdaterForTest({}), /electron-updater loaded but exposed no `autoUpdater`/);
+});
+
+test('parseVersion: major.minor.patch with an optional pre-release; anything else is not a version', () => {
+  assert.deepEqual(parseVersion('0.7.5'), { major: 0, minor: 7, patch: 5, prerelease: [] });
+  assert.deepEqual(parseVersion(' 1.2.3-beta.4 '), { major: 1, minor: 2, patch: 3, prerelease: ['beta', '4'] });
+  assert.deepEqual(parseVersion('10.20.30-rc.1')!.prerelease, ['rc', '1']);
+  for (const bad of ['', '1', '1.2', '1.2.x', 'latest', '1.2.3.4', '-1.2.3', '1.2.3-', 'v', '1..3'])
+    assert.equal(parseVersion(bad), undefined, bad);
+});
+
+test('isNoFullReleaseMessage: the updater saying there is no full release yet, in its three wordings', () => {
+  for (const text of [
+    'Unable to find latest version on GitHub (https://github.com/x/y/releases/latest)',
+    'Cannot parse releases feed: please ensure a production release exists',
+    'No published versions on GitHub',
+    'error: no published versions on github',
+  ])
+    assert.equal(isNoFullReleaseMessage(text), true, text);
+  for (const text of ['net::ERR_INTERNET_DISCONNECTED', 'sha512 checksum mismatch', ''])
+    assert.equal(isNoFullReleaseMessage(text), false, text);
+});
+
+test('createInertAutoUpdater: finds nothing, downloads nothing, installs nothing', async () => {
+  const inert = createInertAutoUpdater();
+  assert.equal(await inert.checkForUpdates(), null);
+  assert.deepEqual(await inert.downloadUpdate(), []);
+  assert.doesNotThrow(() => inert.quitAndInstall());
+  assert.equal(inert.autoDownload, false);
+  assert.equal(inert.autoInstallOnAppQuit, false);
+  assert.equal(inert.allowPrerelease, false);
+  assert.equal(inert.allowDowngrade, false);
 });

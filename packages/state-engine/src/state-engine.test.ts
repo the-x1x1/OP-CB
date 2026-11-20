@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WorldState, extractLabels } from './index.js';
+import { WorldState, extractLabels, extractMedia } from './index.js';
 import { IdentityResolver, encodeValue } from '@opcb/identity';
 import { GridSpatialIndex } from '@opcb/hot-spatial-index';
 import { testing } from '@opcb/provider-sdk';
@@ -541,4 +541,38 @@ test('labels: a name loses control characters and direction marks; one of nothin
     name: 'Åland ferry',
     callsign: 'UAL123',
   });
+});
+
+test('extractMedia: only entries the camera gateway can resolve, trimmed, at most eight', () => {
+  assert.equal(extractMedia({}), undefined);
+  assert.equal(extractMedia({ media: 'https://x/y.jpg' }), undefined);
+  assert.equal(extractMedia({ media: [] }), undefined);
+  assert.equal(
+    extractMedia({
+      media: [null, 5, 'x', [], { kind: 'video', ref: 'a' }, { kind: 'image' }, { kind: 'image', ref: '  ' }],
+    }),
+    undefined,
+  );
+  assert.deepEqual(
+    extractMedia({ media: [{ kind: 'image', ref: ' cam:1 ', label: ' North ', mimeType: ' image/jpeg ', extra: 1 }] }),
+    [{ kind: 'image', ref: 'cam:1', label: 'North', mimeType: 'image/jpeg' }],
+  );
+  assert.deepEqual(extractMedia({ media: [{ kind: 'stream', ref: 'r', label: '', mimeType: 5 }] }), [
+    { kind: 'stream', ref: 'r' },
+  ]);
+  for (const kind of ['image', 'stream', 'snapshot', 'audio'])
+    assert.equal(extractMedia({ media: [{ kind, ref: 'r' }] })![0]!.kind, kind);
+  const many = extractMedia({ media: Array.from({ length: 20 }, (_, i) => ({ kind: 'image', ref: `r${i}` })) })!;
+  assert.equal(many.length, 8);
+  assert.equal(many[7]!.ref, 'r7');
+  const long = extractMedia({
+    media: [{ kind: 'image', ref: 'r'.repeat(600), label: 'l'.repeat(300), mimeType: 'm'.repeat(200) }],
+  })![0]!;
+  assert.deepEqual([long.ref.length, long.label!.length, long.mimeType!.length], [512, 200, 100]);
+  // A label is text to show: no line breaks or direction-override characters in it.
+  assert.equal(
+    extractMedia({ media: [{ kind: 'image', ref: 'r', label: 'Gate\u202e 4\n\tNorth' }] })![0]!.label,
+    'Gate 4 North',
+  );
+  assert.equal('label' in extractMedia({ media: [{ kind: 'image', ref: 'r', label: '\u202e\n' }] })![0]!, false);
 });

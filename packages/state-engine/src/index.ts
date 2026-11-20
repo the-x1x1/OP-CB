@@ -665,7 +665,11 @@ export function extractMedia(payload: Record<string, JsonValue>): WorldMedia[] |
     if (typeof kind !== 'string' || !MEDIA_KINDS.has(kind) || typeof ref !== 'string' || !ref.trim()) continue;
     const entry: WorldMedia = { kind: kind as WorldMedia['kind'], ref: ref.trim().slice(0, 512) };
     const label = rec['label'];
-    if (typeof label === 'string' && label.trim()) entry.label = label.trim().slice(0, 200);
+    if (typeof label === 'string') {
+      // Shown as text, like an object's own labels: no control or direction characters.
+      const text = label.replace(NOT_LABEL_TEXT, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+      if (text) entry.label = text;
+    }
     const mimeType = rec['mimeType'];
     if (typeof mimeType === 'string' && mimeType.trim()) entry.mimeType = mimeType.trim().slice(0, 100);
     out.push(entry);

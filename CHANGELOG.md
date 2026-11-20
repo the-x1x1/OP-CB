@@ -7,6 +7,19 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **Diagnostics export and your account name.** The export replaces your user folder with `~`,
+  but it missed the folder written in another letter case (`c:\users\name`), written with
+  doubled backslashes (a path inside JSON inside a log line), under `Documents and Settings`,
+  or as a key rather than a value; and for a name with a space in it (`Jane Doe`) it left the
+  second word. All of those are now replaced.
+- **Approved local devices.** An IPv6 address approved for offline use in any spelling other
+  than the shortest one (`fd00:0:0:0:0:0:0:1`) never matched the requests it was approved for;
+  it is compared in one form now. An address written with leading zeros (`010.1.2.3`) or as a
+  bare number is refused when entered, because a request to it goes somewhere else (they were
+  never let through; the entry just could not work).
+- A camera or image label from a source has line breaks and text-direction characters removed,
+  like every other label.
+- A share just under zero reads `0%`, not `-0%`.
 - Typing `last 5 constructor` (or `__proto__`) in search stopped the search with an error, and
   `aircraft over 5 constructor` built a filter on nothing. The same mistake — a word, code or
   name from outside looked up in a table and finding what every JavaScript object has — is

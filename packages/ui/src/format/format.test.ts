@@ -11,6 +11,8 @@ import {
   formatHeading,
   formatMagnitude,
   formatObjectType,
+  formatPercent,
+  formatUtcTime,
   formatRelativeAge,
   formatSpeed,
   formatUtcDateTime,
@@ -64,4 +66,28 @@ test('coordinates, distance, depth, magnitude, bytes, duration, dates, type labe
   assert.equal(formatUtcDateTime('2026-09-21T08:00:00.000Z'), '2026-09-21 08:00:00 UTC');
   assert.equal(formatUtcDateTime(undefined), 'unknown');
   assert.equal(formatObjectType('fire-detection'), 'Fire detection');
+});
+
+test('formatUtcTime and formatPercent', () => {
+  const ms = Date.parse('2026-09-21T03:04:05.678Z');
+  assert.equal(formatUtcTime(ms), '03:04:05');
+  assert.equal(formatUtcTime(ms, false), '03:04');
+  assert.equal(formatUtcTime(0), '00:00:00');
+  assert.equal(formatUtcTime(Number.NaN), 'unknown');
+  assert.equal(formatUtcTime(Number.POSITIVE_INFINITY), 'unknown');
+  assert.equal(formatPercent(0.5), '50%');
+  assert.equal(formatPercent(0.1234, 1), '12.3%');
+  assert.equal(formatPercent(1), '100%');
+  assert.equal(formatPercent(0), '0%');
+  assert.equal(formatPercent(-0.001), '0%', 'not -0%');
+  assert.equal(formatPercent(-0.0004, 1), '0.0%');
+  assert.equal(formatPercent(-0.25), '-25%');
+  assert.equal(formatPercent(undefined), undefined);
+  assert.equal(formatPercent(Number.NaN), undefined);
+});
+
+test('formatObjectType: a type named like something every object has is a name like any other', () => {
+  assert.equal(formatObjectType('constructor'), 'Constructor');
+  assert.equal(formatObjectType('__proto__'), ' proto ');
+  assert.equal(formatObjectType('imagery-scene'), 'Satellite image');
 });
