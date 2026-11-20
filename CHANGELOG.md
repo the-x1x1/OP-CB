@@ -19,6 +19,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The 3D globe stopped drawing ("An error occurred while rendering. Rendering has stopped",
+  twice on 2026-11-14 with 0.7.4) until the app was restarted. An area's edge is drawn as a line
+  on the ground, and a line whose points are one place written two ways — 180° and then -180°
+  on the antimeridian, or two longitudes at a pole — makes Cesium's geometry worker fail. Such
+  a repeat is now written once, and an edge that is then a single place, or that steps between
+  opposite sides of the globe, is not drawn. Reproduced with Cesium 1.145 and those positions;
+  which shape it was on the day is not known.
 - A saved lens whose rule named the icon `constructor` stopped the 3D globe's models from
   drawing (an error on every frame). An icon with no model of its own now has none.
 - The licence audit read a shipped definition whose `review` it did not know as "manual

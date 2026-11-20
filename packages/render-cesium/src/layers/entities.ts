@@ -2,7 +2,7 @@ import { geodesicCircle, type RenderFeature, type ResolvedStyle } from '@opcb/re
 import type { GeoPosition } from '@opcb/world-model';
 import type { CesiumLike, ColorLike, DataSourceLike, EntityLike, EntityOptions } from '../cesium-like.js';
 import type { CesiumTheme } from '../theme.js';
-import { positionsValid, toCartesianArray } from '../geometry.js';
+import { groundLinePositions, positionsValid, toCartesianArray } from '../geometry.js';
 
 /**
  * Polygons and circles: entities in one CustomDataSource per layer. Entity
@@ -58,7 +58,7 @@ export class EntityLayer {
           outline: false,
           classificationType: this.cesium.ClassificationType.BOTH,
         },
-        polyline: this.edge(closed(outer), outline, feature, resolved),
+        ...this.edge(closed(outer), outline, feature, resolved),
       };
     }
     if (g.kind === 'circle') {
@@ -73,19 +73,31 @@ export class EntityLayer {
           outline: false,
           classificationType: this.cesium.ClassificationType.BOTH,
         },
-        polyline: this.edge(geodesicCircle(g.center, g.radiusM), outline, feature, resolved),
+        ...this.edge(geodesicCircle(g.center, g.radiusM), outline, feature, resolved),
       };
     }
     return undefined;
   }
 
-  /** The edge: the feature's own size, else its class's bold edge (a tornado warning's), else 1.5 px. */
-  private edge(ring: readonly GeoPosition[], color: ColorLike, feature: RenderFeature, resolved: ResolvedStyle) {
+  /**
+   * The edge: the feature's own size, else its class's bold edge (a tornado warning's), else
+   * 1.5 px. No edge for a ring Cesium cannot draw on the ground (geometry.ts groundLinePositions).
+   */
+  private edge(
+    ring: readonly GeoPosition[],
+    color: ColorLike,
+    feature: RenderFeature,
+    resolved: ResolvedStyle,
+  ): Pick<EntityOptions, 'polyline'> {
+    const positions = groundLinePositions(ring);
+    if (!positions) return {};
     return {
-      positions: toCartesianArray(this.cesium, ring, 'clamp'),
-      width: Math.max(1.5, feature.style.size ?? resolved.edgeWidthPx ?? 1.5),
-      material: color,
-      clampToGround: true,
+      polyline: {
+        positions: toCartesianArray(this.cesium, positions, 'clamp'),
+        width: Math.max(1.5, feature.style.size ?? resolved.edgeWidthPx ?? 1.5),
+        material: color,
+        clampToGround: true,
+      },
     };
   }
 

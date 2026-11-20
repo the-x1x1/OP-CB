@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   boundsToRectangle,
   flattenPositions,
+  groundLinePositions,
   heightFor,
   heightReferenceFor,
   positionsValid,
@@ -10,6 +11,7 @@ import {
   toCartesianArray,
 } from './geometry.js';
 import { createGoogle3DTileset, google3dAvailability } from './google3d.js';
+import { EntityLayer } from './layers/entities.js';
 import { ICON_MODEL, modelKindFor } from './layers/models.js';
 import { REEARTH_TERRAIN_URL, terrainSourceFor, type TerrainFactoryModule } from './terrain.js';
 
@@ -185,4 +187,123 @@ test('modelKindFor: a model for an icon that has one, on a point; none for an ic
   assert.equal(modelKindFor(feature('aircraft', 'line')), undefined, 'only a point is drawn as a model');
   for (const icon of [undefined, '', 'no-such-icon', 'constructor', 'toString', 'hasOwnProperty', '__proto__'])
     assert.equal(modelKindFor(feature(icon)), undefined, String(icon));
+});
+
+test('groundLinePositions: one place written twice running is kept once; a line Cesium cannot draw on the ground is not drawn', () => {
+  const at = (longitude: number, latitude: number) => ({ latitude, longitude });
+  const lonLat = (ps: ReturnType<typeof groundLinePositions>) => ps?.map((p) => [p.longitude, p.latitude]);
+  const line = [at(-158, 21), at(-157, 21), at(-157, 22)];
+  assert.deepEqual(groundLinePositions(line), line, 'an ordinary line is unchanged');
+  // The positions that stopped the globe: one place, as -180 and as 180.
+  assert.equal(groundLinePositions([at(-180, 51), at(180, 51)]), undefined);
+  assert.equal(groundLinePositions([at(180, 51), at(-180, 51)]), undefined);
+  assert.equal(groundLinePositions([at(180, 10), at(-180, 10), at(180, 10), at(-180, 10)]), undefined);
+  assert.equal(groundLinePositions([at(10, 90), at(50, 90)]), undefined, 'every longitude at a pole is the pole');
+  assert.equal(groundLinePositions([at(10, -90), at(-120, -90)]), undefined);
+  assert.equal(groundLinePositions([at(5, 5), at(5, 5), at(5, 5)]), undefined);
+  assert.equal(groundLinePositions([at(5, 5)]), undefined);
+  assert.equal(groundLinePositions([]), undefined);
+  // A seam written twice inside a longer line is written once, and the line is drawn.
+  assert.deepEqual(lonLat(groundLinePositions([at(179, 0), at(180, 0), at(-180, 0), at(-179, 0)])), [
+    [179, 0],
+    [180, 0],
+    [-179, 0],
+  ]);
+  assert.deepEqual(
+    lonLat(
+      groundLinePositions([
+        at(170, 50),
+        at(180, 50),
+        at(-180, 50),
+        at(-170, 50),
+        at(-170, 55),
+        at(170, 55),
+        at(170, 50),
+      ]),
+    ),
+    [
+      [170, 50],
+      [180, 50],
+      [-170, 50],
+      [-170, 55],
+      [170, 55],
+      [170, 50],
+    ],
+  );
+  assert.equal(
+    groundLinePositions([at(172, 52), at(180, 52), at(180, 53), at(172, 53), at(172, 52)])!.length,
+    5,
+    'a ring that ends on the seam keeps its corners',
+  );
+  assert.equal(groundLinePositions([at(179, 51), at(-179, 51)])!.length, 2, 'crossing the seam is not the same place');
+  // Opposite sides of the globe: no one line joins them.
+  assert.equal(groundLinePositions([at(0, 0), at(180, 0)]), undefined);
+  assert.equal(groundLinePositions([at(-30, 40), at(150, -40)]), undefined);
+  assert.equal(groundLinePositions([at(0, 90), at(77, -90)]), undefined);
+  assert.equal(groundLinePositions([at(0, 0), at(179, 0)])!.length, 2);
+  assert.equal(
+    groundLinePositions([at(-30, 40), at(150, 40)])!.length,
+    2,
+    'the same latitude half a turn apart goes over the pole',
+  );
+});
+
+test('an area whose ring is one place gets its fill decided by Cesium and no edge; an ordinary area gets both', () => {
+  const fake = {
+    Cartesian3: {
+      fromDegrees: (lon: number, lat: number, h: number) => ({ lon, lat, h }),
+      fromDegreesArrayHeights: (flat: number[]) =>
+        Array.from({ length: flat.length / 3 }, (_, i) => ({ lon: flat[i * 3], lat: flat[i * 3 + 1] })),
+    },
+    createPolygonHierarchy: (positions: unknown[], holes?: unknown[]) => ({ positions, holes }),
+    ClassificationType: { BOTH: 2 },
+  } as unknown as ConstructorParameters<typeof EntityLayer>[0];
+  const theme = { color: (c: unknown) => c } as unknown as ConstructorParameters<typeof EntityLayer>[1];
+  const layer = new EntityLayer(fake, theme, { entities: {} } as unknown as ConstructorParameters<
+    typeof EntityLayer
+  >[2]);
+  type Feature = Parameters<EntityLayer['entityOptions']>[0];
+  const resolved = { color: { r: 1, g: 0, b: 0, a: 1 }, fillAlpha: 0.2 } as unknown as Parameters<
+    EntityLayer['entityOptions']
+  >[1];
+  const polygon = (ring: Array<[number, number]>) =>
+    ({
+      id: 'f',
+      geometry: { kind: 'polygon', rings: [ring.map(([longitude, latitude]) => ({ latitude, longitude }))] },
+      style: { styleClass: 'x' },
+    }) as unknown as Feature;
+
+  const square = layer.entityOptions(
+    polygon([
+      [-158, 21],
+      [-157, 21],
+      [-157, 22],
+      [-158, 22],
+    ]),
+    resolved,
+  )!;
+  assert.ok(square.polygon && square.polyline);
+  assert.equal((square.polyline as { positions: unknown[] }).positions.length, 5, 'the edge is the ring, closed');
+  assert.equal((square.polyline as { clampToGround: boolean }).clampToGround, true);
+
+  const seam = layer.entityOptions(
+    polygon([
+      [180, 51],
+      [-180, 51],
+      [180, 51],
+    ]),
+    resolved,
+  )!;
+  assert.ok(seam.polygon, 'the fill is still handed over');
+  assert.ok(!('polyline' in seam), 'no edge for a ring that is one place');
+
+  const circle = layer.entityOptions(
+    {
+      id: 'c',
+      geometry: { kind: 'circle', center: { latitude: 51, longitude: 180 }, radiusM: 50_000 },
+      style: { styleClass: 'x' },
+    } as unknown as Feature,
+    resolved,
+  )!;
+  assert.ok(circle.ellipse && circle.polyline, 'a circle on the antimeridian keeps its edge');
 });

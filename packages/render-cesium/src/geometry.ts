@@ -70,3 +70,45 @@ export function positionsValid(positions: ReadonlyArray<GeoPosition>): boolean {
     )
   );
 }
+
+const SAME_PLACE_DEG = 1e-9;
+const OPPOSITE_DEG = 1e-6;
+
+/** Whether two positions are one place: the same latitude, and longitudes a whole turn apart (or anywhere, at a pole). */
+function samePlace(a: GeoPosition, b: GeoPosition): boolean {
+  if (Math.abs(a.latitude - b.latitude) > SAME_PLACE_DEG) return false;
+  if (Math.abs(Math.abs(a.latitude) - 90) <= SAME_PLACE_DEG) return true;
+  const d = Math.abs(a.longitude - b.longitude) % 360;
+  return d <= SAME_PLACE_DEG || 360 - d <= SAME_PLACE_DEG;
+}
+
+/** Whether two positions are on opposite sides of the globe: no one shortest line joins them. */
+function oppositePlaces(a: GeoPosition, b: GeoPosition): boolean {
+  if (Math.abs(a.latitude + b.latitude) > OPPOSITE_DEG) return false;
+  if (Math.abs(Math.abs(a.latitude) - 90) <= OPPOSITE_DEG) return true;
+  return Math.abs((Math.abs(a.longitude - b.longitude) % 360) - 180) <= OPPOSITE_DEG;
+}
+
+/**
+ * A line's positions as Cesium can draw them on the ground, or undefined when it cannot: the
+ * same place written twice running (180° and then -180°, or any two longitudes at a pole) is
+ * kept once, and a line that is then one place, or that steps between two places opposite each
+ * other on the globe, is not drawn.
+ *
+ * Cesium drops a repeat only when the numbers repeat. Given [-180, 51] then [180, 51] — one
+ * place, as a ring cut at the antimeridian writes its seam — its ground polyline comes out of
+ * the antimeridian split with attribute lists of different lengths, the geometry worker throws
+ * "All attribute lists must have the same number of attributes", and the globe stops
+ * rendering until the app is restarted (seen in the field, 2026-11-14; reproduced against
+ * Cesium 1.145 with these positions).
+ */
+export function groundLinePositions(positions: ReadonlyArray<GeoPosition>): GeoPosition[] | undefined {
+  const out: GeoPosition[] = [];
+  for (const p of positions) {
+    const last = out[out.length - 1];
+    if (!last || !samePlace(last, p)) out.push(p);
+  }
+  if (out.length < 2) return undefined;
+  for (let i = 1; i < out.length; i++) if (oppositePlaces(out[i - 1]!, out[i]!)) return undefined;
+  return out;
+}
