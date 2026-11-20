@@ -78,7 +78,9 @@ export function rewritePlaylist(text: string, playlistUrl: string, base: HlsBase
       continue;
     }
     if (trimmed.startsWith('#')) {
-      let dropped = BARE_URI_ATTR.test(trimmed);
+      // Looked for outside quoted values: a quoted address may itself hold `uri=` (a key
+      // served from `…/key?redirect_uri=…`), and that is not an attribute.
+      let dropped = BARE_URI_ATTR.test(trimmed.replace(/"[^"]*"/g, '""'));
       const rewritten = trimmed.replace(URI_ATTR, (_m, uri: string) => {
         const relay = toRelay(uri);
         if (relay === undefined) {

@@ -165,3 +165,34 @@ test('an honest reference comes back as the address it named', () => {
     assert.equal(target, new URL(reference, INSIDE).toString(), reference);
   }
 });
+
+test('a quoted address that holds "uri=" is rewritten like any other, not taken for a bare attribute', () => {
+  const output = rewritePlaylist(
+    [
+      '#EXTM3U',
+      '#EXT-X-KEY:METHOD=AES-128,URI="keys/k1.bin?redirect_uri=abc&URI=def",IV=0x1',
+      '#EXT-X-MAP:URI="init.mp4?uri=x"',
+      '#EXTINF:4.0,',
+      'seg1.ts?uri=y',
+      '#EXT-X-KEY:METHOD=AES-128,URI=keys/bare.bin',
+      '',
+    ].join('\n'),
+    PLAYLIST,
+    BASE,
+    RELAY,
+  );
+  assert.equal(unsafe(output), undefined);
+  const lines = output.split('\n');
+  assert.ok(
+    lines.some(
+      (l) => l.startsWith('#EXT-X-KEY') && l.includes(`URI="${RELAY}/r/keys/k1.bin?redirect_uri=abc&URI=def"`),
+    ),
+    output,
+  );
+  assert.ok(
+    lines.some((l) => l.startsWith('#EXT-X-MAP') && l.includes(`${RELAY}/r/init.mp4?uri=x`)),
+    output,
+  );
+  assert.ok(lines.includes(`${RELAY}/r/seg1.ts?uri=y`), output);
+  assert.ok(!output.includes('bare.bin'), 'the tag with an unquoted URI is still left out');
+});
