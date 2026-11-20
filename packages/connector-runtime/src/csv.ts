@@ -2,7 +2,8 @@
  * A CSV reader for catalogue-sized files: RFC 4180 quoting (quoted fields, doubled quotes,
  * newlines inside quotes), any single-character delimiter, CRLF or LF, a BOM. Rows become
  * records keyed by the header row (or by `columns` when the file has none); a row with more
- * fields than columns keeps the extras under `_3`, `_4`…; empty cells are absent, and cells
+ * fields than columns keeps the extras under `_3`, `_4`…; a header name used twice is `name`,
+ * then `name_2`; empty cells are absent, and cells
  * that look like numbers stay strings — the mapping's `number` transform decides.
  *
  * `delimiter: "whitespace"` reads a column-aligned text table instead (NDBC's
@@ -115,7 +116,18 @@ export function parseCsv(text: string, opts: CsvOptions = {}): CsvResult {
   if (header) {
     const first = rows[0];
     if (!first) return { records: [], columns, dropped: 0, malformed: 'no header row' };
-    if (!opts.columns) columns = first.map((c, i) => (c.trim() === '' ? `_${i}` : c.trim()));
+    if (!opts.columns) {
+      // A name used twice keeps its first column; the next are `name_2`, `name_3`: both were
+      // written to one key, and which cell a record kept depended on which was empty.
+      const seen = new Map<string, number>();
+      columns = first.map((c, i) => {
+        const name = c.trim();
+        if (name === '' || name === '__proto__') return `_${i}`;
+        const n = (seen.get(name) ?? 0) + 1;
+        seen.set(name, n);
+        return n === 1 ? name : `${name}_${n}`;
+      });
+    }
     start = 1;
   }
   if (columns.length === 0)

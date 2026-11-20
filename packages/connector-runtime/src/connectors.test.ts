@@ -437,6 +437,13 @@ test('csv: quoting, CRLF, BOM, named columns, extra cells, row cap', () => {
     { x: '1', y: '2' },
   ]);
   assert.ok(parseCsv('"open', {}).malformed);
+  // A header name used twice: each column keeps its own cell, whichever is empty.
+  const twice = parseCsv('id,name,name,__proto__\n1,Alpha,Beta,x\n2,,Gamma,y\n');
+  assert.deepEqual(twice.columns, ['id', 'name', 'name_2', '_3']);
+  assert.deepEqual(twice.records, [
+    { id: '1', name: 'Alpha', name_2: 'Beta', _3: 'x' },
+    { id: '2', name_2: 'Gamma', _3: 'y' },
+  ]);
   assert.equal(parseCsv('a\n1\n2\n3\n', { maxRows: 2 }).dropped, 1);
 });
 

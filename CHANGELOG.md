@@ -23,6 +23,8 @@ Versioning: [semantic versioning](https://semver.org/).
 - An object's name, callsign or title from any source loses control characters and direction
   marks (a right-to-left override, a line break) where the label is made, so it reads the same
   on the map, in lists and in search.
+- CSV sources: a header name used twice gives two columns (`name`, `name_2`) instead of one
+  key both were written to, where which cell a row kept depended on which was empty.
 
 ## [0.7.5] — 2026-11-14
 
