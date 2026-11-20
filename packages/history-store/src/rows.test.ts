@@ -22,7 +22,6 @@ import {
   rowToObservation,
   rowToWorldObject,
   stripRawHash,
-  type HistoryRow,
   type PartitionKey,
 } from './index.js';
 import { pruneEmptyDirs, walkFiles } from './ndjson-backend.js';
@@ -75,7 +74,7 @@ test('observationToRow: a geometry gives the row its centre; an impossible posit
 });
 
 test('a row survives the line it is written as, and gives back the observation it came from', () => {
-  const obs = aircraftObs('abc123', T, 21.3, -157.9, { note: 'line\nbreak "quoted"  ' });
+  const obs = aircraftObs('abc123', T, 21.3, -157.9, { note: 'line\nbreak "quoted" \u2028' });
   const row = observationToRow(obs, 'aircraft:icao24:abc123', { includeRawHash: true });
   const line = rowToLine(row);
   assert.ok(!line.includes('\n'));
@@ -143,7 +142,7 @@ test('stripRawHash: removes the hash in place and says how many rows had one', (
 
 test('rowToWorldObject: the id, labels and motion the live state would give', () => {
   const obs = aircraftObs('abc123', T, 21.3, -157.9, {
-    callsign: ' HAL‮25 \n',
+    callsign: ' HAL\u202e25 \n',
     headingDegrees: 114.8,
     verticalSpeedMps: -3,
   });

@@ -675,7 +675,7 @@ test('htmlToText: text as a reader would see it, each entity decoded once', () =
     ['<p>a</p><br><br/>b<br class="x">c', 'a\nb\nc'],
     ['<SCRIPT type="x">1 < 2</SCRIPT >z<style>p{}</style>', 'z'],
     ['a<template><p>t</p></template>b<noscript>n</noscript>c', 'a b c'],
-    ['  \n\n lead  　 trail \n ', 'lead trail'],
+    ['  \n\n lead \u00a0\u3000 trail \n ', 'lead trail'],
     ['&unknown; &#0; &#xD800; &#x110000; &#x1F30B;', '&unknown; \u{1F30B}'],
     ['<script>never closed <b>bold</b>', 'never closed bold'],
     ['<p>unfinished <a href="x', 'unfinished <a href="x'],
@@ -697,7 +697,7 @@ test('htmlToText: a megabyte of anything is read in a moment', () => {
     '<script></script'.repeat(60_000),
     '&'.repeat(1_000_000),
     '&#'.repeat(500_000),
-    ' \n '.repeat(330_000),
+    ' \n\u00a0'.repeat(330_000),
     '<br '.repeat(250_000),
   ];
   for (const html of hostile) {

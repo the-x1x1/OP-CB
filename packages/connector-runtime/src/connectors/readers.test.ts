@@ -150,7 +150,7 @@ test('lengthMetres and lineGeometry', () => {
 
 test('file XML: prefixes dropped, entities and CDATA read, sloppy markup tolerated, a DOCTYPE never interpreted', () => {
   const doc = fileXml.parseXml(
-    '﻿<?xml version="1.0"?><!DOCTYPE gpx [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>' +
+    '\ufeff<?xml version="1.0"?><!DOCTYPE gpx [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>' +
       '<gpx xmlns:gx="urn:x" version=1.1><!-- note --><wpt lat="21.3" LON=\'-157.8\'><name>Hale &amp; &xxe; <![CDATA[<b>Kai</b>]]></name>' +
       '<gx:Track id="t&#49;"/><desc>  </desc></wpt><trk><name>One</name><trkseg><trkpt lat="1" lon="2"></trkseg></trk></stray></gpx><second/>',
   );
@@ -210,7 +210,7 @@ test('declaredEncoding: what the XML declaration names, lower case', () => {
 
 test('OGC XML: names with their prefix apart, the tree readers, numbers, links and exception reports', () => {
   const doc = ogcXml.scanXml(
-    '﻿  <?xml version="1.0"?><wms:WMS_Capabilities xmlns:wms="urn:x" version="1.3.0"><wms:Capability>' +
+    '\ufeff  <?xml version="1.0"?><wms:WMS_Capabilities xmlns:wms="urn:x" version="1.3.0"><wms:Capability>' +
       '<wms:Request><wms:GetMap><wms:Format>image/png</wms:Format><wms:DCPType><wms:HTTP><wms:Get>' +
       '<wms:OnlineResource xlink:href=" https://maps.example/wms? "/></wms:Get></wms:HTTP></wms:DCPType></wms:GetMap></wms:Request>' +
       '<wms:Layer><wms:Title> Outer &amp; all </wms:Title><wms:Layer><wms:Name>inner</wms:Name><wms:Layer><wms:Name>deepest</wms:Name></wms:Layer></wms:Layer></wms:Layer>' +
