@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- A map archive whose directory does not decompress is refused as a damaged map archive,
+  in those words, rather than with the compression library's own ("incorrect data check").
+  The library, map-archive and pack readers are now tested against damaged files.
 - A longitude already between -180° and 180° is no longer put through the arithmetic that
   brings others into range, which cost it its last digit (-179.9999 came back a hair west of
   itself, and so outside a box whose edge it was). Nothing shown moves by an amount that can

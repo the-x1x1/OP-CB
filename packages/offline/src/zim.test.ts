@@ -237,3 +237,68 @@ test('article text: tags, scripts and entities removed', () => {
     'Clean wounds & cover.\nThen rest',
   );
 });
+
+test('a damaged library file is refused or read; it never throws anything else, hangs or asks for the earth', async () => {
+  // Fixed-seed damage to a good file: bytes changed, with a lean towards the header and the
+  // pointer lists, where one wrong number sends every later read somewhere else.
+  let s = 2026;
+  const next = () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const awkward = [0x00, 0x01, 0x7f, 0x80, 0xff, 0x04, 0x05, 0x10, 0x40];
+  let opened = 0;
+  let refused = 0;
+  for (const good of [buildZim(newScheme, { minor: 2 }), buildZim(newScheme, { minor: 2, noTitleList: true })]) {
+    for (let i = 0; i < 1500; i++) {
+      // A copy: a Buffer's own slice is a window on the same bytes.
+      let b = new Uint8Array(good);
+      const times = 1 + Math.floor(next() * 3);
+      for (let k = 0; k < times; k++) {
+        const at = next() < 0.4 ? Math.floor(next() * Math.min(b.length, 200)) : Math.floor(next() * b.length);
+        const roll = next();
+        if (roll < 0.1) b = new Uint8Array(b.subarray(0, Math.max(1, at)));
+        else if (roll < 0.6) b[at] = awkward[Math.floor(next() * awkward.length)]!;
+        else b[at] = Math.floor(next() * 256);
+      }
+      const started = performance.now();
+      const before = process.memoryUsage().arrayBuffers;
+      try {
+        const z = await ZimArchive.open(mem(b));
+        opened++;
+        // Everything a reader does with an open file, each allowed to refuse.
+        const attempt = async (what: () => Promise<unknown>) => {
+          try {
+            await what();
+          } catch (error) {
+            assert.ok(error instanceof ZimError, `threw ${String(error)}`);
+          }
+        };
+        await attempt(() => z.metadata(['Title', 'Language', 'constructor']));
+        await attempt(async () => {
+          const main = await z.mainEntry();
+          if (main) await z.content(await z.resolve(main), 1024 * 1024);
+        });
+        await attempt(() => z.find('C', 'Water_purification'));
+        await attempt(() => z.titlesStartingWith('Wat', 5));
+        await attempt(async () => {
+          for (let n = 0; n < Math.min(z.header.entryCount, 12); n++) {
+            const e = await z.entry(n);
+            await z.content(await z.resolve(e), 1024 * 1024);
+          }
+        });
+      } catch (error) {
+        assert.ok(error instanceof ZimError, `threw ${String(error)}`);
+        refused++;
+      }
+      const took = performance.now() - started;
+      assert.ok(took < 3000, `took ${Math.round(took)} ms`);
+      const grew = process.memoryUsage().arrayBuffers - before;
+      assert.ok(grew < 64 * 1024 * 1024, `held ${Math.round(grew / 1e6)} MB for a ${b.length}-byte file`);
+    }
+  }
+  assert.ok(opened > 300 && refused > 300, `${opened} opened, ${refused} refused`);
+});

@@ -145,7 +145,16 @@ export function encodePmHeader(h: PmHeader): Uint8Array {
 /** Directories and metadata: gzip or none (Protomaps builds use gzip). */
 export function decompressInternal(bytes: Uint8Array, compression: number, maxBytes = 64 * 1024 * 1024): Uint8Array {
   if (compression === PmCompression.None) return bytes;
-  if (compression === PmCompression.Gzip) return gunzipSync(bytes, { maxOutputLength: maxBytes });
+  if (compression === PmCompression.Gzip) {
+    try {
+      return gunzipSync(bytes, { maxOutputLength: maxBytes });
+    } catch (error) {
+      // zlib's own words ("incorrect data check") say nothing of which file or what part.
+      throw new PmtilesFormatError(
+        `a directory or the metadata does not decompress (${error instanceof Error ? error.message : String(error)})`,
+      );
+    }
+  }
   throw new PmtilesFormatError(`internal compression ${compression} is not read here (gzip or none only)`);
 }
 
