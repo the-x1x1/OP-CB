@@ -1354,6 +1354,7 @@ export class ProviderHost {
     // A query credential goes into the URL the socket dials and nowhere else: not into the
     // handle, a log line or an error (the provider's own URL is what those would show).
     let dial = url;
+    let carried: string[] = [];
     if (secret !== undefined && opts?.credential?.as === 'query') {
       const param = opts.credential.param ?? 'token';
       if (!/^[A-Za-z_][A-Za-z0-9_-]{0,63}$/.test(param))
@@ -1363,9 +1364,23 @@ export class ProviderHost {
       const u = new URL(url);
       u.searchParams.set(param, secret);
       dial = u.toString();
+      // As stored, percent-encoded, and as a query writes it (a space as +).
+      carried = [secret, encodeURIComponent(secret), new URLSearchParams({ k: secret }).toString().slice(2)];
       secret = undefined;
     }
-    const ws = new Impl(dial);
+    // Whatever names the dialed address — a constructor that refuses it and says why, a close
+    // reason from the far end that repeats it — is said without the secret that address carries.
+    const withoutSecret = (text: string): string => {
+      let out = text;
+      for (const form of carried) if (form.length > 0) out = out.split(form).join('[redacted]');
+      return out;
+    };
+    let ws: WebSocket;
+    try {
+      ws = new Impl(dial);
+    } catch {
+      throw new ProviderError('NETWORK', 'websocket could not be opened');
+    }
     ws.binaryType = 'arraybuffer';
     let closed = false;
     const finish = (code: number, reason: string) => {
@@ -1389,7 +1404,7 @@ export class ProviderHost {
       events.onMessage(typeof data === 'string' ? data : new Uint8Array(data));
     };
     ws.onerror = () => events.onError(new ProviderError('NETWORK', 'websocket error'));
-    ws.onclose = (ev: CloseEvent) => finish(ev.code, ev.reason);
+    ws.onclose = (ev: CloseEvent) => finish(ev.code, withoutSecret(String(ev.reason ?? '')));
     opts?.signal?.addEventListener(
       'abort',
       () => {

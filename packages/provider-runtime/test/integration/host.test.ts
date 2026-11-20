@@ -390,19 +390,24 @@ test('a socket credential as a URL query is dialed by the host, never handed to 
     onmessage: ((ev: unknown) => void) | null = null;
     onerror: (() => void) | null = null;
     onclose: ((ev: unknown) => void) | null = null;
+    static refuse = false;
+    static closeWith: ((url: string) => string) | undefined;
     constructor(url: string) {
       dialed.push(url);
-      setImmediate(() => this.onopen?.());
+      if (FakeWebSocket.refuse) throw new SyntaxError(`The URL '${url}' is invalid.`);
+      const closeWith = FakeWebSocket.closeWith;
+      setImmediate(() => (closeWith ? this.onclose?.({ code: 1008, reason: closeWith(url) }) : this.onopen?.()));
     }
     send(): void {}
     close(): void {}
   }
+  let token = 's3cret';
   const host = new ProviderHost({
     clock,
     loggerHub: new LoggerHub({ level: 'debug', sinks: [sink] }),
     manualScheduling: true,
     sleep: async () => {},
-    credentials: { get: async (key) => (key === 'feed.token' ? 's3cret' : undefined), has: async () => true },
+    credentials: { get: async (key) => (key === 'feed.token' ? token : undefined), has: async () => true },
     cacheStore: (_id, allowed) => new testing.MemoryCache(clock, allowed),
     settingsStore: () => new testing.MemorySettings({}),
     webSocketImpl: FakeWebSocket as unknown as typeof WebSocket,
@@ -459,7 +464,48 @@ test('a socket credential as a URL query is dialed by the host, never handed to 
     }),
     (e: Error & { code?: string }) => e.code === 'INTERNAL',
   );
+  // A socket the runtime refuses to make, saying why with the address in it; and a far end
+  // that closes with a reason repeating the address. Neither says the token, in the form it
+  // was stored or the form it was written into the address.
+  token = 'p@ss word/+=&?#%é';
+  FakeWebSocket.refuse = true;
+  await assert.rejects(
+    ctx!.sockets.open('wss://feeds.example.org/api/socket', events, { credential: { key: 'feed.token', as: 'query' } }),
+    (e: Error & { code?: string; cause?: unknown }) => {
+      const said = `${e.message} ${e.stack} ${String(e.cause)} ${JSON.stringify(e)}`;
+      const written = dialed.at(-1)!.split('token=')[1]!;
+      assert.ok(written.length > 0 && !said.includes(written) && !said.includes(token), said);
+      return e.code === 'NETWORK';
+    },
+  );
+  FakeWebSocket.refuse = false;
+  const reasons: string[] = [];
+  for (const closeWith of [
+    (url: string) => `policy violation: ${url}`,
+    () => `bad token ${token}`,
+    () => `bad token ${encodeURIComponent(token)}`,
+    () => 'going away',
+  ]) {
+    FakeWebSocket.closeWith = closeWith;
+    await ctx!.sockets.open(
+      'wss://feeds.example.org/api/socket',
+      { ...events, onClose: (_code: number, reason: string) => reasons.push(reason) },
+      { credential: { key: 'feed.token', as: 'query' } },
+    );
+    await new Promise((r) => setImmediate(r));
+  }
+  FakeWebSocket.closeWith = undefined;
+  assert.equal(reasons.length, 4);
+  const written = dialed.at(-1)!.split('token=')[1]!;
+  for (const reason of reasons)
+    assert.ok(
+      !reason.includes(token) && !reason.includes(written) && !reason.includes(encodeURIComponent(token)),
+      reason,
+    );
+  assert.equal(reasons[0], 'policy violation: wss://feeds.example.org/api/socket?token=[redacted]');
+  assert.equal(reasons[3], 'going away');
   assert.ok(!JSON.stringify(sink.records).includes('s3cret'), 'the secret is in no log line');
+  assert.ok(!JSON.stringify(sink.records).includes(written) && !JSON.stringify(sink.records).includes(token));
   // Unencrypted sockets: never to an allowlisted host on the internet.
   await assert.rejects(
     ctx!.sockets.open('ws://feeds.example.org/api/socket', events),

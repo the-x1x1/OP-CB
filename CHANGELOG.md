@@ -53,6 +53,9 @@ Versioning: [semantic versioning](https://semver.org/).
   address; none was seen to do this.) The HTTP layer, which knows the key it added, now
   removes it by value from every error it raises, and keeps the underlying error as text
   only.
+- The same for a live feed whose token goes in its address: a socket that could not be
+  made is reported without the address, and a closing reason from the far end has the token
+  taken out of it by value before the source sees it. (No such error or reason was seen.)
 - **A password with an @ in it was only half removed from logs and error messages.** A camera
   or broker address typed as `rtsp://admin:p@ssword@192.168.1.20/` was redacted up to the
   first @, leaving `ssword` in the log line and in the source's error text. The password is
