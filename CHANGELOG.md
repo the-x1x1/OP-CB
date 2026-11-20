@@ -103,6 +103,12 @@ Versioning: [semantic versioning](https://semver.org/).
   reading of history had ended left the map showing live objects under a timeline in the
   past, until the cursor was next moved. The second reading was dropped with the first; it
   is now made.
+- A live feed that was still connecting when the network dropped and came back could end
+  up connected twice, and one still connecting when its source was switched off could stay
+  connected, where the source did not itself give up on being told to stop. A connection
+  that completes after it was given up is now closed at once by the host, and one that
+  fails after it was given up is not reported as the source failing or tried again while
+  offline.
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
   The same for the emergency references when the library folder could not be made.

@@ -543,7 +543,7 @@ export class ProviderHost {
         if (current) this.health.update({ ...current, status: 'OFFLINE', message: 'network offline' });
       } else {
         h.consecutiveFailures = 0;
-        if (h.provider.subscribe && !h.unsubscribe && !h.subTimer) void this.openSubscription(h);
+        if (h.provider.subscribe && !h.unsubscribe && !h.subTimer && !h.subAbort) void this.openSubscription(h);
         this.schedule(h, 0);
       }
     }
@@ -1211,12 +1211,27 @@ export class ProviderHost {
           }
         },
       );
+      // Closed while it was being opened (the source stopped, or the network went): what has
+      // just been opened is closed, not kept. Kept, it would be a second stream beside the one
+      // opened since, or would stand in the way of ever opening one again.
+      if (abort.signal.aborted || h.subAbort !== abort) {
+        try {
+          unsub();
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
       h.unsubscribe = () => {
         abort.abort();
         unsub();
       };
       await this.publishHealth(h);
     } catch (err) {
+      // A failure to open what has since been closed is not the source failing: nothing is
+      // counted, reported or tried again.
+      if (abort.signal.aborted || h.subAbort !== abort) return;
+      h.subAbort = undefined;
       const pe =
         err instanceof ProviderError
           ? err

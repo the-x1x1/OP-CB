@@ -1232,6 +1232,112 @@ test('a source that polls and subscribes still retries a failed subscription; go
   assert.equal(signals[1]?.aborted, true, 'stopping the source closes it');
 });
 
+test('a subscription still being opened when the network goes and comes back: one stream is left, and it is the one kept', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1_000_000 });
+  const clock = { now: () => Date.now() };
+  const usgs = createProvider();
+  const host = new ProviderHost({
+    clock: clock as never,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [new RingBufferSink()] }),
+    fetchImpl: fakeFetch(() => new Response('{}')),
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock as never, allowed),
+    settingsStore: () => new testing.MemorySettings({}),
+  });
+  // Each subscribe waits to be let through (a socket that takes its time), then either opens
+  // a stream or fails; it does not look at its signal, as a provider may not.
+  const pending: Array<{ open: () => void; fail: (e: Error) => void }> = [];
+  const streams: Array<{ open: boolean }> = [];
+  host.register({
+    manifest: {
+      ...usgs.manifest,
+      id: 'slow',
+      enabledByDefault: true,
+      refreshPolicy: { ...usgs.manifest.refreshPolicy, intervalMs: 3_600_000 },
+    },
+    initialize: async () => {},
+    start: async () => {},
+    stop: async () => {},
+    query: async () => [],
+    subscribe: () =>
+      new Promise((resolve, reject) => {
+        pending.push({
+          open: () => {
+            const stream = { open: true };
+            streams.push(stream);
+            resolve(() => {
+              stream.open = false;
+            });
+          },
+          fail: reject,
+        });
+      }),
+    health: async () => ({
+      providerId: 'slow',
+      status: 'LIVE',
+      errorRate: 0,
+      rateLimitState: { limited: false },
+      credentialState: 'not-required',
+    }),
+  });
+  const flush = async () => {
+    for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
+  };
+  const starting = host.start();
+  await flush();
+  assert.equal(pending.length, 1, 'the first is being opened');
+  host.setOnline(false);
+  host.setOnline(true);
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(pending.length, 2, 'back online: a second is being opened');
+  // Both come through, the abandoned one first.
+  pending[0]!.open();
+  pending[1]!.open();
+  await starting;
+  await flush();
+  assert.deepEqual(
+    streams.map((s) => s.open),
+    [false, true],
+    'the one abandoned is closed as soon as it opens',
+  );
+  // Offline again closes the one kept; online opens a third.
+  host.setOnline(false);
+  await flush();
+  assert.deepEqual(
+    streams.map((s) => s.open),
+    [false, false],
+  );
+  host.setOnline(true);
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(pending.length, 3);
+  // This one is abandoned too, and then fails: nothing is reported or tried again for it.
+  host.setOnline(false);
+  pending[2]!.fail(new ProviderError('NETWORK', 'socket closed'));
+  await flush();
+  t.mock.timers.tick(10 * 60_000);
+  await flush();
+  assert.equal(pending.length, 3, 'no retry while offline');
+  assert.notEqual(host.health.get('slow')?.health.lastError?.message, 'socket closed');
+  host.setOnline(true);
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(pending.length, 4, 'and online opens one again');
+  pending[3]!.open();
+  await flush();
+  assert.deepEqual(
+    streams.map((s) => s.open),
+    [false, false, true],
+  );
+  await host.dispose();
+  assert.deepEqual(
+    streams.map((s) => s.open),
+    [false, false, false],
+  );
+});
+
 test('a source waiting for the operator reads NEEDS_SETUP, is not retried or logged as failing, and polls again when its settings change', async () => {
   const clock = new testing.VirtualClock();
   const settings = new testing.MemorySettings({});
