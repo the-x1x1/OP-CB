@@ -1,4 +1,4 @@
-import type { GeoPosition } from '@opcb/world-model';
+import { elapsedMs, type GeoPosition } from '@opcb/world-model';
 import type { RequestOf, StreetLevelAnswer, StreetLevelPicture } from '@opcb/ipc-contract';
 
 /**
@@ -289,9 +289,13 @@ class Turnstile {
     if (this.waiting >= MAX_WAITING) return false;
     this.waiting++;
     try {
-      const at = Math.max(this.now(), this.next);
+      // Each request waiting adds one gap, so the next turn is never further off than that.
+      // One that reads further off was set before the clock was put back.
+      const now = this.now();
+      if (this.next - now > this.waiting * MIN_GAP_MS) this.next = now;
+      const at = Math.max(now, this.next);
       this.next = at + MIN_GAP_MS;
-      const wait = at - this.now();
+      const wait = at - now;
       if (wait > 0) await this.sleep(wait);
       return true;
     } finally {
@@ -328,7 +332,10 @@ export class StreetLevel {
     const limit = Math.min(12, Math.max(1, req.limit ?? DEFAULT_LIMIT));
     const key = `${req.position.latitude.toFixed(KEY_DECIMALS)},${req.position.longitude.toFixed(KEY_DECIMALS)}|${radiusM}|${limit}`;
     const cached = this.cache.get(key);
-    if (cached && cached.expires > this.now()) {
+    // Nothing is kept longer than HIT_TTL_MS; an entry that reads longer was kept before the
+    // clock was put back, and is asked for again.
+    const keptFor = cached ? cached.expires - this.now() : 0;
+    if (cached && keptFor > 0 && keptFor <= HIT_TTL_MS) {
       this.stats.fromCache++;
       this.cache.delete(key);
       this.cache.set(key, cached);
@@ -348,7 +355,7 @@ export class StreetLevel {
 
   /** The federation's hosts, read once a day (ten minutes after a failure); never waits on a second reader. */
   private async refreshInstances(): Promise<void> {
-    const age = this.now() - this.instances.readAt;
+    const age = elapsedMs(this.now(), this.instances.readAt);
     if (this.instances.readAt && age < (this.instances.ok ? INSTANCES_TTL_MS : INSTANCES_RETRY_MS)) return;
     this.instances.readAt = this.now();
     this.stats.instances++;

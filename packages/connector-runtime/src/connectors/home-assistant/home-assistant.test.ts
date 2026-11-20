@@ -629,6 +629,23 @@ test('home-assistant: pings a live socket and drops one that goes quiet; an unan
   assert.match((await a.provider.health()).message ?? '', /did not answer the auth frame/);
 });
 
+test('home-assistant: a clock put back does not hide a socket that has gone quiet', async () => {
+  const h = await harness('sensors');
+  await h.subscribe();
+  h.goLive();
+  // The last message is marked at a time the clock then reads as a day ahead.
+  // (Timers do not follow the wall clock, so the test's own are moved back with it.)
+  h.clock.set(h.clock.now() - 86_400_000);
+  for (const timer of (h.timers as unknown as { pending: Map<number, { at: number }> }).pending.values())
+    timer.at -= 86_400_000;
+  // The first tick restarts the count from the new time; nothing answers after that.
+  h.timers.advance(HA_PING_MS);
+  assert.ok(!h.socket(0).closed);
+  h.timers.advance(HA_SILENCE_MS + HA_PING_MS);
+  assert.ok(h.socket(0).closed, 'dropped a little over the silence limit later, not a day later');
+  assert.match((await h.provider.health()).message ?? '', /no answer from Home Assistant for \d{2,3} s/);
+});
+
 test('home-assistant: malformed and unknown messages are ignored; cancelling closes the socket', async () => {
   const h = await harness('sensors');
   await h.subscribe();

@@ -1,4 +1,4 @@
-import type { JsonValue, Observation } from '@opcb/world-model';
+import { elapsedMs, type JsonValue, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -300,7 +300,7 @@ export class PublicCamerasProvider extends PollingProvider {
         if (pack.keepAcrossRestarts) void this.saveLastGood(pack.id, r.value.observations);
       } else {
         const kept = this.lastGood.get(pack.id);
-        if (kept && this.context.clock.now() - kept.atMs <= LAST_GOOD_KEEP_MS)
+        if (kept && elapsedMs(this.context.clock.now(), kept.atMs) <= LAST_GOOD_KEEP_MS)
           for (const item of kept.observations) observations.push(item);
         else this.lastGood.delete(pack.id);
         const pe =
@@ -344,7 +344,7 @@ export class PublicCamerasProvider extends PollingProvider {
       const got = await this.context.cache.get<JsonValue>(lastGoodKey(packId));
       if (!got || !Array.isArray(got.value)) return;
       const atMs = Date.parse(got.storedAt);
-      if (!Number.isFinite(atMs) || this.context.clock.now() - atMs > LAST_GOOD_KEEP_MS) return;
+      if (!Number.isFinite(atMs) || elapsedMs(this.context.clock.now(), atMs) > LAST_GOOD_KEEP_MS) return;
       const observations = got.value as unknown as Observation[];
       this.lastGood.set(packId, { observations, atMs });
       this.lastGoodSavedAt.set(packId, atMs);

@@ -620,6 +620,23 @@ test('Queensland refused at start: its cameras come from the list kept by an ear
     o.externalId.startsWith('queensland:'),
   );
   assert.equal(none.length, 0);
+  // Kept at a time the clock now reads as ahead (it was put back a year): its age cannot be
+  // told, so it is not used either.
+  const before = testing.createFixtureContext({
+    providerId: 'public-cameras',
+    settings,
+    clock: earlier.clock,
+    responder: (req) => (hk(req.url) ? { status: 200, body: body('hongkong-cameras.xml') } : { status: 429 }),
+  });
+  for (const [k, v] of earlier.cache.store) before.cache.store.set(k, v);
+  before.clock.set(before.clock.now() - 365 * 86_400_000);
+  const d = new Provider();
+  await d.initialize(before);
+  await d.start();
+  const unknownAge = (await d.query({ signal: new AbortController().signal, background: true })).filter((o) =>
+    o.externalId.startsWith('queensland:'),
+  );
+  assert.equal(unknownAge.length, 0);
 });
 
 test('a pack that is off by default stays off until its setting turns it on', async () => {

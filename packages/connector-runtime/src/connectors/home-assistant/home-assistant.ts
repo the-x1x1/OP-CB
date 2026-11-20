@@ -893,6 +893,9 @@ export class HomeAssistantProvider implements WorldProvider {
     const tick = () => {
       session.pingTimer = undefined;
       if (!this.current(session, generation) || this.socketState !== 'live') return;
+      // A clock put back restarts the count: the silence is measured from now, not left
+      // unnoticed until the clock passes the old mark again.
+      if (session.lastMessageAt > this.context.clock.now()) session.lastMessageAt = this.context.clock.now();
       const silent = this.context.clock.now() - session.lastMessageAt;
       if (silent > HA_SILENCE_MS) {
         this.onDrop(

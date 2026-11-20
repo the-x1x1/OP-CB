@@ -1,4 +1,4 @@
-import type { Clock } from '@opcb/world-model';
+import { elapsedMs, type Clock } from '@opcb/world-model';
 import { ProviderError, type ProviderHttpRequest, type ProviderHttpResponse } from '@opcb/provider-sdk';
 import {
   RateLimiter,
@@ -221,7 +221,9 @@ export class HttpClient {
     const staleMs = this.opts.staleWhileErrorMs ?? 0;
 
     const serveStale = (err: ProviderError, level: 'warn' | 'debug' = 'warn'): ProviderHttpResponse => {
-      if (req.allowStale !== false && cached && staleMs > 0 && clock.now() - cached.storedAt <= staleMs) {
+      // An answer kept at a time the clock now reads as ahead cannot be aged; it is not served.
+      const ageMs = cached ? elapsedMs(clock.now(), cached.storedAt) : Number.POSITIVE_INFINITY;
+      if (req.allowStale !== false && cached && staleMs > 0 && ageMs <= staleMs) {
         this.stats.staleServed++;
         // `httpStatus` is what tells the two kinds of RATE_LIMITED apart: our own limiter
         // refuses before sending (no status), upstream answers 429. Without it this line
@@ -233,9 +235,9 @@ export class HttpClient {
           code: err.code,
           httpStatus: err.httpStatus ?? null,
           reason: err.message,
-          ageMs: clock.now() - cached.storedAt,
+          ageMs,
         });
-        return toResponse(cached, { fromCache: true, stale: true, ageMs: clock.now() - cached.storedAt, latencyMs: 0 });
+        return toResponse(cached, { fromCache: true, stale: true, ageMs, latencyMs: 0 });
       }
       throw err;
     };

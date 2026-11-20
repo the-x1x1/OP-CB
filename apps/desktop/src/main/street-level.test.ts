@@ -216,6 +216,20 @@ test('street level: one request a second, cached an hour, nothing sent offline o
   assert.equal(sent.length, 2);
   assert.deepEqual(sleeps, [MIN_GAP_MS], 'the second request waited its turn');
   assert.equal(sl.stats.instances, 1, 'the federation list was read once for both');
+  // The clock is put back a year: the list's age cannot be told, so it is read again and not
+  // kept until the clock passes the old mark.
+  now -= 365 * 86_400_000;
+  const putBack = now;
+  await sl.near({ position: { latitude: 48.95, longitude: 2.45 } });
+  assert.equal(sl.stats.instances, 2);
+  assert.equal(sent.length, 3);
+  assert.ok(now - putBack <= MIN_GAP_MS, 'and the request did not wait for the old turn to come round');
+  await sl.near({ position: { latitude: 48.99, longitude: 2.49 } });
+  assert.equal(sl.stats.instances, 2);
+  // An answer kept before the clock went back is asked for again, not kept a year.
+  await sl.near({ position: AT });
+  assert.equal(sent.length, 5);
+  sent.length = 2;
   online = false;
   assert.equal((await sl.near({ position: { latitude: 49, longitude: 2 } })).status, 'offline');
   online = true;
