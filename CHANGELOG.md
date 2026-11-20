@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Importing the same collection file twice, when a different collection of that id is
+  already kept, made a second copy ("imported 2"). The copy made the first time is now
+  recognised and kept as it is.
 - A large MQTT message arriving in network-sized pieces was copied whole on every piece: a
   4 MB message took up to two seconds of copying, during which nothing else was read. The
   pieces are now joined once, when the message is complete (about 50 ms).

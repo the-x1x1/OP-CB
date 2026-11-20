@@ -1841,7 +1841,11 @@ export async function importedCollection(
     return { collection: existing, unchanged: true };
   for (let n = 1; n < 1000; n++) {
     const id = `${incoming.id.slice(0, 100)}-imported${n === 1 ? '' : `-${n}`}`;
-    if (await get(id)) continue;
+    const copy = await get(id);
+    // The same file imported again is the copy made of it the first time, not one more.
+    if (copy && JSON.stringify(copy.items) === JSON.stringify(incoming.items))
+      return { collection: copy, unchanged: true };
+    if (copy) continue;
     const name = `${incoming.name.slice(0, 180)} (imported${n === 1 ? '' : ` ${n}`})`;
     return { collection: { ...incoming, id, name }, unchanged: false };
   }
