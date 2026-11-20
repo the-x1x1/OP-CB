@@ -107,11 +107,11 @@ export async function whatChanged(
     ? countByType(before)
     : countByType(liveInRegion(sources.state, region).filter((o) => knownAt(o, start)));
   const afterCounts = countByType(after);
-  const types = [...new Set([...Object.keys(beforeCounts), ...Object.keys(afterCounts)])].sort();
+  const types = [...new Set([...beforeCounts.keys(), ...afterCounts.keys()])].sort();
   const countChanges: WhatChangedResult['countChanges'] = [];
   for (const t of types) {
-    const b = beforeCounts[t] ?? 0,
-      a = afterCounts[t] ?? 0;
+    const b = beforeCounts.get(t) ?? 0,
+      a = afterCounts.get(t) ?? 0;
     if (b !== a) countChanges.push({ objectType: t, before: b, after: a });
   }
 
@@ -143,8 +143,13 @@ function statusOf(o: WorldObject): string | undefined {
   return typeof s === 'string' ? s : undefined;
 }
 
-function countByType(objects: readonly WorldObject[]): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const o of objects) out[o.type] = (out[o.type] ?? 0) + 1;
-  return out;
+/**
+ * How many objects there are of each type. A Map: on a plain object a type named
+ * `constructor` reads as Object's own member — a count that came out as a function, or as
+ * text once one was added to it.
+ */
+function countByType(objects: readonly WorldObject[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const o of objects) counts.set(o.type, (counts.get(o.type) ?? 0) + 1);
+  return counts;
 }

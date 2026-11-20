@@ -143,7 +143,12 @@ export const PAGE_OMITTED_PROPERTIES: Readonly<Record<string, readonly string[]>
 /** An object as the page gets it in bulk: the same object when nothing is left out. */
 export function forPage<T>(o: T): T {
   const obj = o as { type?: unknown; properties?: Record<string, unknown> } | null;
-  const omit = obj && typeof obj.type === 'string' ? PAGE_OMITTED_PROPERTIES[obj.type] : undefined;
+  // An own entry: for a type named `constructor` the table would answer with a function, and
+  // every object of that type would throw on its way to the page.
+  const omit =
+    obj && typeof obj.type === 'string' && Object.hasOwn(PAGE_OMITTED_PROPERTIES, obj.type)
+      ? PAGE_OMITTED_PROPERTIES[obj.type]
+      : undefined;
   if (!omit || !obj!.properties || !omit.some((k) => k in obj!.properties!)) return o;
   const properties = { ...obj!.properties };
   for (const k of omit) delete properties[k];

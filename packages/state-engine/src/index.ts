@@ -4,6 +4,7 @@ import {
   freshnessPolicyFor,
   isExpired,
   geometryCentroid,
+  ownEntry,
   type Clock,
   type FreshnessClass,
   type FreshnessPolicy,
@@ -523,7 +524,7 @@ export class WorldState {
   // ---- internals ------------------------------------------------------------
 
   private policyFor(type: string, overrides?: Record<string, FreshnessPolicy>): FreshnessPolicy {
-    return overrides?.[type] ?? this.policyOverrides.get(type) ?? freshnessPolicyFor(type);
+    return ownEntry(overrides, type) ?? this.policyOverrides.get(type) ?? freshnessPolicyFor(type);
   }
 
   private insert(obj: WorldObject): void {

@@ -154,3 +154,21 @@ test('event wire: a satellite reaches the page without the element set it is pro
   const plane = { ...satellite, type: 'aircraft', properties: { callsign: 'UAL1', line1: 'kept: not a satellite' } };
   assert.equal(forPage(plane), plane, 'other types pass through as the same object');
 });
+
+test('forPage: a type named after something every object has passes through, and does not throw', () => {
+  for (const type of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf']) {
+    const object = { id: `p:${type}:1`, type, properties: { line1: 'kept', name: 'x' } };
+    assert.equal(forPage(object), object, type);
+  }
+  for (const odd of [
+    null,
+    undefined,
+    5,
+    'text',
+    {},
+    { type: 5 },
+    { type: 'satellite' },
+    { type: 'satellite', properties: null },
+  ])
+    assert.equal(forPage(odd), odd, JSON.stringify(odd));
+});

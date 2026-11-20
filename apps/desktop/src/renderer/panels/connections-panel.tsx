@@ -1,3 +1,4 @@
+import { ownEntry } from '@opcb/world-model';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { SourceHealthEntry } from '@opcb/source-health';
 import { Button, EmptyState, Panel, StatusBadge, Toggle } from '@opcb/ui';
@@ -68,12 +69,12 @@ function StatusLine({ entry }: { entry: SourceHealthEntry }) {
 function ConnectionCard({ entry }: { entry: SourceHealthEntry }) {
   const { sources } = useAppState();
   const actions = useActions();
-  const manifest = sources.manifests[entry.providerId];
+  const manifest = ownEntry(sources.manifests, entry.providerId);
   const [open, setOpen] = useState(false);
   useEffect(() => {
     void actions.loadManifest(entry.providerId);
   }, [entry.providerId, actions]);
-  const settingsLoaded = sources.providerSettings[entry.providerId] !== undefined;
+  const settingsLoaded = ownEntry(sources.providerSettings, entry.providerId) !== undefined;
   useEffect(() => {
     if (open && !settingsLoaded) void actions.loadProviderSettings(entry.providerId);
   }, [open, settingsLoaded, entry.providerId, actions]);
@@ -99,7 +100,7 @@ function ConnectionCard({ entry }: { entry: SourceHealthEntry }) {
               key={def.key}
               providerId={entry.providerId}
               def={def}
-              value={getByPath(sources.providerSettings[entry.providerId] ?? {}, def.key)}
+              value={getByPath(ownEntry(sources.providerSettings, entry.providerId) ?? {}, def.key)}
             />
           ))}
           {entry.meta.credentialsRequired.map((key) => (
@@ -207,7 +208,7 @@ function HomeAssistantCard({ entries }: { entries: SourceHealthEntry[] }) {
             <div key={e.providerId} className="wv-connections__pickrow">
               <Toggle
                 size="sm"
-                label={HA_LABELS[e.providerId] ?? e.name}
+                label={Object.hasOwn(HA_LABELS, e.providerId) ? HA_LABELS[e.providerId]! : e.name}
                 checked={pick.has(e.providerId)}
                 onChange={(v) =>
                   setPick((prev) => {

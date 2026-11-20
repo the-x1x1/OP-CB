@@ -57,6 +57,8 @@ export function destinationPoint(from: GeoPosition, bearingDeg: number, distance
  * moving, is on the ground, or its report does not say how it moves.
  */
 export function deadReckonedMotion(obj: WorldObject): RenderMotion | undefined {
+  // Own entries: a source may name its objects' type `constructor`, which every table "has".
+  if (!Object.hasOwn(DEAD_RECKONING_HORIZON_MS, obj.type)) return undefined;
   const horizonMs = DEAD_RECKONING_HORIZON_MS[obj.type];
   if (horizonMs === undefined || !obj.position || !obj.motion) return undefined;
   const speed = obj.motion.speedMps;

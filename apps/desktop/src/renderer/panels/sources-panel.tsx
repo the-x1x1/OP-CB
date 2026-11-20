@@ -13,7 +13,7 @@ import {
   formatDuration,
   formatUtcDateTime,
 } from '@opcb/ui';
-import type { JsonValue } from '@opcb/world-model';
+import { ownEntry, type JsonValue } from '@opcb/world-model';
 import type { ProviderSettingDefinition } from '@opcb/provider-sdk';
 import { settingUnavailableNote } from './setting-platform.js';
 import { useActions, useAppState, useClient } from '../store/store.js';
@@ -157,7 +157,7 @@ export function SourcesPanel() {
 function SourceDetail({ entry, nowMs }: { entry: SourceHealthEntry; nowMs: number }) {
   const { sources } = useAppState();
   const actions = useActions();
-  const manifest = sources.manifests[entry.providerId];
+  const manifest = ownEntry(sources.manifests, entry.providerId);
   const h = entry.health;
   // Optional keys come from the manifest: a source that works without one and does more
   // with it (a camera catalogue that needs its own key, say) offers the field too.
@@ -168,7 +168,7 @@ function SourceDetail({ entry, nowMs }: { entry: SourceHealthEntry; nowMs: numbe
   useEffect(() => {
     for (const key of [...entry.meta.credentialsRequired, ...optionalKeys]) void actions.checkCredential(key);
   }, [entry.meta.credentialsRequired, optionalKeys, actions]);
-  const settingsLoaded = sources.providerSettings[entry.providerId] !== undefined;
+  const settingsLoaded = ownEntry(sources.providerSettings, entry.providerId) !== undefined;
   useEffect(() => {
     if (!settingsLoaded) void actions.loadProviderSettings(entry.providerId);
   }, [settingsLoaded, entry.providerId, actions]);
@@ -265,7 +265,7 @@ function SourceDetail({ entry, nowMs }: { entry: SourceHealthEntry; nowMs: numbe
               key={def.key}
               providerId={entry.providerId}
               def={def}
-              value={getByPath(sources.providerSettings[entry.providerId] ?? {}, def.key)}
+              value={getByPath(ownEntry(sources.providerSettings, entry.providerId) ?? {}, def.key)}
             />
           ))}
         </div>

@@ -5,8 +5,19 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Tables keyed by an object type or a source id are read by their own entries only, so a
+  name every JavaScript object already answers to (`constructor`) is an ordinary name there.
+  A source can be given that id and worked before this too (there is now a test that runs
+  one end to end); an object type cannot, since a definition's type must be one of the world
+  model's, so the faults this removes — an object that could not be sent to the page, a
+  motion towards nowhere, a count that came out as text — could not be reached.
+
 ### Fixed
 
+- A saved lens whose rule named the icon `constructor` stopped the 3D globe's models from
+  drawing (an error on every frame). An icon with no model of its own now has none.
 - The licence audit read a shipped definition whose `review` it did not know as "manual
   review required", which a registry record saying the same would have passed. An unknown
   review is now an error.

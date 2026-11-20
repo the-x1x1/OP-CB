@@ -190,3 +190,21 @@ test('whatChanged with history: status changes and counts come from snapshots', 
   assert.deepEqual(r2.countChanges, []);
   assert.deepEqual(r2.statusChanges, []);
 });
+
+test('whatChanged counts a type named after something every object has as a number, like any other', async () => {
+  const { clock, store } = synthetic();
+  const objects: WorldObject[] = [
+    obj({ id: 'constructor:x:1', type: 'constructor', lat: 21.3, lon: -157.9, observedAt: iso(-60_000) }),
+    obj({ id: 'constructor:x:2', type: 'constructor', lat: 21.31, lon: -157.9, observedAt: iso(-60_000) }),
+    obj({ id: 'vessel:mmsi:111111111', type: 'vessel', lat: 21.3, lon: -157.87, observedAt: iso(-2 * HOUR) }),
+  ];
+  const r = await whatChanged(
+    { region: hawaii, time: last24h },
+    { events: store, state: stateOf(clock, objects), now: () => clock.now() },
+  );
+  const change = r.countChanges.find((c) => c.objectType === 'constructor');
+  assert.ok(change, JSON.stringify(r.countChanges));
+  assert.equal(typeof change.before, 'number');
+  assert.equal(change.after, 2);
+  for (const c of r.countChanges) assert.ok(Number.isFinite(c.before) && Number.isFinite(c.after), JSON.stringify(c));
+});

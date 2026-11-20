@@ -685,7 +685,10 @@ function HistorySettings({ history }: { history: AppSettings['history'] }) {
                 {
                   label: 'Largest',
                   value: top
-                    .map((t) => `${TYPE_NAMES[t.objectType] ?? t.objectType} ${formatBytes(t.bytes)}`)
+                    .map(
+                      (t) =>
+                        `${Object.hasOwn(TYPE_NAMES, t.objectType) ? TYPE_NAMES[t.objectType] : t.objectType} ${formatBytes(t.bytes)}`,
+                    )
                     .join(' · '),
                 },
               ]

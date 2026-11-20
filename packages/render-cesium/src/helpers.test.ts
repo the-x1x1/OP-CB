@@ -10,6 +10,7 @@ import {
   toCartesianArray,
 } from './geometry.js';
 import { createGoogle3DTileset, google3dAvailability } from './google3d.js';
+import { ICON_MODEL, modelKindFor } from './layers/models.js';
 import { REEARTH_TERRAIN_URL, terrainSourceFor, type TerrainFactoryModule } from './terrain.js';
 
 const cesium = {
@@ -174,4 +175,14 @@ test('terrain sources: nothing is fetched until one is applied, and each asks on
     );
   await assert.rejects(world.create({ signal: gone.signal }));
   assert.equal(ion.length, 1, 'no token and no cancel reaches ion');
+});
+
+test('modelKindFor: a model for an icon that has one, on a point; none for an icon named after an object member', () => {
+  type Feature = Parameters<typeof modelKindFor>[0];
+  const feature = (icon: string | undefined, kind = 'point') =>
+    ({ geometry: { kind }, style: { icon } }) as unknown as Feature;
+  for (const [icon, model] of Object.entries(ICON_MODEL)) assert.equal(modelKindFor(feature(icon)), model, icon);
+  assert.equal(modelKindFor(feature('aircraft', 'line')), undefined, 'only a point is drawn as a model');
+  for (const icon of [undefined, '', 'no-such-icon', 'constructor', 'toString', 'hasOwnProperty', '__proto__'])
+    assert.equal(modelKindFor(feature(icon)), undefined, String(icon));
 });

@@ -1,4 +1,4 @@
-import { DEFAULT_FRESHNESS_POLICIES, ObjectTypes, type JsonValue, type Observation } from '@opcb/world-model';
+import { DEFAULT_FRESHNESS_POLICIES, ObjectTypes, ownEntry, type JsonValue, type Observation } from '@opcb/world-model';
 import {
   PollingProvider,
   ProviderError,
@@ -133,7 +133,9 @@ function pagesOf(d: ConnectorProviderDefinition): number {
  * default. Undefined: not expired by age.
  */
 export function keptForMs(d: ConnectorProviderDefinition): number | undefined {
-  const seconds = d.freshness ? d.freshness.expireSeconds : DEFAULT_FRESHNESS_POLICIES[d.objectType]?.expireSeconds;
+  const seconds = d.freshness
+    ? d.freshness.expireSeconds
+    : ownEntry(DEFAULT_FRESHNESS_POLICIES, d.objectType)?.expireSeconds;
   return seconds === undefined ? undefined : seconds * 1000;
 }
 

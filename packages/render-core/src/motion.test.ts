@@ -98,3 +98,9 @@ test('presentation gives aircraft their motion only while the timeline is live',
   const paused = presentObjects({ objects: [aircraft()], view, animate: false, cullToView: false });
   assert.equal(paused.upsert.find((u) => u.objectId === 'aircraft:icao24:a1b2c3')?.motion, undefined, 'paused: still');
 });
+
+test('only aircraft and vessels are dead reckoned: no other type, whatever it is named, gets a motion', () => {
+  assert.ok(deadReckonedMotion(aircraft()));
+  for (const type of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'satellite', 'camera', ''])
+    assert.equal(deadReckonedMotion(aircraft({ type })), undefined, type);
+});

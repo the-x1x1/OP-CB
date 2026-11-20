@@ -4,7 +4,7 @@ const PLATFORM_NAMES: Record<string, string> = { linux: 'Linux', win32: 'Windows
 
 /** A platform's name for a sentence (`win32` → Windows); an unknown one as it is. */
 export function platformName(platform: string): string {
-  return PLATFORM_NAMES[platform] ?? platform;
+  return Object.hasOwn(PLATFORM_NAMES, platform) ? PLATFORM_NAMES[platform]! : platform;
 }
 
 /**

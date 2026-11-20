@@ -3,7 +3,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { silentLogger, type Logger } from '@opcb/core';
 import { readJsonFile, writeFileAtomic } from '@opcb/core/node';
-import type { Clock, JsonValue } from '@opcb/world-model';
+import { ownEntry, type Clock, type JsonValue } from '@opcb/world-model';
 import type {
   ByteStreamEvents,
   ByteStreamHandle,
@@ -190,13 +190,14 @@ export class ProviderSettingsStore {
   }
 
   get(providerId: string): Record<string, JsonValue> {
-    return { ...(this.data[providerId] ?? {}) };
+    return { ...(ownEntry(this.data, providerId) ?? {}) };
   }
 
   view(providerId: string): ProviderSettingsView {
     let v = this.views.get(providerId);
     if (!v) {
-      v = new ProviderSettingsView(() => this.data[providerId] ?? {});
+      // Own entries: a source may be named `constructor`, and its settings are not Object's members.
+      v = new ProviderSettingsView(() => ownEntry(this.data, providerId) ?? {});
       this.views.set(providerId, v);
     }
     return v;

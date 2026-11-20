@@ -216,7 +216,8 @@ export function sizedAsset(asset: ModelAsset, lengthM: number | undefined): Mode
 /** The model an icon feature is drawn with, or undefined for none. */
 export function modelKindFor(feature: RenderFeature): ModelKind | undefined {
   if (feature.geometry.kind !== 'point' || !feature.style.icon) return undefined;
-  return ICON_MODEL[feature.style.icon];
+  // An own entry: an icon named `constructor` (a saved lens may name any) has no model.
+  return Object.hasOwn(ICON_MODEL, feature.style.icon) ? ICON_MODEL[feature.style.icon] : undefined;
 }
 
 /**

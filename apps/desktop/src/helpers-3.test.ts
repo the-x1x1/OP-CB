@@ -5,6 +5,8 @@ import { stepIndex, stepVerified } from './renderer/command-center/guide-engine.
 import { GUIDES, guideById, guidesFor } from './renderer/command-center/guides/index.js';
 import { connectionFrom } from './renderer/demo/sources.js';
 import { LAYER_GROUPS, buildLayerGroups } from './renderer/layer-tree.js';
+import { flavourText } from './renderer/command-center/catalog-text.js';
+import { platformName } from './renderer/panels/setting-platform.js';
 import { packOrigin, savedEnabled, savedMessage } from './renderer/panels/sources-definitions-model.js';
 
 test('the guides: each found by its id and under its section, with steps a reader can follow to the end', () => {
@@ -204,4 +206,19 @@ test('layer groups: one switch and one name per type wherever it is listed', () 
     ],
     'a type with no name of its own is named from its id',
   );
+});
+
+test('names looked up for text from outside: the known ones in words, any other as it is written', () => {
+  assert.equal(platformName('win32'), 'Windows');
+  assert.equal(platformName('linux'), 'Linux');
+  assert.equal(platformName('darwin'), 'macOS');
+  for (const other of ['freebsd', 'constructor', 'toString', '__proto__', ''])
+    assert.equal(platformName(other), other, other);
+
+  assert.equal(flavourText('maxi'), 'full, with pictures');
+  assert.equal(flavourText(' NoPic '), 'full text, no pictures');
+  assert.equal(flavourText(undefined), undefined);
+  assert.equal(flavourText('  '), undefined);
+  for (const other of ['custom', 'constructor', 'tostring', '__proto__'])
+    assert.equal(flavourText(other), other, other);
 });

@@ -159,7 +159,8 @@ export function Timeline({ state, dispatch, typeLabels, className }: TimelinePro
                 .filter((r) => r.ranges.length > 0)
                 .map((r) => (
                   <span key={r.objectType} className="wv-timeline__avail-type">
-                    {typeLabels?.[r.objectType] ?? r.objectType}
+                    {(typeLabels && Object.hasOwn(typeLabels, r.objectType) ? typeLabels[r.objectType] : undefined) ??
+                      r.objectType}
                   </span>
                 ))}
             </span>

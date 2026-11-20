@@ -5,6 +5,7 @@ import { existsSync, promises as fs } from 'node:fs';
 import { spawn as nodeSpawn } from 'node:child_process';
 import {
   boundsCenter,
+  ownEntry,
   systemClock,
   type Clock,
   type GeoBounds,
@@ -604,7 +605,7 @@ export class RuntimeCore {
 
   /** Bundled fixtures directory granted to filesystem-transport providers. */
   private grantDirFor(providerId: string): string | undefined {
-    return this.deps.localGrants?.[providerId] ?? this.deps.resourcesDir;
+    return ownEntry(this.deps.localGrants, providerId) ?? this.deps.resourcesDir;
   }
 
   private async buildHistory(): Promise<void> {

@@ -9,7 +9,7 @@ import type {
   WorldObject,
   WorldQuery,
 } from '@opcb/world-model';
-import { geometryCentroid, haversineMeters, regionBounds } from '@opcb/world-model';
+import { geometryCentroid, haversineMeters, ownEntry, regionBounds } from '@opcb/world-model';
 import { MEASURE_MAX_POINTS, densifyRing } from '../map/measure.js';
 import { keyboardBounds, nearbyOrder } from './nearby.js';
 import type {
@@ -804,7 +804,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       return true;
     },
     async setProviderSetting(providerId: string, key: string, value: JsonValue | undefined): Promise<void> {
-      const current = getState().sources.providerSettings[providerId] ?? {};
+      const current = ownEntry(getState().sources.providerSettings, providerId) ?? {};
       const next = setByPath(current as Record<string, JsonValue>, key, value);
       try {
         await client.request('sources.settings.set', { providerId, settings: next });
@@ -865,7 +865,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         for (const providerId of opts.providerIds) {
           const current =
-            getState().sources.providerSettings[providerId] ??
+            ownEntry(getState().sources.providerSettings, providerId) ??
             (await client.request('sources.settings.get', { providerId }));
           const next = { ...current, host: opts.address.host, port: opts.address.port, tls: opts.address.tls };
           await client.request('sources.settings.set', { providerId, settings: next });

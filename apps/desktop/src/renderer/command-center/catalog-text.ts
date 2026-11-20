@@ -16,7 +16,7 @@ const FLAVOURS: Readonly<Record<string, string>> = Object.freeze({
 export function flavourText(flavour: string | undefined): string | undefined {
   const f = flavour?.trim().toLowerCase();
   if (!f) return undefined;
-  return FLAVOURS[f] ?? f;
+  return Object.hasOwn(FLAVOURS, f) ? FLAVOURS[f]! : f;
 }
 
 /**
