@@ -118,7 +118,12 @@ function letterSplits(t: string): Array<[string, string]> {
 }
 
 export function formatCoordinateLabel(lat: number, lon: number): string {
-  return `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? 'N' : 'S'}, ${Math.abs(lon).toFixed(4)}° ${lon >= 0 ? 'E' : 'W'}`;
+  // The hemisphere of the figure as written: −0.00001° is `0.0000° N`, not `0.0000° S`.
+  const part = (value: number, positive: string, negative: string) => {
+    const text = Math.abs(value).toFixed(4);
+    return `${text}° ${value >= 0 || Number(text) === 0 ? positive : negative}`;
+  };
+  return `${part(lat, 'N', 'S')}, ${part(lon, 'E', 'W')}`;
 }
 
 function gridReference(t: string): ParsedCoordinate | UnsupportedCoordinate | undefined {

@@ -104,10 +104,12 @@ function walk(root: Record<string, JsonValue> | undefined, segments: string[]): 
   for (const s of segments) {
     if (cur === undefined || cur === null || typeof cur !== 'object') return undefined;
     if (Array.isArray(cur)) {
-      const idx = Number(s);
-      cur = Number.isInteger(idx) ? cur[idx] : undefined;
+      // A whole index only: Number('') is 0, and `list.` read the first element.
+      cur = /^\d+$/.test(s) ? cur[Number(s)] : undefined;
     } else {
-      cur = (cur as Record<string, JsonValue>)[s];
+      // Its own keys only. `constructor` and `toString` are on every object, so a filter
+      // "constructor exists" matched everything and a sort by it compared functions.
+      cur = Object.hasOwn(cur, s) ? (cur as Record<string, JsonValue>)[s] : undefined;
     }
   }
   return cur;
@@ -147,9 +149,15 @@ export function comparableKind(v: FieldValue): 'number' | 'date' | 'string' | 'b
 }
 
 /**
- * Deterministic three-way compare. Numbers numerically, ISO timestamps by instant,
- * strings case-insensitively (then case-sensitively for stability). Mixed kinds compare
- * by kind order so sorting never throws; `none` always sorts last regardless of direction.
+ * Deterministic three-way compare, and a total order: numbers numerically, with numeric
+ * strings among them ("9" before "10" before 10.5); ISO timestamps by instant; strings
+ * case-insensitively (then case-sensitively for stability). Mixed kinds compare by kind
+ * order so sorting never throws; `none` always sorts last regardless of direction.
+ *
+ * Numeric strings used to count as numbers only beside a number and as text beside each
+ * other, which is not an order at all: "10" < "9" as text, "9" < 9.5 and 9.5 < "10" as
+ * numbers. A column holding both (a CSV source beside a JSON one) sorted differently
+ * depending on the order its rows arrived in.
  */
 export function compareValues(a: FieldValue, b: FieldValue): number {
   const ka = comparableKind(a),
@@ -157,20 +165,23 @@ export function compareValues(a: FieldValue, b: FieldValue): number {
   if (ka === 'none' && kb === 'none') return 0;
   if (ka === 'none') return 1;
   if (kb === 'none') return -1;
+  const na = ka === 'number' || ka === 'string' ? toNumber(a) : undefined,
+    nb = kb === 'number' || kb === 'string' ? toNumber(b) : undefined;
+  if (na !== undefined && nb !== undefined) {
+    // Equal in value is equal, however it is spelled ("5.0", 5, "5"): the caller breaks ties.
+    return na < nb ? -1 : na > nb ? 1 : 0;
+  }
+  // A numeric value of either kind comes before everything that is not one.
+  if (na !== undefined) return -1;
+  if (nb !== undefined) return 1;
   if (ka === kb) {
     switch (ka) {
-      case 'number':
-        return (a as number) - (b as number);
       case 'date':
         return Date.parse(a as string) - Date.parse(b as string);
       case 'boolean':
         return Number(a) - Number(b);
-      case 'string': {
-        const la = (a as string).toLowerCase(),
-          lb = (b as string).toLowerCase();
-        if (la !== lb) return la < lb ? -1 : 1;
-        return (a as string) < (b as string) ? -1 : (a as string) > (b as string) ? 1 : 0;
-      }
+      case 'string':
+        return compareText(a as string, b as string);
       default: {
         const sa = JSON.stringify(a),
           sb = JSON.stringify(b);
@@ -178,12 +189,15 @@ export function compareValues(a: FieldValue, b: FieldValue): number {
       }
     }
   }
-  // Numbers vs numeric strings compare numerically.
-  const na = toNumber(a),
-    nb = toNumber(b);
-  if (na !== undefined && nb !== undefined) return na - nb;
   const order = ['number', 'date', 'boolean', 'string', 'other'];
   return order.indexOf(ka) - order.indexOf(kb);
+}
+
+function compareText(a: string, b: string): number {
+  const la = a.toLowerCase(),
+    lb = b.toLowerCase();
+  if (la !== lb) return la < lb ? -1 : 1;
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 export function toNumber(v: FieldValue): number | undefined {
