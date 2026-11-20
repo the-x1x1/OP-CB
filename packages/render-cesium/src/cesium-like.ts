@@ -526,6 +526,11 @@ export interface SceneLike {
   readonly pickPositionSupported: boolean;
   readonly postRender: EventLike<unknown>;
   readonly preRender: EventLike<unknown>;
+  /**
+   * Raised when a frame throws. Cesium then stops its render loop (the widget sets
+   * `useDefaultRenderLoop` false) and draws nothing more until it is switched back on.
+   */
+  readonly renderError?: EventLike<unknown>;
   /** Raised as Scene.render starts, before the primitives update. */
   readonly preUpdate: EventLike<unknown>;
   requestRender(): void;

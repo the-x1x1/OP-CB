@@ -73,6 +73,7 @@ async function mounted(
     // The fake's coordinates are lon/lat/height, not Earth-fixed metres; the real horizon
     // test has its own tests (horizon.test.ts).
     horizon: opts.horizon ?? (() => ALWAYS_VISIBLE),
+    defer: (fn) => fn(),
   });
   const events: Array<{ type: string; payload: unknown }> = [];
   for (const type of ['ready', 'viewChanged', 'pick', 'hover', 'error', 'frame'] as const)
@@ -972,4 +973,78 @@ test('CesiumWorldRenderer: labels in different layers compete for space, boxed w
   assert.equal(label('Mon 11 PM · Cat 1 · 80 kt').show, false, 'the forecast time under it gives way');
   assert.equal(label('Far away').show, true, 'a label clear of both is untouched');
   renderer.dispose();
+});
+
+test('a frame that throws takes the areas off and starts the loop again; a second one is left stopped and said to be fatal', async () => {
+  const { renderer, viewer, events } = await mounted();
+  const area = (id: string, lon: number): RenderFeature => ({
+    id,
+    eventId: id,
+    geometry: {
+      kind: 'polygon',
+      rings: [
+        [
+          { latitude: 0, longitude: lon },
+          { latitude: 0, longitude: lon + 1 },
+          { latitude: 1, longitude: lon + 1 },
+        ],
+      ],
+    },
+    style: { styleClass: 'event.weather-alert' },
+    interactive: true,
+    priority: 80,
+    layer: 'events',
+  });
+  const circle: RenderFeature = {
+    id: 'obj:c',
+    objectId: 'c',
+    geometry: { kind: 'circle', center: { latitude: 5, longitude: 5 }, radiusM: 2000 },
+    style: { styleClass: 'earthquake' },
+    interactive: true,
+    priority: 70,
+    layer: 'earthquake',
+  };
+  renderer.update({ upsert: [pt('obj:a', 10, 20), area('event:1', 0), area('event:2', 10), circle], remove: [] });
+  const sources = () => viewer.dataSources.sources as FakeDataSource[];
+  const drawnAreas = () => sources().reduce((n, d) => n + d.entities.entities.length, 0);
+  assert.equal(drawnAreas(), 3);
+  const errors = () => events.filter((e) => e.type === 'error').map((e) => e.payload as RendererEvents['error']);
+  const before = errors().length;
+
+  // What Cesium does on a throwing frame: its widget switches the loop off, then the event is heard.
+  viewer.useDefaultRenderLoop = false;
+  viewer.scene.renderError.raise(
+    new Error('All attribute lists must have the same number of attributes.\n    at stack'),
+  );
+  assert.equal(drawnAreas(), 0, 'every area is off the globe');
+  assert.equal(viewer.useDefaultRenderLoop, true, 'and the globe draws again');
+  const first = errors().slice(before);
+  assert.equal(first.length, 1);
+  assert.equal(first[0]!.fatal, false);
+  assert.match(first[0]!.message, /All attribute lists must have the same number of attributes/);
+  assert.match(first[0]!.message, /3 areas are hidden until the app is restarted/);
+  assert.ok(!first[0]!.message.includes('at stack'), 'the first line only');
+  assert.equal(renderer.feature('obj:a')?.id, 'obj:a', 'markers are kept');
+
+  // Areas that arrive afterwards are not drawn either; markers still are.
+  renderer.update({ upsert: [area('event:3', 20), pt('obj:b', 11, 21)], remove: [] });
+  assert.equal(drawnAreas(), 0);
+  assert.equal(renderer.feature('obj:b')?.id, 'obj:b');
+
+  // A second error is not an area's doing: nothing is restarted.
+  viewer.useDefaultRenderLoop = false;
+  viewer.scene.renderError.raise('context lost');
+  assert.equal(viewer.useDefaultRenderLoop, false);
+  const second = errors().slice(before + 1);
+  assert.deepEqual(second, [{ message: 'the globe stopped drawing: context lost', fatal: true }]);
+});
+
+test('a throwing frame while the globe is hidden does not start it drawing behind the 2D map', async () => {
+  const { renderer, viewer } = await mounted();
+  renderer.suspend();
+  assert.equal(viewer.useDefaultRenderLoop, false);
+  viewer.scene.renderError.raise(new Error('bad shape'));
+  assert.equal(viewer.useDefaultRenderLoop, false, 'still suspended');
+  renderer.resume();
+  assert.equal(viewer.useDefaultRenderLoop, true);
 });

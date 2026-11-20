@@ -842,6 +842,7 @@ export namespace CesiumWidget {
     creditViewport?: Element | string;
     contextOptions?: ContextOptions;
     msaaSamples?: number;
+    showRenderLoopErrors?: boolean;
     requestRenderMode?: boolean;
     targetFrameRate?: number;
     useDefaultRenderLoop?: boolean;

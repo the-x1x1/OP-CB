@@ -70,6 +70,8 @@ export interface CesiumWorldRendererOptions {
   now?: () => number;
   /** Wall-clock time in epoch ms — what RenderFeature.motion is in (default Date.now). */
   wallNow?: () => number;
+  /** Runs a function after the current event has been handled (default: a zero-delay timer). Tests run it at once. */
+  defer?: (fn: () => void) => void;
   /**
    * Where page visibility changes are heard (default: `document`). Injectable so the frame
    * counter's handling of a hidden window can be tested without a DOM.
@@ -113,6 +115,10 @@ const DEFAULT_VIEW: ViewState = {
  * GPU lives in the pure modules (featureRouter, view, picking, labelDeclutter,
  * basemaps registry, theme) and this class wires them to the viewer.
  */
+function defaultDefer(fn: () => void): void {
+  setTimeout(fn, 0);
+}
+
 export class CesiumWorldRenderer implements WorldRenderer {
   readonly capabilities: RendererCapabilities = {
     mode: '3D',
@@ -385,6 +391,35 @@ export class CesiumWorldRenderer implements WorldRenderer {
       target.addEventListener('visibilitychange', restart);
       this.cameraUnsubs.push(() => target.removeEventListener('visibilitychange', restart));
     }
+    // A frame that throws stops Cesium's render loop for good: on 2026-11-14 one shape did,
+    // twice, and the globe stayed a still picture until the app was restarted. The geometry
+    // Cesium builds in its workers — areas — is what a bad shape breaks, so the first error
+    // takes the areas off and starts the loop again; markers, lines and labels go on. A
+    // second error is not a shape's doing, and the loop is left stopped.
+    const renderError = viewer.scene.renderError;
+    if (renderError)
+      this.cameraUnsubs.push(
+        renderError.addEventListener((...args: unknown[]) => {
+          const error = args[args.length - 1];
+          const why = (error instanceof Error ? error.message : String(error ?? 'unknown error')).split('\n')[0]!;
+          const layers = this.layers;
+          if (!layers || layers.shapesDropped) {
+            this.emit('error', { message: `the globe stopped drawing: ${why.slice(0, 200)}`, fatal: true });
+            return;
+          }
+          const removed = layers.dropShapes();
+          this.emit('error', {
+            message: `a shape could not be drawn (${why.slice(0, 200)}); ${removed} areas are hidden until the app is restarted`,
+            fatal: false,
+          });
+          // After Cesium's own handler has switched the loop off.
+          (this.options.defer ?? defaultDefer)(() => {
+            if (this.viewer !== viewer || this.suspended) return;
+            viewer.useDefaultRenderLoop = true;
+            viewer.scene.requestRender();
+          });
+        }),
+      );
     // Markers are not depth-tested (layers/depth.ts); the Earth hides them here instead, on
     // every frame the camera has moved — the horizon moves with it — before it is drawn.
     const buildHorizon = this.options.horizon ?? horizonTest;

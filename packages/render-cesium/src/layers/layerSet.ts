@@ -275,13 +275,36 @@ export class LayerSet {
           break;
         case 'polygon':
         case 'circle':
-          b.entityLayer().upsert(feature, resolved);
+          if (!this.shapesOff) b.entityLayer().upsert(feature, resolved);
           break;
         case 'density':
-          b.densityLayer().upsert(feature, resolved);
+          if (!this.shapesOff) b.densityLayer().upsert(feature, resolved);
           break;
       }
     }
+  }
+
+  private shapesOff = false;
+
+  /** Whether areas were taken off the globe by `dropShapes`. */
+  get shapesDropped(): boolean {
+    return this.shapesOff;
+  }
+
+  /**
+   * Takes every area off the globe (polygons, circles and density cells: the geometry Cesium
+   * builds in its workers, and the only kind a bad shape can make it throw on) and draws no
+   * more of them. Markers, lines and labels stay. Returns how many were removed.
+   */
+  dropShapes(): number {
+    this.shapesOff = true;
+    let removed = 0;
+    for (const b of this.bundles.values()) {
+      removed += (b.entities?.count ?? 0) + (b.density?.count ?? 0);
+      b.entities?.clear();
+      b.density?.clear();
+    }
+    return removed;
   }
 
   /**

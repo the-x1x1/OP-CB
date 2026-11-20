@@ -19,6 +19,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- When a frame of the 3D globe fails, the globe no longer stays a still picture until the app
+  is restarted. The first failure takes the areas off the globe (polygons, circles, density
+  cells — the shapes whose geometry can make Cesium fail), says so, and goes on drawing
+  markers, lines and labels; a second failure is reported as the globe having stopped.
+  Cesium's own error panel is no longer shown over the map. Not yet tried in a built app.
 - The 3D globe stopped drawing ("An error occurred while rendering. Rendering has stopped",
   twice on 2026-11-14 with 0.7.4) until the app was restarted. An area's edge is drawn as a line
   on the ground, and a line whose points are one place written two ways — 180° and then -180°

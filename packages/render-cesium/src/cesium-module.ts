@@ -59,7 +59,10 @@ type WidgetOptions = NonNullable<ConstructorParameters<typeof Cesium.CesiumWidge
  * two are not the same thing to the compiler even though they are at run time.
  */
 function widgetOptions(options: ViewerOptionsLike): WidgetOptions {
-  const out: WidgetOptions = {};
+  // Cesium's own panel over the globe ("An error occurred while rendering", with an OK
+  // button) is not shown: the renderer hears the error itself, says so in the app's words and
+  // carries on where it can (renderer.ts).
+  const out: WidgetOptions = { showRenderLoopErrors: false };
   if (options.baseLayer === false) out.baseLayer = false;
   if (options.creditContainer !== undefined) out.creditContainer = options.creditContainer;
   if (options.msaaSamples !== undefined) out.msaaSamples = options.msaaSamples;
