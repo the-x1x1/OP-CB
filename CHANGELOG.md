@@ -7,6 +7,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- A longitude already between -180° and 180° is no longer put through the arithmetic that
+  brings others into range, which cost it its last digit (-179.9999 came back a hair west of
+  itself, and so outside a box whose edge it was). Nothing shown moves by an amount that can
+  be seen; the helpers now agree with each other exactly, and a test holds them to it.
 - The live spatial index answers a question whose south edge is exactly 90°N, or whose west
   edge is exactly 180°E, with what lies on that edge; it looked one row or column past the
   grid and found nothing. No screen asks such a question in ordinary use. The index is now

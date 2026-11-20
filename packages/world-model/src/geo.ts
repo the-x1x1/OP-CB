@@ -44,6 +44,9 @@ const DEG = Math.PI / 180;
 
 export function normalizeLongitude(lon: number): number {
   if (!Number.isFinite(lon)) return lon;
+  // Already in range is returned as it is: the arithmetic below costs the last digit
+  // (-179.9999 came back as -179.99990000000003, outside bounds that start at -179.9999).
+  if (lon >= -180 && lon <= 180) return lon;
   let x = ((((lon + 180) % 360) + 360) % 360) - 180;
   if (x === -180 && lon > 0) x = 180;
   return x;
