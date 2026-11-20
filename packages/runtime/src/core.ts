@@ -1618,14 +1618,17 @@ export class RuntimeCore {
     folder: string,
     label: string,
   ): Promise<{ ok: true; adopted: boolean } | { ok: false; reason: string }> {
-    const current = this.settings.get().storage?.vaults ?? [];
-    if (current.length >= 8) return { ok: false, reason: 'at most 8 data vaults' };
+    if ((this.settings.get().storage?.vaults ?? []).length >= 8) return { ok: false, reason: 'at most 8 data vaults' };
     const r = await initVault(folder, label, {
       appDataDir: this.dirs.root,
       now: () => this.clock.now(),
       ...(this.deps.vaultsOnAppDrive ? { allowSameDrive: true } : {}),
     });
     if (!r.ok) return r;
+    // The list as it is now, after the wait for the folder: a vault added or removed meanwhile
+    // is in it, and writing back the list from before would undo that.
+    const current = this.settings.get().storage?.vaults ?? [];
+    if (current.length >= 8) return { ok: false, reason: 'at most 8 data vaults' };
     if (current.some((v) => v.id === r.vault.id))
       return { ok: false, reason: `"${r.vault.label}" is already a vault here` };
     // One vault inside another would read the inner one as a pack folder of the outer.
