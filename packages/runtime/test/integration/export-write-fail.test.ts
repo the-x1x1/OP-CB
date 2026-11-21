@@ -43,6 +43,8 @@ test('integration: an export to a file that cannot be written says so, for every
       const unwritable = [dataDir, path.join(dataDir, 'gone', 'out.file')];
       const exports: Array<[string, () => Promise<unknown>]> = [
         ['collections.export', () => h.client.request('collections.export', { id: 'c1', format: 'geojson' })],
+        ['collections.export json', () => h.client.request('collections.export', { id: 'c1', format: 'json' })],
+        ['diagnostics.export', () => h.client.request('diagnostics.export', undefined)],
         ['watchzones.export', () => h.client.request('watchzones.export', { format: 'kml' })],
         ['prep.export', () => h.client.request('prep.export', { format: 'csv' })],
         [
@@ -62,7 +64,8 @@ test('integration: an export to a file that cannot be written says so, for every
         ],
       ];
       for (const [name, run] of exports)
-        for (const target of unwritable) {
+        // The diagnostics bundle makes its folder when it is missing: only a folder's name fails.
+        for (const target of name === 'diagnostics.export' ? unwritable.slice(0, 1) : unwritable) {
           h.host.saveQueue.push(target);
           await assert.rejects(
             run(),

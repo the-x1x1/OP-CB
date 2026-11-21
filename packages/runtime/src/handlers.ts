@@ -704,10 +704,9 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
           const { position: _withheld, ...rest } = item;
           return rest;
         });
-        await fs.writeFile(
+        await writeExportFile(
           choice.path,
           `${JSON.stringify({ version: 1, collection: { ...collection, items } }, null, 2)}\n`,
-          'utf8',
         );
         return skipped ? { path: choice.path, skipped } : { path: choice.path };
       }
@@ -1224,12 +1223,16 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       });
       if ('cancelled' in choice) return { cancelled: true };
       const snapshot = (await handlers['diagnostics.get'](undefined, ctx)) as DiagnosticsSnapshot;
-      await exportBundle(path.dirname(choice.path), {
-        snapshot,
-        logFile: core.dirs.logFile,
-        fileName: path.basename(choice.path),
-        extraRoots: [core.dirs.root],
-      });
+      try {
+        await exportBundle(path.dirname(choice.path), {
+          snapshot,
+          logFile: core.dirs.logFile,
+          fileName: path.basename(choice.path),
+          extraRoots: [core.dirs.root],
+        });
+      } catch (err) {
+        throw unwritable(err);
+      }
       return { path: choice.path, redacted: true };
     },
 
