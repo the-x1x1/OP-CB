@@ -98,3 +98,93 @@ test('integration: saves asked for at the same moment are all kept, and survive 
     await fs.rm(dataDir, { recursive: true, force: true });
   }
 });
+
+const prep = (i: number) => ({
+  id: `p${i}`,
+  kind: 'item' as const,
+  category: 'water',
+  name: `Water ${i}`,
+  quantity: 10,
+  updatedAt: at,
+});
+
+function rng(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Saves and deletions of the same few records, in a generated order, asked for without waiting:
+ * the same record saved under three names and deleted and saved again before any answer comes.
+ * What is kept — in the list, and after a restart — is what applying them in the order they
+ * were asked gives.
+ */
+for (const seed of [31, 32, 33, 34]) {
+  test(`integration: saves and deletions of the same records, asked for together, end as asked (seed ${seed})`, async () => {
+    const next = rng(seed);
+    const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-concurrent-'));
+    const kinds = [
+      { save: 'collections.save', del: 'collections.delete', list: 'collections.list', make: collection, prefix: 'c' },
+      { save: 'watchzones.save', del: 'watchzones.delete', list: 'watchzones.list', make: zone, prefix: 'z' },
+      { save: 'lenses.save', del: 'lenses.delete', list: 'lenses.list', make: lens, prefix: 'user-' },
+      { save: 'prep.save', del: 'prep.delete', list: 'prep.list', make: prep, prefix: 'p' },
+    ] as const;
+    // What applying the requests in order gives: id → name, per kind.
+    const model = kinds.map(() => new Map<string, string>());
+    try {
+      const h = await startRuntime({ dataDir, providerInstances: [] });
+      try {
+        for (let round = 0; round < 4; round++) {
+          const work: Array<Promise<unknown>> = [];
+          for (let k = 0; k < 120; k++) {
+            const which = Math.floor(next() * kinds.length);
+            const kind = kinds[which]!;
+            const i = Math.floor(next() * 6);
+            const id = `${kind.prefix}${i}`;
+            if (next() < 0.3) {
+              model[which]!.delete(id);
+              work.push(h.client.request(kind.del as 'collections.delete', { id }));
+            } else {
+              const name = `Name ${round}.${k}`;
+              model[which]!.set(id, name);
+              work.push(h.client.request(kind.save as 'collections.save', { ...kind.make(i), name } as never));
+            }
+          }
+          await Promise.all(work);
+          for (const [which, kind] of kinds.entries()) {
+            const list = (await h.client.request(kind.list as 'collections.list', undefined)) as Array<{
+              id: string;
+              name: string;
+            }>;
+            const got = new Map(list.filter((x) => x.id.startsWith(kind.prefix)).map((x) => [x.id, x.name] as const));
+            assert.deepEqual([...got].sort(), [...model[which]!].sort(), `${kind.list} after round ${round}`);
+          }
+        }
+        await settle(6);
+      } finally {
+        await h.dispose();
+      }
+      const again = await startRuntime({ dataDir, providerInstances: [] });
+      try {
+        for (const [which, kind] of kinds.entries()) {
+          const list = (await again.client.request(kind.list as 'collections.list', undefined)) as Array<{
+            id: string;
+            name: string;
+          }>;
+          const got = new Map(list.filter((x) => x.id.startsWith(kind.prefix)).map((x) => [x.id, x.name] as const));
+          assert.deepEqual([...got].sort(), [...model[which]!].sort(), `${kind.list} after a restart`);
+        }
+      } finally {
+        await again.dispose();
+      }
+    } finally {
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
+  });
+}

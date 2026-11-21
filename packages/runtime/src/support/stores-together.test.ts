@@ -105,3 +105,30 @@ test('source cache: entries set together before the first read are all there, an
     for (let i = 0; i < 20; i++) assert.deepEqual((await again.get(`k${i}`))?.value, { n: i }, `k${i} on disk`);
   });
 });
+
+test('JsonDocStore: a save with a limit is judged against the list in its own turn, in order with a removal', async () => {
+  await inTemp(async (dir) => {
+    const file = path.join(dir, 'docs.json');
+    const store = new JsonDocStore<Doc>(file, asDoc);
+    const atMostThree = (items: readonly Doc[]) => {
+      if (items.length >= 3) throw new Error('at most 3');
+    };
+    const limited = (doc: Doc) =>
+      store.save(doc, (items) => {
+        if (!items.some((i) => i.id === doc.id)) atMostThree(items);
+      });
+    // Four asked for together: three kept, the fourth refused.
+    const results = await Promise.allSettled([1, 2, 3, 4].map((i) => limited({ id: `d${i}`, name: `${i}` })));
+    assert.deepEqual(
+      results.map((r) => r.status),
+      ['fulfilled', 'fulfilled', 'fulfilled', 'rejected'],
+    );
+    // One already kept can be saved again at the limit; a removal makes room.
+    await limited({ id: 'd2', name: 'two' });
+    await Promise.all([store.remove('d1'), limited({ id: 'd5', name: '5' })]);
+    assert.deepEqual((await store.list()).map((d) => `${d.id}:${d.name}`).sort(), ['d2:two', 'd3:3', 'd5:5']);
+    // Saved and then removed, asked for together: removed.
+    await Promise.all([limited({ id: 'd3', name: 'three' }), store.remove('d3')]);
+    assert.deepEqual((await onDisk(file)).map((d) => d.id).sort(), ['d2', 'd5']);
+  });
+});

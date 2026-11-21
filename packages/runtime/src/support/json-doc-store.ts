@@ -78,12 +78,18 @@ export class JsonDocStore<T extends { id: string }> {
     return structuredClone(this.items ?? []);
   }
 
-  async save(item: T): Promise<T[]> {
+  /**
+   * `admit`, if given, sees the list in the same turn the item goes in, and throws to refuse
+   * it (a limit on the number kept). Checked before the call instead, it took a wait of its
+   * own, and a removal of the same item asked for after this save was applied before it.
+   */
+  async save(item: T, admit?: (items: readonly T[]) => void): Promise<T[]> {
     // The list is taken after the wait and changed in the same turn. The value `load` gives
     // is the list as it was when `load` was called: several changes asked for together each
     // got the same one, and every removal but the last was undone by the change after it.
     await this.load();
     const items = (this.items ??= []);
+    admit?.(items);
     const index = items.findIndex((i) => i.id === item.id);
     if (index >= 0) items[index] = item;
     else items.push(item);

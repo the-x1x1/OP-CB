@@ -108,6 +108,10 @@ Versioning: [semantic versioning](https://semver.org/).
   collection could replace the first. Such changes now wait their turn, and an object asked
   for twice is still collected once. The same for satellites added to pass alerts (three
   added quickly kept only the last) and for the home view and its fly-on-start setting.
+- A preparedness record saved and then deleted straight away (a quantity changed, then
+  Delete) could come back: the save checked the record limit first, which took a moment,
+  and the deletion was applied before it. Likewise a lens deleted and saved again under
+  the same id. Each is now applied in the order asked.
 - Two lenses chosen one straight after the other: the first lens's events, arriving late,
   were added to what the window held under the second, for up to two minutes until the
   next events refresh.

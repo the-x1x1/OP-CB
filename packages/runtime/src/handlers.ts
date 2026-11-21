@@ -56,7 +56,7 @@ import {
   type WorldSubscription,
 } from '@opcb/ipc-contract';
 import type { RequestHandlers } from './contract.js';
-import { MAP_PROVIDER_CATALOG, resolveMapProviders } from '@opcb/render-core';
+import { BUILT_IN_LENSES, MAP_PROVIDER_CATALOG, resolveMapProviders } from '@opcb/render-core';
 import { RuntimeCore, errorText } from './core.js';
 import { filterObjects } from './support/subscriptions.js';
 import { ownPlaceResults } from './support/own-places-search.js';
@@ -638,8 +638,9 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
     'lenses.delete': async ({ id }) => {
       requireId(id, 'id');
-      if ((await core.allLenses()).some((l) => l.id === id && l.builtIn))
-        throw new InvalidRequestError('built-in lenses cannot be deleted');
+      // Checked without a wait: waiting here let a save of the same lens asked for after this
+      // deletion be applied before it, and the deletion then removed the lens just saved.
+      if (BUILT_IN_LENSES.some((l) => l.id === id)) throw new InvalidRequestError('built-in lenses cannot be deleted');
       await core.lenses.remove(id);
       const all = await core.allLenses();
       core.emitter.emit('lenses.changed', all);
@@ -892,9 +893,10 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     'prep.save': async (record) => {
       const r = readPrepRecord(record);
       if (!r) throw new InvalidRequestError('not a preparedness record');
-      if ((await core.preparedness.list()).length >= 2000 && !(await core.preparedness.get(r.id)))
-        throw new InvalidRequestError('the inventory holds at most 2,000 records');
-      return core.preparedness.save(r);
+      return core.preparedness.save(r, (items) => {
+        if (items.length >= 2000 && !items.some((i) => i.id === r.id))
+          throw new InvalidRequestError('the inventory holds at most 2,000 records');
+      });
     },
     'prep.delete': async ({ id }) => {
       requireId(id, 'id');
