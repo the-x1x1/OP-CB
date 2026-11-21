@@ -139,6 +139,11 @@ Versioning: [semantic versioning](https://semver.org/).
 - Camera relay: a request whose first line is not an address (`GET //`) was never answered
   and its connection stayed open until the other end gave up; it is answered 400. (The
   relay listens on this computer only.)
+- **A measured line across 180° exported as GeoJSON ran the long way round the world.** The
+  line was cut at 180° as GeoJSON asks, but the end of the first piece was then written as
+  −180, so that piece ran back across the whole map; a point exactly on 180° did the same to
+  a line that was not cut. GeoJSON now keeps 180 as it is (GPX still writes −180, as it
+  must). In 0.7.4 too.
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
   The same for the emergency references when the library folder could not be made.

@@ -392,10 +392,9 @@ export function lineGeodata(
       '</kml>',
     ].join('\n');
   }
-  const pair = (p: { latitude: number; longitude: number }) => [
-    Number(coord(lonOf(p.longitude))),
-    Number(coord(p.latitude)),
-  ];
+  // GeoJSON takes 180 as it is (GPX is the one that wants a longitude below 180): written as
+  // −180, a vertex on the antimeridian turned the edge to it into one the long way round.
+  const pair = (p: { latitude: number; longitude: number }) => [Number(coord(p.longitude)), Number(coord(p.latitude))];
   const coordinates = ring.map(pair);
   // RFC 7946 §3.1.9: a line that crosses the antimeridian is cut there, or readers draw it the
   // long way round. (A shape across it is written whole: cutting a polygon is not done here.)
@@ -412,7 +411,13 @@ export function lineGeodata(
             closed && points.length >= 3
               ? { type: 'Polygon', coordinates: [coordinates] }
               : pieces.length > 1
-                ? { type: 'MultiLineString', coordinates: pieces.map((piece) => piece.map(pair)) }
+                ? {
+                    type: 'MultiLineString',
+                    // Each piece's end on the antimeridian stays on its own side (+180 or −180):
+                    // turned into −180 like any other longitude of 180, the piece ending at +180
+                    // ran back the long way round, which is what the cut is there to stop.
+                    coordinates: pieces.map((piece) => piece.map(pair)),
+                  }
                 : { type: 'LineString', coordinates },
           properties: { name },
         },

@@ -193,7 +193,17 @@ test("the measure tool's line: a GPX route, a KML line or polygon, GeoJSON — a
     ),
   ) as { features: Array<{ geometry: { type: string; coordinates: number[][][] } }> };
   assert.equal(across.features[0]!.geometry.type, 'MultiLineString');
-  assert.equal(across.features[0]!.geometry.coordinates.length, 2);
+  // Each piece ends on its own side of 180°: the first at +180, the second from −180.
+  assert.deepEqual(across.features[0]!.geometry.coordinates, [
+    [
+      [178, -17],
+      [180, -17.5],
+    ],
+    [
+      [-180, -17.5],
+      [-178, -18],
+    ],
+  ]);
   // Plain decimals, and −180 rather than 180 (GPX wants a longitude below 180).
   const edge = lineGeodata(
     'gpx',
