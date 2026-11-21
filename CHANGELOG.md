@@ -57,6 +57,16 @@ Versioning: [semantic versioning](https://semver.org/).
   on. In 0.7.4 too.
 - Adding a 65th pack publisher from a key file said "internal error" rather than that 64 is
   the most there can be. In 0.7.4 too.
+- **A list file that was there but could not be read was taken as empty, and the next save
+  wrote over it.** Collections, watch zones, lenses, walkthroughs, the preparedness inventory
+  and the camera list: if the file was held by another program when the app started (OneDrive
+  and virus scanners do this on Windows), or could not be read for another reason, the list
+  showed empty and the first change wrote the one new item over the whole file. Now the list
+  shows empty but nothing is written over the file; a change is refused with the reason until
+  the file reads, and it is read again at each try. An unreadable file that cannot be set
+  aside is treated the same way. In 0.7.4 too.
+- **A change to one of those lists that could not be written to disk was answered as saved**,
+  and was gone at the next start. It now says the file could not be written. In 0.7.4 too.
 - **Moving the data folder went on when one of the small files could not be copied** (a full
   drive, a refused read): the move was reported done, and the next start, in the new folder,
   was without that file — the settings, the keys, the places. Only a file that is not there is
