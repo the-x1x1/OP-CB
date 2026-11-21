@@ -248,3 +248,87 @@ test('integration: back to live and into the past again while history is read: t
     await h.dispose();
   }
 });
+
+function rng(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * The timeline moved about at random — into the past at one of five times, back to live, the
+ * cursor moved — while each reading of history is held back and let through at random. When
+ * everything has come back, the map is what the timeline shows: live objects under live, the
+ * history of the last time asked for under a time in the past.
+ */
+for (const seed of [11, 12, 13, 14, 15, 16]) {
+  test(`integration: the timeline moved about while history is read ends showing what it shows (seed ${seed})`, async () => {
+    const next = rng(seed);
+    const body = await readFixture('usgs', 'normal.geojson');
+    const { impl: fetchImpl } = tableFetch({
+      'https://earthquake.usgs.gov/': () =>
+        new Response(body, { status: 200, headers: { 'content-type': 'application/geo+json' } }),
+    });
+    const h = await startRuntime({ fetchImpl, providerInstances: [createUsgs()] });
+    try {
+      await h.client.request('sources.refresh', { providerId: 'usgs-earthquakes' });
+      await settle();
+      await h.client.request('world.subscribe', { objectTypes: ['earthquake'] });
+      const live = (await h.client.request('world.query', { objectTypes: ['earthquake'] })).items;
+      assert.ok(live.length >= 4);
+      const liveIds = live.map((o) => o.id).sort();
+      const onMap = new Set(liveIds);
+      h.runtime.on('world.changed', (d, clientId) => {
+        if (clientId !== 'test-client') return;
+        for (const id of d.removed) onMap.delete(id);
+        for (const o of d.objects) onMap.add(o.id);
+      });
+      // Each time in the past has its own part of the objects in history.
+      const CURSORS = [1, 2, 3, 4, 5].map((d) => `2026-0${d}-01T00:00:00.000Z`);
+      const atCursor = (cursor: string) => {
+        const k = CURSORS.indexOf(cursor) + 2;
+        return live
+          .filter((_, i) => i % k === 0)
+          .map((o) => ({ ...o, freshness: 'HISTORICAL' as const, observedAt: cursor }));
+      };
+      const held: Array<() => void> = [];
+      const timeline = h.runtime.core.timeline as unknown as { snapshotAt: (cursor: string) => Promise<unknown[]> };
+      timeline.snapshotAt = (cursor) => new Promise((resolve) => held.push(() => resolve(atCursor(cursor))));
+      let mode: 'LIVE' | 'HISTORICAL' = 'LIVE';
+      let cursor = '';
+      for (let step = 0; step < 40; step++) {
+        const r = next();
+        if (r < 0.45) {
+          cursor = CURSORS[Math.floor(next() * CURSORS.length)]!;
+          mode = 'HISTORICAL';
+          await h.client.request('timeline.set', { mode: 'HISTORICAL', cursor });
+        } else if (r < 0.65) {
+          mode = 'LIVE';
+          await h.client.request('timeline.set', { mode: 'LIVE' });
+        } else if (held.length) {
+          held.shift()!();
+        }
+        await new Promise((r2) => setImmediate(r2));
+      }
+      // Everything comes back.
+      for (let i = 0; i < 50 && (held.length || i < 3); i++) {
+        while (held.length) held.shift()!();
+        await settle();
+      }
+      const expected =
+        mode === 'LIVE'
+          ? liveIds
+          : atCursor(cursor)
+              .map((o) => o.id)
+              .sort();
+      assert.deepEqual([...onMap].sort(), expected, `ended ${mode} ${cursor}`);
+    } finally {
+      await h.dispose();
+    }
+  });
+}
