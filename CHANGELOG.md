@@ -73,6 +73,11 @@ Versioning: [semantic versioning](https://semver.org/).
   others, and a damaged file was written over without being kept. It is now kept beside as
   `provider-settings.json.corrupt-<time>`, an unreadable one is not written over, and a write
   that fails says so. In 0.7.4 too.
+- **A damaged key file was said to be kept, and was written over by the next key stored.**
+  The startup warning read "credential file unreadable; stored keys must be entered again
+  (file preserved)", but nothing set it aside. It is now renamed to
+  `credentials.json.corrupt-<time>` before anything is stored; if that rename fails, no key is
+  stored until it succeeds. In 0.7.4 too.
 - **Moving the data folder went on when one of the small files could not be copied** (a full
   drive, a refused read): the move was reported done, and the next start, in the new folder,
   was without that file — the settings, the keys, the places. Only a file that is not there is

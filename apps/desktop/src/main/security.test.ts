@@ -91,6 +91,31 @@ test('credential store: corrupt file starts empty and is preserved', async () =>
   await fs.writeFile(file, '{ nope');
   const store = new CredentialStore({ file, safeStorage: fakeSafeStorage() });
   assert.deepEqual(await store.load(), { status: 'corrupt', keys: 0 });
+  // Kept beside, and still there after the next key is stored: the warning says the file is
+  // kept, and the first key stored used to be written over it.
+  await store.set('new.key', 'value');
+  const kept = (await fs.readdir(dir)).filter((n) => n.startsWith('credentials.json.corrupt-'));
+  assert.equal(kept.length, 1);
+  assert.equal(await fs.readFile(path.join(dir, kept[0]!), 'utf8'), '{ nope');
+  assert.equal(await store.get('new.key'), 'value');
+});
+
+test('credential store: a damaged file that cannot be set aside is not written over', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-'));
+  const file = path.join(dir, 'credentials.json');
+  await fs.writeFile(file, '{ nope');
+  const store = new CredentialStore({ file, safeStorage: fakeSafeStorage() });
+  // The rename aside fails (a virus scanner holding the file does this on Windows).
+  const realRename = fs.rename;
+  (fs as { rename: typeof fs.rename }).rename = async () => {
+    throw Object.assign(new Error('busy'), { code: 'EBUSY' });
+  };
+  try {
+    assert.deepEqual(await store.load(), { status: 'corrupt', keys: 0 });
+  } finally {
+    (fs as { rename: typeof fs.rename }).rename = realRename;
+  }
+  await assert.rejects(store.set('new.key', 'value'), /could not be set aside/);
   assert.equal(await fs.readFile(file, 'utf8'), '{ nope');
 });
 

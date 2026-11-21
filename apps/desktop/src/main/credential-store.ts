@@ -100,6 +100,8 @@ export class CredentialStore implements CredentialResolver {
   private readonly logger: Logger;
   private readonly now: () => number;
   private loaded = false;
+  /** Set when a damaged file could not be set aside: nothing is written over it. */
+  private notSetAside: string | undefined;
   private writeChain: Promise<void> = Promise.resolve();
 
   constructor(private readonly opts: CredentialStoreOptions) {
@@ -161,8 +163,18 @@ export class CredentialStore implements CredentialResolver {
       this.loaded = true;
       return { status: 'loaded', keys: Object.keys(entries).length };
     } catch (err) {
+      // Kept beside before anything is stored: the warning says the file is kept, and the
+      // first key stored used to be written over it.
+      const aside = `${this.opts.file}.corrupt-${new Date(this.now()).toISOString().replace(/[:.]/g, '-')}`;
+      try {
+        await fs.rename(this.opts.file, aside);
+        this.notSetAside = undefined;
+      } catch (e) {
+        this.notSetAside = (e as NodeJS.ErrnoException).code ?? 'unknown error';
+      }
       this.logger.error('credential file unreadable; starting empty (file preserved)', {
         error: err instanceof Error ? err.message : String(err),
+        ...(this.notSetAside ? { setAside: `failed (${this.notSetAside}); nothing is written over it` } : {}),
       });
       this.entries = {};
       this.loaded = true;
@@ -195,6 +207,7 @@ export class CredentialStore implements CredentialResolver {
 
   async set(key: string, value: string): Promise<void> {
     await this.ensureLoaded();
+    this.refuseOverDamaged();
     const k = validKey(key);
     if (typeof value !== 'string' || value.length === 0 || value.length > MAX_CREDENTIAL_LENGTH)
       throw new CredentialStoreError('INVALID_VALUE', `credential value must be 1–${MAX_CREDENTIAL_LENGTH} characters`);
@@ -230,6 +243,7 @@ export class CredentialStore implements CredentialResolver {
 
   async delete(key: string): Promise<void> {
     await this.ensureLoaded();
+    this.refuseOverDamaged();
     const k = validKey(key);
     if (!(k in this.entries)) return;
     delete this.entries[k];
@@ -239,6 +253,15 @@ export class CredentialStore implements CredentialResolver {
 
   private async ensureLoaded(): Promise<void> {
     if (!this.loaded) await this.load();
+  }
+
+  /** A damaged file that was not set aside is not written over: no change is made. */
+  private refuseOverDamaged(): void {
+    if (this.notSetAside)
+      throw new CredentialStoreError(
+        'CORRUPT',
+        `the damaged key file could not be set aside (${this.notSetAside}); no key is stored until it can be. Restart OP-CB to try again`,
+      );
   }
 
   private persist(): Promise<void> {
