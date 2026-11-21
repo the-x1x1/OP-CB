@@ -21,6 +21,7 @@ async function shell() {
   const settings = new Map<string, Record<string, unknown>>();
   const later = () => new Promise((r) => setTimeout(r, 5));
   let failNext = false;
+  const eventsAsked: string[][] = [];
   const client = {
     contractVersion: demo.contractVersion,
     on: demo.on.bind(demo),
@@ -40,6 +41,23 @@ async function shell() {
         const r = request as { providerId: string; settings: Record<string, unknown> };
         settings.set(r.providerId, r.settings);
         return r.settings;
+      }
+      if (channel === 'world.events') {
+        const r = request as { eventTypes?: string[] };
+        eventsAsked.push(r.eventTypes ?? []);
+        await later();
+        await later();
+        return {
+          items: (r.eventTypes ?? []).map((type, i) => ({
+            id: `event:${type}:${i}`,
+            type,
+            title: type,
+            severity: 'MINOR',
+            startTime: '2026-11-20T07:00:00.000Z',
+            sourceIds: [],
+            objectIds: [],
+          })),
+        };
       }
       if (channel === 'settings.set') {
         // Answered later, as over IPC; the demo keeps the settings and merges the patch.
@@ -62,7 +80,7 @@ async function shell() {
     hosts: { get: () => null, set: () => {} },
     now: () => t++,
   });
-  return { actions, collections, settings, state: () => state, refuseNext: () => (failNext = true) };
+  return { actions, collections, settings, eventsAsked, state: () => state, refuseNext: () => (failNext = true) };
 }
 
 test('collections: items added one straight after another are all kept', async () => {
@@ -151,4 +169,23 @@ test('settings: pass alerts and the home view changed one straight after another
 
   await Promise.all([s.actions.setHomeFlyOnStart(true), s.actions.clearHome(), s.actions.setHomeFlyOnStart(true)]);
   assert.deepEqual(s.state().session.settings?.home, { view: null, flyOnStart: true }, 'applied in the order asked');
+});
+
+test("lenses: a lens chosen straight after another shows its own events, not the first one's", async () => {
+  const s = await shell();
+  const withEvents = s.state().lenses.lenses.filter((l) => l.eventTypes.length > 0);
+  assert.ok(withEvents.length >= 2, 'two lenses with events to choose between');
+  const [a, b] = withEvents as [(typeof withEvents)[0], (typeof withEvents)[0]];
+  const onlyInA = a.eventTypes.filter((t) => !b.eventTypes.includes(t));
+  assert.ok(onlyInA.length > 0, `${a.id} has an event type ${b.id} does not`);
+  const before = new Set(s.state().world.events.keys());
+  await Promise.all([s.actions.setLens(a.id), s.actions.setLens(b.id)]);
+  assert.equal(s.state().lenses.activeId, b.id);
+  const added = [...s.state().world.events.values()].filter((e) => !before.has(e.id));
+  assert.ok(added.length > 0, "the second lens's events are there");
+  assert.deepEqual(
+    added.filter((e) => onlyInA.includes(e.type)).map((e) => e.type),
+    [],
+    'and none that only the first lens asked for',
+  );
 });

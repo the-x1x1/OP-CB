@@ -243,6 +243,8 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
    * the second save would undo the first. `change` reads the state when its turn comes.
    */
   const turns = new Map<string, Promise<void>>();
+  /** How many times a lens has been chosen; see setLens. */
+  let lensAsked = 0;
   function inTurn(key: string, change: () => Promise<void>): Promise<void> {
     const run = (turns.get(key) ?? Promise.resolve()).then(change, change);
     const settled = run.then(
@@ -655,10 +657,15 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       dispatch({ type: 'lenses/activate', id });
       hosts.get()?.setLens(lens);
       await updateSettings({ activeLensId: id });
-      if (lens.eventTypes.length) {
+      // Another lens chosen while this one was saved or its events read: those events are for
+      // a lens no longer shown, and are not added. (Counted, not read from the state: the
+      // answer to this lens's save sets the state's lens back to this one for a moment.)
+      const asked = ++lensAsked;
+      const stillShown = () => asked === lensAsked;
+      if (lens.eventTypes.length && stillShown()) {
         try {
           const events = await client.request('world.events', { eventTypes: lens.eventTypes, limit: 500 });
-          dispatch({ type: 'world/events', events: events.items });
+          if (stillShown()) dispatch({ type: 'world/events', events: events.items });
         } catch (err) {
           console.warn('[opcb] events for lens failed:', describeError(err));
         }

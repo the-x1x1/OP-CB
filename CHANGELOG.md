@@ -108,6 +108,9 @@ Versioning: [semantic versioning](https://semver.org/).
   collection could replace the first. Such changes now wait their turn, and an object asked
   for twice is still collected once. The same for satellites added to pass alerts (three
   added quickly kept only the last) and for the home view and its fly-on-start setting.
+- Two lenses chosen one straight after the other: the first lens's events, arriving late,
+  were added to what the window held under the second, for up to two minutes until the
+  next events refresh.
 - Command Center walkthroughs: a check that took a while to come back undid what was done
   while it ran — Back, Skip or another step chosen — and put the walkthrough back on the
   step that was checked. The result is now recorded on that step in the walkthrough as it
