@@ -112,6 +112,10 @@ Versioning: [semantic versioning](https://semver.org/).
 - A source switched off while its map layers were being read (a WMS or WMTS service slow
   to answer) could have those layers put back in the layer list after it was off. An
   answer that arrives after the source stopped, or after a later asking, is now dropped.
+- A source switched off while it was being asked could put its objects back on the map when
+  the answer came, if the source did not itself stop on being told to. An answer for a
+  source that has stopped is now dropped, and a source switched off and on again during
+  that time is asked afresh.
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
   The same for the emergency references when the library folder could not be made.

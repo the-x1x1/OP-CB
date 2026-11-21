@@ -2045,3 +2045,106 @@ test('a poll is complete only when it is all the source lists, under the setting
   assert.equal(await poll(), true, 'empty twice: believed');
   await host.dispose();
 });
+
+test('a poll that answers after its source was switched off puts nothing on the map', async () => {
+  const clock = new testing.VirtualClock(Date.parse('2026-09-21T08:05:00.000Z'));
+  const { host } = makeHost(
+    clock,
+    fakeFetch(() => new Response(fixture('normal.geojson'), { status: 200 })),
+  );
+  const usgs = createProvider();
+  // The real source, except that its answer is held back and it does not look at the signal
+  // it is given — as a source reading a local file or a slow parser may not.
+  let release: () => void = () => undefined;
+  let held: Promise<void> | undefined;
+  const slow: import('@opcb/provider-sdk').WorldProvider = {
+    manifest: usgs.manifest,
+    initialize: (c) => usgs.initialize(c),
+    start: () => usgs.start(),
+    stop: () => usgs.stop(),
+    health: () => usgs.health(),
+    query: async (q) => {
+      const observations = await usgs.query!({ ...q, signal: new AbortController().signal });
+      if (held) await held;
+      return observations;
+    },
+  };
+  const batches: number[] = [];
+  host.onObservations((b) => batches.push(b.observations.length));
+  host.register(slow);
+  await host.start();
+  await host.setEnabled(usgs.manifest.id, true);
+  await host.pollNow(usgs.manifest.id);
+  assert.ok(batches.length === 1 && batches[0]! > 0, 'while it runs, a poll is admitted');
+
+  held = new Promise<void>((r) => (release = r));
+  const polling = host.pollNow(usgs.manifest.id);
+  await new Promise((r) => setImmediate(r));
+  await host.setEnabled(usgs.manifest.id, false);
+  release();
+  await polling;
+  await new Promise((r) => setImmediate(r));
+  assert.equal(batches.length, 1, 'the answer of a source that is off is not admitted');
+  assert.equal(host.health.get(usgs.manifest.id)?.health.status, 'DISABLED');
+
+  // Off and on again while a poll is out: the old poll's answer is not the new run's.
+  await host.setEnabled(usgs.manifest.id, true);
+  held = undefined;
+  await host.pollNow(usgs.manifest.id);
+  assert.equal(batches.length, 2);
+  await host.dispose();
+});
+
+test('a source switched off and on while a poll is out is polled afresh once that poll comes back', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: Date.parse('2026-09-21T08:05:00.000Z') });
+  const clock = { now: () => Date.now() };
+  const usgs = createProvider();
+  const host = new ProviderHost({
+    clock: clock as never,
+    loggerHub: new LoggerHub({ level: 'debug', sinks: [new RingBufferSink()] }),
+    fetchImpl: fakeFetch(() => new Response(fixture('normal.geojson'), { status: 200 })),
+    sleep: async () => {},
+    credentials: { get: async () => undefined, has: async () => false },
+    cacheStore: (_id, allowed) => new testing.MemoryCache(clock as never, allowed),
+    settingsStore: () => new testing.MemorySettings({}),
+  });
+  let queries = 0;
+  let release: () => void = () => undefined;
+  let held: Promise<void> | undefined = new Promise<void>((r) => (release = r));
+  host.register({
+    manifest: { ...usgs.manifest, enabledByDefault: true },
+    initialize: (c) => usgs.initialize(c),
+    start: () => usgs.start(),
+    stop: () => usgs.stop(),
+    health: () => usgs.health(),
+    query: async (q) => {
+      queries++;
+      const observations = await usgs.query!({ ...q, signal: new AbortController().signal });
+      if (held) await held;
+      return observations;
+    },
+  });
+  const batches: number[] = [];
+  host.onObservations((b) => batches.push(b.observations.length));
+  const flush = async () => {
+    for (let i = 0; i < 30; i++) await new Promise((r) => setImmediate(r));
+  };
+  await host.start();
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(queries, 1, 'the first poll is out');
+  await host.setEnabled(usgs.manifest.id, false);
+  await host.setEnabled(usgs.manifest.id, true);
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(queries, 1, 'the new run finds a poll still out');
+  held = undefined;
+  release();
+  await flush();
+  t.mock.timers.tick(0);
+  await flush();
+  assert.equal(queries, 2, 'and polls for itself once that one is back');
+  assert.equal(batches.length, 1, "only the new run's answer is admitted");
+  assert.ok(batches[0]! > 0);
+  await host.dispose();
+});

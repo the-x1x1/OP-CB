@@ -1054,6 +1054,10 @@ export class ProviderHost {
     const timeout = setTimeout(() => abort.abort(new ProviderError('TIMEOUT', `poll exceeded ${budget}ms`)), budget);
     h.incompleteReason = undefined;
     const generation = h.settingsGeneration;
+    // Stopped (or stopped and started again) while the source was asked: this answer belongs
+    // to a run that is over. A stop cancels the request, but a source need not notice.
+    const run = h.run;
+    const overtaken = () => !h.running || h.run !== run;
     try {
       const observations = await h.provider.query({
         signal: abort.signal,
@@ -1063,6 +1067,7 @@ export class ProviderHost {
           ? { center: this.viewportCenter }
           : {}),
       });
+      if (overtaken()) return undefined;
       // All the source lists, under the same settings as the last poll: what it leaves out is
       // no longer listed. Not a read of the view, not an answer the provider said is partial,
       // not the first poll after its settings changed (a narrower area asked for), nor one
@@ -1092,7 +1097,7 @@ export class ProviderHost {
         err instanceof ProviderError
           ? err
           : new ProviderError('INTERNAL', err instanceof Error ? err.message : String(err), { cause: err });
-      if (pe.code === 'CANCELLED') return undefined;
+      if (pe.code === 'CANCELLED' || overtaken()) return undefined;
       if (pe.setupRequired) {
         // Not a failure: the source waits for the operator (an address, a folder). It is
         // asked again when its settings change, not on a back-off.
@@ -1153,6 +1158,9 @@ export class ProviderHost {
         h.settingsChangedInPoll = false;
         if (h.running && !h.waitingForKey) this.schedule(h, 250);
       }
+      // Started again while this poll was out: the new run's first poll found one in flight
+      // and did nothing, so it is made now.
+      if (h.running && h.run !== run) this.schedule(h, 0);
     }
   }
 
