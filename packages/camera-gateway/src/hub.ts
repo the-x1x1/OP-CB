@@ -86,8 +86,22 @@ export class CameraHub {
     return this.opts.direct;
   }
 
+  /**
+   * Registrations and removals take turns, in the order asked. A camera with a login waits for
+   * the secure store before it is listed; a removal, or a registration of the same camera
+   * without the login, asked during that wait finished first and was then undone (the camera
+   * back in the list, or back with the login it had just been saved without).
+   */
+  private changes: Promise<unknown> = Promise.resolve();
+  private inTurn<T>(change: () => Promise<T>): Promise<T> {
+    const run = this.changes.then(change, change);
+    this.changes = run.catch(() => undefined);
+    return run;
+  }
+
   async register(source: CameraSourceInput): Promise<CameraRegistration> {
-    return this.gatewayFor(source).register(source);
+    const gateway = this.gatewayFor(source);
+    return this.inTurn(() => gateway.register(source));
   }
 
   async snapshot(idOrRef: string): Promise<CameraSnapshot> {
@@ -104,8 +118,10 @@ export class CameraHub {
 
   async unregister(cameraId: string): Promise<void> {
     if (!isCameraId(cameraId)) throw new CameraError('NOT_FOUND', 'unknown camera id');
-    await this.opts.direct.unregister(cameraId);
-    await this.opts.go2rtc?.unregister(cameraId);
+    await this.inTurn(async () => {
+      await this.opts.direct.unregister(cameraId);
+      await this.opts.go2rtc?.unregister(cameraId);
+    });
   }
 
   async list(): Promise<CameraListEntry[]> {

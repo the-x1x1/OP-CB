@@ -43,6 +43,11 @@ Versioning: [semantic versioning](https://semver.org/).
   switch-on, finishing last, wrote "on" to the settings file. Each switch now writes what the
   source is when it finishes, not what that request asked; the same for a connector
   definition's switch. In 0.7.4 too.
+- **A camera removed, or saved again without its login, while it was still being saved with
+  one came back as it was before.** A camera with a login waits for the secure store before
+  it is listed; a change asked for during that wait finished first and was then undone: the
+  camera came back to the list, or with the login it had just been saved without.
+  Camera changes now take turns in the order asked. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,
