@@ -143,8 +143,14 @@ export async function moveDataTo(
       try {
         await p.copyFile(path.join(from, name), path.join(resolved, name));
         carried.push(name);
-      } catch {
-        /* not there: nothing to carry */
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue; // not there: nothing to carry
+        // There but not copied (a full drive, a refused read): going on would start the next
+        // session without it. What was copied is taken back, so the folder can be chosen again.
+        for (const done of carried) await p.rm(path.join(resolved, done), { force: true }).catch(() => undefined);
+        await p.rm(path.join(resolved, name), { force: true, recursive: true }).catch(() => undefined);
+        const code = (err as NodeJS.ErrnoException).code;
+        return { ok: false, reason: `${name} could not be copied (${code ?? 'unknown error'}); nothing was moved` };
       }
     }
     await p.writeFile(

@@ -57,6 +57,11 @@ Versioning: [semantic versioning](https://semver.org/).
   on. In 0.7.4 too.
 - Adding a 65th pack publisher from a key file said "internal error" rather than that 64 is
   the most there can be. In 0.7.4 too.
+- **Moving the data folder went on when one of the small files could not be copied** (a full
+  drive, a refused read): the move was reported done, and the next start, in the new folder,
+  was without that file — the settings, the keys, the places. Only a file that is not there is
+  passed over now; any other failure stops the move, takes back what was copied and says
+  which file. In 0.7.4 too.
 - **An export to a file that could not be written said only "internal error".** On Windows
   that is what saving a checklist over a CSV still open in a spreadsheet did; the same for a
   folder since removed, a full or read-only drive, or a place the account may not write.

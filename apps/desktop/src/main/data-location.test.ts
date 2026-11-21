@@ -83,3 +83,18 @@ test('moving: a folder OP-CB already uses is adopted as it is; anything else non
   assert.equal((await moveDataTo(path.join(usual, 'inside'), usual, usual)).ok, false, 'not inside the data folder');
   assert.equal((await moveDataTo('relative/path', usual, usual)).ok, false);
 });
+
+test('moving: a file that is there but cannot be copied stops the move; nothing is pointed at', async () => {
+  const usual = await tmp();
+  await fs.writeFile(path.join(usual, 'credentials.json'), '{"version":1}');
+  // settings.json there, but not a file that copies (a full drive or a refused read does the
+  // same): the move used to go on without it, and the next start found no settings.
+  await fs.mkdir(path.join(usual, 'settings.json'));
+  const drive = path.join(await tmp(), 'OP-CB');
+  const r = await moveDataTo(drive, usual, usual);
+  assert.equal(r.ok, false);
+  if (r.ok) return;
+  assert.match(r.reason, /settings\.json could not be copied/);
+  assert.ok(!(await fs.readdir(usual)).includes(POINTER_FILE), 'no pointer: the next start uses the usual folder');
+  assert.deepEqual(await fs.readdir(drive), [], 'and the chosen folder is left empty, so it can be chosen again');
+});
