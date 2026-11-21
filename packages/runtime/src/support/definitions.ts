@@ -238,12 +238,21 @@ export class ConnectorDefinitions {
     }
     if (res.status < 200 || res.status >= 300) throw new UnavailableError(`the URL answered ${res.status}`);
     const contentType = res.headers['content-type'];
-    const drafted = draftDefinition({
-      url,
-      text: res.text(),
-      bytes: res.bytes(),
-      ...(contentType ? { contentType } : {}),
-    });
+    let drafted: ReturnType<typeof draftDefinition>;
+    try {
+      drafted = draftDefinition({
+        url,
+        text: res.text(),
+        bytes: res.bytes(),
+        ...(contentType ? { contentType } : {}),
+      });
+    } catch (err) {
+      // The drafter says why it cannot draft this answer (not JSON or CSV, no list of records,
+      // …). Said as a plain error it reached the window as "internal error".
+      throw new InvalidRequestError(
+        `the sample could not be drafted: ${err instanceof Error ? err.message : 'unreadable answer'}`,
+      );
+    }
     const verdict = defaultConnectorRegistry.validate(drafted.definition);
     return {
       definition: drafted.definition as Record<string, JsonValue>,

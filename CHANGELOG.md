@@ -51,6 +51,10 @@ Versioning: [semantic versioning](https://semver.org/).
 - After the computer's clock was put back, a watch zone's new entries were folded into a toast
   of the same zone still on screen from before the change, however long ago that was by the
   clock, rather than raising one of their own. In 0.7.4 too.
+- Adding a source from an address whose answer could not be drafted (a web page, JSON with
+  no list of records in it) said only "internal error (details are in the application log)".
+  It now says why: the sample is neither JSON nor CSV, no array of records was found, and so
+  on. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,
