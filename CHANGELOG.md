@@ -55,6 +55,8 @@ Versioning: [semantic versioning](https://semver.org/).
   no list of records in it) said only "internal error (details are in the application log)".
   It now says why: the sample is neither JSON nor CSV, no array of records was found, and so
   on. In 0.7.4 too.
+- Adding a 65th pack publisher from a key file said "internal error" rather than that 64 is
+  the most there can be. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,

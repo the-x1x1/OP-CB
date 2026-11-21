@@ -1095,7 +1095,14 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       }
       const key = parsePublisherKeyFile(text);
       if (!key.ok) return { status: core.offlineStatus(), added: null, issues: [key.reason] };
-      const publisher = await core.packs.addPublisher(key.name, key.publicKey);
+      let publisher;
+      try {
+        publisher = await core.packs.addPublisher(key.name, key.publicKey);
+      } catch (err) {
+        // The registry's reason (at most 64 publishers): a plain error reached the window as
+        // "internal error".
+        return { status: core.offlineStatus(), added: null, issues: [errorText(err)] };
+      }
       const status = core.offlineStatus();
       core.emitter.emit('offline.changed', status);
       return { status, added: publisher.name, issues: [] };

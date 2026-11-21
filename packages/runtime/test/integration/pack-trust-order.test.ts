@@ -104,3 +104,31 @@ const KEYS = 8;
 function keysOf(round: number): string[] {
   return Array.from({ length: KEYS }, (_, i) => Buffer.alloc(32, round * KEYS + i + 1).toString('base64'));
 }
+
+test('integration: a publisher past the limit is refused with the reason, not as an internal error', async () => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-trust-limit-'));
+  try {
+    const h = await startRuntime({ dataDir, providerInstances: [] });
+    try {
+      const files: string[] = [];
+      for (let i = 0; i < 65; i++) {
+        const file = path.join(dataDir, `k${i}.worldpack-pub`);
+        await fs.writeFile(file, publisherKeyFile(`Key ${i}`, Buffer.alloc(32, 100 + i).toString('base64')));
+        files.push(file);
+      }
+      h.host.openQueue.push(...files);
+      for (let i = 0; i < 64; i++) {
+        const r = await h.client.request('offline.importPublisher', undefined);
+        assert.equal(r.added, `Key ${i}`);
+      }
+      const last = await h.client.request('offline.importPublisher', undefined);
+      assert.equal(last.added, null);
+      assert.match(last.issues.join(' '), /at most 64 publishers/);
+      assert.equal(trustOf(last.status).publishers.length, 64);
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});
