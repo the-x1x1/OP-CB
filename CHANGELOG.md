@@ -57,6 +57,12 @@ Versioning: [semantic versioning](https://semver.org/).
   on. In 0.7.4 too.
 - Adding a 65th pack publisher from a key file said "internal error" rather than that 64 is
   the most there can be. In 0.7.4 too.
+- **An export to a file that could not be written said only "internal error".** On Windows
+  that is what saving a checklist over a CSV still open in a spreadsheet did; the same for a
+  folder since removed, a full or read-only drive, or a place the account may not write.
+  Every export (objects, tracks, readings, a measured line, collections, watch zones, the
+  preparedness inventory, a picture of the map, the diagnostics bundle) now says the file
+  could not be written and why. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,

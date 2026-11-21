@@ -39,7 +39,15 @@ import {
   type DiagnosticsSnapshot,
 } from '@opcb/ipc-contract';
 import type { HostBridge, RequestHandlers, WorldRuntime } from '@opcb/runtime';
-import { chooseMode, libraryPath, modeState, readLibraryOpen, serviceOrigin } from '@opcb/runtime';
+import {
+  chooseMode,
+  libraryPath,
+  modeState,
+  readLibraryOpen,
+  serviceOrigin,
+  unwritable,
+  writeExportFile,
+} from '@opcb/runtime';
 import type { ProviderManifest } from '@opcb/provider-sdk';
 import { MAP_PROVIDER_CATALOG } from '@opcb/render-core';
 import { APP_ORIGIN, DEV_SERVER_ORIGIN, isTrustedRendererUrl } from '../shared/app-origin.js';
@@ -642,7 +650,7 @@ async function bootstrap(): Promise<void> {
         filters: [{ name: 'PNG image', extensions: ['png'] }],
       });
       if (chosen.canceled || !chosen.filePath) return { cancelled: true } as const;
-      await fs.writeFile(chosen.filePath, image.toPNG());
+      await writeExportFile(chosen.filePath, image.toPNG());
       const size = image.getSize();
       return { path: chosen.filePath, width: size.width, height: size.height };
     },
@@ -660,13 +668,17 @@ async function bootstrap(): Promise<void> {
       const chosen = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts);
       if (chosen.canceled || !chosen.filePath) return { cancelled: true } as const;
       const snapshot = (await runtime.handlers['diagnostics.get'](undefined, ctx)) as DiagnosticsSnapshot;
-      await exportBundle(path.dirname(chosen.filePath), {
-        snapshot,
-        logFile: dirs.logFile,
-        findings: startup.findings.map((f) => ({ ...f })),
-        fileName: path.basename(chosen.filePath),
-        extraRoots: [dirs.root],
-      });
+      try {
+        await exportBundle(path.dirname(chosen.filePath), {
+          snapshot,
+          logFile: dirs.logFile,
+          findings: startup.findings.map((f) => ({ ...f })),
+          fileName: path.basename(chosen.filePath),
+          extraRoots: [dirs.root],
+        });
+      } catch (err) {
+        throw unwritable(err);
+      }
       return { path: chosen.filePath, redacted: true } as const;
     },
   };

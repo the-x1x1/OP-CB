@@ -83,6 +83,7 @@ import {
   requireCollection,
   requireLens,
   requireWatchZone,
+  UnavailableError,
   validateCollection,
   validateRegion,
 } from './validate.js';
@@ -716,7 +717,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         exportedAt: new Date(core.clock.now()).toISOString(),
         attribution: [...attribution].sort(),
       });
-      await fs.writeFile(choice.path, `${body}\n`, 'utf8');
+      await writeExportFile(choice.path, `${body}\n`);
       core.log.info('collection exported', { format: geo, places: places.length, skipped });
       return { path: choice.path, places: places.length, skipped };
     },
@@ -797,7 +798,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       });
       if ('cancelled' in choice) return { cancelled: true };
       const out = zonesToGeodata(format, zones, new Date(core.clock.now()).toISOString());
-      await fs.writeFile(choice.path, `${out.text}\n`, 'utf8');
+      await writeExportFile(choice.path, `${out.text}\n`);
       return { path: choice.path, zones: out.written, skipped: out.skipped };
     },
     'watchzones.import': async () => {
@@ -919,7 +920,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         format === 'csv'
           ? prepCsv(records)
           : `${JSON.stringify({ version: 1, kind: 'opcb-preparedness', records }, null, 2)}\n`;
-      await fs.writeFile(choice.path, body, 'utf8');
+      await writeExportFile(choice.path, body);
       core.log.info('preparedness exported', { format, records: records.length });
       return { path: choice.path, records: records.length };
     },
@@ -1161,7 +1162,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         closed,
         new Date(core.clock.now()).toISOString(),
       );
-      await fs.writeFile(choice.path, `${body}\n`, 'utf8');
+      await writeExportFile(choice.path, `${body}\n`);
       return { path: choice.path, points: points.length };
     },
     'export.readings': async (request) => exportReadings(core, request),
@@ -1440,6 +1441,39 @@ export function prepCsv(records: PrepRecord[]): string {
   return `${['checked', ...PREP_CSV_COLUMNS].join(',')}\n${rows.map((r) => `,${r}`).join('\n')}\n`;
 }
 
+/**
+ * Write an export where the operator chose. A file that cannot be written there (a folder's
+ * name, a folder since removed, a file another program holds open, a full or read-only drive)
+ * is said in words the window shows: a plain error reached it as "internal error".
+ */
+export async function writeExportFile(file: string, data: string | Uint8Array): Promise<void> {
+  try {
+    await fs.writeFile(file, data);
+  } catch (err) {
+    throw unwritable(err);
+  }
+}
+
+/** Why a chosen file could not be written, as an error the window shows. */
+export function unwritable(err: unknown): UnavailableError {
+  const code = (err as NodeJS.ErrnoException).code;
+  const why =
+    code === 'EACCES' || code === 'EPERM'
+      ? 'this account may not write there'
+      : code === 'EBUSY'
+        ? 'another program has the file open'
+        : code === 'EISDIR'
+          ? 'that is a folder'
+          : code === 'ENOENT' || code === 'ENOTDIR'
+            ? 'the folder is not there'
+            : code === 'ENOSPC'
+              ? 'the drive is full'
+              : code === 'EROFS'
+                ? 'the drive is read-only'
+                : (code ?? 'unknown error');
+  return new UnavailableError(`the file could not be written: ${why}`);
+}
+
 function requireId(value: unknown, field: string): asserts value is string {
   if (typeof value !== 'string' || !value.trim() || value.length > 512)
     throw new InvalidRequestError(`${field} must be a non-empty string`);
@@ -1590,7 +1624,7 @@ async function exportObjects(
               null,
               2,
             );
-  await fs.writeFile(choice.path, `${body}\n`, 'utf8');
+  await writeExportFile(choice.path, `${body}\n`);
   core.log.info('objects exported', { format, objects: allowed.length, skippedProviders: skipped.size });
   return { path: choice.path, skippedProviders: [...skipped].sort() };
 }
@@ -1673,7 +1707,7 @@ async function exportTrack(
             null,
             2,
           );
-  await fs.writeFile(choice.path, `${body}\n`, 'utf8');
+  await writeExportFile(choice.path, `${body}\n`);
   core.log.info('track exported', { format, points: points.length });
   return { path: choice.path, points: points.length };
 }
@@ -1730,7 +1764,7 @@ async function exportReadings(
     ['observedAt', ...keys].join(','),
     ...readings.map((r) => [r.observedAt, ...keys.map((k) => r.values[k] ?? '')].join(',')),
   ].join('\n');
-  await fs.writeFile(choice.path, `${body}\n`, 'utf8');
+  await writeExportFile(choice.path, `${body}\n`);
   core.log.info('readings exported', { rows: readings.length, keys: keys.length });
   return { path: choice.path, rows: readings.length };
 }
