@@ -38,6 +38,13 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A computer clock set years ahead deleted all movement history at the next sweep**: ages
+  are taken from the clock, so every record looked expired. When the clock is more than a week
+  past the newest history there is, the sweep now deletes and thins nothing by age, and says
+  so in the log, until data comes in near the clock's time again (which, with any source
+  running, is within minutes once the clock is right). The size cap, which does not read the
+  clock, still applies. History also stops being trimmed by age while every source is off for
+  more than a week. In 0.7.4 too.
 - **A key in an address pasted to add a source was written into the definition file as
   typed** (`?appid=…`, `?key=…`, `?token=…`): a key on disk in plain text. Drafting now takes
   it out of the address, keeps it in the key store (the OS-protected one) and names it in the

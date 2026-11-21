@@ -146,6 +146,11 @@ export interface SweepReport {
   deduped: Array<{ partition: string; rowsBefore: number; rowsAfter: number; bytesBefore: number; bytesAfter: number }>;
   /** Partitions deleted, oldest first, to bring history under the operator's size cap. */
   capped: PartitionMeta[];
+  /**
+   * Set when the sweep held off deleting and thinning by age because the clock is far ahead of
+   * the newest history there is (`CLOCK_AHEAD_HOLD_MS`): what it says, for the log and tests.
+   */
+  held?: string;
   errors: Array<{ partition: string; error: string }>;
 }
 
@@ -184,6 +189,12 @@ const MAX_REMEMBERED_OBJECTS = 500_000;
 const DEDUPE_MAX_DISTINCT = 2_000_000;
 const DEDUPE_IN_MEMORY_MAX_BYTES = 64 * 1024 * 1024;
 /** A backend without streaming rewrites holds a partition whole; past this it is left for the size cap. */
+/**
+ * How far the clock may be past the newest history before the age sweep holds off: a week.
+ * With any source running, new history keeps the gap to minutes; history only stops for a
+ * week when every source does.
+ */
+export const CLOCK_AHEAD_HOLD_MS = 7 * 24 * 60 * 60 * 1000;
 const REWRITE_IN_MEMORY_MAX_BYTES = 256 * 1024 * 1024;
 
 export interface HistoryUsage {
@@ -473,7 +484,20 @@ export class HistoryStore {
       capped: [],
     };
     const partitions = await this.backend.listPartitions();
-    for (const meta of partitions) {
+    // The operator's decision (2026-11-21): ages are taken from the computer's clock, so a clock
+    // set years ahead (a flat motherboard battery, a bad time sync, a date typed wrong) made all
+    // history look expired and the next sweep deleted it. When the newest history is far
+    // behind the clock, nothing is deleted or thinned by age until data comes in near the
+    // clock's time again; the size cap, which does not read the clock, still applies.
+    const newest = partitions.reduce((n, m) => Math.max(n, Date.parse(m.maxObservedAt) || 0), 0);
+    if (partitions.length && newest > 0 && now - newest > CLOCK_AHEAD_HOLD_MS) {
+      report.held = `the clock (${report.at}) is ${Math.round((now - newest) / 86_400_000)} days past the newest history (${new Date(newest).toISOString()}); nothing is deleted by age until data comes in near the clock's time`;
+      this.log.warn('history: retention held, clock far ahead of the newest history', {
+        clock: report.at,
+        newest: new Date(newest).toISOString(),
+      });
+    }
+    for (const meta of report.held ? [] : partitions) {
       const policy = this.retentionPolicyFor(meta.objectType);
       const dataPolicy = this.policies(meta.providerId);
       if (!dataPolicy && !USER_DATA_PROVIDER_IDS.includes(meta.providerId)) {
