@@ -1108,13 +1108,21 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       return { status, added: publisher.name, issues: [] };
     },
     'offline.removePublisher': async ({ keyId }) => {
-      await core.packs.removePublisher(keyId);
+      try {
+        await core.packs.removePublisher(keyId);
+      } catch (err) {
+        throw new UnavailableError(errorText(err));
+      }
       const status = core.offlineStatus();
       core.emitter.emit('offline.changed', status);
       return status;
     },
     'offline.setRequireTrusted': async ({ required }) => {
-      await core.packs.setRequireTrusted(required === true);
+      try {
+        await core.packs.setRequireTrusted(required === true);
+      } catch (err) {
+        throw new UnavailableError(errorText(err));
+      }
       const status = core.offlineStatus();
       core.emitter.emit('offline.changed', status);
       return status;

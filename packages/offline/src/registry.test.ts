@@ -188,3 +188,29 @@ test('registry: trust changes asked for at the same moment are all kept', async 
     await fs.rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test('registry: a trust file that does not read is not written over by the next trust change', async () => {
+  const dataDir = await tempDir();
+  try {
+    const reg = registry(dataDir);
+    await reg.refresh();
+    const key = Buffer.alloc(32, 7).toString('base64');
+    await reg.addPublisher('Kept', key);
+    await reg.setRequireTrusted(true);
+    const trustFile = path.join(dataDir, 'worldpacks', 'trust.json');
+    const good = await fs.readFile(trustFile, 'utf8');
+    // Damaged on disk (a half-written copy from another tool, a sync conflict): the next change
+    // read it as no publishers and the switch off, and wrote that back with itself.
+    await fs.writeFile(trustFile, good.slice(0, 20));
+    await assert.rejects(reg.addPublisher('Other', Buffer.alloc(32, 8).toString('base64')), /trust\.json/);
+    await assert.rejects(reg.setRequireTrusted(false), /trust\.json/);
+    assert.equal(await fs.readFile(trustFile, 'utf8'), good.slice(0, 20), 'nothing was written over it');
+    // Mended, changes go on as before.
+    await fs.writeFile(trustFile, good);
+    await reg.addPublisher('Other', Buffer.alloc(32, 8).toString('base64'));
+    assert.equal(reg.trustState().publishers.length, 2);
+    assert.equal(reg.trustState().requireTrusted, true);
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

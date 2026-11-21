@@ -132,3 +132,29 @@ test('integration: a publisher past the limit is refused with the reason, not as
     await fs.rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test('integration: a trust file that does not read refuses changes with the reason', async () => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-trust-damaged-'));
+  try {
+    const h = await startRuntime({ dataDir, providerInstances: [] });
+    try {
+      await h.client.request('offline.setRequireTrusted', { required: true });
+      const trustFile = path.join(dataDir, 'worldpacks', 'trust.json');
+      await fs.writeFile(trustFile, '{"formatVersion":1,"requireTr');
+      for (const run of [
+        () => h.client.request('offline.setRequireTrusted', { required: false }),
+        () => h.client.request('offline.removePublisher', { keyId: '0123456789abcdef' }),
+      ])
+        await assert.rejects(run(), (err: unknown) => {
+          assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
+          assert.match((err as Error).message, /trust\.json/);
+          return true;
+        });
+      assert.equal(await fs.readFile(trustFile, 'utf8'), '{"formatVersion":1,"requireTr');
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

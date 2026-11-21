@@ -78,6 +78,10 @@ Versioning: [semantic versioning](https://semver.org/).
   (file preserved)", but nothing set it aside. It is now renamed to
   `credentials.json.corrupt-<time>` before anything is stored; if that rename fails, no key is
   stored until it succeeds. In 0.7.4 too.
+- **A pack trust file that did not read lost every publisher at the next trust change.** The
+  change read it as no publishers and "only trusted publishers" off, and wrote that back with
+  itself. A trust change now refuses, saying the file does not read, until it reads again;
+  nothing is written over it. In 0.7.4 too.
 - **Moving the data folder went on when one of the small files could not be copied** (a full
   drive, a refused read): the move was reported done, and the next start, in the new folder,
   was without that file — the settings, the keys, the places. Only a file that is not there is

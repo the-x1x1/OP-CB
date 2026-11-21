@@ -511,7 +511,7 @@ export class WorldPackRegistry {
     // which read it), or two asked for together each write back what the other did not see: a
     // publisher added as "only trusted publishers" was switched on left that switch off.
     const publisher = await this.exclusive(async () => {
-      const trust = await this.readTrust();
+      const trust = await this.readTrust({ forChange: true });
       const existing = trust.publishers.find((p) => p.publicKey === publicKey);
       let entry: TrustedPublisher;
       if (existing) {
@@ -533,7 +533,7 @@ export class WorldPackRegistry {
 
   async removePublisher(keyId: string): Promise<boolean> {
     const removed = await this.exclusive(async () => {
-      const trust = await this.readTrust();
+      const trust = await this.readTrust({ forChange: true });
       const before = trust.publishers.length;
       trust.publishers = trust.publishers.filter((p) => p.keyId !== keyId);
       if (trust.publishers.length === before) return false;
@@ -549,7 +549,7 @@ export class WorldPackRegistry {
 
   async setRequireTrusted(required: boolean): Promise<void> {
     await this.exclusive(async () => {
-      const trust = await this.readTrust();
+      const trust = await this.readTrust({ forChange: true });
       trust.requireTrusted = required;
       await this.writeTrust(trust);
     });
@@ -1158,8 +1158,23 @@ export class WorldPackRegistry {
   }
 
   /** trust.json, read defensively: a malformed entry is dropped, never half-trusted. */
-  private async readTrust(): Promise<TrustState> {
-    const raw = await readJsonFile<Partial<TrustState>>(path.join(this.root, TRUST_FILE)).catch(() => undefined);
+  /**
+   * The operator's publishers and policy. A scan reads a file that does not read as none (and
+   * the switch off), as before; a change does not: it would write that back with itself, and
+   * every publisher and the switch were gone. A change refuses until the file reads (or is
+   * removed, which is a fresh start).
+   */
+  private async readTrust(opts: { forChange?: boolean } = {}): Promise<TrustState> {
+    const file = path.join(this.root, TRUST_FILE);
+    const raw = await readJsonFile<Partial<TrustState>>(file).catch((err: unknown) => {
+      if (opts.forChange)
+        throw new Error(
+          `${TRUST_FILE} in the packs folder does not read (${(err as NodeJS.ErrnoException).code ?? 'not JSON'}); no trust change is written over it`,
+        );
+      return undefined;
+    });
+    if (opts.forChange && raw !== undefined && (typeof raw !== 'object' || raw === null || Array.isArray(raw)))
+      throw new Error(`${TRUST_FILE} in the packs folder is not a trust file; no trust change is written over it`);
     const publishers: TrustedPublisher[] = [];
     for (const p of Array.isArray(raw?.publishers) ? raw.publishers : []) {
       if (!p || typeof p !== 'object' || typeof p.publicKey !== 'string' || typeof p.name !== 'string') continue;
