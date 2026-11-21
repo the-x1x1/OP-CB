@@ -162,7 +162,15 @@ export class CameraRelay {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Access-Control-Allow-Origin', '*');
     if (req.method !== 'GET' && req.method !== 'HEAD') return plain(res, 405, 'method not allowed');
-    const url = new URL(req.url ?? '/', 'http://127.0.0.1');
+    // A request line that is not an address (`GET //`) is answered, not left hanging: read
+    // here it threw before anything was sent, and the connection stayed open until the far
+    // end gave up.
+    let url: URL;
+    try {
+      url = new URL(req.url ?? '/', 'http://127.0.0.1');
+    } catch {
+      return plain(res, 400, 'bad request');
+    }
     const m = ROUTE.exec(url.pathname);
     if (!m) return plain(res, 404, 'not found');
     const [, cameraId, token, rel] = m as unknown as [string, string, string, string | undefined];

@@ -116,6 +116,9 @@ Versioning: [semantic versioning](https://semver.org/).
   the answer came, if the source did not itself stop on being told to. An answer for a
   source that has stopped is now dropped, and a source switched off and on again during
   that time is asked afresh.
+- Camera relay: a request whose first line is not an address (`GET //`) was never answered
+  and its connection stayed open until the other end gave up; it is answered 400. (The
+  relay listens on this computer only.)
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
   The same for the emergency references when the library folder could not be made.

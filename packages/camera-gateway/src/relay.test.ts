@@ -220,3 +220,41 @@ test('hls containment helpers', () => {
     'off-origin variant and its tag line are dropped',
   );
 });
+
+test('relay: a request line that is not an address is answered 400, not left open', async () => {
+  const { relay, headers } = relayWith();
+  const port = await relay.start();
+  const unhandled: unknown[] = [];
+  const onUnhandled = (reason: unknown) => unhandled.push(reason);
+  process.on('unhandledRejection', onUnhandled);
+  try {
+    relay.add({ cameraId: CAM, url: 'http://cam.local/snap.jpg', kind: 'snapshot', headers });
+    const net = await import('node:net');
+    const ask = (line: string) =>
+      new Promise<string>((resolve) => {
+        const socket = net.connect(port, '127.0.0.1');
+        let got = '';
+        const timer = setTimeout(() => {
+          socket.destroy();
+          resolve(`no answer: ${got}`);
+        }, 1500);
+        socket.on('data', (d) => (got += d.toString('latin1')));
+        socket.on('close', () => {
+          clearTimeout(timer);
+          resolve(got);
+        });
+        socket.write(`${line}\r\nHost: 127.0.0.1:${port}\r\nConnection: close\r\n\r\n`);
+      });
+    for (const target of ['//', 'http://[', '//[/cam']) {
+      const answer = await ask(`GET ${target} HTTP/1.1`);
+      assert.match(answer, /^HTTP\/1\.1 400 /, `${target}: ${answer.slice(0, 60)}`);
+    }
+    // And the relay still serves.
+    assert.equal((await fetch(relay.urlFor(CAM)!)).status, 200);
+    await new Promise((r) => setTimeout(r, 20));
+    assert.deepEqual(unhandled, []);
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+    await relay.stop();
+  }
+});
