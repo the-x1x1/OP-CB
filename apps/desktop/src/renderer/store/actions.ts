@@ -1549,47 +1549,57 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     },
     // ---- home view (store/home.ts): set from the map, never looked up ----
     /** Make what is on screen the home view. */
-    async setHomeFromView(): Promise<void> {
-      const host = hosts.get();
-      const current = getState().session.settings;
-      if (!host || !current) return;
-      const view = homeFromView(host.getView());
-      await updateSettings({ home: { ...(current.home ?? NO_HOME), view } });
-      notify('Home view set', `${describeHome(view)}. Home or Shift+H returns here.`);
+    setHomeFromView(): Promise<void> {
+      return inTurn('settings:home', async () => {
+        const host = hosts.get();
+        const current = getState().session.settings;
+        if (!host || !current) return;
+        const view = homeFromView(host.getView());
+        await updateSettings({ home: { ...(current.home ?? NO_HOME), view } });
+        notify('Home view set', `${describeHome(view)}. Home or Shift+H returns here.`);
+      });
     },
     /**
      * Pass alerts (Settings `passAlerts`): add or take a satellite off the list, or change how
      * the alerts are given. A notice comes `leadMinutes` before each listed satellite rises over
      * the home view (runtime support/pass-alerts.ts).
      */
-    async setPassAlert(satellite: { objectId: string; name: string }, on: boolean): Promise<void> {
-      const current = getState().session.settings?.passAlerts ?? DEFAULT_PASS_ALERTS;
-      const others = current.satellites.filter((s) => s.objectId !== satellite.objectId);
-      if (on && others.length >= 20) {
-        notify('Pass alerts', 'At most 20 satellites can be watched for passes.', 'MINOR');
-        return;
-      }
-      await updateSettings({
-        passAlerts: {
-          ...current,
-          satellites: on ? [...others, { objectId: satellite.objectId, name: satellite.name.slice(0, 200) }] : others,
-        },
+    setPassAlert(satellite: { objectId: string; name: string }, on: boolean): Promise<void> {
+      return inTurn('settings:passAlerts', async () => {
+        const current = getState().session.settings?.passAlerts ?? DEFAULT_PASS_ALERTS;
+        const others = current.satellites.filter((s) => s.objectId !== satellite.objectId);
+        if (on && others.length >= 20) {
+          notify('Pass alerts', 'At most 20 satellites can be watched for passes.', 'MINOR');
+          return;
+        }
+        await updateSettings({
+          passAlerts: {
+            ...current,
+            satellites: on ? [...others, { objectId: satellite.objectId, name: satellite.name.slice(0, 200) }] : others,
+          },
+        });
       });
     },
-    async setPassAlertOptions(
+    setPassAlertOptions(
       options: Partial<Pick<PassAlertSettings, 'leadMinutes' | 'visibleOnly' | 'desktop'>>,
     ): Promise<void> {
-      const current = getState().session.settings?.passAlerts ?? DEFAULT_PASS_ALERTS;
-      await updateSettings({ passAlerts: { ...current, ...options } });
+      return inTurn('settings:passAlerts', async () => {
+        const current = getState().session.settings?.passAlerts ?? DEFAULT_PASS_ALERTS;
+        await updateSettings({ passAlerts: { ...current, ...options } });
+      });
     },
-    async clearHome(): Promise<void> {
-      await updateSettings({ home: { view: null, flyOnStart: false } });
+    clearHome(): Promise<void> {
+      return inTurn('settings:home', async () => {
+        await updateSettings({ home: { view: null, flyOnStart: false } });
+      });
     },
     /** Fly to the home view once the map is up, at every start (asked on the welcome screen and in Settings). */
-    async setHomeFlyOnStart(on: boolean): Promise<void> {
-      const current = getState().session.settings;
-      if (!current) return;
-      await updateSettings({ home: { ...(current.home ?? NO_HOME), flyOnStart: on } });
+    setHomeFlyOnStart(on: boolean): Promise<void> {
+      return inTurn('settings:home', async () => {
+        const current = getState().session.settings;
+        if (!current) return;
+        await updateSettings({ home: { ...(current.home ?? NO_HOME), flyOnStart: on } });
+      });
     },
     /** Home, Shift+H: fly to the home view, or say how to set one. */
     /**

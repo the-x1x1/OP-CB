@@ -106,7 +106,8 @@ Versioning: [semantic versioning](https://semver.org/).
   and saved whole, and the second was built before the first had come back. Ticking two
   camera regions quickly could leave only the second ticked; a second place added to a
   collection could replace the first. Such changes now wait their turn, and an object asked
-  for twice is still collected once.
+  for twice is still collected once. The same for satellites added to pass alerts (three
+  added quickly kept only the last) and for the home view and its fly-on-start setting.
 - Timeline: going into the past, back to live and into the past again before the first
   reading of history had ended left the map showing live objects under a timeline in the
   past, until the cursor was next moved. The second reading was dropped with the first; it

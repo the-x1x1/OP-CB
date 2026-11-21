@@ -41,6 +41,12 @@ async function shell() {
         settings.set(r.providerId, r.settings);
         return r.settings;
       }
+      if (channel === 'settings.set') {
+        // Answered later, as over IPC; the demo keeps the settings and merges the patch.
+        const answer = await demo.request(channel as never, request as never);
+        await later();
+        return answer;
+      }
       return demo.request(channel as never, request as never);
     },
   } as unknown as DemoClient;
@@ -120,4 +126,29 @@ test('source settings: two keys changed one straight after the other are both sa
     s.actions.setProviderSetting('public-cameras', 'packs.nsw', false),
   ]);
   assert.deepEqual(s.settings.get('public-cameras'), { packs: { nsw: false, queensland: true } });
+});
+
+test('settings: pass alerts and the home view changed one straight after another keep every change', async () => {
+  const s = await shell();
+  const sat = (n: number) => ({ objectId: `satellite:norad:${40000 + n}`, name: `SAT ${n}` });
+  await Promise.all([1, 2, 3].map((n) => s.actions.setPassAlert(sat(n), true)));
+  assert.deepEqual(
+    s.state().session.settings?.passAlerts?.satellites.map((x) => x.name),
+    ['SAT 1', 'SAT 2', 'SAT 3'],
+  );
+  await Promise.all([
+    s.actions.setPassAlert(sat(2), false),
+    s.actions.setPassAlertOptions({ leadMinutes: 15 }),
+    s.actions.setPassAlertOptions({ visibleOnly: true }),
+  ]);
+  const alerts = s.state().session.settings?.passAlerts;
+  assert.deepEqual(
+    alerts?.satellites.map((x) => x.name),
+    ['SAT 1', 'SAT 3'],
+  );
+  assert.equal(alerts?.leadMinutes, 15);
+  assert.equal(alerts?.visibleOnly, true);
+
+  await Promise.all([s.actions.setHomeFlyOnStart(true), s.actions.clearHome(), s.actions.setHomeFlyOnStart(true)]);
+  assert.deepEqual(s.state().session.settings?.home, { view: null, flyOnStart: true }, 'applied in the order asked');
 });
