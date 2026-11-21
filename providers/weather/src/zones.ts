@@ -1,5 +1,5 @@
 import { ProviderError } from '@opcb/provider-sdk';
-import { geometrySchema, simplifyRing, type WorldGeometry } from '@opcb/world-model';
+import { geometrySchema, simplifyRing, type WorldGeometry, elapsedMs } from '@opcb/world-model';
 
 /**
  * NWS zone geometry (api.weather.gov/zones/…).
@@ -166,7 +166,7 @@ export class ZoneGeometryCache {
         }
       }
       const failed = this.failedAt.get(zoneId);
-      if (failed !== undefined && this.deps.now() - failed < ZONE_FAILURE_BACKOFF_MS) continue;
+      if (failed !== undefined && elapsedMs(this.deps.now(), failed) < ZONE_FAILURE_BACKOFF_MS) continue;
       if (budget <= 0) continue;
       budget--;
       let payload: unknown;

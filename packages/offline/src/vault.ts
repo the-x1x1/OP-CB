@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 import { randomBytes } from 'node:crypto';
 import { constants as fsConstants, promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -476,7 +477,9 @@ export class VaultMonitor {
       const prev = this.health.get(v.id);
       const lastWrite = this.lastWriteProbe.get(v.id);
       const due =
-        !prev || lastWrite === undefined || this.now() - lastWrite >= (this.opts.writeProbeEveryMs ?? 10 * 60_000);
+        !prev ||
+        lastWrite === undefined ||
+        elapsedMs(this.now(), lastWrite) >= (this.opts.writeProbeEveryMs ?? 10 * 60_000);
       let next = await probeVault(v, this.probeOpts(due));
       // A state change seen without a write probe is confirmed with one before it is reported.
       if (!due && prev && next.state !== prev.state && vaultReadable(next.state))

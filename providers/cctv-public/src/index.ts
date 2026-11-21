@@ -326,7 +326,7 @@ export class PublicCamerasProvider extends PollingProvider {
   private async saveLastGood(packId: string, observations: Observation[]): Promise<void> {
     const now = this.context.clock.now();
     const saved = this.lastGoodSavedAt.get(packId);
-    if (saved !== undefined && now - saved < LAST_GOOD_SAVE_MS) return;
+    if (saved !== undefined && elapsedMs(now, saved) < LAST_GOOD_SAVE_MS) return;
     this.lastGoodSavedAt.set(packId, now);
     try {
       await this.context.cache.set(

@@ -302,3 +302,34 @@ test('mqtt client: refused hosts, ports and filters never connect; a bad passwor
   assert.ok(!ok.received.some((p) => p.type === PacketType.CONNECT));
   await ok.close();
 });
+
+test('mqtt client: a clock put back does not leave the per-second limit counting for good', async (t) => {
+  const b = await broker();
+  const mqtt = createMqtt({ allowed: (host) => host === '127.0.0.1', resolveSecret: async () => undefined });
+  const messages: string[] = [];
+  const handle = await mqtt.connect(
+    { host: '127.0.0.1', port: b.port, subscriptions: [{ topic: 'a/#' }], maxMessagesPerSecond: 3 },
+    { onMessage: (_topic, payload) => messages.push(new TextDecoder().decode(payload)) },
+  );
+  const client = b.clients[0]!;
+  const send = (...texts: string[]) => {
+    for (const text of texts) client.write(publish('a/b', Buffer.from(text)));
+  };
+  send('1', '2');
+  await until(() => messages.length === 2);
+  // The clock is put back a day (only Date is replaced; the sockets keep real time). By
+  // subtraction the second in which messages are counted would not end for a day, and every
+  // message after the third would be dropped until then.
+  const real = Date.now();
+  t.mock.timers.enable({ apis: ['Date'], now: real - 86_400_000 });
+  send('3', '4', '5', '6');
+  await until(() => messages.length + handle.dropped >= 6);
+  assert.deepEqual(messages, ['1', '2', '3', '4', '5'], 'a new second began when the clock went back');
+  t.mock.timers.setTime(real - 86_400_000 + 1_001);
+  send('7', '8');
+  await until(() => messages.length + handle.dropped >= 8);
+  assert.deepEqual(messages.slice(5), ['7', '8'], 'and the next second is counted afresh');
+  t.mock.timers.reset();
+  handle.close();
+  await b.close();
+});

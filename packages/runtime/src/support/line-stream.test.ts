@@ -90,3 +90,28 @@ test('only loopback in the manifest, or the one named host; nothing listening is
     (e: unknown) => e instanceof ProviderError && e.code === 'OFFLINE' && /nothing is listening/.test(e.message),
   );
 });
+
+test('a line stream: a clock put back does not leave the per-second limits counting for good', async (t) => {
+  const srv = await server(['a\nb\n']);
+  const access = createLocalAccess({ allowedHosts: ['127.0.0.1'], maxLinesPerSecond: 3 });
+  const lines: string[] = [];
+  const h = await access.openLineStream!({ host: '127.0.0.1', port: srv.port }, { onLine: (l) => lines.push(l) });
+  await until(() => lines.length === 2);
+  // A receiver's lines are counted by the second. The clock is put back a day (only Date is
+  // replaced): by subtraction that second would not end for a day, and a ship feed would
+  // deliver one more line and then nothing.
+  const real = Date.now();
+  t.mock.timers.enable({ apis: ['Date'], now: real - 86_400_000 });
+  const settled = () => new Promise((r) => setTimeout(r, 40));
+  srv.clients[0]!.write('c\nd\ne\nf\n');
+  await settled();
+  assert.deepEqual(lines, ['a', 'b', 'c', 'd', 'e'], 'a new second began when the clock went back');
+  assert.equal(h.dropped, 1);
+  t.mock.timers.setTime(real - 86_400_000 + 1_001);
+  srv.clients[0]!.write('g\nh\n');
+  await settled();
+  assert.deepEqual(lines.slice(5), ['g', 'h'], 'and the next second is counted afresh');
+  t.mock.timers.reset();
+  h.close();
+  await srv.close();
+});

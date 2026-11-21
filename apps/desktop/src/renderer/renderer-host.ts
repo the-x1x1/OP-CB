@@ -1,4 +1,4 @@
-import type { GeoBounds, GeoPosition, RasterOverlay } from '@opcb/world-model';
+import { elapsedMs, type GeoBounds, type GeoPosition, type RasterOverlay } from '@opcb/world-model';
 import type {
   AttributionEntry,
   BasemapDescriptor,
@@ -457,7 +457,7 @@ export class DesktopRendererHost implements RendererHostLike {
   private contextLost(): void {
     if (this.recovering || !this.container) return;
     const now = (this.options.now ?? Date.now)();
-    this.recoveries = this.recoveries.filter((t) => now - t < CONTEXT_RECOVERY_WINDOW_MS);
+    this.recoveries = this.recoveries.filter((t) => elapsedMs(now, t) < CONTEXT_RECOVERY_WINDOW_MS);
     if (this.recoveries.length >= CONTEXT_RECOVERIES) {
       const failure = {
         message: `The graphics driver reset ${CONTEXT_RECOVERIES + 1} times in ${CONTEXT_RECOVERY_WINDOW_MS / 60_000} minutes; restart OP-CB, or lower Settings → Rendering → Graphics quality`,

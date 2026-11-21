@@ -3,7 +3,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { silentLogger, type Logger } from '@opcb/core';
 import { readJsonFile, writeFileAtomic } from '@opcb/core/node';
-import { ownEntry, type Clock, type JsonValue } from '@opcb/world-model';
+import { ownEntry, type Clock, type JsonValue, elapsedMs } from '@opcb/world-model';
 import type {
   ByteStreamEvents,
   ByteStreamHandle,
@@ -425,7 +425,7 @@ function openLineStream(
         return;
       }
       const now = Date.now();
-      if (now - windowStart >= 1000) {
+      if (elapsedMs(now, windowStart) >= 1000) {
         windowStart = now;
         inWindow = 0;
       }
@@ -548,7 +548,7 @@ function openByteStream(
     });
     socket.on('data', (chunk: Buffer) => {
       const now = Date.now();
-      if (now - readWindowStart >= 1000) {
+      if (elapsedMs(now, readWindowStart) >= 1000) {
         readWindowStart = now;
         readInWindow = 0;
       }

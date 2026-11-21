@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 /**
  * AIVDM/AIVDO — AIS messages as NMEA 0183 sentences (ITU-R M.1371, IEC 61162), the form every
  * AIS receiver speaks: `!AIVDM,<count>,<number>,<sequence id>,<channel>,<payload>,<fill bits>*<checksum>`.
@@ -305,6 +306,6 @@ export class AivdmAssembler {
   }
 
   private expire(nowMs: number): void {
-    for (const [k, p] of this.pending) if (nowMs - p.at > FRAGMENT_TTL_MS) this.pending.delete(k);
+    for (const [k, p] of this.pending) if (elapsedMs(nowMs, p.at) > FRAGMENT_TTL_MS) this.pending.delete(k);
   }
 }

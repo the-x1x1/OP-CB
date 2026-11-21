@@ -434,12 +434,14 @@ export class AdsbLolProvider extends PollingProvider implements ObjectTrackSourc
       const had = out.get(key);
       if (!had || Date.parse(o.observedAt) > Date.parse(had.observedAt)) out.set(key, o);
     };
-    if (this.point && nowMs - this.point.fetchedAtMs > POINT_KEEP_MS) this.point = undefined;
-    if (this.military && nowMs - this.military.fetchedAtMs > TYPE_KEEP_MS) this.military = undefined;
-    for (const [type, answer] of this.byType) if (nowMs - answer.fetchedAtMs > TYPE_KEEP_MS) this.byType.delete(type);
+    if (this.point && elapsedMs(nowMs, this.point.fetchedAtMs) > POINT_KEEP_MS) this.point = undefined;
+    if (this.military && elapsedMs(nowMs, this.military.fetchedAtMs) > TYPE_KEEP_MS) this.military = undefined;
+    for (const [type, answer] of this.byType)
+      if (elapsedMs(nowMs, answer.fetchedAtMs) > TYPE_KEEP_MS) this.byType.delete(type);
     for (const [code, answer] of this.bySquawk)
-      if (nowMs - answer.fetchedAtMs > TYPE_KEEP_MS) this.bySquawk.delete(code);
-    for (const [id, answer] of this.byCircle) if (nowMs - answer.fetchedAtMs > CIRCLE_KEEP_MS) this.byCircle.delete(id);
+      if (elapsedMs(nowMs, answer.fetchedAtMs) > TYPE_KEEP_MS) this.bySquawk.delete(code);
+    for (const [id, answer] of this.byCircle)
+      if (elapsedMs(nowMs, answer.fetchedAtMs) > CIRCLE_KEEP_MS) this.byCircle.delete(id);
     // Every answer that is complete for a disc: the point query's and each circle's.
     const discs: Array<{ answer: CachedAnswer; disc: { latitude: number; longitude: number; radiusNm: number } }> = [];
     if (this.point) discs.push({ answer: this.point, disc: this.point.query });

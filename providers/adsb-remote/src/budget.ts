@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 /**
  * How many requests adsb.lol gets, and in what order.
  *
@@ -135,7 +136,7 @@ export class RequestBudget {
     const paced =
       this.hostGapMs !== undefined &&
       this.lastSentAt !== undefined &&
-      nowMs - this.lastSentAt < this.hostGapMs - HOST_PACE_SLACK_MS;
+      elapsedMs(nowMs, this.lastSentAt) < this.hostGapMs - HOST_PACE_SLACK_MS;
     const ok = this.foreground === 0 && nowMs >= this.notBefore && this.tokens >= 1 && !paced;
     if (!ok) this.withheldPolls++;
     return ok;
@@ -161,7 +162,7 @@ export class RequestBudget {
 
   /** adsb.lol answered (200 or 304): creep up. */
   answered(nowMs: number): void {
-    if (this.ceiling && nowMs - this.ceiling.atMs > CEILING_MEMORY_MS) this.ceiling = undefined;
+    if (this.ceiling && elapsedMs(nowMs, this.ceiling.atMs) > CEILING_MEMORY_MS) this.ceiling = undefined;
     const near = this.ceiling !== undefined && this.rate >= this.ceiling.rate * CEILING_APPROACH;
     const step = INCREASE_PER_SUCCESS * (near ? CEILING_INCREASE_FACTOR : 1);
     this.rate = Math.min(this.opts.maxPerMin ?? MAX_PER_MIN, this.rate + step);

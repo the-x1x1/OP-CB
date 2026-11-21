@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 import { execFile } from 'node:child_process';
 import { constants as fsConstants, promises as fsp, close as fsClose, open as fsOpen, write as fsWrite } from 'node:fs';
 import tty from 'node:tty';
@@ -149,7 +150,7 @@ export async function openSerialStream(
   };
   reader.on('data', (chunk: Buffer) => {
     const now = Date.now();
-    if (now - readWindowStart >= 1000) {
+    if (elapsedMs(now, readWindowStart) >= 1000) {
       readWindowStart = now;
       readInWindow = 0;
     }

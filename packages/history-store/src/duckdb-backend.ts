@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoBounds, IsoTimestamp, JsonValue, TimeRange } from '@opcb/world-model';
+import { elapsedMs, type GeoBounds, type IsoTimestamp, type JsonValue, type TimeRange } from '@opcb/world-model';
 import { regionBounds } from '@opcb/world-model';
 import { writeFileAtomic } from '@opcb/core/node';
 import { silentLogger, type Logger } from '@opcb/core';
@@ -280,7 +280,7 @@ export class DuckDbParquetBackend implements HistoryBackend {
     const s = this.staging.get(id) ?? { rows: 0, since: this.clock.now() };
     s.rows += rows.length;
     this.staging.set(id, s);
-    if (s.rows >= this.rollRows || this.clock.now() - s.since >= this.rollMs) await this.roll(key);
+    if (s.rows >= this.rollRows || elapsedMs(this.clock.now(), s.since) >= this.rollMs) await this.roll(key);
     return { rows: rows.length, bytes, partition: this.index.get(id) ?? meta };
   }
 

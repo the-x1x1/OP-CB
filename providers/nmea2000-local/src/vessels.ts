@@ -1,4 +1,4 @@
-import { isValidLatLon, mmsiFlag, type JsonValue } from '@opcb/world-model';
+import { isValidLatLon, mmsiFlag, type JsonValue, elapsedMs } from '@opcb/world-model';
 import type { ObservationDraft } from '@opcb/provider-sdk';
 import type { AisPositionMessage, AisStaticMessage, N2kMessage } from './pgns.js';
 
@@ -134,9 +134,9 @@ export class OwnVessel {
       case 'position': {
         const cur = this.position;
         const sameSource = cur?.value.source === source;
-        if (cur && !sameSource && nowMs - cur.at < POSITION_SOURCE_HOLD_MS) return false;
+        if (cur && !sameSource && elapsedMs(nowMs, cur.at) < POSITION_SOURCE_HOLD_MS) return false;
         // From the same device, a rapid update does not overwrite a fresher precise fix's extras.
-        if (cur && sameSource && cur.value.precise && !message.precise && nowMs - cur.at < 2_000) {
+        if (cur && sameSource && cur.value.precise && !message.precise && elapsedMs(nowMs, cur.at) < 2_000) {
           cur.value = { ...cur.value, latitude: message.latitude, longitude: message.longitude };
           cur.at = nowMs;
           return true;
@@ -231,7 +231,7 @@ export class OwnVessel {
   }
 
   private fresh<T>(s: Stamped<T> | undefined, nowMs: number): T | undefined {
-    return s && nowMs - s.at <= READING_TTL_MS ? s.value : undefined;
+    return s && elapsedMs(nowMs, s.at) <= READING_TTL_MS ? s.value : undefined;
   }
 
   /**
@@ -251,7 +251,7 @@ export class OwnVessel {
       this.air,
       this.pressure,
     ])
-      if (r && nowMs - r.at <= READING_TTL_MS && r.at > t) t = r.at;
+      if (r && elapsedMs(nowMs, r.at) <= READING_TTL_MS && r.at > t) t = r.at;
     return t;
   }
 

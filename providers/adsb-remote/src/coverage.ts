@@ -243,7 +243,7 @@ export class CoveragePlanner {
       const s = this.circles.get(t.id);
       const age = s ? nowMs - s.fetchedAtMs : CIRCLE_KEEP_MS;
       if (s && age < CIRCLE_MIN_REFRESH_MS) continue;
-      const shown = s?.answeredAtMs !== undefined && nowMs - s.answeredAtMs < CIRCLE_KEEP_MS;
+      const shown = s?.answeredAtMs !== undefined && elapsedMs(nowMs, s.answeredAtMs) < CIRCLE_KEEP_MS;
       const count = s ? s.count : Math.max(this.prior(t), UNASKED_GUESS);
       // Aircraft about to drop off the map (or not on it at all) are worth more than
       // fresher positions for ones that will stay.
@@ -291,13 +291,13 @@ export class CoveragePlanner {
     nowMs: number,
     recentMs = 120_000,
   ): { circles: number; answered: number; recent: number; oldestAgeMs: number | undefined } {
-    for (const [id, s] of this.circles) if (nowMs - s.fetchedAtMs > CIRCLE_KEEP_MS) this.circles.delete(id);
+    for (const [id, s] of this.circles) if (elapsedMs(nowMs, s.fetchedAtMs) > CIRCLE_KEEP_MS) this.circles.delete(id);
     let answered = 0;
     let recent = 0;
     let oldest: number | undefined;
     for (const t of tiles) {
       const s = this.circles.get(t.id);
-      if (s?.answeredAtMs === undefined || nowMs - s.answeredAtMs > CIRCLE_KEEP_MS) continue;
+      if (s?.answeredAtMs === undefined || elapsedMs(nowMs, s.answeredAtMs) > CIRCLE_KEEP_MS) continue;
       const age = nowMs - s.answeredAtMs;
       answered++;
       if (age <= recentMs) recent++;
@@ -388,8 +388,8 @@ export class CoveragePlanner {
       n++;
       if (oldest === undefined || age > oldest) oldest = age;
     }
-    const military = !!this.mil && this.mil.count > 0 && nowMs - this.mil.fetchedAtMs <= TYPE_KEEP_MS;
-    const emergencies = !!this.sqkAnswer && nowMs - this.sqkAnswer.fetchedAtMs <= TYPE_KEEP_MS;
+    const military = !!this.mil && this.mil.count > 0 && elapsedMs(nowMs, this.mil.fetchedAtMs) <= TYPE_KEEP_MS;
+    const emergencies = !!this.sqkAnswer && elapsedMs(nowMs, this.sqkAnswer.fetchedAtMs) <= TYPE_KEEP_MS;
     return { types: n, oldestAgeMs: oldest, military, emergencies };
   }
 }

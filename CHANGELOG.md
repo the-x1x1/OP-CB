@@ -73,6 +73,11 @@ Versioning: [semantic versioning](https://semver.org/).
   ship feed was not noticed, files were not re-read, the Kp index, the connection check and
   the satellite catalogue details were not refreshed. Each of those waits now lasts its own
   length whatever the clock does.
+- **After the clock was put back, a local receiver delivered a second's worth of messages
+  and then nothing, for as long as the clock had been fast.** Ship and NMEA lines, serial
+  bytes and MQTT messages are counted by the second to hold back a flood, and the second
+  was ended by subtraction from the wall clock: put back, it did not end, and everything
+  past the limit was dropped. A second that began ahead of the clock now ends at once.
 - The same, in more places. Place search and street-level pictures: a request waited
   for a turn set before the clock went back (so for as long as the clock had been fast) and
   an answer was kept that long instead of its day or hour; the list of street-level hosts
@@ -84,6 +89,9 @@ Versioning: [semantic versioning](https://semver.org/).
   catalogue was not asked for again after a kept copy was used; watch zones reported no
   entries; a map error shown once was not shown again; a download's progress stood still
   until it finished. A warning that kept repeating was counted but not written to the log.
+  Also: aircraft answers kept past their time, weather zones and satellite catalogues not
+  asked for again after a failure, the Martin basemap list, a history file not rolled by
+  age, a vault's write check.
   None of those now outlasts its own length.
 - The small document stores (collections, watch zones, lenses, guides, prepared records, the
   camera list) could lose a change to another made at the same moment. Guides, prepared

@@ -287,7 +287,7 @@ export class CelestrakProvider extends PollingProvider implements ObjectTrackSou
         continue;
       }
       const failed = this.memberFailedAt.get(g);
-      if (failed !== undefined && now - failed < this.retryAfterStaleMs) continue;
+      if (failed !== undefined && elapsedMs(now, failed) < this.retryAfterStaleMs) continue;
       try {
         const { entry } = await this.catalog(g, format, Number.MAX_SAFE_INTEGER, request);
         const had = this.members.get(g);
@@ -391,7 +391,7 @@ export class CelestrakProvider extends PollingProvider implements ObjectTrackSou
     nowMs: number,
   ): Promise<SatcatCacheEntry | undefined> {
     const held = this.satcat.get(noradId);
-    if (held && nowMs - held.at < SATCAT_MAX_AGE_MS) return held.entry;
+    if (held && elapsedMs(nowMs, held.at) < SATCAT_MAX_AGE_MS) return held.entry;
     const key = `satcat:${noradId}`;
     try {
       const cached = await this.context.cache.get<JsonValue>(key);

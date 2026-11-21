@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 import net from 'node:net';
 import tls from 'node:tls';
 import { randomBytes } from 'node:crypto';
@@ -259,7 +260,7 @@ function connectMqtt(
               break;
             }
             const now = Date.now();
-            if (now - windowStart >= 1000) {
+            if (elapsedMs(now, windowStart) >= 1000) {
               windowStart = now;
               inWindow = 0;
             }

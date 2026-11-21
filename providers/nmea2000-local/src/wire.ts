@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 /**
  * NMEA 2000 as a gateway passes it on in Yacht Devices' RAW text format — one CAN frame a
  * line, `17:33:21.107 R 09F80103 2F 30 70 00 2F 30 70 00`: the gateway's time of day, R
@@ -106,7 +107,7 @@ export class FastPacketAssembler {
       return undefined;
     }
     const p = this.partial.get(key);
-    if (!p || p.sequence !== sequence || p.next !== index || nowMs - p.at > this.maxGapMs) {
+    if (!p || p.sequence !== sequence || p.next !== index || elapsedMs(nowMs, p.at) > this.maxGapMs) {
       this.partial.delete(key);
       return undefined;
     }

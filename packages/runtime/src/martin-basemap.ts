@@ -1,3 +1,4 @@
+import { elapsedMs } from '@opcb/world-model';
 import type { ResolvedMapProvider } from '@opcb/render-core';
 import { readMartinBasemap, type MartinBasemap, type MartinResult, type MartinSourceConfig } from '@opcb/offline';
 
@@ -87,7 +88,7 @@ export class MartinBasemaps {
       return [];
     }
     const key = JSON.stringify([url, config.trustedHost.trim().toLowerCase(), config.attribution.trim()]);
-    if (this.cached && this.cached.key === key && this.now() - this.cached.at < MARTIN_CACHE_MS)
+    if (this.cached && this.cached.key === key && elapsedMs(this.now(), this.cached.at) < MARTIN_CACHE_MS)
       return this.cached.entries;
     const result = await this.read({
       url,
