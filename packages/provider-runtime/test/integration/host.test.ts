@@ -371,6 +371,35 @@ test('raster overlays: start does not wait for a slow capabilities read; overlay
   await host.pollNow('slow-overlays');
   await new Promise((r) => setImmediate(r));
   assert.equal(asked, 2);
+  // Asked twice, answered out of order: the later asking's answer is the one shown.
+  const second = answer;
+  const again = host.refreshOverlays('slow-overlays');
+  const third = answer;
+  assert.equal(asked, 3);
+  list = [];
+  third();
+  await again;
+  assert.equal(host.overlays().length, 0, 'the newer answer: no layers now');
+  list = [
+    {
+      id: 'old',
+      kind: 'xyz',
+      name: 'Old',
+      attribution: 'Example',
+      url: `https://${usgs.manifest.allowedHosts[0]}/{z}/{x}/{y}.png`,
+    },
+  ];
+  second();
+  await new Promise((r) => setImmediate(r));
+  assert.equal(host.overlays().length, 0, 'the older answer, arriving late, changes nothing');
+  // Switched off while its overlays are being read: the late answer does not bring them back.
+  const pending = host.refreshOverlays('slow-overlays');
+  const fourth = answer;
+  await host.setEnabled('slow-overlays', false);
+  fourth();
+  await pending;
+  await new Promise((r) => setImmediate(r));
+  assert.deepEqual(host.overlays(), [], 'a source that is off has no layers');
   await host.dispose();
 });
 

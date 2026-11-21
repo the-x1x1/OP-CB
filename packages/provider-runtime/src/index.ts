@@ -182,6 +182,8 @@ interface Hosted {
   polling: boolean;
   /** Raster overlays the provider published (ADR-008); empty while it is not running. */
   overlays: RasterOverlay[];
+  /** How many times the source's overlays have been asked for; an answer to an earlier asking is dropped. */
+  overlaysAsked: number;
   /** The provider's loopback listener while it runs (ADR-003 `listen`); closed on stop. */
   listener: LocalListenerHandle | undefined;
   /** Settings watchers to drop when the provider is unregistered. */
@@ -323,6 +325,7 @@ export class ProviderHost {
       deviceAbsentLogged: false,
       polling: false,
       overlays: [],
+      overlaysAsked: 0,
       listener: undefined,
       starting: false,
       run: 0,
@@ -411,6 +414,8 @@ export class ProviderHost {
   async refreshOverlays(providerId: string): Promise<RasterOverlay[]> {
     const h = this.hosted.get(providerId);
     if (!h || !h.running || !h.provider.overlays) return [];
+    const run = h.run;
+    const asking = ++h.overlaysAsked;
     let published: RasterOverlay[] = [];
     try {
       published = await h.provider.overlays();
@@ -418,6 +423,10 @@ export class ProviderHost {
       h.logger.warn('overlays failed', { message: err instanceof Error ? err.message : String(err) });
       published = [];
     }
+    // The source stopped while it was asked (its layers were taken away then, and stay away),
+    // or it has been asked again since (the later answer is the one to show).
+    if (!h.running || h.run !== run || h.removed || h.overlaysAsked !== asking) return h.overlays;
+    if (!Array.isArray(published)) published = [];
     const accepted: RasterOverlay[] = [];
     const seen = new Set<string>();
     for (const [i, raw] of published.slice(0, MAX_OVERLAYS_PER_PROVIDER).entries()) {

@@ -109,6 +109,9 @@ Versioning: [semantic versioning](https://semver.org/).
   that completes after it was given up is now closed at once by the host, and one that
   fails after it was given up is not reported as the source failing or tried again while
   offline.
+- A source switched off while its map layers were being read (a WMS or WMTS service slow
+  to answer) could have those layers put back in the layer list after it was off. An
+  answer that arrives after the source stopped, or after a later asking, is now dropped.
 - A map download whose pack folder could not be made (no permission, a drive gone) stood at
   "downloading" for good and no other could be started; it now ends as failed and says why.
   The same for the emergency references when the library folder could not be made.
