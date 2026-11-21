@@ -15,6 +15,7 @@ import type {
   Unsubscribe,
 } from '@opcb/provider-sdk';
 import { ProviderError } from '@opcb/provider-sdk';
+import { UnavailableError } from '../validate.js';
 import { createOgr2ogrAccess, readGrantedFile, statGrantedFile, type Ogr2ogrHostOptions } from './granted-folder.js';
 import { openSerialStream, type SerialStreamOptions } from './serial-stream.js';
 
@@ -190,6 +191,12 @@ export class ProviderSettingsStore {
   private data: Record<string, Record<string, JsonValue>> = {};
   private readonly views = new Map<string, ProviderSettingsView>();
   private writing: Promise<void> = Promise.resolve();
+  /**
+   * Why the file did not read at the last load, when it is there (held by another program, a
+   * refused read, a folder in its place) or damaged and not set aside: every source's settings
+   * read as none, and nothing is written over the file until it reads.
+   */
+  private unreadable: string | undefined;
 
   constructor(
     private readonly file: string,
@@ -197,9 +204,26 @@ export class ProviderSettingsStore {
   ) {}
 
   async load(): Promise<void> {
-    const doc = await readJsonFile<{ version: 1; providers: Record<string, Record<string, JsonValue>> }>(
-      this.file,
-    ).catch(() => undefined);
+    this.unreadable = undefined;
+    let doc: { version: 1; providers: Record<string, Record<string, JsonValue>> } | undefined;
+    try {
+      doc = await readJsonFile(this.file);
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== undefined) {
+        this.unreadable = `could not be read (${code})`;
+        this.log.warn('provider settings could not be read; nothing is written over them', { code });
+      } else {
+        // Not JSON: kept beside, as the other documents are, so the next write is not its end.
+        const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+        try {
+          await fs.rename(this.file, `${this.file}.corrupt-${stamp}`);
+          this.log.warn('provider settings unreadable; preserved and started empty', {});
+        } catch (e) {
+          this.unreadable = `is damaged and could not be set aside (${(e as NodeJS.ErrnoException).code ?? 'unknown error'})`;
+        }
+      }
+    }
     this.data =
       doc && typeof doc === 'object' && doc.providers && typeof doc.providers === 'object' ? { ...doc.providers } : {};
   }
@@ -219,6 +243,11 @@ export class ProviderSettingsStore {
   }
 
   async set(providerId: string, settings: Record<string, JsonValue>): Promise<void> {
+    // A file that did not read is read again first (the hold may be over); still unread, the
+    // change is refused rather than written over every other source's settings.
+    if (this.unreadable) await this.load();
+    if (this.unreadable)
+      throw new UnavailableError(`${path.basename(this.file)} ${this.unreadable}; nothing was changed`);
     this.data[providerId] = { ...settings };
     await this.persist();
     this.views.get(providerId)?.notify(this.data[providerId]!);
@@ -226,15 +255,20 @@ export class ProviderSettingsStore {
 
   private async persist(): Promise<void> {
     const snapshot = { version: 1 as const, providers: this.data };
-    this.writing = this.writing
-      .then(async () => {
-        await fs.mkdir(path.dirname(this.file), { recursive: true });
-        await writeFileAtomic(this.file, `${JSON.stringify(snapshot, null, 2)}\n`);
-      })
-      .catch((err: unknown) => {
-        this.log.error('provider settings write failed', { error: err instanceof Error ? err.message : String(err) });
-      });
-    await this.writing;
+    const write = this.writing.then(async () => {
+      await fs.mkdir(path.dirname(this.file), { recursive: true });
+      await writeFileAtomic(this.file, `${JSON.stringify(snapshot, null, 2)}\n`);
+    });
+    this.writing = write.catch(() => undefined);
+    try {
+      await write;
+    } catch (err) {
+      this.log.error('provider settings write failed', { error: err instanceof Error ? err.message : String(err) });
+      // Answered as saved, the setting was gone at the next start.
+      throw new UnavailableError(
+        `${path.basename(this.file)} could not be written (${(err as NodeJS.ErrnoException).code ?? 'unknown error'})`,
+      );
+    }
   }
 }
 

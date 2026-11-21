@@ -67,6 +67,12 @@ Versioning: [semantic versioning](https://semver.org/).
   aside is treated the same way. In 0.7.4 too.
 - **A change to one of those lists that could not be written to disk was answered as saved**,
   and was gone at the next start. It now says the file could not be written. In 0.7.4 too.
+- The same for each source's own settings (`provider-settings.json`: a Home Assistant address
+  and the sources picked from it, a receiver's host, the local camera list): read as none when
+  the file was there but did not read, the next source setting saved wrote over all the
+  others, and a damaged file was written over without being kept. It is now kept beside as
+  `provider-settings.json.corrupt-<time>`, an unreadable one is not written over, and a write
+  that fails says so. In 0.7.4 too.
 - **Moving the data folder went on when one of the small files could not be copied** (a full
   drive, a refused read): the move was reported done, and the next start, in the new folder,
   was without that file — the settings, the keys, the places. Only a file that is not there is
