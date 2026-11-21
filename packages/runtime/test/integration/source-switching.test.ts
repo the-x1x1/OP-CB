@@ -1,5 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { createProvider as createUsgs } from '@opcb/provider-usgs';
 import type { WorldProvider } from '@opcb/provider-sdk';
 import { readFixture, settle, startRuntime, tableFetch } from '../helpers/harness.js';
@@ -55,11 +58,12 @@ for (const seed of [21, 22, 23, 24, 25, 26]) {
     const id = usgs.manifest.id;
     // The reachability probe is on (it asks the same host, answered here): without it a source
     // that is still starting reads as the network being down, and nothing polls again.
-    const h = await startRuntime({ fetchImpl, providerInstances: [slow], disableReachabilityProbe: false });
+    const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-switching-'));
+    const h = await startRuntime({ dataDir, fetchImpl, providerInstances: [slow], disableReachabilityProbe: false });
     holding = true;
+    let last: boolean | undefined;
     try {
       const pending: Promise<unknown>[] = [];
-      let last: boolean | undefined;
       for (let step = 0; step < 30; step++) {
         const r = next();
         if (r < 0.4) {
@@ -107,6 +111,18 @@ for (const seed of [21, 22, 23, 24, 25, 26]) {
       while (held.length) held.shift()!();
       await h.dispose();
     }
+    // The next start reads the file, not the host: it comes back as last asked.
+    try {
+      const again = await startRuntime({ dataDir, fetchImpl, providerInstances: [createUsgs()] });
+      try {
+        const source = (await again.client.request('sources.list', undefined)).find((s) => s.providerId === id)!;
+        assert.equal(source.enabled, last, 'after a restart, as last asked');
+      } finally {
+        await again.dispose();
+      }
+    } finally {
+      await fs.rm(dataDir, { recursive: true, force: true });
+    }
   });
 }
 
@@ -131,7 +147,8 @@ test('integration: switched on, and off again before it has started: the setting
     query: (q) => usgs.query!(q),
   };
   const id = usgs.manifest.id;
-  const h = await startRuntime({ fetchImpl, providerInstances: [slow], disableReachabilityProbe: false });
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-switching-'));
+  const h = await startRuntime({ dataDir, fetchImpl, providerInstances: [slow], disableReachabilityProbe: false });
   try {
     await h.client.request('sources.setEnabled', { providerId: id, enabled: false });
     holding = true;
@@ -144,10 +161,23 @@ test('integration: switched on, and off again before it has started: the setting
     const source = (await h.client.request('sources.list', undefined)).find((s) => s.providerId === id)!;
     assert.equal(source.enabled, false, 'the source is off');
     const settings = await h.client.request('settings.get', undefined);
-    assert.equal(settings.providers?.[id]?.enabled, false, 'and the settings say off, so it stays off after a restart');
+    assert.equal(settings.providers?.[id]?.enabled, false, 'and the settings say off');
   } finally {
     holding = false;
     release();
     await h.dispose();
+  }
+  // What settings.get answers is the host's word for each source; the file is what the next
+  // start reads. Off was the last thing asked, so it comes back off.
+  try {
+    const again = await startRuntime({ dataDir, fetchImpl, providerInstances: [createUsgs()] });
+    try {
+      const source = (await again.client.request('sources.list', undefined)).find((s) => s.providerId === id)!;
+      assert.equal(source.enabled, false, 'off after a restart too');
+    } finally {
+      await again.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
   }
 });

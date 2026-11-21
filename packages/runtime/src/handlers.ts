@@ -426,9 +426,13 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       requireId(providerId, 'providerId');
       if (!core.providerHost.manifest(providerId)) throw new NotFoundError(`unknown provider ${providerId}`);
       await core.providerHost.setEnabled(providerId, enabled === true);
-      if (!enabled) core.state.removeProvider(providerId);
+      // What the host holds after the wait, not what this request asked: a switch asked for
+      // after this one may have finished first (off while on was still starting), and writing
+      // this request's word to the file brought the source back on at the next start.
+      const now = core.providerHost.list().find((p) => p.manifest.id === providerId)?.enabled ?? enabled === true;
+      if (!now) core.state.removeProvider(providerId);
       const current = core.settings.get();
-      await core.settings.patch({ providers: { ...current.providers, [providerId]: { enabled: enabled === true } } });
+      await core.settings.patch({ providers: { ...current.providers, [providerId]: { enabled: now } } });
     },
     'sources.refresh': async ({ providerId }) => {
       requireId(providerId, 'providerId');

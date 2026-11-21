@@ -38,6 +38,11 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- **A source switched on and then off again before it had finished starting came back on at
+  the next start.** The switch-off took effect and the Sources panel showed it off, but the
+  switch-on, finishing last, wrote "on" to the settings file. Each switch now writes what the
+  source is when it finishes, not what that request asked; the same for a connector
+  definition's switch. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,

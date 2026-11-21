@@ -193,8 +193,11 @@ export class ConnectorDefinitions {
     if (!entry.id || !this.known.has(entry.id))
       throw new InvalidRequestError(`${file} did not load, so it has no source to enable`);
     await this.deps.host.setEnabled(entry.id, enabled);
-    if (!enabled) this.deps.removed?.(entry.id);
-    await this.deps.persistEnabled(entry.id, enabled);
+    // The host's word after the wait: the same source switched from the Sources panel
+    // meanwhile (sources.setEnabled is not in this queue) may have finished first.
+    const now = this.deps.host.list().find((p) => p.manifest.id === entry.id)?.enabled ?? enabled;
+    if (!now) this.deps.removed?.(entry.id);
+    await this.deps.persistEnabled(entry.id, now);
     return this.listing();
   }
 

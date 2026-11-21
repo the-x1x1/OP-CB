@@ -161,6 +161,38 @@ test('definitions: setEnabled maps the file to its source and persists; refused 
   }
 });
 
+test('definitions: switched off from the Sources panel while this switch-on waited: off is what is kept', async () => {
+  const t = setup();
+  try {
+    writeDef(t.dir, 'bikes.json');
+    t.register();
+    const id = 'citibike-nyc-stations';
+    // The host's switch-on waits (the source is starting); the Sources panel's switch-off,
+    // which does not queue behind the definitions, lands and finishes meanwhile.
+    let release: () => void = () => undefined;
+    const setEnabled = t.host.setEnabled.bind(t.host);
+    t.host.setEnabled = async (pid, enabled) => {
+      if (enabled) {
+        t.host.registered.get(pid)!.enabled = true;
+        await new Promise<void>((r) => (release = r));
+        return;
+      }
+      await setEnabled(pid, enabled);
+    };
+    const on = t.defs.setEnabled('bikes.json', true);
+    await new Promise((r) => setImmediate(r));
+    await t.host.setEnabled(id, false);
+    t.persisted[id] = false;
+    release();
+    const after = await on;
+    assert.equal(t.persisted[id], false, 'the file says off, so it starts off next time');
+    assert.equal(after.files.find((f) => f.file === 'bikes.json')!.enabled, false);
+    assert.deepEqual(t.removed, [id], 'and its objects left the world');
+  } finally {
+    t.cleanup();
+  }
+});
+
 test('definitions: draft fetches one sample under the URL policy and returns the validator verdict', async () => {
   const seen: string[] = [];
   const body = JSON.stringify({
