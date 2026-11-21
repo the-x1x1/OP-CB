@@ -48,6 +48,9 @@ Versioning: [semantic versioning](https://semver.org/).
   it is listed; a change asked for during that wait finished first and was then undone: the
   camera came back to the list, or with the login it had just been saved without.
   Camera changes now take turns in the order asked. In 0.7.4 too.
+- After the computer's clock was put back, a watch zone's new entries were folded into a toast
+  of the same zone still on screen from before the change, however long ago that was by the
+  clock, rather than raising one of their own. In 0.7.4 too.
 - A key written into a source's address under a name other than `key` or `token` stayed in
   log lines and error text that quoted the address: `appid=`, `app_key=`, `api-key=`,
   `subscription-key=`, `auth=`, `auth_token=`, `private_token=`, `license_key=`, `user_key=`,

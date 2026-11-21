@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { GeoBounds } from '@opcb/world-model';
+import { elapsedMs, type GeoBounds } from '@opcb/world-model';
 import type { TileCacheStatus } from '@opcb/ipc-contract';
 import { silentLogger, type Logger } from '@opcb/core';
 
@@ -305,7 +305,9 @@ export class TileCache {
       return;
     }
     e.used = t;
-    if (t - e.touched > TOUCH_EVERY_MS) {
+    // A touch from before the clock was put back counts as long ago (the file's time is what
+    // the next start ranks tiles by; it is set again rather than left ahead of the clock).
+    if (elapsedMs(t, e.touched) > TOUCH_EVERY_MS) {
       e.touched = t;
       const when = new Date(t);
       void fs.utimes(file, when, when).catch(() => undefined);

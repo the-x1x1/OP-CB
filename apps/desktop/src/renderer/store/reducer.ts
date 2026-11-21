@@ -1,4 +1,4 @@
-import { keepWeightiest, type WorldEvent, type WorldObject } from '@opcb/world-model';
+import { elapsedMs, keepWeightiest, type WorldEvent, type WorldObject } from '@opcb/world-model';
 import type { WorldChangedEvent } from '@opcb/ipc-contract';
 import { BUILT_IN_LENSES } from '@opcb/render-core';
 import { initialTimelineState, timelineReducer } from '@opcb/ui';
@@ -522,7 +522,7 @@ const MERGED_ITEMS_SHOWN = 3;
  * "Zone near 50.04, 8.56: 3 new" with the newest few named. Each one is in the feed anyway.
  */
 export function mergeNotification(list: readonly Notification[], n: Notification): Notification[] {
-  const i = n.group ? list.findIndex((x) => x.group === n.group && n.at - x.at < NOTIFICATION_MERGE_MS) : -1;
+  const i = n.group ? list.findIndex((x) => x.group === n.group && elapsedMs(n.at, x.at) < NOTIFICATION_MERGE_MS) : -1;
   if (i < 0) return [n, ...list].slice(0, MAX_NOTIFICATIONS);
   const old = list[i]!;
   const tail = (title: string) => (title.includes(': ') ? title.slice(title.indexOf(': ') + 2) : title);

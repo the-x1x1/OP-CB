@@ -28,3 +28,10 @@ test('notifications from one zone close together are one toast', () => {
   const plain: Notification = { id: 'x', title: 'Settings not saved', body: '', severity: 'MINOR', at: 4_000 };
   assert.equal(mergeNotification(list, plain).length, 2);
 });
+
+test('a toast from before the clock was put back is not one to fold into', () => {
+  // The toast was raised at a time the clock has since gone back from: every new entry of the
+  // zone was folded into it while it was on screen, however far apart.
+  const before = mergeNotification([], entry('SX52KZ', 10 * 3_600_000));
+  assert.equal(mergeNotification(before, entry('RYR631K', 1_000)).length, 2);
+});
