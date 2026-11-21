@@ -108,6 +108,10 @@ Versioning: [semantic versioning](https://semver.org/).
   collection could replace the first. Such changes now wait their turn, and an object asked
   for twice is still collected once. The same for satellites added to pass alerts (three
   added quickly kept only the last) and for the home view and its fly-on-start setting.
+- Command Center walkthroughs: a check that took a while to come back undid what was done
+  while it ran — Back, Skip or another step chosen — and put the walkthrough back on the
+  step that was checked. The result is now recorded on that step in the walkthrough as it
+  is, and shown only on that step.
 - Timeline: going into the past, back to live and into the past again before the first
   reading of history had ended left the map showing live objects under a timeline in the
   past, until the cursor was next moved. The second reading was dropped with the first; it

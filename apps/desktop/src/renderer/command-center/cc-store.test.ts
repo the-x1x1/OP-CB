@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createDemoClient } from '../demo/demo-client.js';
 import { CommandCenterStore } from './cc-store.js';
 import { MAPS_GUIDE } from './guides/maps.js';
-import { startGuide } from './guide-engine.js';
+import { back, goTo, startGuide } from './guide-engine.js';
 
 test('the store: no mode until chosen, then the choice and its remembering; records kept', async () => {
   const client = createDemoClient({ autoTick: false });
@@ -48,4 +48,22 @@ test('the store: no mode until chosen, then the choice and its remembering; reco
   assert.ok(store.get().services?.every((s) => s.state === 'not-found'));
   const ai = await store.aiTest('llama3.2', 'hello');
   assert.equal(ai.ok, false);
+});
+
+test('the store: a check that comes back after the operator moved on is recorded on its step, and the move is kept', async () => {
+  const client = createDemoClient({ autoTick: false });
+  let t = Date.parse('2026-10-30T09:00:00.000Z');
+  const store = new CommandCenterStore(client, () => t++);
+  const def = MAPS_GUIDE;
+  const checkedStep = def.steps[1]!;
+  assert.ok(checkedStep.check, 'the step checked has a check');
+  // On step two; its check is run, and before it comes back the operator goes Back.
+  await store.saveGuide(goTo(def, startGuide(def, t), checkedStep.id, t));
+  await store.saveGuide(back(def, store.get().guides[0]!, t));
+  await store.recordCheckResult(def, checkedStep.id, { status: 'pass', message: 'ok', evidence: 'a pack is on' });
+  const p = store.get().guides.find((g) => g.id === def.id)!;
+  assert.equal(p.currentStepId, def.steps[0]!.id, 'the walkthrough stays where the operator took it');
+  assert.equal(p.steps[checkedStep.id]?.outcome, 'verified', 'and the check is kept on the step it ran on');
+  assert.equal(p.steps[checkedStep.id]?.evidence, 'a pack is on');
+  assert.equal(p.steps[def.steps[0]!.id]?.outcome === 'verified', false, 'not on the step shown now');
 });

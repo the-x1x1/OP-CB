@@ -21,7 +21,8 @@ import type {
 } from '@opcb/ipc-contract';
 import type { WorldObject } from '@opcb/world-model';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, type LastSearch } from './checks.js';
-import type { SectionId } from './guide-types.js';
+import type { CheckResult, GuideDefinition, SectionId } from './guide-types.js';
+import { currentProgress, recordCheck, startGuide } from './guide-engine.js';
 
 /**
  * The Command Center's own state, beside the shell's store: whether it is open and where, the
@@ -373,6 +374,21 @@ export class CommandCenterStore {
     } catch {
       /* kept for this session; the next save tries again */
     }
+  }
+
+  /**
+   * A check has come back. It is recorded on the step it ran on, in the walkthrough's progress
+   * as it is now: taken from before the check, it undid whatever the operator did while the
+   * check ran (Back, Skip, another step chosen), and put the walkthrough back on that step.
+   */
+  async recordCheckResult(def: GuideDefinition, stepId: string, result: CheckResult): Promise<void> {
+    const now = this.now();
+    const progress =
+      currentProgress(
+        def,
+        this.state.guides.find((g) => g.id === def.id),
+      ) ?? startGuide(def, now);
+    await this.saveGuide(recordCheck(def, progress, result, now, stepId));
   }
 
   async resetGuide(id: string): Promise<void> {

@@ -68,10 +68,20 @@ function moveTo(def: GuideDefinition, p: GuideProgress, index: number, nowMs: nu
   return { ...rest, currentStepId: def.steps[Math.max(0, index)]!.id, updatedAt: iso(nowMs) };
 }
 
-/** A check ran on the current step: its outcome is kept, pass or fail, with what it saw. */
-export function recordCheck(def: GuideDefinition, p: GuideProgress, result: CheckResult, nowMs: number): GuideProgress {
-  const step = currentStep(def, p);
-  if (!step.check) return p;
+/**
+ * A check ran on a step — the current one unless `stepId` names the one it ran on (the
+ * walkthrough may have moved on while it ran): its outcome is kept, pass or fail, with what
+ * it saw. Where the walkthrough is does not change.
+ */
+export function recordCheck(
+  def: GuideDefinition,
+  p: GuideProgress,
+  result: CheckResult,
+  nowMs: number,
+  stepId: string = currentStep(def, p).id,
+): GuideProgress {
+  const step = def.steps.find((s) => s.id === stepId);
+  if (!step?.check) return p;
   const prior = p.steps[step.id];
   const evidence = (result.status === 'pass' ? (result.evidence ?? result.message) : result.message).slice(0, 500);
   return withStep(

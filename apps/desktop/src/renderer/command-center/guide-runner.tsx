@@ -12,7 +12,6 @@ import {
   currentStep,
   goTo,
   next,
-  recordCheck,
   recordChoice,
   skip,
   startGuide,
@@ -43,7 +42,8 @@ export function GuideRunner({ def }: { def: GuideDefinition }) {
     def,
     cc.guides.find((g) => g.id === def.id),
   );
-  const [result, setResult] = useState<CheckResult | null>(null);
+  // The last check's result, with the step it ran on: shown only on that step.
+  const [checked, setChecked] = useState<{ stepId: string; result: CheckResult } | null>(null);
   const [checking, setChecking] = useState(false);
   const progress = saved ?? startGuide(def, Date.now());
   const step = currentStep(def, progress);
@@ -52,16 +52,18 @@ export function GuideRunner({ def }: { def: GuideDefinition }) {
   const words = choiceWords(step, progress);
   const offline = cc.mode?.chosen === 'offline';
 
-  useEffect(() => setResult(null), [step.id]);
+  useEffect(() => setChecked(null), [step.id]);
+  const result = checked?.stepId === step.id ? checked.result : null;
 
   const save = (p: typeof progress) => void store.saveGuide(p);
   const check = async () => {
     if (!step.check) return;
+    const stepId = step.id;
     setChecking(true);
     try {
       const r = await runCheck(step.check);
-      setResult(r);
-      save(recordCheck(def, progress, r, Date.now()));
+      setChecked({ stepId, result: r });
+      void store.recordCheckResult(def, stepId, r);
     } finally {
       setChecking(false);
     }
