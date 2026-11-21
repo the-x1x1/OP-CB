@@ -588,6 +588,7 @@ export class RuntimeCore {
         reservedIds: () => bundledProviderIds(),
         enabledSetting: (id) =>
           (this.deps.disabledProviders ?? []).includes(id) ? false : this.settings.get().providers[id]?.enabled,
+        storeSecret: (key, value) => this.credentials.set(key, value),
         persistEnabled: async (id, enabled) => {
           const current = this.settings.get();
           await this.settings.patch({ providers: { ...current.providers, [id]: { enabled } } });

@@ -10,6 +10,7 @@ import {
   connectorProviderFactories,
   defaultConnectorRegistry,
   draftDefinition,
+  keyParamsIn,
   loadConnectorDefinitions,
   type ConnectorProviderDefinition,
   type DefinitionFile,
@@ -59,6 +60,12 @@ export interface DefinitionsDeps {
   reservedIds: () => Iterable<string>;
   /** The operator's enabled setting for an id, when there is one. */
   enabledSetting: (id: string) => boolean | undefined;
+  /**
+   * Keep a secret in the operator's key store (the OS-protected one in the desktop app). A
+   * key found in a drafted address goes there, never into the definition file. Absent, an
+   * address with a key in it is not drafted.
+   */
+  storeSecret?: (key: string, value: string) => Promise<void>;
   /** Persist an enabled switch (settings.providers), as `sources.setEnabled` does. */
   persistEnabled: (id: string, enabled: boolean) => Promise<void>;
   /** Called after a source is taken out, so its objects leave the world. */
@@ -253,14 +260,60 @@ export class ConnectorDefinitions {
         `the sample could not be drafted: ${err instanceof Error ? err.message : 'unreadable answer'}`,
       );
     }
+    const moved = await this.moveKeyOut(url, drafted);
     const verdict = defaultConnectorRegistry.validate(drafted.definition);
     return {
       definition: drafted.definition as Record<string, JsonValue>,
       connector: drafted.connector,
-      notes: drafted.notes,
+      notes: moved ? [moved, ...drafted.notes] : drafted.notes,
       todo: drafted.todo,
       validation: { ok: verdict.ok, errors: verdict.errors, warnings: verdict.warnings },
     };
+  }
+
+  /**
+   * A key in the drafted address (`?appid=…`, `?key=…`) is taken out of it, kept in the key
+   * store, and named in the definition as a credential the source sends as that query
+   * parameter. Returns the note that says so, or undefined when the address held none. More
+   * than one is refused: a definition attaches one credential to its requests.
+   */
+  private async moveKeyOut(url: string, drafted: ReturnType<typeof draftDefinition>): Promise<string | undefined> {
+    const params = keyParamsIn(url);
+    if (!params.length) return undefined;
+    if (params.length > 1)
+      throw new InvalidRequestError(
+        `the address carries more than one key (${params.join(', ')}); draft it with one and add the other by hand`,
+      );
+    if (!this.deps.storeSecret)
+      throw new UnavailableError('the address carries a key, and this runtime has no key store to keep it in');
+    const param = params[0]!;
+    const u = new URL(url);
+    const value = u.searchParams.get(param) ?? '';
+    u.searchParams.delete(param);
+    const clean = u.toString();
+    const def = drafted.definition as Record<string, unknown>;
+    const id = typeof def['id'] === 'string' ? def['id'] : 'draft';
+    const secretRef = `connector.${id}.${param}`
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '-')
+      .slice(0, 128);
+    // Every mention of the address (the endpoint, the description) without the key.
+    const text = JSON.stringify(def).split(JSON.stringify(url).slice(1, -1)).join(JSON.stringify(clean).slice(1, -1));
+    const rewritten = JSON.parse(text) as Record<string, unknown>;
+    const endpoint = (rewritten['endpoint'] ?? {}) as Record<string, unknown>;
+    endpoint['credential'] = { name: 'apiKey', as: 'query', param };
+    rewritten['endpoint'] = endpoint;
+    rewritten['credentials'] = {
+      apiKey: { secretRef, label: `${u.hostname} key (${param})`, kind: 'api-key' },
+    };
+    for (const k of Object.keys(def)) delete def[k];
+    Object.assign(def, rewritten);
+    drafted.notes = drafted.notes.map((n) => n.split(url).join(clean));
+    drafted.todo = drafted.todo.map((n) => n.split(url).join(clean));
+    if (value && [JSON.stringify(def), ...drafted.notes, ...drafted.todo].some((t) => t.includes(value)))
+      throw new InvalidRequestError('the key in the address could not be taken out of the draft; nothing was kept');
+    if (value) await this.deps.storeSecret(secretRef, value);
+    return `The key in the address (${param}) was moved to the key store as "${secretRef}"; the source sends it with each request, and it is not in the definition file.`;
   }
 
   save(id: string, definition: Record<string, JsonValue>): Promise<{ file: string; listing: DefinitionsReload }> {
@@ -276,6 +329,14 @@ export class ConnectorDefinitions {
     if (!DEFINITION_ID.test(id))
       throw new InvalidRequestError(`id ${JSON.stringify(id)} must be 2–63 of a-z, 0-9 and -`);
     const doc: Record<string, JsonValue> = { ...definition, id, review: 'user-configured', enabled: false };
+    // A key typed into the address would be a key on disk in plain text: it goes in the key
+    // store, named as the definition's credential (drafting from an address does this).
+    const endpointUrl = (doc['endpoint'] as { url?: unknown } | undefined)?.url;
+    const keys = typeof endpointUrl === 'string' ? keyParamsIn(endpointUrl) : [];
+    if (keys.length)
+      throw new InvalidRequestError(
+        `the address carries a key (${keys.join(', ')}); keep it in the key store and name it as the definition's credential`,
+      );
     const verdict = defaultConnectorRegistry.validate(doc);
     if (!verdict.ok)
       throw new InvalidRequestError(`the definition does not validate: ${verdict.errors.slice(0, 3).join('; ')}`);

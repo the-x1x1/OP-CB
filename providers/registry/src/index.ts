@@ -41,6 +41,7 @@ export {
   defaultConnectorRegistry,
   draftDefinition,
   checkDefinitionUrl,
+  keyParamsIn,
   type DraftResult,
   type DefinitionFile,
   type ConnectorProviderDefinition,

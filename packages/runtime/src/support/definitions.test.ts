@@ -36,7 +36,7 @@ class FakeHost implements DefinitionsHost {
   }
 }
 
-function setup(fetchImpl?: typeof fetch) {
+function setup(fetchImpl?: typeof fetch, secrets?: Map<string, string>) {
   const dir = mkdtempSync(path.join(os.tmpdir(), 'wv-defs-'));
   const host = new FakeHost();
   const persisted: Record<string, boolean> = {};
@@ -55,6 +55,13 @@ function setup(fetchImpl?: typeof fetch) {
     logger: silentLogger,
     clock: systemClock,
     ...(fetchImpl ? { fetchImpl } : {}),
+    ...(secrets
+      ? {
+          storeSecret: async (key: string, value: string) => {
+            secrets.set(key, value);
+          },
+        }
+      : {}),
   });
   const register = () => {
     for (const d of defs.load()) {
@@ -226,6 +233,67 @@ test('definitions: draft fetches one sample under the URL policy and returns the
     ])
       await assert.rejects(t.defs.draft(bad), (e: unknown) => (e as { ipcCode?: string }).ipcCode === 'DENIED', bad);
     assert.equal(seen.length, 1, 'nothing refused was fetched');
+  } finally {
+    t.cleanup();
+  }
+});
+
+test('definitions: a key in a drafted address goes to the key store, never into the file', async () => {
+  const seen: string[] = [];
+  const body = JSON.stringify([{ id: 'a', name: 'A', lat: 21.3, lon: -157.8 }]);
+  const fetchImpl = (async (url: string | URL | Request) => {
+    seen.push(String(url));
+    return new Response(body, { status: 200, headers: { 'content-type': 'application/json' } });
+  }) as typeof fetch;
+  const secrets = new Map<string, string>();
+  const t = setup(fetchImpl, secrets);
+  try {
+    t.register();
+    const address = 'https://api.example.org/v2/points.json?appid=SECRET-123&units=metric';
+    const d = await t.defs.draft(address);
+    assert.deepEqual(seen, [address], 'the sample is fetched with the key, as typed');
+    const text = JSON.stringify(d);
+    assert.ok(!text.includes('SECRET-123'), 'the key is nowhere in the draft the window is given');
+    const endpoint = d.definition['endpoint'] as { url: string; credential?: unknown };
+    assert.equal(endpoint.url, 'https://api.example.org/v2/points.json?units=metric');
+    assert.deepEqual(endpoint.credential, { name: 'apiKey', as: 'query', param: 'appid' });
+    const ref = (d.definition['credentials'] as Record<string, { secretRef: string }>)['apiKey']!.secretRef;
+    assert.equal(secrets.get(ref), 'SECRET-123', 'kept in the key store');
+    assert.match(d.notes[0]!, /moved to the key store/);
+    assert.equal(d.validation.ok, true, d.validation.errors.join('; '));
+    const saved = await t.defs.save('my-points', d.definition);
+    assert.ok(!readFileSync(path.join(t.dir, saved.file), 'utf8').includes('SECRET-123'));
+    assert.deepEqual(saved.listing.files.find((f) => f.file === saved.file)!.problems, []);
+
+    // Two keys: one credential per definition, so refused, and nothing is kept.
+    secrets.clear();
+    await assert.rejects(
+      t.defs.draft('https://api.example.org/x.json?key=A1&token=B2'),
+      (e: unknown) => (e as { ipcCode?: string }).ipcCode === 'INVALID_REQUEST' && /more than one key/.test(String(e)),
+    );
+    assert.equal(secrets.size, 0);
+    // A definition saved with a key typed into its address is refused.
+    await assert.rejects(
+      t.defs.save('typed-key', {
+        ...d.definition,
+        endpoint: { ...endpoint, url: 'https://api.example.org/v2/points.json?apikey=XYZ', credential: undefined },
+      } as never),
+      /carries a key/,
+    );
+  } finally {
+    t.cleanup();
+  }
+});
+
+test('definitions: without a key store, an address with a key is not drafted', async () => {
+  const fetchImpl = (async () =>
+    new Response('[{"lat":1,"lon":2}]', {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    })) as typeof fetch;
+  const t = setup(fetchImpl);
+  try {
+    await assert.rejects(t.defs.draft('https://api.example.org/x.json?apikey=A1'), /no key store/);
   } finally {
     t.cleanup();
   }

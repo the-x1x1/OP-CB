@@ -86,5 +86,5 @@ export function loadConnectorDefinitions(dirs: ConnectorDirectories, reservedIds
 
 export { defaultConnectorRegistry };
 export { draftDefinition, type DraftResult, type DefinitionFile } from '@opcb/connector-runtime';
-export { checkUrl as checkDefinitionUrl, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
+export { checkUrl as checkDefinitionUrl, keyParamsIn, type ConnectorProviderDefinition } from '@opcb/connector-sdk';
 export type { WorldProvider };
