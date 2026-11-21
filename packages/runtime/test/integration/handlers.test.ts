@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { REQUEST_CHANNELS, type RequestChannel, type RequestOf } from '@opcb/ipc-contract';
+import { ProviderError } from '@opcb/provider-sdk';
 import { settle, startRuntime } from '../helpers/harness.js';
 
 /**
@@ -250,7 +251,13 @@ test('every channel answers a benign request in demo mode without throwing', asy
         const message = err instanceof Error ? err.message : String(err);
         // A "not registered" answer for a camera that does not exist is a correct answer,
         // not an unimplemented channel; everything else is a real failure.
-        if (MAY_REPORT_MISSING.has(channel)) continue;
+        // ...and said as an error the IPC layer passes on: a plain Error reaches the window as
+        // "internal error", whatever it says.
+        if (
+          MAY_REPORT_MISSING.has(channel) &&
+          (typeof (err as { ipcCode?: unknown }).ipcCode === 'string' || err instanceof ProviderError)
+        )
+          continue;
         failures.push({ channel, error: message });
       }
     }
