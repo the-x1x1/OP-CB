@@ -222,7 +222,8 @@ export class WorldPackRegistry {
   private async scan(): Promise<InstalledWorldPack[]> {
     await fs.mkdir(this.root, { recursive: true });
     await fs.rm(path.join(this.root, STAGING_DIR), { recursive: true, force: true }).catch(() => undefined);
-    const state = await this.readState();
+    let stateUnread = false;
+    const state = await this.readState({ onFailure: () => (stateUnread = true) });
     this.trust = await this.readTrust();
     const vaults = this.vaultsOf();
     const sources: Array<{ root: string; vault?: RegistryVault }> = [{ root: this.root }];
@@ -398,7 +399,9 @@ export class WorldPackRegistry {
         vault: { id: v.id, label: v.label },
       });
     }
-    if (stateChanged) await this.writeState(state);
+    // A state file that did not read is not written back: the switches and drives it records
+    // would be replaced by what this scan could guess.
+    if (stateChanged && !stateUnread) await this.writeState(state);
     this.packs = packs;
     this.sqliteIndexes = sqliteIndexes;
     this.index = sqlite ? new CompositePlaceSearch(sqliteIndexes) : PlaceIndex.merge(indexes);
@@ -761,7 +764,7 @@ export class WorldPackRegistry {
       this.log.error('worldpack activation failed', { id: manifest.id, error: message });
       return { installed: null, issues: [message], verification: { ...verification, ok: false, issues: [message] } };
     }
-    const state = await this.readState();
+    const state = await this.readState({ forChange: true });
     state.packs[manifest.id] = {
       installedAt: new Date(this.clock.now()).toISOString(),
       enabled: state.packs[manifest.id]?.enabled ?? true,
@@ -887,7 +890,7 @@ export class WorldPackRegistry {
         return { installed: null, issues: [`activation failed: ${errorText(err)}`] };
       }
       await fs.rm(old, { recursive: true, force: true }).catch(() => undefined);
-      const state = await this.readState();
+      const state = await this.readState({ forChange: true });
       state.packs[id] = {
         installedAt: new Date(this.clock.now()).toISOString(),
         enabled: true,
@@ -966,7 +969,7 @@ export class WorldPackRegistry {
         `"${pack.summary.name}" is on the vault "${pack.vault.label}". OP-CB does not delete files on a vault: switch the pack off here, or delete ${pack.dir} yourself.`,
       );
     await fs.rm(pack.dir, { recursive: true, force: true });
-    const state = await this.readState();
+    const state = await this.readState({ forChange: true });
     delete state.packs[id];
     await this.writeState(state);
     await this.scan();
@@ -984,7 +987,7 @@ export class WorldPackRegistry {
     const pack = this.get(id);
     // A duplicate listed under `<id>:<vault>` is not a pack of its own: nothing to switch.
     if (!pack || pack.summary.id !== path.basename(pack.dir)) return false;
-    const state = await this.readState();
+    const state = await this.readState({ forChange: true });
     const prev = state.packs[id];
     state.packs[id] = {
       installedAt: prev?.installedAt ?? pack.summary.installedAt,
@@ -1133,8 +1136,20 @@ export class WorldPackRegistry {
     return r.ok ? { ok: true, index: new PlaceIndex(r.entries) } : r;
   }
 
-  private async readState(): Promise<RegistryState> {
-    const raw = await readJsonFile<Partial<RegistryState>>(path.join(this.root, STATE_FILE)).catch(() => undefined);
+  /**
+   * Which packs are switched off and which drive each is on. A change (install, remove, a
+   * switch) refuses while the file does not read, rather than write back what it could guess;
+   * a scan reads it as nothing known and says so through `onFailure`.
+   */
+  private async readState(opts: { forChange?: boolean; onFailure?: () => void } = {}): Promise<RegistryState> {
+    const raw = await readJsonFile<Partial<RegistryState>>(path.join(this.root, STATE_FILE)).catch((err: unknown) => {
+      if (opts.forChange)
+        throw new Error(
+          `${STATE_FILE} in the packs folder does not read (${(err as NodeJS.ErrnoException).code ?? 'not JSON'}); nothing is changed until it does`,
+        );
+      opts.onFailure?.();
+      return undefined;
+    });
     const packs: Record<string, PackState> = {};
     if (raw && typeof raw === 'object' && raw.packs && typeof raw.packs === 'object') {
       for (const [id, v] of Object.entries(raw.packs)) {

@@ -1009,7 +1009,12 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         filters: [{ name: 'OP-CB pack', extensions: ['worldpack'] }],
       });
       if ('cancelled' in choice) return { installed: null, issues: ['cancelled'] };
-      const result = await core.packs.install(choice.path);
+      let result;
+      try {
+        result = await core.packs.install(choice.path);
+      } catch (err) {
+        return { installed: null, issues: [errorText(err)] };
+      }
       core.emitter.emit('offline.changed', core.offlineStatus());
       return { installed: result.installed, issues: result.issues };
     },
@@ -1022,7 +1027,12 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         filters: [{ name: 'OP-CB pack', extensions: ['worldpack'] }],
       });
       if ('cancelled' in choice) return { installed: null, issues: ['cancelled'] };
-      const result = await core.installPackToVault(choice.path, vaultId);
+      let result;
+      try {
+        result = await core.installPackToVault(choice.path, vaultId);
+      } catch (err) {
+        return { installed: null, issues: [errorText(err)] };
+      }
       core.emitter.emit('offline.changed', core.offlineStatus());
       return { installed: result.installed, issues: result.issues };
     },
@@ -1054,7 +1064,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         await core.packs.remove(id);
       } catch (err) {
         if (err instanceof VaultPackError) throw new InvalidRequestError(err.message);
-        throw err;
+        throw new UnavailableError(errorText(err));
       }
       const status = core.offlineStatus();
       core.emitter.emit('offline.changed', status);
@@ -1062,7 +1072,11 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
     'offline.setPackEnabled': async ({ id, enabled }) => {
       requireId(id, 'id');
-      await core.packs.setEnabled(id, enabled === true);
+      try {
+        await core.packs.setEnabled(id, enabled === true);
+      } catch (err) {
+        throw new UnavailableError(errorText(err));
+      }
       const status = core.offlineStatus();
       core.emitter.emit('offline.changed', status);
       return status;

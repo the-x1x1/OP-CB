@@ -82,6 +82,10 @@ Versioning: [semantic versioning](https://semver.org/).
   change read it as no publishers and "only trusted publishers" off, and wrote that back with
   itself. A trust change now refuses, saying the file does not read, until it reads again;
   nothing is written over it. In 0.7.4 too.
+- The same for the packs' own record of which are switched off and which drive each is on
+  (`state.json`): a scan no longer writes back a file it could not read, and installing,
+  removing or switching a pack says the file does not read instead of replacing it with a
+  guess (every pack back on, vault packs no longer tied to their drive). In 0.7.4 too.
 - **Moving the data folder went on when one of the small files could not be copied** (a full
   drive, a refused read): the move was reported done, and the next start, in the new folder,
   was without that file — the settings, the keys, the places. Only a file that is not there is

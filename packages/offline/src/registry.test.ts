@@ -214,3 +214,29 @@ test('registry: a trust file that does not read is not written over by the next 
     await fs.rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test('registry: a pack state file that does not read is not written over', async () => {
+  const dir = await tempDir();
+  try {
+    const dataDir = path.join(dir, 'data');
+    const file = path.join(dir, 'hawaii.worldpack');
+    await writeTestPack(file);
+    const reg = registry(dataDir);
+    await reg.refresh();
+    assert.ok((await reg.install(file)).installed);
+    await reg.setEnabled('hawaii-test', false);
+    const stateFile = path.join(dataDir, 'worldpacks', 'state.json');
+    const damaged = (await fs.readFile(stateFile, 'utf8')).slice(0, 25);
+    await fs.writeFile(stateFile, damaged);
+    // A scan reads it as nothing known (so the pack shows on, its install time from the
+    // folder) but writes nothing; a change refuses. Written back, the switch the operator set
+    // and which drive each pack is on were gone.
+    await reg.refresh();
+    assert.equal(await fs.readFile(stateFile, 'utf8'), damaged, 'a scan did not write over it');
+    await assert.rejects(reg.setEnabled('hawaii-test', true), /state\.json/);
+    await assert.rejects(reg.remove('hawaii-test'), /state\.json/);
+    assert.equal(await fs.readFile(stateFile, 'utf8'), damaged);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
