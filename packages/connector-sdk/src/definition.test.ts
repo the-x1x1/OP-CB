@@ -8,6 +8,7 @@ import {
   definitionHosts,
   definitionToManifest,
   isLocalSocketPlaceholder,
+  keyParamsIn,
   parseDefinition,
   resolveDataPolicy,
   type ConnectorProviderDefinition,
@@ -359,4 +360,23 @@ test('bodyToObservations: finds the records and maps them; a body with none wher
     assert.ok(bad.malformed, JSON.stringify(body));
     assert.deepEqual([bad.total, bad.observations.length], [0, 0]);
   }
+});
+
+test('keyParamsIn: the query names a key goes under, in any case and spelling; nothing else', () => {
+  assert.deepEqual(keyParamsIn('https://api.example.org/x?apikey=A&format=json'), ['apikey']);
+  assert.deepEqual(keyParamsIn('https://api.example.org/x?API_KEY=A&appid=B&Subscription-Key=C&access_token=D&q=key'), [
+    'API_KEY',
+    'appid',
+    'Subscription-Key',
+    'access_token',
+  ]);
+  assert.deepEqual(keyParamsIn('https://api.example.org/x?key=A&key=B'), ['key'], 'once each');
+  assert.deepEqual(keyParamsIn('https://api.example.org/{TOKEN}/x?token=A'), ['token'], 'with the path placeholder');
+  assert.deepEqual(
+    keyParamsIn('https://api.example.org/x?keyword=A&monkey=B&tokens=C&apikeys=D'),
+    [],
+    'whole names only',
+  );
+  assert.deepEqual(keyParamsIn('https://api.example.org/apikey/x#key=A'), [], 'not the path or the fragment');
+  assert.deepEqual(keyParamsIn('not a url'), []);
 });

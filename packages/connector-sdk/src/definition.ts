@@ -556,11 +556,6 @@ export const definitionSchema: Schema<ConnectorProviderDefinition> = s.refine(
 ) as Schema<ConnectorProviderDefinition>;
 
 /**
- * A URL a definition may name: https (or wss), a real host, no credentials in it, and —
- * for a remote connector — not loopback, a private range or a link-local metadata address
- * (SSRF, directive §76). Local connectors have their own contract.
- */
-/**
  * Query parameters of `url` whose names are names a key goes under (the same names the logs
  * redact: `key`, `apikey`, `appid`, `token`, `subscription-key`, …). A definition file is
  * plain text, so a key there is a key on disk unencrypted: drafting moves it to the key store
@@ -590,6 +585,11 @@ export function isLocalSocketPlaceholder(url: string): boolean {
   }
 }
 
+/**
+ * A URL a definition may name: https (or wss), a real host, no credentials in it, and —
+ * for a remote connector — not loopback, a private range or a link-local metadata address
+ * (SSRF, directive §76). Local connectors have their own contract.
+ */
 export function checkUrl(url: string, protocols: string[]): string | undefined {
   // `{TOKEN}` stands for a secret that is put in the path when the request is made. In the
   // host it would never be filled in, and a secret has no business in a name that is looked up.
