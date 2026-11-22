@@ -554,3 +554,35 @@ test('offline: the runtime starts and answers with its installed packs damaged i
     await fs.rm(tmp, { recursive: true, force: true });
   }
 });
+
+test('offline: a pack state file that does not read refuses changes with the reason, over IPC', async () => {
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-runtime-packstate-'));
+  try {
+    const clock = new testing.VirtualClock(Date.parse('2026-09-21T12:00:00.000Z'));
+    const packPath = await buildHawaiiPack(tmp, clock);
+    const dataDir = path.join(tmp, 'data');
+    const h = await startRuntime({ dataDir, clock, fetchImpl: offlineFetch({ count: 0 }), providerInstances: [] });
+    try {
+      h.host.openQueue.push(packPath);
+      assert.ok((await h.client.request('offline.installPack', undefined)).installed);
+      const stateFile = path.join(dataDir, 'worldpacks', 'state.json');
+      await fs.writeFile(stateFile, '{"formatVersion":1,"pac');
+      const refused = (err: unknown) => {
+        assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
+        assert.match((err as Error).message, /state\.json/);
+        return true;
+      };
+      await assert.rejects(h.client.request('offline.setPackEnabled', { id: 'hawaii', enabled: false }), refused);
+      await assert.rejects(h.client.request('offline.removePack', { id: 'hawaii' }), refused);
+      h.host.openQueue.push(packPath);
+      const again = await h.client.request('offline.installPack', undefined);
+      assert.equal(again.installed, null);
+      assert.match(again.issues.join(' '), /state\.json/);
+      assert.equal(await fs.readFile(stateFile, 'utf8'), '{"formatVersion":1,"pac', 'nothing written over it');
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true });
+  }
+});
