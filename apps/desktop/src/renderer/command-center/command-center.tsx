@@ -10,6 +10,7 @@ import {
 } from '@opcb/ipc-contract';
 import { Button, Icon, type IconName } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
+import { describeError } from '../store/sync.js';
 import { VersionTag } from '../components/version-tag.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS } from './checks.js';
 import { completion } from './guide-engine.js';
@@ -611,6 +612,9 @@ function GroundedAsk({ model }: { model: string }) {
       const a = await store.aiTest(model, prompt);
       if (a.ok) setAnswer(a.text ?? '');
       else setProblem(a.message ?? 'The model did not answer.');
+    } catch (err) {
+      // The library search before the model: failed, it showed nothing at all.
+      setProblem(`The library could not be searched: ${describeError(err)}`);
     } finally {
       setBusy(false);
     }

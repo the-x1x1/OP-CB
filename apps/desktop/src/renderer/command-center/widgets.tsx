@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import type { LibraryFindAnswer, PrepCategory, PrepRecord } from '@opcb/ipc-contract';
 import { Button, Toggle } from '@opcb/ui';
 import { useActions, useAppSlice } from '../store/store.js';
+import { describeError } from '../store/sync.js';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, ago, heardHow } from './checks.js';
 import type { ActionId } from './guide-types.js';
 import { useCC, useShellFacts } from './use-cc.js';
@@ -125,17 +126,26 @@ export function LibraryFind() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [hits, setHits] = useState<LibraryFindAnswer['hits'] | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
   const readable = (cc.shelf?.books ?? []).filter((b) => b.readable);
   if (!readable.length) return <p className="wv-cc-muted">No books OP-CB can open yet.</p>;
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!text.trim()) return;
     setBusy(true);
+    setProblem(null);
     try {
       setHits((await store.findInLibrary({ query: text.trim(), limit: 10 })).hits);
+    } catch (err) {
+      setHits(null);
+      setProblem(`The library could not be searched: ${describeError(err)}`);
     } finally {
       setBusy(false);
     }
+  };
+  const open = async (bookId: string, key: string) => {
+    const r = await store.openLibrary({ kind: 'book', bookId, key });
+    setProblem(r.opened ? null : `The page could not be opened: ${r.message ?? 'not opened'}`);
   };
   return (
     <form className="wv-cc-inline" onSubmit={(e) => void submit(e)}>
@@ -154,11 +164,7 @@ export function LibraryFind() {
           {hits.length ? null : <li className="wv-cc-muted">No titles start with that.</li>}
           {hits.map((h) => (
             <li key={`${h.bookId}/${h.key}`}>
-              <button
-                type="button"
-                className="wv-cc-link"
-                onClick={() => void store.openLibrary({ kind: 'book', bookId: h.bookId, key: h.key })}
-              >
+              <button type="button" className="wv-cc-link" onClick={() => void open(h.bookId, h.key)}>
                 {h.title}
               </button>
               <span className="wv-cc-muted"> — {h.bookTitle}</span>
@@ -166,6 +172,7 @@ export function LibraryFind() {
           ))}
         </ul>
       ) : null}
+      {problem ? <p className="wv-cc-problem">{problem}</p> : null}
     </form>
   );
 }
@@ -178,6 +185,7 @@ export function LibrarySearch() {
   const [book, setBook] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   // Books are named to the server by their catalogue id: a real kiwix-serve does not know the
   // catalogue's `name` as a book name (local-services.ts librarySearch).
   const chosen = book || books[0]?.id || '';
@@ -194,8 +202,11 @@ export function LibrarySearch() {
     e.preventDefault();
     if (!chosen || !text.trim()) return;
     setBusy(true);
+    setProblem(null);
     try {
       await store.librarySearch(chosen, text.trim());
+    } catch (err) {
+      setProblem(`The book could not be searched: ${describeError(err)}`);
     } finally {
       setBusy(false);
     }
@@ -214,6 +225,7 @@ export function LibrarySearch() {
         className="wv-input"
         placeholder="Search the book"
         value={text}
+        maxLength={200}
         onChange={(e) => setText(e.target.value)}
       />
       <Button size="sm" type="submit" disabled={busy}>
@@ -236,6 +248,7 @@ export function LibrarySearch() {
           <p className="wv-cc-problem">{last.answer.message}</p>
         )
       ) : null}
+      {problem ? <p className="wv-cc-problem">{problem}</p> : null}
     </form>
   );
 }

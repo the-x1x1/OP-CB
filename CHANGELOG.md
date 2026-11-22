@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Command Center library: a search by title, a search of a book, a question to the library
+  and opening a page that fail say why, instead of showing nothing. A book search is held to
+  the 200 characters the server takes; a longer one was refused without a word. In 0.7.4 too.
 - The local AI test and the radio test say so when their request fails (Command Center),
   instead of the button going back with nothing shown. For the radio, the window says it is
   not known whether anything was sent, and shows no report the radio did not give. In 0.7.4 too.
