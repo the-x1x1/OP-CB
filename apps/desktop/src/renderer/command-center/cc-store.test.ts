@@ -67,3 +67,24 @@ test('the store: a check that comes back after the operator moved on is recorded
   assert.equal(p.steps[checkedStep.id]?.evidence, 'a pack is on');
   assert.equal(p.steps[def.steps[0]!.id]?.outcome === 'verified', false, 'not on the step shown now');
 });
+
+test('the store: an AI or radio test whose request fails says so, and no radio report is made up', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  const failing = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      channel === 'ai.test' || channel === 'mesh.sendTest'
+        ? Promise.reject(Object.assign(new Error('request timed out'), { code: 'UNAVAILABLE', channel }))
+        : demo.request(channel as never, req as never),
+  });
+  const store = new CommandCenterStore(failing, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  const ai = await store.aiTest('llama3.2', 'hello');
+  assert.equal(ai.ok, false);
+  assert.match(ai.message ?? '', /^The model could not be asked: request timed out/);
+  assert.equal(store.get().lastAiTest?.answer, ai, 'shown where the answer goes');
+  assert.equal(store.get().aiBusy, false);
+
+  assert.equal(await store.meshTest('!a1b2c3d4', 'Base', 'radio check'), null);
+  assert.equal(store.get().lastMeshTest, undefined, 'no report from the radio is invented');
+  assert.match(store.get().meshError ?? '', /could not be asked .*request timed out.*not known/);
+  assert.equal(store.get().meshBusy, false);
+});

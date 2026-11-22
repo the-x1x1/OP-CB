@@ -23,6 +23,7 @@ import type { WorldObject } from '@opcb/world-model';
 import { MESH_PROVIDER, RECEIVER_PROVIDERS, type LastSearch } from './checks.js';
 import type { CheckResult, GuideDefinition, SectionId } from './guide-types.js';
 import { currentProgress, recordCheck, startGuide } from './guide-engine.js';
+import { describeError } from '../store/sync.js';
 
 /**
  * The Command Center's own state, beside the shell's store: whether it is open and where, the
@@ -49,6 +50,8 @@ export interface CommandCenterState {
   aiBusy: boolean;
   lastMeshTest?: { to: string; name: string; answer: MeshTestAnswer };
   meshBusy: boolean;
+  /** Why the last radio test could not be asked at all (not a report from the radio). */
+  meshError?: string | undefined;
   /** The map download, as the runtime last said (polled while it runs). */
   mapDownload: MapDownloadStatus;
   /** The built-in library: books, references, and the download into it (polled while it runs). */
@@ -192,8 +195,21 @@ export class CommandCenterStore {
   async aiTest(model: string, prompt: string): Promise<AiTestAnswer> {
     const offline = this.isOffline();
     this.set({ aiBusy: true });
+    let answer: AiTestAnswer;
     try {
-      const answer = await this.client.request('ai.test', { model, prompt });
+      answer = await this.client.request('ai.test', { model, prompt });
+    } catch (err) {
+      // Said where the answer goes: thrown, the button only stopped waiting, and nothing showed.
+      answer = {
+        ok: false,
+        model,
+        message: `The model could not be asked: ${describeError(err)}`,
+        elapsedMs: 0,
+        grounded: false,
+        at: new Date(this.now()).toISOString(),
+      };
+    }
+    try {
       this.set({ lastAiTest: { offline, answer } });
       return answer;
     } finally {
@@ -201,12 +217,21 @@ export class CommandCenterStore {
     }
   }
 
-  async meshTest(to: string, name: string, text: string): Promise<MeshTestAnswer> {
-    this.set({ meshBusy: true });
+  /**
+   * One test message; `null` when the request itself failed. That is said apart from the
+   * radio's reports: what the radio did is not known, and no report is made up for it.
+   */
+  async meshTest(to: string, name: string, text: string): Promise<MeshTestAnswer | null> {
+    this.set({ meshBusy: true, meshError: undefined });
     try {
       const answer = await this.client.request('mesh.sendTest', { to, text });
       this.set({ lastMeshTest: { to, name, answer } });
       return answer;
+    } catch (err) {
+      this.set({
+        meshError: `The test could not be asked of OP-CB (${describeError(err)}); whether the radio sent anything is not known.`,
+      });
+      return null;
     } finally {
       this.set({ meshBusy: false });
     }

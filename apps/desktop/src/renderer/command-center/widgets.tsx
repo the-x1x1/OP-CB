@@ -336,6 +336,7 @@ export function MeshTest() {
           {cc.meshBusy ? 'Waiting for the report (up to a minute)…' : 'Send test message'}
         </Button>
       )}
+      {cc.meshError ? <p className="wv-cc-problem">{cc.meshError}</p> : null}
       {t ? (
         <div className="wv-cc-answer">
           <ul className="wv-cc-stages">

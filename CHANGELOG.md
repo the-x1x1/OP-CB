@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- The local AI test and the radio test say so when their request fails (Command Center),
+  instead of the button going back with nothing shown. For the radio, the window says it is
+  not known whether anything was sent, and shows no report the radio did not give. In 0.7.4 too.
 - A file or folder dialog left open for more than a minute no longer ends its request with
   "request timed out" while the export or import goes on after the choice. The local AI test
   gets its three minutes, and the radio test its minute for the delivery report: both were
