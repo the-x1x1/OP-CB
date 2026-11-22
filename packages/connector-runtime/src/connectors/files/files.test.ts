@@ -587,6 +587,11 @@ test('gdal-import without ogr2ogr is OFFLINE with a message, and looks again onl
   clock.advance(5 * 60_000);
   await rejects(query(), 'OFFLINE');
   assert.equal(detects, 2);
+  // The clock put back an hour: the last look, now ahead of the clock, counts as long ago, so
+  // GDAL installed meanwhile is found at once rather than an hour later.
+  clock.set(clock.now() - 3_600_000);
+  await rejects(query(), 'OFFLINE');
+  assert.equal(detects, 3);
 });
 
 test('gdal-import on a host without a converter reports UNSUPPORTED', async () => {
