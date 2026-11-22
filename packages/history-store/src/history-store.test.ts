@@ -548,6 +548,15 @@ test('store: bounded queue drops with a count and a log line when the backend is
     sink.records.some((r) => r.level === 'warn' && r.message.includes('queue full')),
     'overflow is logged',
   );
+  // Repeats inside ten seconds are counted, not written again...
+  const warnings = () => sink.records.filter((r) => r.level === 'warn' && r.message.includes('queue full')).length;
+  store.writeBatch(batch(AIRCRAFT_PROVIDER, mk(5, 300)));
+  assert.equal(warnings(), 1);
+  // ...and with the clock put back an hour, the next overflow is written: the last warning,
+  // now an hour ahead of the clock, counts as long ago (it held every warning back for the hour).
+  clock.set(clock.now() - 3_600_000);
+  store.writeBatch(batch(AIRCRAFT_PROVIDER, mk(5, 400)));
+  assert.equal(warnings(), 2);
   release!();
   await store.flush();
   assert.equal(store.getStats().writtenRows, 20);
