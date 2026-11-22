@@ -64,11 +64,7 @@ export function encryptionUnavailableReason(platform: string, backend: string | 
 }
 
 export type CredentialErrorCode =
-  | 'ENCRYPTION_UNAVAILABLE'
-  | 'INVALID_KEY'
-  | 'INVALID_VALUE'
-  | 'CORRUPT'
-  | 'WRITE_FAILED';
+  'ENCRYPTION_UNAVAILABLE' | 'INVALID_KEY' | 'INVALID_VALUE' | 'CORRUPT' | 'WRITE_FAILED';
 
 export class CredentialStoreError extends Error {
   /** How the window is told, wherever the error is thrown from (a key stored by a draft too). */
