@@ -248,3 +248,36 @@ test('tile cache: clear empties the disk and the count', async () => {
   assert.equal(s.bytes, 0);
   await assert.rejects(fs.access(path.join(dir, 'esri-world-imagery', '1', '0', '0.bin')));
 });
+
+test('tile cache: a tile used after the clock was put back has its file time set again', async () => {
+  const dir = await tmp();
+  const DAY = 86_400_000;
+  let t = Date.parse('2026-11-21T00:00:00Z');
+  const c = cache(dir, upstream().fetch, { now: () => t });
+  await c.init();
+  assert.equal((await c.respond('/__tiles/esri-world-imagery/4/3/7')).status, 200);
+  const files: string[] = [];
+  const walk = async (d: string) => {
+    for (const e of await fs.readdir(d, { withFileTypes: true }))
+      if (e.isDirectory()) await walk(path.join(d, e.name));
+      else if (!e.name.endsWith('.json')) files.push(path.join(d, e.name));
+  };
+  await walk(dir);
+  const tile = files.find((f) => /7/.test(path.basename(f)))!;
+  const mtime = async () => (await fs.stat(tile)).mtimeMs;
+  const waitFor = async (want: number) => {
+    const deadline = Date.now() + 5_000;
+    while (Math.abs((await mtime()) - want) > 1000 && Date.now() < deadline) await new Promise((r) => setTimeout(r, 5));
+  };
+  // A day later it is used: the file's time moves to then.
+  t += DAY;
+  await c.respond('/__tiles/esri-world-imagery/4/3/7');
+  await waitFor(t);
+  assert.ok(Math.abs((await mtime()) - t) <= 1000);
+  // The clock goes back a week; the tile is used again. Its last touch, a day ahead of the
+  // clock, counts as long ago: the file's time is set to now, not left in the future.
+  t -= 7 * DAY;
+  await c.respond('/__tiles/esri-world-imagery/4/3/7');
+  await waitFor(t);
+  assert.ok(Math.abs((await mtime()) - t) <= 1000, 'the file time follows the clock back');
+});
