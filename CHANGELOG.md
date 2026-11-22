@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Satellites: an orbit whose epoch names a date or time that does not exist (30 February,
+  24:00) is refused, not moved into the next day and drawn where the satellite is not. In
+  0.7.4 too.
 - Looking through a few sources' details no longer uses up the ten-a-minute budget the key
   channels share, so the key typed next is not refused as "rate limited". Each key's presence
   is asked once in half a minute instead of at every look (twice per source). In 0.7.4 too.

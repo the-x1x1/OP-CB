@@ -79,6 +79,12 @@ export function ommEpochToIso(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined;
   const m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})?$/.exec(value.trim());
   if (!m) return undefined;
+  // A date or time that does not exist (30 February, 24:00) is refused, not rolled over into
+  // the next day: an epoch moved by days puts the satellite somewhere it is not.
+  const [y, mo, d, h, mi, sec] = m[1]!.split(/[-T:]/).map(Number) as [number, number, number, number, number, number];
+  const real = new Date(Date.UTC(y, mo - 1, d, h, mi, sec));
+  if (real.getUTCMonth() !== mo - 1 || real.getUTCDate() !== d || real.getUTCHours() !== h || mi > 59 || sec > 59)
+    return undefined;
   const fraction = m[2] ? m[2].slice(0, 4).padEnd(4, '0') : '.000';
   const ms = Date.parse(`${m[1]}${fraction}${m[3] ?? 'Z'}`);
   return Number.isFinite(ms) ? new Date(ms).toISOString() : undefined;

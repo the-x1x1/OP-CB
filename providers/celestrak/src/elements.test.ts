@@ -13,6 +13,8 @@ import {
   tleToElements,
   ommEpochToIso,
   intlDesignatorFromTle,
+  semiMajorAxisKm,
+  validateElements,
 } from './elements.js';
 
 const fixtures = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'fixtures', 'celestrak');
@@ -59,6 +61,48 @@ test('TLE checksum, Alpha-5 catalog numbers and designators', () => {
   assert.equal(ommEpochToIso('2026-09-21T03:12:34.123456'), '2026-09-21T03:12:34.123Z');
   assert.equal(ommEpochToIso('2026-09-21T03:12:34Z'), '2026-09-21T03:12:34.000Z');
   assert.equal(ommEpochToIso('yesterday'), undefined);
+  // A date or time that does not exist is refused, not rolled into the next day.
+  assert.equal(ommEpochToIso('2026-02-30T00:00:00'), undefined);
+  assert.equal(ommEpochToIso('2026-04-31T12:00:00'), undefined);
+  assert.equal(ommEpochToIso('2026-09-21T24:00:00'), undefined);
+  assert.equal(ommEpochToIso('2026-09-21T23:60:00'), undefined);
+  assert.equal(ommEpochToIso('2026-13-01T00:00:00'), undefined);
+  assert.equal(ommEpochToIso('2028-02-29T23:59:59.999'), '2028-02-29T23:59:59.999Z', 'a leap day');
+  assert.equal(ommEpochToIso('2026-09-21T03:12:34+05:00'), '2026-09-20T22:12:34.000Z');
+});
+
+test('semiMajorAxisKm and validateElements: known orbits, and each limit', () => {
+  assert.ok(Math.abs(semiMajorAxisKm(15.5) - 6794.9) < 0.5, 'low orbit near the ISS');
+  assert.ok(Math.abs(semiMajorAxisKm(1.00273791) - 42164.2) < 0.5, 'geostationary');
+  const ok = {
+    noradId: 25544,
+    name: 'ISS',
+    epoch: '2026-09-21T00:00:00.000Z',
+    meanMotion: 15.5,
+    eccentricity: 0.0005,
+    inclination: 51.6,
+    raan: 360,
+    argPerigee: 0,
+    meanAnomaly: 359.9,
+  };
+  assert.equal(validateElements(ok), undefined);
+  const cases: Array<[Partial<typeof ok>, RegExp]> = [
+    [{ noradId: 0 }, /NORAD/],
+    [{ noradId: 1.5 }, /NORAD/],
+    [{ name: '' }, /name/],
+    [{ epoch: 'soon' }, /epoch/],
+    [{ meanMotion: 0 }, /mean motion/],
+    [{ meanMotion: 20.1 }, /mean motion/],
+    [{ meanMotion: Number.NaN }, /mean motion/],
+    [{ eccentricity: 1 }, /eccentricity/],
+    [{ eccentricity: -0.1 }, /eccentricity/],
+    [{ inclination: 180.1 }, /inclination/],
+    [{ raan: -1 }, /RAAN/],
+    [{ argPerigee: 361 }, /perigee/],
+    [{ meanAnomaly: Number.NaN }, /anomaly/],
+  ];
+  for (const [change, why] of cases)
+    assert.match(validateElements({ ...ok, ...change }) ?? '', why, JSON.stringify(change));
 });
 
 test('malformed TLE records are rejected individually', () => {
