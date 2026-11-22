@@ -167,9 +167,12 @@ export function matchesFrameHost(u: URL, entry: string): boolean {
   const slash = entry.indexOf('/');
   if (slash < 0) return u.hostname.toLowerCase() === entry.toLowerCase();
   const prefix = entry.slice(slash);
+  // A prefix is a folder: `host/feeds` holds `/feeds/x`, never `/feedsevil/x` (every pinned
+  // entry ends in `/` today; one written without would otherwise let a sibling path through).
+  const folder = prefix.endsWith('/') ? prefix : `${prefix}/`;
   return (
     u.hostname.toLowerCase() === entry.slice(0, slash).toLowerCase() &&
-    u.pathname.startsWith(prefix) &&
+    (u.pathname.startsWith(folder) || u.pathname === prefix) &&
     !/%2f/i.test(u.pathname.slice(prefix.length))
   );
 }

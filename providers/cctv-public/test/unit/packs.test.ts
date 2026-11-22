@@ -387,3 +387,24 @@ test('partnerCredit: a megabyte of markup is read in a moment', () => {
   assert.equal(partnerCredit(`${'<a '.repeat(300_000)}>Images courtesy of TransLink`), 'Images courtesy of TransLink');
   assert.ok(Date.now() - started < 1000, `${Date.now() - started} ms`);
 });
+
+test('isOnHost: a pinned path is a folder; nothing beside it, above it or encoded past it', () => {
+  const pinned = ['cams.example.org/feeds/', 'img.example.net', 'old.example.com/snap'];
+  const on = (url: string) => isOnHost(url, pinned);
+  assert.equal(on('https://cams.example.org/feeds/a.jpg'), true);
+  assert.equal(on('https://CAMS.example.org/feeds/a.jpg'), true, 'host in any case');
+  assert.equal(on('https://cams.example.org/feedsevil/a.jpg'), false);
+  assert.equal(on('https://cams.example.org/feeds/../admin/a.jpg'), false, 'dot segments are resolved first');
+  assert.equal(on('https://cams.example.org/feeds/%2e%2e/admin'), false);
+  assert.equal(on('https://cams.example.org/feeds/x%2F..%2Fadmin'), false, 'an encoded slash');
+  assert.equal(on('https://cams.example.org/other/a.jpg'), false);
+  assert.equal(on('https://img.example.net/anything/at/all.jpg'), true, 'a host alone holds every path');
+  assert.equal(on('https://img.example.net.evil.org/a.jpg'), false);
+  assert.equal(on('http://img.example.net/a.jpg'), false, 'https only');
+  assert.equal(on('https://user:pw@img.example.net/a.jpg'), false, 'no login in the address');
+  assert.equal(on('not a url'), false);
+  // An entry written without its closing slash still names a folder, not a prefix of names.
+  assert.equal(on('https://old.example.com/snap/1.jpg'), true);
+  assert.equal(on('https://old.example.com/snap'), true);
+  assert.equal(on('https://old.example.com/snapshots-private/1.jpg'), false);
+});

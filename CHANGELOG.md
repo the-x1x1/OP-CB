@@ -7,6 +7,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Changed
 
+- Public cameras: a pinned frame path is held as a folder even when written without its
+  closing slash (`host/snap` no longer admits `/snapshots-private/…`). Every pack's entries
+  end in a slash today, so no camera changes.
 - When an RTSP camera cannot be handed to go2rtc, the error says only that go2rtc could not
   be reached or did not answer. The request that failed carries the camera's login in its
   address, and the error used to be built from whatever the failure said.
