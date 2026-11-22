@@ -172,11 +172,16 @@ export class CommandCenterStore {
     }
   }
 
-  async openService(id: LocalServiceStatus['id'], path?: string): Promise<boolean> {
+  /**
+   * A local service's page in the browser: null when it opened, else why not, for the control
+   * pressed to show (it showed nothing: a browser that could not be started said only false).
+   */
+  async openService(id: LocalServiceStatus['id'], path?: string): Promise<string | null> {
     try {
-      return (await this.client.request('services.open', path ? { id, path } : { id })).opened;
-    } catch {
-      return false;
+      const r = await this.client.request('services.open', path ? { id, path } : { id });
+      return r.opened ? null : 'The page could not be opened from here.';
+    } catch (err) {
+      return describeError(err);
     }
   }
 

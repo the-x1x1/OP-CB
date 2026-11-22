@@ -237,7 +237,11 @@ export function LibrarySearch() {
             {last.answer.hits.length ? null : <li className="wv-cc-muted">No pages found.</li>}
             {last.answer.hits.map((h) => (
               <li key={h.path}>
-                <button type="button" className="wv-cc-link" onClick={() => void store.openService('kiwix', h.path)}>
+                <button
+                  type="button"
+                  className="wv-cc-link"
+                  onClick={() => void store.openService('kiwix', h.path).then(setProblem)}
+                >
                   {h.title}
                 </button>
                 {h.snippet ? <span className="wv-cc-muted"> — {h.snippet}</span> : null}
@@ -721,7 +725,7 @@ function StepAction({ id }: { id: ActionId }) {
     case 'ai.openSection':
       return button('Choose in Local Intelligence', () => store.show('intelligence'));
     case 'library.open':
-      return button('Open the library', () => store.openService('kiwix'));
+      return button('Open the library', () => store.openService('kiwix').then(setNote));
     case 'library.search':
       return <LibrarySearch />;
     case 'library.openKnowledge':
@@ -737,7 +741,7 @@ function StepAction({ id }: { id: ActionId }) {
     case 'library.find':
       return <LibraryFind />;
     case 'learning.open':
-      return button('Open Kolibri', () => store.openService('kolibri'));
+      return button('Open Kolibri', () => store.openService('kolibri').then(setNote));
     case 'prep.openInventory':
       return button('Open the inventory', () => store.show('prepare'));
     case 'prep.addStarter':

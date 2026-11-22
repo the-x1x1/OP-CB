@@ -176,3 +176,27 @@ test('the store: an inventory save, removal or export that fails says why; the n
   assert.equal(await store.savePrep(record), true);
   assert.equal(store.get().prepProblem, undefined);
 });
+
+test('the store: a local service page that cannot be opened gives the reason to show', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  let answer: 'refuse' | 'not-opened' | 'opened' = 'refuse';
+  const client = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      channel === 'services.open'
+        ? answer === 'refuse'
+          ? Promise.reject(
+              Object.assign(new Error('The page could not be opened: no application is associated'), {
+                code: 'UNAVAILABLE',
+                channel,
+              }),
+            )
+          : Promise.resolve({ opened: answer === 'opened' })
+        : demo.request(channel as never, req as never),
+  });
+  const store = new CommandCenterStore(client, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  assert.match((await store.openService('kiwix')) ?? '', /could not be opened: no application/);
+  answer = 'not-opened';
+  assert.equal(await store.openService('kiwix', '/content/x'), 'The page could not be opened from here.');
+  answer = 'opened';
+  assert.equal(await store.openService('kolibri'), null);
+});

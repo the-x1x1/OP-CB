@@ -413,6 +413,7 @@ function PackList() {
 
 function ServiceLine({ id }: { id: LocalServiceId }) {
   const [cc, store] = useCC();
+  const [openProblem, setOpenProblem] = useState<string | null>(null);
   const s = cc.services?.find((x) => x.id === id);
   if (!s) return <p className="wv-cc-muted">{cc.servicesBusy ? 'Looking…' : 'Not asked yet.'}</p>;
   return (
@@ -434,10 +435,16 @@ function ServiceLine({ id }: { id: LocalServiceId }) {
         {s.detail ? ` — ${s.detail}` : ''}
       </span>
       {s.state === 'running' && id !== 'ollama' ? (
-        <Button size="sm" variant="ghost" icon="external" onClick={() => void store.openService(id)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          icon="external"
+          onClick={() => void store.openService(id).then(setOpenProblem)}
+        >
           Open
         </Button>
       ) : null}
+      {openProblem ? <span className="wv-cc-problem"> {openProblem}</span> : null}
     </p>
   );
 }
@@ -651,8 +658,10 @@ function GroundedAsk({ model }: { model: string }) {
                   className="wv-cc-link"
                   onClick={() =>
                     void (h.bookId
-                      ? store.openLibrary({ kind: 'book', bookId: h.bookId, key: h.path })
-                      : store.openService('kiwix', h.path))
+                      ? store
+                          .openLibrary({ kind: 'book', bookId: h.bookId, key: h.path })
+                          .then((r) => setProblem(r.opened ? null : (r.message ?? 'The page could not be opened.')))
+                      : store.openService('kiwix', h.path).then(setProblem))
                   }
                 >
                   {h.title}

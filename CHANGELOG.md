@@ -90,7 +90,8 @@ Versioning: [semantic versioning](https://semver.org/).
   showed nothing, and the next start went to the drive all the same. In 0.7.4 too.
 - A link, a local service's page or a folder that the system cannot open (no program for
   it, or a folder that cannot be made) says what could not be opened and why, instead of
-  "internal error". In 0.7.4 too.
+  "internal error". A local service's page (the library, Kolibri) said nothing at all: the
+  Command Center now shows the reason beside the control pressed. In 0.7.4 too.
 - Importing a collection when a thousand imported copies of it already exist says so, and
   that removing some lets it import again, instead of "internal error". In 0.7.4 too.
 - On Windows, the settings, the key file, the lists and each source's settings are read again
