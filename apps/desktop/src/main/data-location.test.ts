@@ -113,3 +113,22 @@ test('back to the usual folder: a pointer that cannot be removed is said, not an
   );
   assert.ok((await fs.readdir(usual)).includes(POINTER_FILE), 'left as it was');
 });
+
+test('moving: a pointer that cannot be written is said; the folder made ready is taken as it is when chosen again', async () => {
+  const usual = await tmp();
+  const drive = path.join(await tmp(), 'drive');
+  await fs.writeFile(path.join(usual, 'settings.json'), '{"from":"this computer"}');
+  // Where the pointer goes, a folder: written over it fails, as a held file does.
+  await fs.mkdir(path.join(usual, POINTER_FILE));
+  const r = await moveDataTo(drive, usual, usual);
+  assert.equal(r.ok, false);
+  assert.match(
+    !r.ok ? r.reason : '',
+    /data-location\.json in .* could not be written \([A-Z_]+\); OP-CB stays where it is/,
+  );
+  assert.equal(resolveDataLocation({ usualRoot: usual, exeDir: await tmp(), dev: false }).kind, 'usual');
+  await fs.rm(path.join(usual, POINTER_FILE), { recursive: true });
+  const again = await moveDataTo(drive, usual, usual);
+  assert.ok(again.ok && again.adopted, 'chosen again, the ready folder is used');
+  assert.equal(await fs.readFile(path.join(drive, 'settings.json'), 'utf8'), '{"from":"this computer"}');
+});

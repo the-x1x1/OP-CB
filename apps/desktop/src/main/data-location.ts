@@ -137,8 +137,16 @@ export async function moveDataTo(
   const adopted = hasMarker(fs, resolved);
   const carried: string[] = [];
   if (!adopted) {
-    const existing = (await p.readdir(resolved)).filter((n) => !n.startsWith('.'));
+    let existing: string[];
+    try {
+      existing = (await p.readdir(resolved)).filter((n) => !n.startsWith('.'));
+    } catch (err) {
+      return { ok: false, reason: `the folder cannot be read (${errCode(err)})` };
+    }
     if (existing.length) return { ok: false, reason: 'choose an empty folder (or one OP-CB already uses)' };
+    const takeBack = async (names: readonly string[]) => {
+      for (const done of names) await p.rm(path.join(resolved, done), { force: true }).catch(() => undefined);
+    };
     for (const name of CARRIED_FILES) {
       try {
         await p.copyFile(path.join(from, name), path.join(resolved, name));
@@ -147,20 +155,38 @@ export async function moveDataTo(
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue; // not there: nothing to carry
         // There but not copied (a full drive, a refused read): going on would start the next
         // session without it. What was copied is taken back, so the folder can be chosen again.
-        for (const done of carried) await p.rm(path.join(resolved, done), { force: true }).catch(() => undefined);
+        await takeBack(carried);
         await p.rm(path.join(resolved, name), { force: true, recursive: true }).catch(() => undefined);
-        const code = (err as NodeJS.ErrnoException).code;
-        return { ok: false, reason: `${name} could not be copied (${code ?? 'unknown error'}); nothing was moved` };
+        return { ok: false, reason: `${name} could not be copied (${errCode(err)}); nothing was moved` };
       }
     }
-    await p.writeFile(
-      path.join(resolved, MARKER_FILE),
-      `${JSON.stringify({ kind: 'opcb-data', createdAt: new Date().toISOString() }, null, 2)}\n`,
-    );
+    // Unmarked, the copies would make the folder neither empty nor OP-CB's: it could not be
+    // chosen again. They are taken back, as for a copy that failed.
+    try {
+      await p.writeFile(
+        path.join(resolved, MARKER_FILE),
+        `${JSON.stringify({ kind: 'opcb-data', createdAt: new Date().toISOString() }, null, 2)}\n`,
+      );
+    } catch (err) {
+      await takeBack([...carried, MARKER_FILE]);
+      return { ok: false, reason: `${MARKER_FILE} could not be written (${errCode(err)}); nothing was moved` };
+    }
   }
-  await p.mkdir(usualRoot, { recursive: true });
-  await p.writeFile(path.join(usualRoot, POINTER_FILE), `${JSON.stringify({ path: resolved }, null, 2)}\n`);
+  try {
+    await p.mkdir(usualRoot, { recursive: true });
+    await p.writeFile(path.join(usualRoot, POINTER_FILE), `${JSON.stringify({ path: resolved }, null, 2)}\n`);
+  } catch (err) {
+    // The folder is marked and holds the copies: chosen again, it is taken as it is.
+    return {
+      ok: false,
+      reason: `${POINTER_FILE} in ${usualRoot} could not be written (${errCode(err)}); OP-CB stays where it is. The new folder is ready: choose it again to use it`,
+    };
+  }
   return { ok: true, carried, adopted };
+}
+
+function errCode(err: unknown): string {
+  return (err as NodeJS.ErrnoException).code ?? 'unknown error';
 }
 
 /** Back to the usual folder from the next start; the moved folder is left as it is. */

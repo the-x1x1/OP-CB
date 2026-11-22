@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Moving the data folder when the drive's mark or the note pointing at it cannot be written
+  says so (the button showed nothing). A mark that fails takes back what was copied; a note
+  that fails leaves the folder ready, taken as it is when chosen again. In 0.7.4 too.
 - Command Center downloads: starting or stopping a map download, or stopping a library
   download, whose request fails says why beside the buttons, instead of nothing. In 0.7.4 too.
 - Command Center library: a search by title, a search of a book, a question to the library

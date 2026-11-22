@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { DataLocationInfo } from '@opcb/ipc-contract';
 import { Button } from '@opcb/ui';
 import { useClient } from '../store/store.js';
+import { describeError } from '../store/sync.js';
 import { bytesText } from './map-download-panel.js';
 
 const KIND_TEXT: Record<DataLocationInfo['kind'], string> = {
@@ -28,6 +29,9 @@ export function DataLocationCard() {
     try {
       const r = await client.request(channel, undefined);
       if (r.message !== 'cancelled') setNote({ text: r.message, restart: r.restartNeeded, ok: r.ok });
+    } catch (err) {
+      // Failed outright, the press showed nothing.
+      setNote({ text: describeError(err), restart: false, ok: false });
     } finally {
       setBusy(false);
     }
