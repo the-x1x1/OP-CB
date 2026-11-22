@@ -199,6 +199,7 @@ export function MapDownloadPanel() {
         ) : null}
         {offline ? <span className="wv-cc-muted">Downloading needs Online mode.</span> : null}
       </div>
+      {cc.mapNote ? <p className="wv-cc-problem">{cc.mapNote}</p> : null}
       <MapDownloadState />
       <p className="wv-cc-muted">
         Map data © OpenStreetMap contributors (ODbL), built by Protomaps. A newer download replaces the older one of the

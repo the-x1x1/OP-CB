@@ -88,3 +88,32 @@ test('the store: an AI or radio test whose request fails says so, and no radio r
   assert.match(store.get().meshError ?? '', /could not be asked .*request timed out.*not known/);
   assert.equal(store.get().meshBusy, false);
 });
+
+test('the store: a map or library download whose start or stop request fails says so, apart from the status', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  const refused = new Set(['maps.download.start', 'maps.download.cancel', 'library.download.cancel']);
+  const failing = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      refused.has(channel)
+        ? Promise.reject(Object.assign(new Error('rate limited; retry in 5s'), { code: 'DENIED', channel }))
+        : demo.request(channel as never, req as never),
+  });
+  const store = new CommandCenterStore(failing, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  const before = store.get().mapDownload;
+  await store.startMap();
+  assert.match(store.get().mapNote ?? '', /^The download could not be started: rate limited/);
+  assert.equal(store.get().mapDownload, before, 'the status is the runtime’s, not made up');
+  await store.cancelMap();
+  assert.match(store.get().mapNote ?? '', /could not be stopped: rate limited/);
+  refused.delete('maps.download.cancel');
+  await store.cancelMap();
+  assert.equal(store.get().mapNote, undefined, 'the next press that goes through clears it');
+
+  await store.cancelLibraryDownload();
+  assert.match(store.get().libraryNote ?? '', /could not be stopped: rate limited/);
+  refused.delete('library.download.cancel');
+  await store.cancelLibraryDownload();
+  assert.equal(store.get().libraryNote, undefined);
+  // The polling a press starts ends by itself once the runtime reports nothing running.
+  await new Promise((r) => setTimeout(r, 1_200));
+});

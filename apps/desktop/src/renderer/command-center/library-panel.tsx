@@ -353,6 +353,7 @@ function DownloadState() {
           Stop (keeps what is downloaded)
         </Button>
       ) : null}
+      {cc.libraryNote ? <p className="wv-cc-problem">{cc.libraryNote}</p> : null}
     </div>
   );
 }

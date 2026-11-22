@@ -54,9 +54,13 @@ export interface CommandCenterState {
   meshError?: string | undefined;
   /** The map download, as the runtime last said (polled while it runs). */
   mapDownload: MapDownloadStatus;
+  /** Why the last start or stop of the map download could not be asked (cleared by the next). */
+  mapNote?: string | undefined;
   /** The built-in library: books, references, and the download into it (polled while it runs). */
   shelf: LibraryShelf | null;
   libraryDownload: LibraryDownloadStatus;
+  /** Why the last stop of a library download could not be asked (cleared by the next start or stop). */
+  libraryNote?: string | undefined;
   lastLibraryFind?: LastSearch;
 }
 
@@ -270,13 +274,25 @@ export class CommandCenterStore {
     }
   }
 
+  // A start or stop whose request fails says so beside the buttons, apart from the status the
+  // runtime reports (which the polling replaces every second). Thrown, the press showed nothing.
   async startMap(): Promise<void> {
-    this.set({ mapDownload: await this.client.request('maps.download.start', undefined) });
+    this.set({ mapNote: undefined });
+    try {
+      this.set({ mapDownload: await this.client.request('maps.download.start', undefined) });
+    } catch (err) {
+      this.set({ mapNote: `The download could not be started: ${describeError(err)}` });
+    }
     this.watchMap();
   }
 
   async cancelMap(): Promise<void> {
-    this.set({ mapDownload: await this.client.request('maps.download.cancel', undefined) });
+    this.set({ mapNote: undefined });
+    try {
+      this.set({ mapDownload: await this.client.request('maps.download.cancel', undefined) });
+    } catch (err) {
+      this.set({ mapNote: `The download could not be stopped: ${describeError(err)}` });
+    }
     this.watchMap();
   }
 
@@ -338,6 +354,7 @@ export class CommandCenterStore {
   }
 
   async startLibraryDownload(req: LibraryDownloadRequest): Promise<void> {
+    this.set({ libraryNote: undefined });
     try {
       this.set({ libraryDownload: await this.client.request('library.download.start', req) });
       this.watchLibrary();
@@ -347,7 +364,12 @@ export class CommandCenterStore {
   }
 
   async cancelLibraryDownload(): Promise<void> {
-    this.set({ libraryDownload: await this.client.request('library.download.cancel', undefined) });
+    this.set({ libraryNote: undefined });
+    try {
+      this.set({ libraryDownload: await this.client.request('library.download.cancel', undefined) });
+    } catch (err) {
+      this.set({ libraryNote: `The download could not be stopped: ${describeError(err)}` });
+    }
     this.watchLibrary();
   }
 

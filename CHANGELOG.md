@@ -38,6 +38,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Command Center downloads: starting or stopping a map download, or stopping a library
+  download, whose request fails says why beside the buttons, instead of nothing. In 0.7.4 too.
 - Command Center library: a search by title, a search of a book, a question to the library
   and opening a page that fail say why, instead of showing nothing. A book search is held to
   the 200 characters the server takes; a longer one was refused without a word. In 0.7.4 too.
