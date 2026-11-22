@@ -58,6 +58,8 @@ export interface CommandCenterState {
   mapNote?: string | undefined;
   /** The built-in library: books, references, and the download into it (polled while it runs). */
   shelf: LibraryShelf | null;
+  /** Why the shelf could not be read the last time it was asked for (a folder on a drive that is gone). */
+  shelfProblem?: string | undefined;
   libraryDownload: LibraryDownloadStatus;
   /** Why the last stop of a library download could not be asked (cleared by the next start or stop). */
   libraryNote?: string | undefined;
@@ -302,9 +304,11 @@ export class CommandCenterStore {
   async refreshShelf(): Promise<LibraryShelf | null> {
     try {
       const shelf = await this.client.request('library.shelf', undefined);
-      this.set({ shelf });
+      this.set({ shelf, shelfProblem: undefined });
       return shelf;
-    } catch {
+    } catch (err) {
+      // Said beside the list: the books last read stay, and the reason they may not be all.
+      this.set({ shelfProblem: describeError(err) });
       return this.state.shelf;
     }
   }

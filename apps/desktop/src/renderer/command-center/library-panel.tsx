@@ -48,6 +48,7 @@ export function BuiltInLibrary() {
         below.
         {shelf?.freeBytes !== undefined ? ` ${bytesText(shelf.freeBytes)} free on that drive.` : ''}
       </p>
+      {cc.shelfProblem ? <p className="wv-cc-problem">{cc.shelfProblem}</p> : null}
       {books.length ? (
         <ul className="wv-cc-list">
           {books.map((b) => (

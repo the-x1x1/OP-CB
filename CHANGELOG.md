@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Library: a library folder that cannot be read (on a drive that is gone, or not a folder)
+  says so beside the books, and a search says why, instead of "internal error" or an empty
+  shelf with no reason. In 0.7.4 too.
 - Air sensor (PurpleAir on the local network): a time that does not exist (30 February, 24:00)
   is no longer moved into the next day; the reading is marked with the time it was fetched,
   as for a sensor that gives no time. In 0.7.4 too.

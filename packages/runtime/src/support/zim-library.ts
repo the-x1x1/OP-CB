@@ -1,8 +1,9 @@
-import { promises as fs } from 'node:fs';
+import { promises as fs, type Dirent } from 'node:fs';
 import type { FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 import { ZimArchive, ZimError, fileZimSource, htmlToText, type ZimEntry } from '@opcb/offline';
 import type { Logger } from '@opcb/core';
+import { UnavailableError } from '../validate.js';
 import type { LibraryBook, LibraryFindAnswer, LibraryFindHit, LibraryFindRequest } from '@opcb/ipc-contract';
 
 /**
@@ -48,8 +49,18 @@ export class ZimLibrary {
   }
 
   private async scan(): Promise<LibraryBook[]> {
-    await fs.mkdir(this.dir, { recursive: true });
-    const names = (await fs.readdir(this.dir, { withFileTypes: true }))
+    let entries: Dirent[];
+    try {
+      await fs.mkdir(this.dir, { recursive: true });
+      entries = await fs.readdir(this.dir, { withFileTypes: true });
+    } catch (err) {
+      // Said as what it is (a folder on a drive that is gone, or not a folder), not as an
+      // internal error.
+      throw new UnavailableError(
+        `the library folder could not be read (${(err as NodeJS.ErrnoException).code ?? 'unknown error'})`,
+      );
+    }
+    const names = entries
       .filter((d) => d.isFile() && /\.zim$/i.test(d.name) && !d.name.startsWith('.'))
       .map((d) => d.name)
       .sort()

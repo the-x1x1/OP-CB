@@ -412,3 +412,30 @@ test('library: the live catalogue shape is read (lb.download.kiwix.org, a KiB-ro
   assert.equal(kiwixDownloadUrl('https://xdownload.kiwix.org/zim/a/b.zim'), undefined);
   assert.equal(kiwixDownloadUrl('https://a.b.download.kiwix.org/zim/a/b.zim'), undefined);
 });
+
+test('library: a library folder that cannot be read is said as such, not as an internal error', async () => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-library-unreadable-'));
+  try {
+    const h = await startRuntime({ dataDir, providerInstances: [] });
+    try {
+      // Where the library folder goes, a file (as a drive that is gone leaves nothing to read).
+      const dir = h.runtime.core.zimLibrary.dir;
+      await fs.rm(dir, { recursive: true, force: true });
+      await fs.writeFile(dir, 'not a folder');
+      for (const ask of [
+        () => h.client.request('library.shelf', undefined),
+        () => h.client.request('library.find', { query: 'water' }),
+      ])
+        await assert.rejects(ask(), (err: unknown) => {
+          assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
+          assert.match((err as Error).message, /^the library folder could not be read \([A-Z_]+\)$/);
+          return true;
+        });
+      assert.equal(await fs.readFile(dir, 'utf8'), 'not a folder', 'left as it was');
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

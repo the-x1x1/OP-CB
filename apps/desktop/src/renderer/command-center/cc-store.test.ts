@@ -117,3 +117,28 @@ test('the store: a map or library download whose start or stop request fails say
   // The polling a press starts ends by itself once the runtime reports nothing running.
   await new Promise((r) => setTimeout(r, 1_200));
 });
+
+test('the store: a library shelf that cannot be read says why, and the books last read stay', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  let refuse = false;
+  const failing = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      refuse && channel === 'library.shelf'
+        ? Promise.reject(
+            Object.assign(new Error('the library folder could not be read (ENOTDIR)'), {
+              code: 'UNAVAILABLE',
+              channel,
+            }),
+          )
+        : demo.request(channel as never, req as never),
+  });
+  const store = new CommandCenterStore(failing, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  const first = await store.refreshShelf();
+  assert.equal(store.get().shelfProblem, undefined);
+  refuse = true;
+  assert.equal(await store.refreshShelf(), first, 'the shelf last read');
+  assert.match(store.get().shelfProblem ?? '', /the library folder could not be read \(ENOTDIR\)/);
+  refuse = false;
+  await store.refreshShelf();
+  assert.equal(store.get().shelfProblem, undefined, 'cleared once it reads');
+});
