@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { AppSettings } from '@opcb/ipc-contract';
 import { formatIssues, s, type SchemaIssue } from '@opcb/world-model';
 import { TypedEmitter, silentLogger, type Logger } from '@opcb/core';
-import { writeFileAtomic } from '@opcb/core/node';
+import { readFileRetrying, writeFileAtomic } from '@opcb/core/node';
 import {
   DEFAULT_SETTINGS,
   appSettingsSchema,
@@ -82,7 +82,7 @@ export class SettingsStore {
     const file = this.opts.file;
     let raw: string;
     try {
-      raw = await fs.readFile(file, 'utf8');
+      raw = await readFileRetrying(file);
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
         this.current = cloneSettings(DEFAULT_SETTINGS);

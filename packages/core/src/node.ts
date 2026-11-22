@@ -65,9 +65,33 @@ async function renameOver(from: string, to: string): Promise<void> {
   }
 }
 
+/**
+ * Read a file, trying again for a moment when Windows refuses because something (a virus
+ * scanner, OneDrive, the search indexer) has it open right then — the same codes and waits as
+ * the rename above. A file held at start used to read as unreadable: settings stopped the app
+ * starting, and a list or the key file showed empty until the next change re-read it.
+ */
+export async function readFileRetrying(
+  file: string,
+  opts: { platform?: NodeJS.Platform; read?: (file: string) => Promise<string> } = {},
+): Promise<string> {
+  const platform = opts.platform ?? process.platform;
+  const read = opts.read ?? ((f: string) => fs.readFile(f, 'utf8'));
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await read(file);
+    } catch (err) {
+      const wait = RENAME_RETRY_MS[attempt];
+      const code = (err as NodeJS.ErrnoException).code;
+      if (platform !== 'win32' || wait === undefined || !code || !RENAME_RETRY_CODES.has(code)) throw err;
+      await new Promise((resolve) => setTimeout(resolve, wait));
+    }
+  }
+}
+
 export async function readJsonFile<T = unknown>(file: string): Promise<T | undefined> {
   try {
-    return JSON.parse(await fs.readFile(file, 'utf8')) as T;
+    return JSON.parse(await readFileRetrying(file)) as T;
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
     throw err;

@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import { silentLogger, type CredentialResolver, type Logger } from '@opcb/core';
-import { writeFileAtomic } from '@opcb/core/node';
+import { readFileRetrying, writeFileAtomic } from '@opcb/core/node';
 
 /**
  * CredentialStore — API keys and camera credentials, encrypted at rest with
@@ -141,7 +141,7 @@ export class CredentialStore implements CredentialResolver {
   async load(): Promise<{ status: 'loaded' | 'fresh' | 'corrupt'; keys: number }> {
     let raw: string;
     try {
-      raw = await fs.readFile(this.opts.file, 'utf8');
+      raw = await readFileRetrying(this.opts.file);
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
         this.entries = {};

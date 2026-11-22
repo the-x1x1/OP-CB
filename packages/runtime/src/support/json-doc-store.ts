@@ -1,6 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { writeFileAtomic } from '@opcb/core/node';
+import { readFileRetrying, writeFileAtomic } from '@opcb/core/node';
 import { silentLogger, type Logger } from '@opcb/core';
 import { UnavailableError } from '../validate.js';
 
@@ -66,7 +66,7 @@ export class JsonDocStore<T extends { id: string }> {
   private async read(): Promise<T[]> {
     let raw: string;
     try {
-      raw = await fs.readFile(this.file, 'utf8');
+      raw = await readFileRetrying(this.file);
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === 'ENOENT') return [];

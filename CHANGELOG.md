@@ -38,6 +38,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- On Windows, the settings, the key file, the lists and each source's settings are read again
+  for a moment when a virus scanner, OneDrive or the search indexer has the file open right
+  then, as saving already did. Settings held at start stopped the app starting; the others
+  read as unreadable until the next change. In 0.7.4 too.
 - **A computer clock set years ahead deleted all movement history at the next sweep**: ages
   are taken from the clock, so every record looked expired. When the clock is more than a week
   past the newest history there is, the sweep now deletes and thins nothing by age, and says
