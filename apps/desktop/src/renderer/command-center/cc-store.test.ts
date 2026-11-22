@@ -142,3 +142,37 @@ test('the store: a library shelf that cannot be read says why, and the books las
   await store.refreshShelf();
   assert.equal(store.get().shelfProblem, undefined, 'cleared once it reads');
 });
+
+test('the store: an inventory save, removal or export that fails says why; the next that works clears it', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  let refuse = true;
+  const failing = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      refuse && channel.startsWith('prep.')
+        ? Promise.reject(
+            Object.assign(new Error('the file could not be written: another program has the file open'), {
+              code: 'UNAVAILABLE',
+              channel,
+            }),
+          )
+        : demo.request(channel as never, req as never),
+  });
+  const store = new CommandCenterStore(failing, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  const record = {
+    id: 'w',
+    kind: 'item' as const,
+    category: 'water' as const,
+    name: 'Water',
+    quantity: 10,
+    updatedAt: '2026-11-22T09:00:00.000Z',
+  };
+  assert.equal(await store.savePrep(record), false);
+  assert.match(store.get().prepProblem ?? '', /^Not saved: .*another program has the file open/);
+  await store.deletePrep('w');
+  assert.match(store.get().prepProblem ?? '', /^Not removed: /);
+  assert.equal(await store.exportPrep('csv'), null);
+  assert.match(store.get().prepProblem ?? '', /^Not saved to a file: .*could not be written/, 'not taken for a cancel');
+  refuse = false;
+  assert.equal(await store.savePrep(record), true);
+  assert.equal(store.get().prepProblem, undefined);
+});

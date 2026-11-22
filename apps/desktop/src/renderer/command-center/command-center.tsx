@@ -798,6 +798,7 @@ function Prepare() {
         </Button>
       </SectionHead>
       {note ? <p className="wv-cc-muted">{note}</p> : null}
+      {cc.prepProblem ? <p className="wv-cc-problem">{cc.prepProblem}</p> : null}
       <p className="wv-cc-muted">
         Kept on this computer only; it leaves only through a file you save. Your record, not advice: for what to keep,
         follow your emergency management agency.

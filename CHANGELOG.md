@@ -41,6 +41,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Preparedness inventory: a record that could not be saved says why (it said "check the
+  fields"), a removal that failed says so (it did nothing without a word), and an export to a
+  file that could not be written says so instead of looking like a cancelled dialog. In 0.7.4
+  too.
 - Library: a library folder that cannot be read (on a drive that is gone, or not a folder)
   says so beside the books, and a search says why, instead of "internal error" or an empty
   shelf with no reason. In 0.7.4 too.

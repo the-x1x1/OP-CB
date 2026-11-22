@@ -478,7 +478,7 @@ export function PrepForm({ onDone }: { onDone?: () => void }) {
       ...(notes.trim() ? { notes: notes.trim() } : {}),
       updatedAt: new Date().toISOString(),
     };
-    if (!(await store.savePrep(record))) return setProblem('Not saved: check the fields.');
+    if (!(await store.savePrep(record))) return setProblem(store.get().prepProblem ?? 'Not saved.');
     setProblem(null);
     setName('');
     setQuantity('');
@@ -746,7 +746,7 @@ function StepAction({ id }: { id: ActionId }) {
       );
     case 'prep.exportChecklist':
       return button('Save as a checklist (CSV)…', () =>
-        store.exportPrep('csv').then((p) => setNote(p ? `Saved to ${p}.` : null)),
+        store.exportPrep('csv').then((p) => setNote(p ? `Saved to ${p}.` : (store.get().prepProblem ?? null))),
       );
   }
 }

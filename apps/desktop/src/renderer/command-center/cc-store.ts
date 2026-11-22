@@ -42,6 +42,8 @@ export interface CommandCenterState {
   servicesBusy: boolean;
   guides: GuideProgress[];
   prep: PrepRecord[];
+  /** Why the last save, removal or export of the inventory failed (cleared by the next that works). */
+  prepProblem?: string | undefined;
   meshNodes: WorldObject[] | null;
   receiverObjects: number | null;
   lastPlaceSearch?: LastSearch;
@@ -450,28 +452,34 @@ export class CommandCenterStore {
     }
   }
 
+  // A failure is kept as the reason (`prepProblem`), shown with the inventory: swallowed, a record
+  // the file could not take was "check the fields", a removal did nothing without a word, and
+  // an export to a file that could not be written looked like a cancelled dialog.
   async savePrep(record: PrepRecord): Promise<boolean> {
     try {
-      this.set({ prep: await this.client.request('prep.save', record) });
+      this.set({ prep: await this.client.request('prep.save', record), prepProblem: undefined });
       return true;
-    } catch {
+    } catch (err) {
+      this.set({ prepProblem: `Not saved: ${describeError(err)}` });
       return false;
     }
   }
 
   async deletePrep(id: string): Promise<void> {
     try {
-      this.set({ prep: await this.client.request('prep.delete', { id }) });
-    } catch {
-      /* unchanged */
+      this.set({ prep: await this.client.request('prep.delete', { id }), prepProblem: undefined });
+    } catch (err) {
+      this.set({ prepProblem: `Not removed: ${describeError(err)}` });
     }
   }
 
   async exportPrep(format: 'csv' | 'json'): Promise<string | null> {
     try {
       const r = await this.client.request('prep.export', { format });
+      this.set({ prepProblem: undefined });
       return 'cancelled' in r ? null : r.path;
-    } catch {
+    } catch (err) {
+      this.set({ prepProblem: `Not saved to a file: ${describeError(err)}` });
       return null;
     }
   }
