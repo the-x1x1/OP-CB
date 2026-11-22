@@ -55,3 +55,52 @@ test('library downloads: a folder that cannot be made ends the download as faile
   assert.equal(asked, 0, 'nothing was fetched for a folder that is not there');
   await fs.rm(tmp, { recursive: true, force: true });
 });
+
+test('library downloads: progress keeps being reported after the clock is put back', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-libdl-clock-'));
+  try {
+    const SIZE = 64 * 1024;
+    const chunks = 16;
+    let t = Date.parse('2026-11-20T00:00:00Z');
+    let pulls = 0;
+    const body = () =>
+      new ReadableStream<Uint8Array>({
+        async pull(controller) {
+          await new Promise((r) => setTimeout(r, 1));
+          // A second between chunks, except once: the clock is put back an hour.
+          if (pulls === 4) t -= 3_600_000;
+          else t += 1000;
+          pulls++;
+          if (pulls > chunks) controller.close();
+          else controller.enqueue(new Uint8Array(SIZE / chunks));
+        },
+      });
+    const downloads = new LibraryDownloads({
+      fetchImpl: (async (_url: string | URL | Request, init?: RequestInit) =>
+        init?.method === 'HEAD'
+          ? new Response(null, { status: 200, headers: { 'content-length': String(SIZE) } })
+          : new Response(body(), { status: 200 })) as typeof fetch,
+      dir,
+      now: () => t,
+      log: silentLogger,
+      freeBytes: async () => 1e12,
+    });
+    const seen: LibraryDownloadStatus[] = [];
+    const set = (downloads as unknown as { set: (s: LibraryDownloadStatus) => void }).set.bind(downloads);
+    (downloads as unknown as { set: (s: LibraryDownloadStatus) => void }).set = (s) => {
+      seen.push(s);
+      set(s);
+    };
+    const entry = { title: 'A book', url: 'https://download.kiwix.org/zim/other/a-book_en_all_2026-10.zim' };
+    assert.equal(downloads.start({ kind: 'zim', entry } as never).phase, 'downloading');
+    for (let i = 0; i < 400 && downloads.current().phase === 'downloading'; i++)
+      await new Promise((r) => setTimeout(r, 5));
+    const reported = seen
+      .filter((s) => s.phase === 'downloading' && s.progress)
+      .map((s) => s.progress!.bytesDone)
+      .filter((n) => n > (4 * SIZE) / chunks && n < SIZE);
+    assert.ok(reported.length >= 5, `progress went on after the clock went back (${reported.join(', ')})`);
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
