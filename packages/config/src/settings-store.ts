@@ -151,8 +151,13 @@ export class SettingsStore {
     const full = appSettingsSchema.parse(merged);
     if (!full.ok) throw new SettingsValidationError(full.issues);
     this.current = full.value;
-    await this.persist();
-    this.emitter.emit('change', cloneSettings(this.current));
+    try {
+      await this.persist();
+    } finally {
+      // Told even when the write failed: the change is in use (SettingsWriteError says so), and
+      // a window not told would go on showing the settings from before it.
+      this.emitter.emit('change', cloneSettings(this.current));
+    }
     return cloneSettings(this.current);
   }
 

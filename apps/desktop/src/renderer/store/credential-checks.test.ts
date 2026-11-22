@@ -17,7 +17,9 @@ const T0 = Date.parse('2026-11-22T04:00:00.000Z');
 test('credentials: a key is asked once in a while, not at every look; storing one is not crowded out', async () => {
   const demo = new DemoClient({ now: () => T0 });
   const asked: string[] = [];
+  const stored = new Set<string>();
   let failHas = false;
+  let failSet = false;
   const client = {
     contractVersion: demo.contractVersion,
     on: demo.on.bind(demo),
@@ -25,7 +27,13 @@ test('credentials: a key is asked once in a while, not at every look; storing on
       if (channel.startsWith('credentials.')) {
         asked.push(channel);
         if (channel === 'credentials.has' && failHas) throw new Error('rate limited; retry in 5s');
-        return channel === 'credentials.has' ? { present: false } : undefined;
+        if (channel === 'credentials.set' && failSet) {
+          stored.add((request as { key: string }).key);
+          throw new Error('the key file could not be saved (EBUSY): the change is in use');
+        }
+        if (channel === 'credentials.set') stored.add((request as { key: string }).key);
+        if (channel === 'credentials.has') return { present: stored.has((request as { key: string }).key) };
+        return undefined;
       }
       return demo.request(channel as never, request as never);
     },
@@ -69,8 +77,14 @@ test('credentials: a key is asked once in a while, not at every look; storing on
   await actions.checkCredential('aisstream.key');
   assert.equal(asked.filter((c) => c === 'credentials.has').length, 5);
 
+  // A key whose file could not be saved is still in use: the field is told so, asked again.
+  failSet = true;
+  assert.equal(await actions.setCredential('user.key', 'test-value'), false);
+  assert.equal(state.sources.credentials['user.key'], true, 'asked again, not assumed either way');
+  failSet = false;
+
   // A clock put back does not stop the asking for good.
   t -= 10 * CREDENTIAL_CHECK_REUSE_MS;
   await actions.checkCredential('aisstream.key');
-  assert.equal(asked.filter((c) => c === 'credentials.has').length, 6);
+  assert.equal(asked.filter((c) => c === 'credentials.has').length, 7, 'one more: after the failed store');
 });

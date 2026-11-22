@@ -888,6 +888,10 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
         return true;
       } catch (err) {
         fail('Credential not stored', err);
+        // Asked again rather than assumed: a key file that could not be saved still holds the key
+        // in use (it is written with the next change), and the field should say what is so.
+        credentialChecks.delete(key);
+        await actions.checkCredential(key);
         return false;
       }
     },

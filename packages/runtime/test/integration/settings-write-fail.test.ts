@@ -18,6 +18,8 @@ test('integration: a settings write that fails is said as unavailable, and the c
       const file = path.join(dataDir, 'settings.json');
       await fs.rm(file);
       await fs.mkdir(file);
+      const told: string[] = [];
+      h.runtime.on('settings.changed', (st) => told.push(st.renderMode));
       await assert.rejects(h.client.request('settings.set', { renderMode: '2D' }), (err: unknown) => {
         assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
         assert.match((err as Error).message, /the settings could not be saved/);
@@ -25,6 +27,8 @@ test('integration: a settings write that fails is said as unavailable, and the c
         return true;
       });
       assert.equal((await h.client.request('settings.get', undefined)).renderMode, '2D', 'in use');
+      await new Promise((r) => setTimeout(r, 10));
+      assert.deepEqual(told, ['2D'], 'the window is told of the change in use, not left showing the one before');
       // A patch that is wrong is still refused as such.
       await assert.rejects(h.client.request('settings.set', { renderMode: 'XR' } as never), (err: unknown) => {
         assert.equal((err as { ipcCode?: string }).ipcCode, 'INVALID_REQUEST');

@@ -65,11 +65,13 @@ Versioning: [semantic versioning](https://semver.org/).
   of "internal error"; a file cut short (a full drive) is taken away rather than left in the
   folder as one that does not load. In 0.7.4 too.
 - A key that could not be saved (the key file held by another program) says so, and that it
-  is in use and saved with the next change, instead of "internal error". In 0.7.4 too.
+  is in use and saved with the next change, instead of "internal error"; the key's field then
+  shows it as stored. In 0.7.4 too.
 - A settings change that could not be saved (the file held by another program) says so,
   and that the change is in use and saved with the next one. It was shown as a refused change
   with the system's own message, or as "internal error" from a vault, a mode or a source
-  switch. In 0.7.4 too.
+  switch. The window is told of the change in use, so it no longer shows the settings from
+  before it. In 0.7.4 too.
 - Moving the data folder when the drive's mark or the note pointing at it cannot be written
   says so (the button showed nothing). A mark that fails takes back what was copied; a note
   that fails leaves the folder ready, taken as it is when chosen again. In 0.7.4 too.
