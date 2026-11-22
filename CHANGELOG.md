@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Looking through a few sources' details no longer uses up the ten-a-minute budget the key
+  channels share, so the key typed next is not refused as "rate limited". Each key's presence
+  is asked once in half a minute instead of at every look (twice per source). In 0.7.4 too.
 - Saving a source from an address when its definition cannot be written says why instead
   of "internal error"; a file cut short (a full drive) is taken away rather than left in the
   folder as one that does not load. In 0.7.4 too.

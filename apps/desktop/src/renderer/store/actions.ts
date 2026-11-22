@@ -9,7 +9,7 @@ import type {
   WorldObject,
   WorldQuery,
 } from '@opcb/world-model';
-import { geometryCentroid, haversineMeters, ownEntry, regionBounds } from '@opcb/world-model';
+import { elapsedMs, geometryCentroid, haversineMeters, ownEntry, regionBounds } from '@opcb/world-model';
 import { MEASURE_MAX_POINTS, densifyRing } from '../map/measure.js';
 import { keyboardBounds, nearbyOrder } from './nearby.js';
 import type {
@@ -88,6 +88,8 @@ export const DEFAULT_PASS_ALERTS: PassAlertSettings = Object.freeze({
 
 /** A search result that is an opcb:// link (its text after the prefix). */
 const LINK_RESULT_PREFIX = 'link:';
+/** A key's presence, once asked, is taken as known this long (checkCredential). */
+export const CREDENTIAL_CHECK_REUSE_MS = 30_000;
 
 export interface FlyTarget {
   position: GeoPosition;
@@ -243,6 +245,8 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
    * the second save would undo the first. `change` reads the state when its turn comes.
    */
   const turns = new Map<string, Promise<void>>();
+  /** When each key's presence was last asked (checkCredential). */
+  const credentialChecks = new Map<string, number>();
   /** How many times a lens has been chosen; see setLens. */
   let lensAsked = 0;
   function inTurn(key: string, change: () => Promise<void>): Promise<void> {
@@ -856,6 +860,13 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       }
     },
     async checkCredential(key: string): Promise<void> {
+      // Asked once per key in a while, and never twice at once. Every source opened asked for
+      // its keys (twice, before and after its manifest came), and the key channels share one
+      // budget of ten a minute: looking through a few sources used it up, and the key the
+      // operator then typed was refused as "rate limited".
+      const last = credentialChecks.get(key);
+      if (last !== undefined && elapsedMs(now(), last) < CREDENTIAL_CHECK_REUSE_MS) return;
+      credentialChecks.set(key, now());
       try {
         dispatch({
           type: 'sources/credential',
@@ -863,6 +874,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
           present: (await client.request('credentials.has', { key })).present,
         });
       } catch (err) {
+        credentialChecks.delete(key);
         fail('Credential state unavailable', err);
       }
     },
@@ -870,6 +882,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         await client.request('credentials.set', { key, value });
         dispatch({ type: 'sources/credential', key, present: true });
+        credentialChecks.set(key, now());
         if (providerId) await client.request('sources.refresh', { providerId });
         notify('Credential stored', 'Saved to the operating system secure store.');
         return true;
@@ -917,6 +930,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
       try {
         await client.request('credentials.delete', { key });
         dispatch({ type: 'sources/credential', key, present: false });
+        credentialChecks.set(key, now());
       } catch (err) {
         fail('Credential not removed', err);
       }
