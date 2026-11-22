@@ -422,3 +422,23 @@ test('a pack’s definition set: listed with its pack, loaded when trusted, gone
     rmSync(packDir, { recursive: true, force: true });
   }
 });
+
+test('definitions: a folder that cannot be made is said as such, not as an internal error or a taken name', async () => {
+  const t = setup();
+  try {
+    t.register();
+    const doc = JSON.parse(readFileSync(EXAMPLE, 'utf8')) as Record<string, never>;
+    // The definition folder's place holds a file, as a drive gone read-only or a file in the way does.
+    rmSync(t.dir, { recursive: true, force: true });
+    writeFileSync(t.dir, 'not a folder');
+    await assert.rejects(t.defs.save('my-bikes', doc), (err: unknown) => {
+      assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
+      assert.match((err as Error).message, /^the definition folder could not be made \([A-Z_]+\)$/);
+      return true;
+    });
+    assert.equal(readFileSync(t.dir, 'utf8'), 'not a folder', 'left as it was');
+  } finally {
+    rmSync(t.dir, { force: true });
+    t.cleanup();
+  }
+});

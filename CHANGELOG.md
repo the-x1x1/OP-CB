@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Saving a source from an address when its definition cannot be written says why instead
+  of "internal error"; a file cut short (a full drive) is taken away rather than left in the
+  folder as one that does not load. In 0.7.4 too.
 - A key that could not be saved (the key file held by another program) says so, and that it
   is in use and saved with the next change, instead of "internal error". In 0.7.4 too.
 - A settings change that could not be saved (the file held by another program) says so,

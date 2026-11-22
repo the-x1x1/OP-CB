@@ -344,14 +344,30 @@ export class ConnectorDefinitions {
     if (taken.has(id) || this.files.some((f) => f.id === id))
       throw new InvalidRequestError(`id ${id} is already used by another source`);
     const file = `${id}.json`;
-    await fs.mkdir(dir, { recursive: true });
+    try {
+      await fs.mkdir(dir, { recursive: true });
+    } catch (err) {
+      throw new UnavailableError(
+        `the definition folder could not be made (${(err as NodeJS.ErrnoException).code ?? 'unknown error'})`,
+      );
+    }
+    let made = false;
     try {
       // `wx`: never over an existing file, even one written since the listing was read.
-      await fs.writeFile(path.join(dir, file), `${JSON.stringify(doc, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+      const handle = await fs.open(path.join(dir, file), 'wx');
+      made = true;
+      try {
+        await handle.writeFile(`${JSON.stringify(doc, null, 2)}\n`, 'utf8');
+      } finally {
+        await handle.close();
+      }
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === 'EEXIST')
-        throw new InvalidRequestError(`${file} already exists in the folder`);
-      throw err;
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code === 'EEXIST') throw new InvalidRequestError(`${file} already exists in the folder`);
+      // Cut short (a full drive), the file would be in the folder as one that does not load. It
+      // is this save's own (`wx`), so it is taken away; the failure is said, not "internal error".
+      if (made) await fs.rm(path.join(dir, file), { force: true }).catch(() => undefined);
+      throw new UnavailableError(`${file} could not be written (${code ?? 'unknown error'})`);
     }
     this.deps.logger.info('connector definition saved', { file });
     // A saved definition starts disabled, even when an earlier source with this id left its
