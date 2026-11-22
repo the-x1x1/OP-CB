@@ -110,7 +110,10 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     }),
     'app.openExternal': async ({ url }) => {
       const target = externalUrl(url, core.externalHostAllowlist());
-      const opened = await core.hostBridge.openExternal(target);
+      let opened = false;
+      await openOrSay('The link', async () => {
+        opened = await core.hostBridge.openExternal(target);
+      });
       return { opened };
     },
 
@@ -1503,6 +1506,28 @@ export function unwritable(err: unknown): UnavailableError {
                 ? 'the drive is read-only'
                 : (code ?? 'unknown error');
   return new UnavailableError(`the file could not be written: ${why}`);
+}
+
+/**
+ * Opens something with the system (a link in the browser, a folder in the file manager): a
+ * failure is said as what could not be opened and why, not shown as an internal error. With
+ * no program for the link, or a folder that cannot be made, the window showed only that.
+ */
+export async function openOrSay(what: string, open: () => Promise<unknown>): Promise<void> {
+  try {
+    await open();
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    const why =
+      code === 'EACCES' || code === 'EPERM'
+        ? 'this account may not use it'
+        : code === 'ENOENT' || code === 'ENOTDIR'
+          ? 'it is not there'
+          : code === 'EROFS'
+            ? 'the drive is read-only'
+            : errorText(err) || 'unknown error';
+    throw new UnavailableError(`${what} could not be opened: ${why}`);
+  }
 }
 
 function requireId(value: unknown, field: string): asserts value is string {

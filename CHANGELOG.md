@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A link, a local service's page or a folder that the system cannot open (no program for
+  it, or a folder that cannot be made) says what could not be opened and why, instead of
+  "internal error". In 0.7.4 too.
 - Importing a collection when a thousand imported copies of it already exist says so, and
   that removing some lets it import again, instead of "internal error". In 0.7.4 too.
 - On Windows, the settings, the key file, the lists and each source's settings are read again

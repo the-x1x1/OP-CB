@@ -16,6 +16,7 @@ export {
   chooseMode,
   modeState,
   prepCsv,
+  openOrSay,
   readLibraryOpen,
   unwritable,
   writeExportFile,

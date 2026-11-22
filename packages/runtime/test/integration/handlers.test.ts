@@ -298,6 +298,20 @@ test('every channel answers a benign request in demo mode without throwing', asy
       h.client.request('app.openExternal', { url: 'https://user:pw@earthquake.usgs.gov/' }),
       /must not carry credentials/,
     );
+    // A host that cannot open it (no browser) says so, not "internal error".
+    const opener = h.host.openExternal;
+    h.host.openExternal = async () => {
+      throw new Error('no application is associated with https');
+    };
+    await assert.rejects(
+      h.client.request('app.openExternal', { url: 'https://earthquake.usgs.gov/' }),
+      (err: unknown) => {
+        assert.equal((err as { ipcCode?: string }).ipcCode, 'UNAVAILABLE');
+        assert.match((err as Error).message, /The link could not be opened: no application/);
+        return true;
+      },
+    );
+    h.host.openExternal = opener;
 
     // history.readings: an object with nothing stored has no readings; keys are bounded.
     const time = { start: '2026-09-21T00:00:00.000Z', end: '2026-09-21T01:00:00.000Z' };

@@ -1,7 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Collection, PrepRecord } from '@opcb/ipc-contract';
-import { importedCollection, modeState, prepCsv, readLibraryOpen, readMapDownloadRequest } from './handlers.js';
+import {
+  importedCollection,
+  modeState,
+  openOrSay,
+  prepCsv,
+  readLibraryOpen,
+  readMapDownloadRequest,
+} from './handlers.js';
 import { InvalidRequestError } from './validate.js';
 import { parseCsvRows } from '@opcb/connector-runtime';
 
@@ -240,4 +247,32 @@ test('importedCollection: new as it is, the same again unchanged, a different on
       /too many imported copies/.test(err.message) &&
       (err as { ipcCode?: string }).ipcCode === 'INVALID_REQUEST',
   );
+});
+
+test('openOrSay: what could not be opened and why, as an answer the window shows', async () => {
+  await openOrSay('The link', async () => undefined);
+  const said = async (what: string, err: unknown) => {
+    try {
+      await openOrSay(what, async () => {
+        throw err;
+      });
+    } catch (e) {
+      assert.equal((e as { ipcCode?: string }).ipcCode, 'UNAVAILABLE', 'not an internal error');
+      return (e as Error).message;
+    }
+    assert.fail('a failure to open must be told');
+  };
+  assert.equal(
+    await said('The link', new Error('Failed to open: no application is associated')),
+    'The link could not be opened: Failed to open: no application is associated',
+  );
+  const errno = (code: string) => Object.assign(new Error(`${code}: /x`), { code });
+  assert.equal(
+    await said('The folder', errno('EACCES')),
+    'The folder could not be opened: this account may not use it',
+  );
+  assert.equal(await said('The folder', errno('ENOENT')), 'The folder could not be opened: it is not there');
+  assert.equal(await said('The folder', errno('EROFS')), 'The folder could not be opened: the drive is read-only');
+  assert.equal(await said('The page', 'refused'), 'The page could not be opened: refused');
+  assert.equal(await said('The page', new Error('')), 'The page could not be opened: unknown error');
 });

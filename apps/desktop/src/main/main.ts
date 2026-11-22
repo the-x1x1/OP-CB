@@ -43,6 +43,7 @@ import {
   chooseMode,
   libraryPath,
   modeState,
+  openOrSay,
   readLibraryOpen,
   serviceOrigin,
   unwritable,
@@ -491,7 +492,7 @@ async function bootstrap(): Promise<void> {
         security.warn('openExternal refused', { host: verdict.host ?? '', reason: verdict.reason ?? '' });
         throw Object.assign(new Error(verdict.reason ?? 'refused'), { ipcCode: 'DENIED' as const });
       }
-      await shell.openExternal(url);
+      await openOrSay('The link', () => shell.openExternal(url));
       return { opened: true };
     },
     // The operator's connector-definition folder in the OS file manager (ADR-013 amendment).
@@ -499,7 +500,7 @@ async function bootstrap(): Promise<void> {
     'sources.definitions.openFolder': async (_req, ctx) => {
       const { folder } = (await runtime.handlers['sources.definitions.list'](undefined, ctx)) as DefinitionsListing;
       if (!folder) return { opened: false, folder: null };
-      await fs.mkdir(folder, { recursive: true });
+      await openOrSay('The folder', () => fs.mkdir(folder, { recursive: true }));
       const failure = await shell.openPath(folder);
       if (failure) log.warn('definition folder could not be opened', { error: failure });
       return { opened: failure === '', folder };
@@ -593,7 +594,7 @@ async function bootstrap(): Promise<void> {
       if (page !== undefined && (id !== 'kiwix' || !libraryPath(page)))
         throw Object.assign(new Error('not a library page'), { ipcCode: 'INVALID_REQUEST' as const });
       const url = `${serviceOrigin(settings.get(), id)}${page ?? '/'}`;
-      await shell.openExternal(url);
+      await openOrSay('The page', () => shell.openExternal(url));
       log.info('local service opened', { id });
       return { opened: true };
     },
@@ -602,7 +603,7 @@ async function bootstrap(): Promise<void> {
     'library.open': async (req) => {
       const r = readLibraryOpen(req);
       if (r.kind === 'folder') {
-        await fs.mkdir(runtime.core.zimLibrary.dir, { recursive: true });
+        await openOrSay('The library folder', () => fs.mkdir(runtime.core.zimLibrary.dir, { recursive: true }));
         const err = await shell.openPath(runtime.core.zimLibrary.dir);
         return err ? { opened: false, message: err } : { opened: true };
       }
