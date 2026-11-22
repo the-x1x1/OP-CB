@@ -58,6 +58,8 @@ export interface TileCacheOptions {
   /** Deepest level of the world preload (default `WORLD_PRELOAD_MAX_ZOOM`); lower in tests. */
   preloadMaxZoom?: number;
   sleep?: (ms: number) => Promise<void>;
+  /** Removes a source's folder (`fs.rm`, recursive); a seam for tests of a removal that fails. */
+  removeDir?: (dir: string) => Promise<void>;
 }
 
 export const TILE_ROUTE_PREFIX = '/__tiles/';
@@ -509,10 +511,22 @@ export class TileCache {
 
   async clear(): Promise<TileCacheStatus> {
     this.prefetchQueue = [];
+    const remove = this.opts.removeDir ?? ((dir: string) => fs.rm(dir, { recursive: true, force: true }));
+    let failed: string | undefined;
     for (const source of this.sources.keys())
-      await fs.rm(path.join(this.opts.dir, source), { recursive: true, force: true }).catch(() => undefined);
+      await remove(path.join(this.opts.dir, source)).catch((err: unknown) => {
+        failed ??= (err as NodeJS.ErrnoException).code ?? 'unknown error';
+      });
     this.index.clear();
     this.total = 0;
+    if (failed) {
+      // A tile held open (on Windows, one being read) is left behind. Taken as gone, it was
+      // counted nowhere until the next start, and the cache could grow past its cap by it; the
+      // status said empty. What is left is read again, so the count and the cap cover it.
+      this.log.warn('tile cache: not every tile could be removed', { code: failed });
+      this.scanning = undefined;
+      await this.init();
+    }
     if (this.preload) {
       this.preload = {
         ...this.preload,

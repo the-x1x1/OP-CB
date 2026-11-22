@@ -249,6 +249,27 @@ test('tile cache: clear empties the disk and the count', async () => {
   await assert.rejects(fs.access(path.join(dir, 'esri-world-imagery', '1', '0', '0.bin')));
 });
 
+test('tile cache: a clear that leaves tiles behind counts what is left, not an empty cache', async () => {
+  const dir = await tmp();
+  // A removal that fails part way, as one with a tile held open does on Windows: only the
+  // tiles of zoom 2 go.
+  const c = cache(dir, upstream().fetch, {
+    removeDir: async (d: string) => {
+      await fs.rm(path.join(d, '2'), { recursive: true, force: true });
+      throw Object.assign(new Error('EBUSY: resource busy or locked'), { code: 'EBUSY' });
+    },
+  });
+  await c.init();
+  await c.respond('/__tiles/esri-world-imagery/1/0/0');
+  await c.respond('/__tiles/esri-world-imagery/2/1/1');
+  const before = c.status();
+  assert.equal(before.tiles, 2);
+  const s = await c.clear();
+  assert.equal(s.tiles, 1, 'the tile left behind is counted');
+  assert.ok(s.bytes > 0 && s.bytes < before.bytes, `${s.bytes} of ${before.bytes}`);
+  assert.deepEqual(await c.sourcesWithTiles(), ['esri-world-imagery']);
+});
+
 test('tile cache: a tile used after the clock was put back has its file time set again', async () => {
   const dir = await tmp();
   const DAY = 86_400_000;

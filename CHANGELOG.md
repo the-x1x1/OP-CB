@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Clearing the map tile cache when some tiles could not be removed (one held open on
+  Windows) shows what is left instead of an empty cache, and the size cap counts it again; the
+  tiles left were counted nowhere until the next start. In 0.7.4 too.
 - A walkthrough started over when the change could not be saved says that it may come back at
   the next start, instead of looking done. In 0.7.4 too.
 - Preparedness inventory: a record that could not be saved says why (it said "check the
