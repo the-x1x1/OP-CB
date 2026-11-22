@@ -264,11 +264,19 @@ test('dialog: labelled controls and a polite status line for screen readers', ()
   assert.match(html, /<button[^>]*type="submit"[^>]*disabled=""/, 'Draft waits for an address');
 });
 
-test('address: a key in the query string is refused before sending, since the address is written to the file', () => {
-  assert.match(checkDraftUrl('https://api.example.com/v1/obs?apikey=abc123')!, /Leave the apikey parameter out/);
-  assert.match(checkDraftUrl('https://api.example.com/v1/obs?format=json&access_token=x')!, /access_token/);
-  for (const k of ['appid', 'api_token', 'apiToken', 'app_key', 'access_key', 'subscription-key', 'x-api-key', 'key'])
-    assert.ok(checkDraftUrl(`https://api.example.com/v1/obs?q=Phoenix&${k}=s`), k);
+test('address: a key under a name the runtime moves to the key store is drafted; any other is refused', () => {
+  // The runtime takes these out of the address and keeps them in the key store (operator, 2026-11-21).
+  for (const k of ['apikey', 'access_token', 'appid', 'app_key', 'subscription-key', 'x-api-key', 'key', 'token'])
+    assert.equal(checkDraftUrl(`https://api.example.com/v1/obs?q=Phoenix&${k}=s`), null, k);
+  // Names that look like a key but that it does not move: refused before sending, since the
+  // address would be written to the file as it is.
+  for (const k of ['api_token', 'apiToken', 'access_key', 'client_id'])
+    assert.match(
+      checkDraftUrl(`https://api.example.com/v1/obs?q=Phoenix&${k}=s`) ?? '',
+      new RegExp(`Leave the ${k} parameter out`),
+      k,
+    );
+  assert.match(checkDraftUrl('https://api.example.com/v1/obs?apikey=a&token=b')!, /carries 2 keys \(apikey, token\)/);
   assert.equal(checkDraftUrl('https://api.example.com/v1/obs?format=json&station=KPHX&keyword=fire'), null);
 });
 

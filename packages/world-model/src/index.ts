@@ -33,5 +33,6 @@ export * from './schema.js';
 export * from './validate.js';
 export * from './overlay.js';
 export * from './maritime.js';
+export * from './url-keys.js';
 
 export const WORLD_MODEL_CONTRACT_VERSION = 'architecture-contract-v1';

@@ -7,6 +7,7 @@ import {
   type WorldClient,
 } from '@opcb/ipc-contract';
 import type { SourceHealthEntry } from '@opcb/source-health';
+import { keyParamsIn } from '@opcb/world-model';
 
 /**
  * State and requests behind the Sources panel's Definitions section and the Add-source
@@ -321,7 +322,13 @@ export function checkDraftUrl(raw: string): string | null {
   if (url.protocol !== 'https:') return 'Only https addresses can be drafted.';
   if (url.username || url.password)
     return 'Leave credentials out of the address; the definition names a secret instead.';
-  const secret = [...url.searchParams.keys()].find((k) => SECRET_PARAM.test(k));
+  // A key under a name the runtime knows (`apikey`, `token`, `appid`, …) is taken out of the
+  // address when drafting and kept in the key store (the operator's decision of 2026-11-21);
+  // refused here, the drafting that moves it could never be reached from the window.
+  const known = keyParamsIn(text);
+  if (known.length > 1)
+    return `The address carries ${known.length} keys (${known.join(', ')}): draft with one, and name the others as secrets in the file.`;
+  const secret = [...url.searchParams.keys()].find((k) => SECRET_PARAM.test(k) && !known.includes(k));
   if (secret)
     return `Leave the ${secret} parameter out: the address is copied into the definition file. Draft without it, then name the key as a secret in the file.`;
   return null;

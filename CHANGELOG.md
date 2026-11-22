@@ -104,13 +104,15 @@ Versioning: [semantic versioning](https://semver.org/).
   running, is within minutes once the clock is right). The size cap, which does not read the
   clock, still applies. History also stops being trimmed by age while every source is off for
   more than a week. In 0.7.4 too.
-- **A key in an address pasted to add a source was written into the definition file as
-  typed** (`?appid=…`, `?key=…`, `?token=…`): a key on disk in plain text. Drafting now takes
-  it out of the address, keeps it in the key store (the OS-protected one) and names it in the
-  definition as the credential the source sends with each request; the draft the window shows
-  never holds it. An address with two keys is refused (a definition attaches one), and a
-  definition saved from the app with a key typed into its address is refused. Definition files
-  already in the folder are read as before. In 0.7.4 too.
+- **A key in an address pasted to add a source** (`?appid=…`, `?key=…`, `?token=…`) is taken
+  out of the address when the source is drafted, kept in the key store (the OS-protected one)
+  and named in the definition as the credential the source sends with each request; the draft
+  the window shows never holds it. Before, the window refused such an address ("leave the key
+  out"), and a few names it did not know (`jwt`, `pass`, `passwd`, `session`) went through and
+  were written into the definition file as typed, a key on disk in plain text (in 0.7.4 too).
+  The window and the drafting now go by the same names. An address with two keys is refused (a
+  definition attaches one), as is a definition saved from the app with a key typed into its
+  address. Definition files already in the folder are read as before.
 - **A source switched on and then off again before it had finished starting came back on at
   the next start.** The switch-off took effect and the Sources panel showed it off, but the
   switch-on, finishing last, wrote "on" to the settings file. Each switch now writes what the
