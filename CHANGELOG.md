@@ -41,6 +41,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- History: an observation dated before the year 1000 (`0001-01-01`, the date some feeds send
+  for "none") made a partition name that cannot be written, so its write failed, was logged as
+  an error and showed history as failing. It is stored by its day and swept by its age. In
+  0.7.4 too.
 - Satellites: an orbit whose epoch names a date or time that does not exist (30 February,
   24:00) is refused, not moved into the next day and drawn where the satellite is not. In
   0.7.4 too.

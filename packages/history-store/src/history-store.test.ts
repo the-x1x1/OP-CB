@@ -100,6 +100,12 @@ test('partition layout: keys, paths and round-trip parsing', () => {
   assert.equal(parsePartitionRelativePath('index.json', 'ndjson'), undefined);
   assert.equal(partitionId(key), 'aircraft/2026-09-21/opensky-0800');
   assert.deepEqual(partitionKeyFor('aircraft', 'adsb-remote', '2026-09-21T23:59:59.999Z', 15).slot, '2345');
+  // A year before 1000 (`0001-01-01`, some feeds' "no date") keeps four digits; a key that
+  // cannot be written is refused here, not at the write.
+  assert.equal(partitionKeyFor('aircraft', 'opensky', '0001-01-01T00:00:00.000Z').day, '0001-01-01');
+  assert.equal(partitionKeyFor('aircraft', 'opensky', '0999-12-31T23:00:00.000Z').day, '0999-12-31');
+  assert.throws(() => partitionKeyFor('aircraft', 'Bad Id', '2026-09-21T00:00:00.000Z'), /invalid partition key/);
+  assert.throws(() => partitionKeyFor('aircraft', 'opensky', 'never'), /invalid observedAt/);
   assert.deepEqual(partitionKeyFor('vessel', 'ais', '2026-12-31T00:00:00.000Z', 60), {
     objectType: 'vessel',
     providerId: 'ais',
@@ -819,4 +825,17 @@ test('readNdjsonFile: CRLF, blank lines, a last line with no newline, and a line
     some.rows.map((r) => r.observationId),
     ['a', 'c'],
   );
+});
+
+test('history: a row dated 0001-01-01 is no failed write; the rows beside it are kept', async () => {
+  const { store } = await makeStore();
+  const r = store.writeBatch(
+    batch(QUAKE_PROVIDER, [quakeObs('none', '0001-01-01T00:00:00.000Z', 1, 2, 3), quakeObs('real', D3, 1, 2, 3)]),
+  );
+  assert.equal(r.invalid, 0);
+  await store.flush();
+  const stats = store.getStats();
+  assert.equal(stats.failedAppends, 0, stats.lastError ?? '');
+  assert.equal(stats.writtenRows, 2);
+  await store.close();
 });

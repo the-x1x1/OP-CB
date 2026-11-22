@@ -85,12 +85,19 @@ export function partitionKeyFor(
   const slotStart = Math.floor(minutesOfDay / slotMinutes) * slotMinutes;
   const hh = String(Math.floor(slotStart / 60)).padStart(2, '0');
   const mm = String(slotStart % 60).padStart(2, '0');
-  return {
+  // The year in four digits: `0001-01-01`, the date some feeds send for "none", made the day
+  // `1-01-01`, a key no partition may have. The append then failed, logged as an error and
+  // shown as history failing; now such a row is stored by its day (and swept by its age).
+  const key = {
     objectType,
     providerId,
-    day: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`,
+    day: `${String(d.getUTCFullYear()).padStart(4, '0')}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`,
     slot: `${hh}${mm}`,
   };
+  // A key that cannot be written is refused here, where the row is counted as invalid, not
+  // when its write fails.
+  assertValidPartitionKey(key);
+  return key;
 }
 
 /** Relative path under the history root: `<objectType>/<YYYY>/<MM>/<DD>/<providerId>-<HHMM>.<ext>` */
