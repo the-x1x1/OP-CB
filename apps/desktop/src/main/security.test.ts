@@ -350,3 +350,32 @@ test('openExternal allowlist: the 3D models’ credit links in Data & attributio
   }
   assert.equal(checkExternalUrl(MODEL_LICENCE_URL, allow).allowed, true);
 });
+
+test('credential store: a key file that cannot be saved is said as such (test files only), and the key kept in use', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-cred-'));
+  const file = path.join(dir, 'credentials.json');
+  const store = new CredentialStore({ file, safeStorage: fakeSafeStorage() });
+  await store.set('test.one', 'test-value-one');
+  // The test file is no longer a file it can be written over (as one held open is, on Windows).
+  await fs.rm(file);
+  await fs.mkdir(file);
+  await assert.rejects(store.set('test.two', 'test-value-two'), (err: unknown) => {
+    assert.ok(err instanceof CredentialStoreError);
+    assert.equal(err.code, 'WRITE_FAILED');
+    assert.equal(err.ipcCode, 'UNAVAILABLE', 'not an internal error');
+    assert.match(err.message, /^the key file could not be saved \([A-Z_]+\)/);
+    assert.ok(!err.message.includes('test-value-two') && !err.message.includes(dir));
+    return true;
+  });
+  assert.equal(await store.get('test.two'), 'test-value-two', 'in use');
+  await fs.rm(file, { recursive: true });
+  await store.delete('test.one');
+  const reopened = new CredentialStore({ file, safeStorage: fakeSafeStorage() });
+  assert.equal(await reopened.get('test.two'), 'test-value-two', 'saved with the next write that succeeds');
+  assert.equal(await reopened.has('test.one'), false);
+  // The codes the window is told under.
+  assert.equal(new CredentialStoreError('INVALID_KEY', 'x').ipcCode, 'INVALID_REQUEST');
+  assert.equal(new CredentialStoreError('INVALID_VALUE', 'x').ipcCode, 'INVALID_REQUEST');
+  assert.equal(new CredentialStoreError('CORRUPT', 'x').ipcCode, 'UNAVAILABLE');
+  assert.equal(new CredentialStoreError('ENCRYPTION_UNAVAILABLE', 'x').ipcCode, 'UNAVAILABLE');
+});

@@ -38,6 +38,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A key that could not be saved (the key file held by another program) says so, and that it
+  is in use and saved with the next change, instead of "internal error". In 0.7.4 too.
 - A settings change that could not be saved (the file held by another program) says so,
   and that the change is in use and saved with the next one. It was shown as a refused change
   with the system's own message, or as "internal error" from a vault, a mode or a source

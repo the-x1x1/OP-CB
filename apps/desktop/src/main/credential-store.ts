@@ -63,15 +63,23 @@ export function encryptionUnavailableReason(platform: string, backend: string | 
   return 'the OS keychain/DPAPI could not be used';
 }
 
-export type CredentialErrorCode = 'ENCRYPTION_UNAVAILABLE' | 'INVALID_KEY' | 'INVALID_VALUE' | 'CORRUPT';
+export type CredentialErrorCode =
+  | 'ENCRYPTION_UNAVAILABLE'
+  | 'INVALID_KEY'
+  | 'INVALID_VALUE'
+  | 'CORRUPT'
+  | 'WRITE_FAILED';
 
 export class CredentialStoreError extends Error {
+  /** How the window is told, wherever the error is thrown from (a key stored by a draft too). */
+  readonly ipcCode: 'UNAVAILABLE' | 'INVALID_REQUEST';
   constructor(
     readonly code: CredentialErrorCode,
     message: string,
   ) {
     super(message);
     this.name = 'CredentialStoreError';
+    this.ipcCode = code === 'INVALID_KEY' || code === 'INVALID_VALUE' ? 'INVALID_REQUEST' : 'UNAVAILABLE';
   }
 }
 
@@ -269,7 +277,18 @@ export class CredentialStore implements CredentialResolver {
     const run = async () => {
       // Owner-only on POSIX: the entries are ciphertext, but who holds which keys is nobody
       // else's business either (0600; Windows ignores the mode and the profile ACL applies).
-      await writeFileAtomic(this.opts.file, JSON.stringify(doc, null, 2) + '\n', { mode: 0o600 });
+      try {
+        await writeFileAtomic(this.opts.file, JSON.stringify(doc, null, 2) + '\n', { mode: 0o600 });
+      } catch (err) {
+        // The change is held here and written with the next that succeeds; said as that, not as
+        // an internal error.
+        const code = (err as NodeJS.ErrnoException).code ?? 'unknown error';
+        this.logger.error('credential file write failed', { code });
+        throw new CredentialStoreError(
+          'WRITE_FAILED',
+          `the key file could not be saved (${code}): the change is in use, and is saved with the next one that saves`,
+        );
+      }
     };
     this.writeChain = this.writeChain.then(run, run);
     return this.writeChain;

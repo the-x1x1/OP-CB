@@ -996,8 +996,7 @@ async function withCredentialErrors<T>(fn: () => Promise<T>): Promise<T> {
     return await fn();
   } catch (err) {
     if (err instanceof CredentialStoreError) {
-      const code = err.code === 'ENCRYPTION_UNAVAILABLE' || err.code === 'CORRUPT' ? 'UNAVAILABLE' : 'INVALID_REQUEST';
-      throw Object.assign(new Error(err.message), { ipcCode: code as 'UNAVAILABLE' | 'INVALID_REQUEST' });
+      throw Object.assign(new Error(err.message), { ipcCode: err.ipcCode });
     }
     throw err;
   }
