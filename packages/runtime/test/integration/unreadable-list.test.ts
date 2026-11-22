@@ -41,3 +41,24 @@ test('integration: a list that did not read is shown empty with a notice saying 
     await fs.rm(dataDir, { recursive: true, force: true });
   }
 });
+
+test('integration: source settings that did not read are announced once, when the sources are listed', async () => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'opcb-unreadable-ps-'));
+  try {
+    await fs.mkdir(path.join(dataDir, 'provider-settings.json'));
+    const h = await startRuntime({ dataDir, providerInstances: [] });
+    try {
+      const notices: Array<{ title: string; body: string }> = [];
+      h.runtime.on('notification', (n) => notices.push(n));
+      await h.client.request('sources.list', undefined);
+      await h.client.request('sources.list', undefined);
+      assert.equal(notices.length, 1);
+      assert.match(notices[0]!.title, /Source settings could not be read/);
+      assert.match(notices[0]!.body, /provider-settings\.json could not be read/);
+    } finally {
+      await h.dispose();
+    }
+  } finally {
+    await fs.rm(dataDir, { recursive: true, force: true });
+  }
+});

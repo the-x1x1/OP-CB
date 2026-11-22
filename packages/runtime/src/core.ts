@@ -931,7 +931,12 @@ export class RuntimeCore {
    */
   async listFor<T extends { id: string }>(store: JsonDocStore<T>, what: string): Promise<T[]> {
     const items = await store.list();
-    const problem = store.problem;
+    this.tellUnreadable(store.problem, what);
+    return items;
+  }
+
+  /** The notice above, for any file with a `problem`: once per session for each. */
+  tellUnreadable(problem: string | undefined, what: string): void {
     if (problem && !this.toldUnreadable.has(what)) {
       this.toldUnreadable.add(what);
       this.emitter.emit('notification', {
@@ -941,7 +946,6 @@ export class RuntimeCore {
         severity: 'MODERATE',
       });
     }
-    return items;
   }
 
   private buildUpdater(): void {

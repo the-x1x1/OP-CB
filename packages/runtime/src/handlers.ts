@@ -398,7 +398,10 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
 
     // ---- sources -------------------------------------------------------------
-    'sources.list': async () => core.providerHost.health.list(),
+    'sources.list': async () => {
+      core.tellUnreadable(core.providerSettings.problem, 'Source settings');
+      return core.providerHost.health.list();
+    },
     'overlays.list': async () => core.providerHost.overlays(),
     'geodata.read': async ({ name, data }) => {
       if (typeof name !== 'string' || !name || typeof data !== 'string')

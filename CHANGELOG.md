@@ -90,8 +90,8 @@ Versioning: [semantic versioning](https://semver.org/).
   and the sources picked from it, a receiver's host, the local camera list): read as none when
   the file was there but did not read, the next source setting saved wrote over all the
   others, and a damaged file was written over without being kept. It is now kept beside as
-  `provider-settings.json.corrupt-<time>`, an unreadable one is not written over, and a write
-  that fails says so. In 0.7.4 too.
+  `provider-settings.json.corrupt-<time>`, an unreadable one is not written over (a notice
+  says so when the sources are first listed), and a write that fails says so. In 0.7.4 too.
 - **A damaged key file was said to be kept, and was written over by the next key stored.**
   The startup warning read "credential file unreadable; stored keys must be entered again
   (file preserved)", but nothing set it aside. It is now renamed to

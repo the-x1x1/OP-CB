@@ -203,6 +203,11 @@ export class ProviderSettingsStore {
     private readonly log: Logger = silentLogger,
   ) {}
 
+  /** Why the file is not read and not written, if it is not. */
+  get problem(): string | undefined {
+    return this.unreadable ? `${path.basename(this.file)} ${this.unreadable}` : undefined;
+  }
+
   async load(): Promise<void> {
     this.unreadable = undefined;
     let doc: { version: 1; providers: Record<string, Record<string, JsonValue>> } | undefined;
