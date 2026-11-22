@@ -923,6 +923,27 @@ export class RuntimeCore {
     this.watchZones.setZones(zones);
   }
 
+  private readonly toldUnreadable = new Set<string>();
+  /**
+   * A list for the window, with a notice the first time it is asked for when its file did not
+   * read: the list shows empty, and without a word the operator takes their places, zones or
+   * inventory for gone. The notice says why and that nothing is written over the file.
+   */
+  async listFor<T extends { id: string }>(store: JsonDocStore<T>, what: string): Promise<T[]> {
+    const items = await store.list();
+    const problem = store.problem;
+    if (problem && !this.toldUnreadable.has(what)) {
+      this.toldUnreadable.add(what);
+      this.emitter.emit('notification', {
+        id: `unreadable-${what.toLowerCase().replace(/[^a-z]+/g, '-')}`,
+        title: `${what} could not be read`,
+        body: `${problem}. Nothing is written over it, so what it holds is kept; changes are refused until it reads. Restart OP-CB if another program had it open.`,
+        severity: 'MODERATE',
+      });
+    }
+    return items;
+  }
+
   private buildUpdater(): void {
     this.updater = new UpdaterController({
       updater: this.deps.updater ?? createInertAutoUpdater(),
@@ -1750,7 +1771,7 @@ export class RuntimeCore {
   }
 
   async allLenses(): Promise<LensDefinition[]> {
-    const user = await this.lenses.list();
+    const user = await this.listFor(this.lenses, 'Your lenses');
     const builtInIds = new Set(BUILT_IN_LENSES.map((l) => l.id));
     return [...BUILT_IN_LENSES.map((l) => ({ ...l })), ...user.filter((l) => !builtInIds.has(l.id))];
   }

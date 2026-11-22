@@ -102,6 +102,11 @@ export class JsonDocStore<T extends { id: string }> {
     return valid;
   }
 
+  /** Why the file is not read and not written (`<name> could not be read (EBUSY)`), if it is not. */
+  get problem(): string | undefined {
+    return this.unreadable ? `${path.basename(this.file)} ${this.unreadable}` : undefined;
+  }
+
   async list(): Promise<T[]> {
     await this.load();
     return structuredClone(this.items ?? []);

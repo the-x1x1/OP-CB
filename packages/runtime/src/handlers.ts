@@ -653,7 +653,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
 
     // ---- collections ----------------------------------------------------------
-    'collections.list': async () => core.collections.list(),
+    'collections.list': async () => core.listFor(core.collections, 'Places'),
     'collections.save': async (collection) => core.collections.save(requireCollection(collection)),
     'collections.delete': async ({ id }) => {
       requireId(id, 'id');
@@ -778,7 +778,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
 
     // ---- watch zones ----------------------------------------------------------
-    'watchzones.list': async () => core.watchZoneStore.list(),
+    'watchzones.list': async () => core.listFor(core.watchZoneStore, 'Watch zones'),
     'watchzones.save': async (zone) => {
       const parsed = requireWatchZone(zone);
       const zones = await core.watchZoneStore.save(parsed);
@@ -883,7 +883,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       core.log.info('local AI test', { model: req.model, ok: answer.ok, elapsedMs: answer.elapsedMs });
       return answer;
     },
-    'guides.list': async () => core.guides.list(),
+    'guides.list': async () => core.listFor(core.guides, 'Walkthrough progress'),
     'guides.save': async (progress) => {
       const p = readGuideProgress(progress);
       if (!p) throw new InvalidRequestError('not a guide progress record');
@@ -893,7 +893,7 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       requireId(id, 'id');
       return core.guides.remove(id);
     },
-    'prep.list': async () => core.preparedness.list(),
+    'prep.list': async () => core.listFor(core.preparedness, 'The preparedness inventory'),
     'prep.save': async (record) => {
       const r = readPrepRecord(record);
       if (!r) throw new InvalidRequestError('not a preparedness record');
@@ -1215,8 +1215,10 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       await core.cameras.unregister(cameraId);
       await core.persistCameras();
     },
-    'camera.list': async () =>
-      (await core.cameras.list()).map((c) => ({
+    'camera.list': async () => {
+      // The gateways hold the list; its file is read at start, and a notice says if it was not.
+      await core.listFor(core.cameraStore, 'Your camera list');
+      return (await core.cameras.list()).map((c) => ({
         cameraId: c.cameraId,
         name: c.name,
         objectId: c.objectId,
@@ -1229,7 +1231,8 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
             ? { lastError: { code: c.health.lastError.code, message: c.health.lastError.message } }
             : {}),
         },
-      })),
+      }));
+    },
 
     // ---- diagnostics -------------------------------------------------------------
     'diagnostics.get': async () => core.diagnostics.snapshot(),

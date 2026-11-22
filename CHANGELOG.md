@@ -80,7 +80,8 @@ Versioning: [semantic versioning](https://semver.org/).
   and the camera list: if the file was held by another program when the app started (OneDrive
   and virus scanners do this on Windows), or could not be read for another reason, the list
   showed empty and the first change wrote the one new item over the whole file. Now the list
-  shows empty but nothing is written over the file; a change is refused with the reason until
+  shows empty but nothing is written over the file; the first time the window asks for it, a
+  notice says why and that what it holds is kept; a change is refused with the reason until
   the file reads, and it is read again at each try. An unreadable file that cannot be set
   aside is treated the same way. In 0.7.4 too.
 - **A change to one of those lists that could not be written to disk was answered as saved**,
