@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Map tile cache: a tile used again while the cache was being trimmed to its size is kept;
+  it was deleted from under the map and, fetched again, counted wrong until the next start.
+  In 0.7.4 too.
 - Clearing the map tile cache when some tiles could not be removed (one held open on
   Windows) shows what is left instead of an empty cache, and the size cap counts it again; the
   tiles left were counted nowhere until the next start. In 0.7.4 too.

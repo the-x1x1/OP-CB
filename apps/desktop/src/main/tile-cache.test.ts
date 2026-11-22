@@ -270,6 +270,37 @@ test('tile cache: a clear that leaves tiles behind counts what is left, not an e
   assert.deepEqual(await c.sourcesWithTiles(), ['esri-world-imagery']);
 });
 
+test('tile cache: a tile used again while the trim waits on the disk is kept', async () => {
+  const dir = await tmp();
+  const up = upstream({ size: 1024 * 1024 }); // 1 MB tiles, 64 MB cap
+  let hold: (() => void) | undefined;
+  let held = 0;
+  const c = cache(dir, up.fetch, {
+    removeFile: async (f: string) => {
+      // The first removal waits until the test lets it go.
+      if (held++ === 0) await new Promise<void>((r) => (hold = r));
+      await fs.rm(f, { force: true });
+    },
+  });
+  await c.init();
+  for (let x = 0; x < 64; x++) await c.respond(`/__tiles/esri-world-imagery/7/${x}/0`);
+  // One more: over the cap, the trim starts with tile 0 and waits on its removal.
+  const over = c.respond('/__tiles/esri-world-imagery/7/64/0');
+  await settle(c, () => hold !== undefined);
+  // Meanwhile tile 1, next in the trim's list, is used again.
+  const used = await c.respond('/__tiles/esri-world-imagery/7/1/0');
+  assert.equal(used.headers.get('X-OP-CB-Tile-Cache'), 'hit');
+  hold!();
+  await over;
+  await settle(c, () => c.status().bytes <= 64 * 1024 * 1024);
+  const again = await c.respond('/__tiles/esri-world-imagery/7/1/0');
+  assert.equal(again.headers.get('X-OP-CB-Tile-Cache'), 'hit', 'the tile used during the trim is kept');
+  const first = await c.respond('/__tiles/esri-world-imagery/7/0/0');
+  assert.equal(first.headers.get('X-OP-CB-Tile-Cache'), 'miss', 'the oldest went');
+  const onDisk = c.status();
+  assert.ok(onDisk.bytes <= 66 * 1024 * 1024, `${onDisk.bytes}`);
+});
+
 test('tile cache: a tile used after the clock was put back has its file time set again', async () => {
   const dir = await tmp();
   const DAY = 86_400_000;

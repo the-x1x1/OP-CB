@@ -60,6 +60,8 @@ export interface TileCacheOptions {
   sleep?: (ms: number) => Promise<void>;
   /** Removes a source's folder (`fs.rm`, recursive); a seam for tests of a removal that fails. */
   removeDir?: (dir: string) => Promise<void>;
+  /** Removes one tile's file (`fs.rm`); a seam for tests of what happens while it waits. */
+  removeFile?: (file: string) => Promise<void>;
 }
 
 export const TILE_ROUTE_PREFIX = '/__tiles/';
@@ -343,12 +345,21 @@ export class TileCache {
 
   private async evict(): Promise<void> {
     const target = this.maxBytes * EVICT_TO;
-    const oldest = [...this.index.entries()].sort((a, b) => a[1].used - b[1].used);
+    const oldest = [...this.index.entries()]
+      .map(([id, e]) => ({ id, e, used: e.used }))
+      .sort((a, b) => a.used - b.used);
     let removed = 0;
-    for (const [id, e] of oldest) {
+    // The list is sorted at the start of the pass, and each removal waits on the disk. A tile
+    // used or fetched again since (its use moved, or a new entry) is kept: taken from the list
+    // as it was, it was deleted while on screen and, fetched again, counted wrong by its size.
+    const unchanged = (id: string, e: Entry, used: number) => this.index.get(id) === e && e.used === used;
+    for (const { id, e, used } of oldest) {
       if (this.total <= target) break;
+      if (!unchanged(id, e, used)) continue;
       const [sourceId, z, x, y] = id.split('/') as [string, string, string, string];
-      await fs.rm(this.file({ sourceId, z: +z, x: +x, y: +y }), { force: true }).catch(() => undefined);
+      const file = this.file({ sourceId, z: +z, x: +x, y: +y });
+      await (this.opts.removeFile ?? ((f: string) => fs.rm(f, { force: true })))(file).catch(() => undefined);
+      if (this.index.get(id) !== e) continue;
       this.index.delete(id);
       this.total -= e.bytes;
       removed++;
