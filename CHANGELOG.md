@@ -38,6 +38,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Going back to this computer's own data folder when the note naming the drive's folder
+  cannot be removed (held open by another program) says so and changes nothing. The button
+  showed nothing, and the next start went to the drive all the same. In 0.7.4 too.
 - A link, a local service's page or a folder that the system cannot open (no program for
   it, or a folder that cannot be made) says what could not be opened and why, instead of
   "internal error". In 0.7.4 too.

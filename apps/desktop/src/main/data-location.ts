@@ -164,6 +164,14 @@ export async function moveDataTo(
 }
 
 /** Back to the usual folder from the next start; the moved folder is left as it is. */
-export async function backToUsualData(usualRoot: string): Promise<void> {
-  await fs.promises.rm(path.join(usualRoot, POINTER_FILE), { force: true });
+export async function backToUsualData(usualRoot: string): Promise<{ ok: true } | { ok: false; reason: string }> {
+  // A pointer that cannot be removed (held open, or not a file) is said: answered as done, the
+  // next start went to the drive all the same.
+  try {
+    await fs.promises.rm(path.join(usualRoot, POINTER_FILE), { force: true });
+    return { ok: true };
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code ?? 'unknown error';
+    return { ok: false, reason: `${POINTER_FILE} in ${usualRoot} could not be removed (${code}); nothing was changed` };
+  }
 }

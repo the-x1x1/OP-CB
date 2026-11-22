@@ -58,8 +58,9 @@ test('moving: the small files are carried, the drive marked, the pointer written
   await fs.rm(drive, { recursive: true });
   assert.match(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing?.reason ?? '', /not there/);
 
-  await backToUsualData(usual);
+  assert.deepEqual(await backToUsualData(usual), { ok: true });
   assert.ok(!(await fs.readdir(usual)).includes(POINTER_FILE));
+  assert.deepEqual(await backToUsualData(usual), { ok: true }, 'no pointer: nothing to remove');
   assert.equal(resolveDataLocation({ usualRoot: usual, exeDir, dev: false }).missing, undefined);
 });
 
@@ -97,4 +98,18 @@ test('moving: a file that is there but cannot be copied stops the move; nothing 
   assert.match(r.reason, /settings\.json could not be copied/);
   assert.ok(!(await fs.readdir(usual)).includes(POINTER_FILE), 'no pointer: the next start uses the usual folder');
   assert.deepEqual(await fs.readdir(drive), [], 'and the chosen folder is left empty, so it can be chosen again');
+});
+
+test('back to the usual folder: a pointer that cannot be removed is said, not answered as done', async () => {
+  const usual = await tmp();
+  // A folder where the pointer goes: removed without "recursive" it fails, as a held file does.
+  await fs.mkdir(path.join(usual, POINTER_FILE));
+  await fs.writeFile(path.join(usual, POINTER_FILE, 'x'), 'x');
+  const back = await backToUsualData(usual);
+  assert.equal(back.ok, false);
+  assert.match(
+    !back.ok ? back.reason : '',
+    /data-location\.json in .* could not be removed \([A-Z_]+\); nothing was changed/,
+  );
+  assert.ok((await fs.readdir(usual)).includes(POINTER_FILE), 'left as it was');
 });

@@ -560,7 +560,8 @@ async function bootstrap(): Promise<void> {
     'data.useUsual': async () => {
       if (dataLocation.kind === 'portable')
         return { ok: false, message: 'a portable copy always uses the folder beside it', restartNeeded: false };
-      await backToUsualData(dataLocation.usualRoot);
+      const back = await backToUsualData(dataLocation.usualRoot);
+      if (!back.ok) return { ok: false, message: back.reason, restartNeeded: false };
       return {
         ok: true,
         message: `From the next start OP-CB uses ${dataLocation.usualRoot} again; the drive's folder is left as it is`,
