@@ -112,3 +112,69 @@ test('a download whose pack folder cannot be prepared ends as failed, not standi
   downloads.startPlan({ kind: 'planet' } as never);
   assert.equal((await settled(['planned', 'failed'])).phase, 'planned');
 });
+
+test('download progress keeps being reported after the clock is put back', async () => {
+  const os = await import('node:os');
+  const fsp = await import('node:fs/promises');
+  const dir = await fsp.mkdtemp(path.join(os.tmpdir(), 'opcb-mapdl-'));
+  try {
+    const SIZE = 64 * 1024;
+    let t = Date.parse('2026-11-20T00:00:00Z');
+    const seen: MapDownloadStatus[] = [];
+    // The body arrives in chunks; between chunks the clock moves on a second, except once,
+    // when it is put back an hour.
+    const chunks = 16;
+    const body = () =>
+      new ReadableStream<Uint8Array>({
+        async pull(controller) {
+          await new Promise((r) => setTimeout(r, 1));
+          if (pulls === 4) t -= 3_600_000;
+          else t += 1000;
+          pulls++;
+          if (pulls > chunks) controller.close();
+          else controller.enqueue(new Uint8Array(SIZE / chunks));
+        },
+      });
+    let pulls = 0;
+    const downloads = new MapDownloads({
+      fetchImpl: (async (url: string | URL | Request) =>
+        String(url).endsWith('.pmtiles')
+          ? new Response(body(), { status: 200, headers: { 'content-length': String(SIZE) } })
+          : new Response(JSON.stringify([{ key: '20261029.pmtiles', size: SIZE, version: '4.15.2' }]), {
+              status: 200,
+            })) as typeof fetch,
+      registry: () =>
+        ({
+          downloadDirFor: () => dir,
+          prepareDownload: async () => ({ ok: true, dir }),
+        }) as unknown as WorldPackRegistry,
+      vaultTarget: () => undefined,
+      appPacksDir: dir,
+      now: () => t,
+      log: silentLogger,
+      onChange: (status) => seen.push(status),
+      freeBytes: async () => 1e12,
+    });
+    const settled = async (phases: MapDownloadStatus['phase'][]) => {
+      for (let i = 0; i < 400 && !phases.includes(downloads.current().phase); i++)
+        await new Promise((r) => setTimeout(r, 5));
+      return downloads.current();
+    };
+    downloads.startPlan({ kind: 'planet' } as never);
+    assert.equal((await settled(['planned', 'failed'])).phase, 'planned');
+    downloads.start();
+    await settled(['verifying', 'failed', 'done', 'cancelled', 'installing']);
+    const reported = seen
+      .filter((s) => s.phase === 'downloading' && s.progress)
+      .map((s) => s.progress!.bytesDone)
+      .filter((n) => n > 0 && n < SIZE);
+    // A report every chunk (each a second apart); after the hour back, not one until the end.
+    const afterBack = reported.filter((n) => n > (4 * SIZE) / chunks);
+    assert.ok(
+      afterBack.length >= 5,
+      `progress went on being reported after the clock went back (${reported.join(', ')})`,
+    );
+  } finally {
+    await fsp.rm(dir, { recursive: true, force: true });
+  }
+});
