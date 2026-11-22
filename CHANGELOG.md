@@ -38,6 +38,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A settings change that could not be saved (the file held by another program) says so,
+  and that the change is in use and saved with the next one. It was shown as a refused change
+  with the system's own message, or as "internal error" from a vault, a mode or a source
+  switch. In 0.7.4 too.
 - Moving the data folder when the drive's mark or the note pointing at it cannot be written
   says so (the button showed nothing). A mark that fails takes back what was copied; a note
   that fails leaves the folder ready, taken as it is when chosen again. In 0.7.4 too.

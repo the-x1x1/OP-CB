@@ -49,6 +49,19 @@ export class SettingsValidationError extends Error {
 }
 
 /**
+ * settings.json could not be written. The change is in use (held here), and is written with
+ * the next change that saves. Carries the IPC code the window shows it under: a plain error
+ * reached the window as "internal error", or as a refused request with the raw system text.
+ */
+export class SettingsWriteError extends Error {
+  readonly ipcCode = 'UNAVAILABLE' as const;
+  constructor(readonly code: string) {
+    super(`the settings could not be saved (${code}): the change is in use, and is saved with the next one that saves`);
+    this.name = 'SettingsWriteError';
+  }
+}
+
+/**
  * SettingsStore — the only writer of settings.json.
  *
  *  - validated on load and on every patch (schema from settings-schema.ts)
@@ -151,7 +164,13 @@ export class SettingsStore {
   private persist(): Promise<void> {
     const doc: SettingsDocument = { schemaVersion: this.opts.schemaVersion, settings: cloneSettings(this.current) };
     const run = async () => {
-      await writeFileAtomic(this.opts.file, JSON.stringify(doc, null, 2) + '\n');
+      try {
+        await writeFileAtomic(this.opts.file, JSON.stringify(doc, null, 2) + '\n');
+      } catch (err) {
+        const code = (err as NodeJS.ErrnoException).code ?? 'unknown error';
+        this.logger.error('settings write failed', { code });
+        throw new SettingsWriteError(code);
+      }
     };
     this.writeChain = this.writeChain.then(run, run);
     return this.writeChain;

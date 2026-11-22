@@ -18,6 +18,7 @@ import {
   probeWritable,
   SettingsStore,
   SettingsValidationError,
+  SettingsWriteError,
   StartupValidator,
   applySettingsPatch,
   appSettingsPatchSchema,
@@ -681,4 +682,30 @@ test('moveLegacyProviderCache: moves JSON files that are not already there, and 
   );
   assert.deepEqual((await fs.readdir(legacy)).sort(), ['Cache_Data', 'firms.json', 'index']);
   assert.equal(await moveLegacyProviderCache(dirs), 0, 'a second run moves nothing');
+});
+
+test('settings store: a write that fails is said as such, the change held and saved with the next', async () => {
+  const dir = await tmpDir();
+  const file = path.join(dir, 'settings.json');
+  const { store } = await SettingsStore.open({ file, schemaVersion: CURRENT_SCHEMA_VERSION });
+  await store.patch({ renderMode: '3D' });
+  // settings.json is no longer a file it can be written over (as one held open is, on Windows).
+  await fs.rm(file);
+  await fs.mkdir(file);
+  await assert.rejects(store.patch({ firstRunCompleted: true }), (err: unknown) => {
+    assert.ok(err instanceof SettingsWriteError);
+    assert.equal(err.ipcCode, 'UNAVAILABLE');
+    assert.match(err.message, /^the settings could not be saved \([A-Z_]+\): the change is in use/);
+    assert.ok(!err.message.includes(dir), 'no path in what the window is shown');
+    return true;
+  });
+  assert.equal(store.get().firstRunCompleted, true, 'in use');
+  await assert.rejects(store.patch({ demoMode: false }), SettingsWriteError, 'every write while it fails');
+  await fs.rm(file, { recursive: true });
+  await store.patch({ renderMode: '2D' });
+  const saved = JSON.parse(await fs.readFile(file, 'utf8')) as { settings: AppSettings };
+  assert.equal(saved.settings.firstRunCompleted, true, 'carried by the next write that succeeds');
+  assert.equal(saved.settings.renderMode, '2D');
+  // A refused patch is still a validation error, not a write error.
+  await assert.rejects(store.patch({ renderMode: 'XR' } as never), SettingsValidationError);
 });

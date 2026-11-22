@@ -55,6 +55,7 @@ import {
   type TimelineState,
   type WorldSubscription,
 } from '@opcb/ipc-contract';
+import { SettingsWriteError } from '@opcb/config';
 import type { RequestHandlers } from './contract.js';
 import { BUILT_IN_LENSES, MAP_PROVIDER_CATALOG, resolveMapProviders } from '@opcb/render-core';
 import { RuntimeCore, errorText } from './core.js';
@@ -132,6 +133,8 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       try {
         next = await core.settings.patch(patch as Partial<AppSettings>);
       } catch (err) {
+        // A write that failed is said as such (it carries its own code), not as a refused patch.
+        if (err instanceof SettingsWriteError) throw err;
         throw new InvalidRequestError(errorText(err));
       }
       // Provider enablement is applied to the live host, not just persisted.
