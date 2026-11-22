@@ -1,8 +1,15 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { REQUEST_CHANNELS, EVENT_CHANNELS, wireChannel, type AppSettings } from '@opcb/ipc-contract';
 import { ProviderError } from '@opcb/provider-sdk';
-import { IpcRouter, type IpcInvokeEventLike, type IpcMainLike, type WindowSinkLike } from './ipc-router.js';
+import {
+  IpcRouter,
+  LONG_REQUEST_TIMEOUTS_MS,
+  type IpcInvokeEventLike,
+  type IpcMainLike,
+  type WindowSinkLike,
+} from './ipc-router.js';
 import { REQUEST_SCHEMAS } from './ipc-schemas.js';
 import { StubRuntime } from './testing/stub-runtime.js';
 import { fromWire, isJsonWire } from '../shared/event-wire.js';
@@ -593,4 +600,65 @@ test('router: a key being stored is in no answer and no log line, however storin
       JSON.stringify(payload).slice(0, 80),
     );
   }
+});
+
+test('router: a request waiting on a dialog is not timed out; long ones get their own time', async () => {
+  const runtime = new StubRuntime();
+  const ipcMain = new FakeIpcMain();
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const router = new IpcRouter({
+    ipcMain,
+    runtime,
+    isTrustedSender: trustedSender,
+    requestTimeoutMs: 20,
+    channelTimeoutsMs: { 'collections.import': null, 'ai.test': 120 },
+    overrides: {
+      'collections.import': async () => {
+        await wait(80);
+        return { imported: null, issues: ['cancelled'] };
+      },
+      'ai.test': async ({ model }) => {
+        await wait(model === 'slow' ? 200 : 60);
+        return { ok: true, model, text: 'ok', elapsedMs: 60, grounded: false as const, at: '2026-11-22T00:00:00.000Z' };
+      },
+      'collections.list': async () => {
+        await wait(60);
+        return [];
+      },
+    },
+  });
+  router.register();
+  assert.deepEqual(await router.handle('collections.import', undefined, trusted(1)), {
+    ok: true,
+    value: { imported: null, issues: ['cancelled'] },
+  });
+  const ai = await router.handle('ai.test', { model: 'quick', prompt: 'hello' }, trusted(1));
+  assert.equal(ai.ok, true, 'past the usual time, inside its own');
+  const slow = await router.handle('ai.test', { model: 'slow', prompt: 'hello' }, trusted(1));
+  assert.equal(!slow.ok && slow.error.message, 'request timed out', 'its own time still ends it');
+  const other = await router.handle('collections.list', undefined, trusted(1));
+  assert.equal(!other.ok && other.error.message, 'request timed out', 'anything else keeps the usual time');
+});
+
+test('router: every request that opens a file or folder dialog waits on the operator, not a timer', () => {
+  const opens: string[] = [];
+  for (const file of ['../../../../packages/runtime/src/handlers.ts', './main.ts']) {
+    const text = readFileSync(new URL(file, import.meta.url), 'utf8');
+    const starts = [...text.matchAll(/\n {4}'([a-zA-Z.]+)': async/g)];
+    starts.forEach((m, i) => {
+      const body = text.slice(m.index, starts[i + 1]?.index ?? m.index + 4000);
+      if (/pick(Open|Save)File|pickFolder|show(Open|Save)Dialog|export(Objects|Track|Readings)\(/.test(body))
+        opens.push(m[1]!);
+    });
+  }
+  assert.ok(opens.length >= 15, opens.join(', '));
+  for (const channel of opens)
+    assert.equal(
+      (LONG_REQUEST_TIMEOUTS_MS as Record<string, number | null | undefined>)[channel],
+      null,
+      `${channel} opens a dialog`,
+    );
+  // The two that wait on something else, past their own limits.
+  assert.ok((LONG_REQUEST_TIMEOUTS_MS['ai.test'] ?? 0) > 180_000);
+  assert.ok((LONG_REQUEST_TIMEOUTS_MS['mesh.sendTest'] ?? 0) > 60_000);
 });

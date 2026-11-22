@@ -38,6 +38,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A file or folder dialog left open for more than a minute no longer ends its request with
+  "request timed out" while the export or import goes on after the choice. The local AI test
+  gets its three minutes, and the radio test its minute for the delivery report: both were
+  cut off at a minute, and the radio's report of what it did was lost. In 0.7.4 too.
 - Going back to this computer's own data folder when the note naming the drive's folder
   cannot be removed (held open by another program) says so and changes nothing. The button
   showed nothing, and the next start went to the drive all the same. In 0.7.4 too.

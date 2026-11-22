@@ -55,6 +55,37 @@ export const DEFAULT_RATE_LIMITS: readonly IpcRateLimitRule[] = Object.freeze([
   { prefix: 'overlays.valueAt', max: 30, windowMs: 60_000 },
 ]);
 
+/**
+ * Requests that take longer than the usual minute by design. `null`: the request waits on the
+ * operator (a file or folder dialog, open as long as they like), and is never timed out here;
+ * the work after the choice is the handler's to bound. Timed out at a minute, a dialog left
+ * open that long answered "request timed out" and the export or import went on regardless;
+ * the local AI test (three minutes) and the radio test (a minute for its report) were cut off
+ * before their own limits, and the radio's report of what it did was lost.
+ */
+export const LONG_REQUEST_TIMEOUTS_MS: Readonly<Partial<Record<RequestChannel, number | null>>> = Object.freeze({
+  // Local AI answers in up to 180 s (local-services.ts AI_TIMEOUT_MS), with a margin.
+  'ai.test': 200_000,
+  // The radio waits 60 s for its delivery report (meshtastic-local TEST_MESSAGE_WAIT_MS).
+  'mesh.sendTest': 90_000,
+  'collections.export': null,
+  'collections.import': null,
+  'watchzones.export': null,
+  'watchzones.import': null,
+  'prep.export': null,
+  'offline.installPack': null,
+  'offline.installPackTo': null,
+  'offline.addVault': null,
+  'offline.importPublisher': null,
+  'export.objects': null,
+  'export.track': null,
+  'export.line': null,
+  'export.readings': null,
+  'diagnostics.export': null,
+  'data.moveTo': null,
+  'view.capture': null,
+});
+
 export interface IpcRouterOptions {
   ipcMain: IpcMainLike;
   runtime: WorldRuntime;
@@ -67,6 +98,8 @@ export interface IpcRouterOptions {
   clock?: Clock;
   /** Per-request timeout; the handler's AbortSignal fires and the renderer gets UNAVAILABLE. */
   requestTimeoutMs?: number;
+  /** Channels timed out otherwise (`null`: not at all); default LONG_REQUEST_TIMEOUTS_MS. */
+  channelTimeoutsMs?: Readonly<Partial<Record<string, number | null>>>;
 }
 
 const GENERIC_INTERNAL_MESSAGE = 'internal error (details are in the application log)';
@@ -195,8 +228,12 @@ export class IpcRouter {
     }
     const handler = this.resolveHandler(channel as RequestChannel);
     const controller = new AbortController();
-    const timeoutMs = this.opts.requestTimeoutMs ?? 60_000;
-    const timer = setTimeout(() => controller.abort(new Error('request timed out')), timeoutMs);
+    const timeouts: Readonly<Partial<Record<string, number | null>>> =
+      this.opts.channelTimeoutsMs ?? LONG_REQUEST_TIMEOUTS_MS;
+    const own = timeouts[channel];
+    const timeoutMs = own === undefined ? (this.opts.requestTimeoutMs ?? 60_000) : own;
+    const timer =
+      timeoutMs === null ? undefined : setTimeout(() => controller.abort(new Error('request timed out')), timeoutMs);
     const ctx: RequestContext = { clientId: IpcRouter.clientIdFor(event.sender.id), signal: controller.signal };
     try {
       // A handler that ignores its AbortSignal still cannot hold the renderer's promise open past the timeout.
@@ -208,7 +245,7 @@ export class IpcRouter {
     } catch (err) {
       return errorEnvelope(this.toIpcError(err, channel, controller.signal.aborted, secretIn(channel, parsed.value)));
     } finally {
-      clearTimeout(timer);
+      if (timer !== undefined) clearTimeout(timer);
     }
   }
 
