@@ -46,6 +46,17 @@ export function parseSensorTime(v: unknown): number | undefined {
   const m = /^(\d{4})[/-](\d{2})[/-](\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:z|Z|\+00:00)$/.exec(v.trim());
   if (!m) return undefined;
   const t = Date.UTC(+m[1]!, +m[2]! - 1, +m[3]!, +m[4]!, +m[5]!, +m[6]!);
+  // A date or time that does not exist (30 February, 24:00, 61 s) is not rolled into the next:
+  // a sensor whose clock has not been set reads as having no time, not some other one.
+  const back = new Date(t);
+  if (
+    back.getUTCMonth() !== +m[2]! - 1 ||
+    back.getUTCDate() !== +m[3]! ||
+    back.getUTCHours() !== +m[4]! ||
+    +m[5]! > 59 ||
+    +m[6]! > 59
+  )
+    return undefined;
   return Number.isFinite(t) ? t : undefined;
 }
 

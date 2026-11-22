@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Air sensor (PurpleAir on the local network): a time that does not exist (30 February, 24:00)
+  is no longer moved into the next day; the reading is marked with the time it was fetched,
+  as for a sensor that gives no time. In 0.7.4 too.
 - History: an observation dated before the year 1000 (`0001-01-01`, the date some feeds send
   for "none") made a partition name that cannot be written, so its write failed, was logged as
   an error and showed history as failing. It is stored by its day and swept by its age. In

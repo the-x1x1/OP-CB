@@ -24,6 +24,17 @@ const run = (name: string, extra: Partial<Parameters<typeof normalizeSensorJson>
 test('the sensor’s time and id: the firmware’s form and ISO 8601; a MAC address in any spelling', () => {
   assert.equal(parseSensorTime('2026/09/23T19:58:10z'), Date.parse('2026-09-23T19:58:10Z'));
   assert.equal(parseSensorTime('2026-09-23T19:58:10Z'), Date.parse('2026-09-23T19:58:10Z'));
+  for (const bad of [
+    '2026/02/30T12:00:00z',
+    '2026/04/31T00:00:00z',
+    '2026/09/23T24:00:00z',
+    '2026/09/23T12:60:00z',
+    '2026/09/23T12:00:60z',
+    '2026/13/01T00:00:00z',
+    '2026/00/10T00:00:00z',
+  ])
+    assert.equal(parseSensorTime(bad), undefined, bad);
+  assert.equal(parseSensorTime('2028/02/29T23:59:59z'), Date.parse('2028-02-29T23:59:59Z'), 'a leap day');
   assert.equal(parseSensorTime('2026-09-23 19:58'), undefined);
   assert.equal(sensorKey('68:C6:3A:8E:5A:1B'), '68c63a8e5a1b');
   assert.equal(sensorKey('68-c6-3a-8e-5a-1b'), '68c63a8e5a1b');
