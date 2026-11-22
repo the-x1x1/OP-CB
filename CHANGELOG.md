@@ -41,6 +41,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- A walkthrough started over when the change could not be saved says that it may come back at
+  the next start, instead of looking done. In 0.7.4 too.
 - Preparedness inventory: a record that could not be saved says why (it said "check the
   fields"), a removal that failed says so (it did nothing without a word), and an export to a
   file that could not be written says so instead of looking like a cancelled dialog. In 0.7.4

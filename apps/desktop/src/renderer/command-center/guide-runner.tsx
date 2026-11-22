@@ -45,6 +45,7 @@ export function GuideRunner({ def }: { def: GuideDefinition }) {
   // The last check's result, with the step it ran on: shown only on that step.
   const [checked, setChecked] = useState<{ stepId: string; result: CheckResult } | null>(null);
   const [checking, setChecking] = useState(false);
+  const [resetNote, setResetNote] = useState<string | null>(null);
   const progress = saved ?? startGuide(def, Date.now());
   const step = currentStep(def, progress);
   const record = progress.steps[step.id];
@@ -83,12 +84,13 @@ export function GuideRunner({ def }: { def: GuideDefinition }) {
           <h2 className="wv-cc-guide__title">{def.title}</h2>
         </div>
         <div className="wv-cc-guide__tools">
-          <ConfirmRestart onRestart={() => void store.resetGuide(def.id)} />
+          <ConfirmRestart onRestart={() => void store.resetGuide(def.id).then(setResetNote)} />
           <Button size="sm" variant="ghost" icon="close" onClick={() => store.openGuide(null)}>
             Close
           </Button>
         </div>
       </header>
+      {resetNote ? <p className="wv-cc-problem">{resetNote}</p> : null}
 
       <ol className="wv-cc-steps" aria-label="Steps">
         {def.steps.map((s, i) => {

@@ -449,11 +449,14 @@ export class CommandCenterStore {
     await this.saveGuide(recordCheck(def, progress, result, now, stepId));
   }
 
-  async resetGuide(id: string): Promise<void> {
+  /** Start a walkthrough over: null when saved, else what to say (it is started over here all the same). */
+  async resetGuide(id: string): Promise<string | null> {
     try {
       this.set({ guides: await this.client.request('guides.reset', { id }) });
-    } catch {
+      return null;
+    } catch (err) {
       this.set({ guides: this.state.guides.filter((g) => g.id !== id) });
+      return `Started over here, but not saved (${describeError(err)}): it may come back at the next start.`;
     }
   }
 

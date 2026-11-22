@@ -200,3 +200,28 @@ test('the store: a local service page that cannot be opened gives the reason to 
   answer = 'opened';
   assert.equal(await store.openService('kolibri'), null);
 });
+
+test('the store: a walkthrough started over whose save fails says it may come back', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  let refuse = true;
+  const client = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) =>
+      refuse && channel === 'guides.reset'
+        ? Promise.reject(
+            Object.assign(new Error('guides.json could not be written (EBUSY)'), { code: 'UNAVAILABLE', channel }),
+          )
+        : demo.request(channel as never, req as never),
+  });
+  const t = Date.parse('2026-11-22T09:00:00.000Z');
+  const store = new CommandCenterStore(client, () => t);
+  await store.saveGuide(startGuide(MAPS_GUIDE, t));
+  const note = await store.resetGuide(MAPS_GUIDE.id);
+  assert.match(
+    note ?? '',
+    /^Started over here, but not saved \(guides\.json could not be written \(EBUSY\).*may come back/,
+  );
+  assert.equal(store.get().guides.length, 0, 'started over here all the same');
+  refuse = false;
+  await store.saveGuide(startGuide(MAPS_GUIDE, t));
+  assert.equal(await store.resetGuide(MAPS_GUIDE.id), null);
+});
