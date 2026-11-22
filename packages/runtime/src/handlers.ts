@@ -1927,5 +1927,6 @@ export async function importedCollection(
     const name = `${incoming.name.slice(0, 180)} (imported${n === 1 ? '' : ` ${n}`})`;
     return { collection: { ...incoming, id, name }, unchanged: false };
   }
-  throw new Error('too many imported copies of this collection');
+  // An answer the window can show, not an internal error.
+  throw new InvalidRequestError('too many imported copies of this collection: remove some and import it again');
 }

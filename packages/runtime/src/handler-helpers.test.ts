@@ -235,6 +235,9 @@ test('importedCollection: new as it is, the same again unchanged, a different on
 
   await assert.rejects(
     importedCollection(incoming, async (id) => ({ ...incoming, id, items: [] })),
-    /too many imported copies/,
+    (err: unknown) =>
+      err instanceof Error &&
+      /too many imported copies/.test(err.message) &&
+      (err as { ipcCode?: string }).ipcCode === 'INVALID_REQUEST',
   );
 });

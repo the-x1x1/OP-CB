@@ -38,6 +38,8 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Importing a collection when a thousand imported copies of it already exist says so, and
+  that removing some lets it import again, instead of "internal error". In 0.7.4 too.
 - On Windows, the settings, the key file, the lists and each source's settings are read again
   for a moment when a virus scanner, OneDrive or the search indexer has the file open right
   then, as saving already did. Settings held at start stopped the app starting; the others
