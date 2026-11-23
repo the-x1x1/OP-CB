@@ -5,6 +5,28 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.5] — 2026-11-23
+
+What the first look at 0.7.4 on a screen found, fixed: online in seconds after the start
+screen, the running version shown at the top left, quitting that waits for the history to be
+written, and a watch zone or a circle that crosses 180° or a pole. Then testing since 0.7.4 in the
+build container — fuzzing every feed reader, importer and request, the app run with 150,000
+aircraft and under other time zones — and what it found: searches and queries that failed or
+crawled with very many objects, times read in the computer's own zone, feed numbers too large to
+mean anything, and memory a busy watch zone never gave back.
+
+After the first cut of 0.7.5 (2026-11-14), held back before it was published: every function
+tested on its own and in generated runs, and what that found — changes asked for together that
+undid one another, list and key files that did not read being taken as empty and written over,
+a clock put back holding sources off, late answers undoing what came after them, and failures
+shown as "internal error" or as nothing at all. And, to carry what a survival drive carries: the
+library by subject with a starter collection fitted to a drive, search inside the downloaded
+references, an encrypted private folder, the library on phones and tablets, and a walkthrough for
+a drive that starts any computer. Checked in the build container (the full test suite,
+typecheck, licence, boundary and connector checks) and with the repository's own formatter on
+the operator's computer; 0.7.4 and a build from 2026-11-13 were run on the operator's computer,
+this release itself not yet.
+
 ### Added
 
 - **The library on phones and tablets** (Command Center → Knowledge → On phones and tablets):
@@ -70,6 +92,39 @@ Versioning: [semantic versioning](https://semver.org/).
   `library.download.start` `kind: 'collection'`, at most 30). A book that fails is noted and the
   next begins; a stop keeps what is there.
 
+- **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
+  (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
+  (`21.3N157.8W`, `N21.3W157.8`). Without both letters (`21.3N157.8`) it still declines.
+- **The running version at the top left**, under the wordmark on the start screen, the map
+  and in the Command Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
+  update it is the new one; the commit tells a test build from the release it follows.
+- **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
+  readout showing what is round the selection, or the middle of the view, at its bearing and range
+  out to the range rings' outer ring, with a sweep. Off by default; also Show the contact sonar in
+  the palette.
+- **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
+  from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
+  and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
+  wind at the middle of the view. Each arrow is named by its place ("Wind at 25°N 165°W") and,
+  selected, says the wind the way a forecast does: "7.0 m/s (14 kn) from ENE (075°)", its Beaufort
+  force and the forecast step. Add a source drafts a pasted ERDDAP wind URL as a wind source, and reads
+  any ERDDAP table (buoys, stations) by column name. The definition is in `connectors/examples/weather/`, off
+  until its licence wording is confirmed.
+- **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
+  vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
+  occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
+  CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
+  off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
+  been read live; four MBTA vehicles are kept as a recorded test. A selected vehicle
+  has a Transit section: its route, trip, where it is on the trip, how full it is and whether it
+  is accessible, in words. Add a source recognises a pasted GTFS Realtime URL and drafts it with the same
+  mapping.
+- **A Traccar server on your own computer or network can push positions live**, as a public
+  one could: a local definition may have a `websocket` whose URL is
+  `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
+  source's settings, with the same token. Plain `ws://` goes only to this computer or the host
+  you named.
+
 ### Changed
 
 - Public cameras: a pinned frame path is held as a folder even when written without its
@@ -103,6 +158,22 @@ Versioning: [semantic versioning](https://semver.org/).
   one end to end); an object type cannot, since a definition's type must be one of the world
   model's, so the faults this removes — an object that could not be sent to the page, a
   motion towards nowhere, a count that came out as text — could not be reached.
+
+- **Taking in a large poll is faster:** the list of the 5,000 most recent observations was
+  trimmed at every one, moving all 5,000 along each time; it is trimmed in batches now (150,000
+  aircraft taken in: 1.5 s instead of 2.4 s).
+
+- **Search and queries over many objects are faster:** when only the first few are wanted (a
+  search row's count and its first match), the best few are kept as the objects are read instead
+  of sorting them all — 150,000 aircraft with different times: about 0.1 s a query instead of 2 s.
+  A search by name builds rows only for the matches it shows.
+
+- **Search says a calendar day is UTC:** "fires today" is titled "Fires (today, UTC)", and so
+  are yesterday, this week and this month — as every time in the app, they are UTC days.
+
+- **A watch zone can cross the 180° meridian**: the measure tool's Watch and the zone import keep
+  a shape over the Aleutians or Fiji as drawn, instead of refusing it and asking for one shape
+  each side.
 
 ### Fixed
 
@@ -581,73 +652,6 @@ Versioning: [semantic versioning](https://semver.org/).
 - A key named `__proto__` in data from outside (a table's column, a record checked by the shared
   validator) is refused or left out: an object under it became the record's prototype, and its
   keys then read as the record's own without having been checked.
-
-## [0.7.5] — 2026-11-14
-
-What the first look at 0.7.4 on a screen found, fixed: online in seconds after the start
-screen, the running version shown at the top left, quitting that waits for the history to be
-written, and a watch zone or a circle that crosses 180° or a pole. Then testing since 0.7.4 in the
-build container — fuzzing every feed reader, importer and request, the app run with 150,000
-aircraft and under other time zones — and what it found: searches and queries that failed or
-crawled with very many objects, times read in the computer's own zone, feed numbers too large to
-mean anything, and memory a busy watch zone never gave back. Checked in the build container
-(full test suite, typecheck, licence, boundary and connector checks); 0.7.4 and a build of this
-branch from 2026-11-13 were run on the operator's computer, this release itself not yet.
-
-### Added
-
-- **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
-  (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
-  (`21.3N157.8W`, `N21.3W157.8`). Without both letters (`21.3N157.8`) it still declines.
-- **The running version at the top left**, under the wordmark on the start screen, the map
-  and in the Command Center: `v0.7.4 · f021db71` — the build's own version and commit, read at start, so after an
-  update it is the new one; the commit tells a test build from the release it follows.
-- **Contact sonar in the HUD** (Settings → Rendering): a small north-up scope above the
-  readout showing what is round the selection, or the middle of the view, at its bearing and range
-  out to the range rings' outer ring, with a sweep. Off by default; also Show the contact sonar in
-  the palette.
-- **Wind on the globe**: a `wind` layer of arrows — every 10° of NOAA's GFS 10 m wind, read
-  from NOAA CoastWatch's ERDDAP server without a key — pointing where the wind blows, longer
-  and warmer the stronger it is, a Wind layer under Weather; with it on, the HUD's WND row gives the
-  wind at the middle of the view. Each arrow is named by its place ("Wind at 25°N 165°W") and,
-  selected, says the wind the way a forecast does: "7.0 m/s (14 kn) from ENE (075°)", its Beaufort
-  force and the forecast step. Add a source drafts a pasted ERDDAP wind URL as a wind source, and reads
-  any ERDDAP table (buoys, stations) by column name. The definition is in `connectors/examples/weather/`, off
-  until its licence wording is confirmed.
-- **Live transit vehicles from GTFS Realtime feeds**: a `gtfs-rt` connector reads an agency's
-  vehicle positions (protobuf, decoded without a new dependency) — route, trip, stop, status,
-  occupancy, speed and heading. Definitions for the seven feeds with licence records (MBTA,
-  CapMetro, Metro Transit, OVapi, Entur, TransLink, HSL) are in `connectors/examples/transit/`,
-  off until each licence is confirmed. MBTA's, Entur's, Metro Transit's and OVapi's feeds have
-  been read live; four MBTA vehicles are kept as a recorded test. A selected vehicle
-  has a Transit section: its route, trip, where it is on the trip, how full it is and whether it
-  is accessible, in words. Add a source recognises a pasted GTFS Realtime URL and drafts it with the same
-  mapping.
-- **A Traccar server on your own computer or network can push positions live**, as a public
-  one could: a local definition may have a `websocket` whose URL is
-  `ws://localhost/api/socket`, and the socket opened is `ws://` to the host and port in the
-  source's settings, with the same token. Plain `ws://` goes only to this computer or the host
-  you named.
-
-### Changed
-
-- **Taking in a large poll is faster:** the list of the 5,000 most recent observations was
-  trimmed at every one, moving all 5,000 along each time; it is trimmed in batches now (150,000
-  aircraft taken in: 1.5 s instead of 2.4 s).
-
-- **Search and queries over many objects are faster:** when only the first few are wanted (a
-  search row's count and its first match), the best few are kept as the objects are read instead
-  of sorting them all — 150,000 aircraft with different times: about 0.1 s a query instead of 2 s.
-  A search by name builds rows only for the matches it shows.
-
-- **Search says a calendar day is UTC:** "fires today" is titled "Fires (today, UTC)", and so
-  are yesterday, this week and this month — as every time in the app, they are UTC days.
-
-- **A watch zone can cross the 180° meridian**: the measure tool's Watch and the zone import keep
-  a shape over the Aleutians or Fiji as drawn, instead of refusing it and asking for one shape
-  each side.
-
-### Fixed
 
 - **HUD: a position or heading that is not a number shows a dash,** as altitude and the grid
   reference already did, instead of `NaN°NaN′0NaN″`.
