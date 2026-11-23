@@ -2,6 +2,8 @@ import type {
   AiTestAnswer,
   CatalogAnswer,
   CatalogRequest,
+  CollectionLookupAnswer,
+  CollectionLookupRequest,
   GuideProgress,
   LibraryDownloadRequest,
   LibraryDownloadStatus,
@@ -368,6 +370,20 @@ export class CommandCenterStore {
       return await this.client.request('library.catalog', req);
     } catch (err) {
       return { ok: false, entries: [], message: err instanceof Error ? err.message : 'the catalogue did not answer' };
+    }
+  }
+
+  /** The starter collection looked up in the Kiwix catalogue (library-collection.ts). */
+  async lookupCollection(req: CollectionLookupRequest): Promise<CollectionLookupAnswer> {
+    try {
+      return await this.client.request('library.collection.lookup', req);
+    } catch (err) {
+      return {
+        ok: false,
+        items: [],
+        notes: [],
+        message: err instanceof Error ? err.message : 'the catalogue did not answer',
+      };
     }
   }
 

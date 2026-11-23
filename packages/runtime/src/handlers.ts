@@ -37,6 +37,7 @@ import {
   LOCAL_SERVICE_IDS,
   readGuideProgress,
   readPrepRecord,
+  readCollectionLookupRequest,
   readLibraryDownloadRequest,
   readLibraryOpenRequest,
   type LocalServiceId,
@@ -991,10 +992,16 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
         (typeof req.language !== 'string' || !/^[a-z]{2,3}(,[a-z]{2,3})*$/.test(req.language))
       )
         throw new InvalidRequestError('language is an ISO 639-3 code such as eng');
+      if (
+        req?.name !== undefined &&
+        (typeof req.name !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(req.name))
+      )
+        throw new InvalidRequestError('name is a catalogue book name such as wikipedia_en_all');
       if (core.demoMode()) return { ok: false, entries: [], message: 'the demo build contacts no catalogue' };
       return core.libraryDownloads.catalog(
         {
           ...(req?.query ? { query: req.query } : {}),
+          ...(req?.name ? { name: req.name } : {}),
           ...(req?.language ? { language: req.language } : {}),
           ...(req?.count ? { count: req.count } : {}),
         },
@@ -1004,11 +1011,20 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     'library.download.start': async (req) => {
       if (core.demoMode()) return { phase: 'failed', message: 'the demo build downloads nothing' };
       const r = readLibraryDownloadRequest(req);
-      if (!r) throw new InvalidRequestError('kind must be zim (with a catalogue entry) or references');
+      if (!r)
+        throw new InvalidRequestError(
+          'kind must be zim (with a catalogue entry), references, or collection (1 to 30 catalogue entries)',
+        );
       return core.libraryDownloads.start(r);
     },
     'library.download.status': async () => core.libraryDownloads.current(),
     'library.download.cancel': async () => core.libraryDownloads.cancel(),
+    'library.collection.lookup': async (req, ctx) => {
+      const r = readCollectionLookupRequest(req);
+      if (!r) throw new InvalidRequestError('language is an ISO 639-3 code such as eng');
+      if (core.demoMode()) return { ok: false, items: [], notes: [], message: 'the demo build contacts no catalogue' };
+      return core.libraryDownloads.lookupCollection(r.language, ctx.signal);
+    },
 
     'offline.status': async () => core.offlineStatus(),
     'field.status': async () => core.fieldStatus(),

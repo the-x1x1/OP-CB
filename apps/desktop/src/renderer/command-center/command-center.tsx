@@ -34,6 +34,7 @@ import {
 import { MapDownloadPanel } from './map-download-panel.js';
 import { DataLocationCard } from './data-location-card.js';
 import { BuiltInLibrary, EmergencyReferences, KiwixCatalog } from './library-panel.js';
+import { StarterCollection, SubjectShelf } from './library-collection-panel.js';
 import './command-center.css';
 
 /** One empty list for selectors: a new [] each read would never settle. */
@@ -456,7 +457,9 @@ function Knowledge() {
     <div className="wv-cc-section">
       <SectionHead id="knowledge" />
       <BuiltInLibrary />
+      <SubjectShelf />
       <EmergencyReferences />
+      <StarterCollection />
       <KiwixCatalog />
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">Kiwix server (optional)</h3>

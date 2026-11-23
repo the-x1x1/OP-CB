@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import type { CatalogAnswer, CatalogEntry, LibraryFindAnswer } from '@opcb/ipc-contract';
+import { COLLECTION_ITEM, type CatalogAnswer, type CatalogEntry, type LibraryFindAnswer } from '@opcb/ipc-contract';
 import { Button } from '@opcb/ui';
 import { useCC } from './use-cc.js';
 import { bytesText, etaText } from './map-download-panel.js';
@@ -303,12 +303,14 @@ export function KiwixCatalog() {
           <p>Nothing in the catalogue matched.</p>
         )
       ) : null}
-      {st.phase !== 'idle' && st.item !== 'emergency references' ? <DownloadState /> : null}
+      {st.phase !== 'idle' && st.item !== 'emergency references' && st.item !== COLLECTION_ITEM ? (
+        <DownloadState />
+      ) : null}
     </section>
   );
 }
 
-function DownloadState() {
+export function DownloadState() {
   const [cc, store] = useCC();
   const st = cc.libraryDownload;
   const p = st.progress;
@@ -320,6 +322,7 @@ function DownloadState() {
       {st.step ? (
         <p className="wv-cc-muted">
           {st.step.done} of {st.step.total}
+          {st.book && (st.phase === 'downloading' || st.phase === 'verifying') ? ` · now: ${st.book}` : ''}
         </p>
       ) : null}
       {p ? (

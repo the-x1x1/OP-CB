@@ -13,6 +13,7 @@ import {
   MAX_OVERLAY_VALUE_OVERLAYS,
   MAX_READING_KEYS,
   readGuideProgress,
+  readCollectionLookupRequest,
   readLibraryDownloadRequest,
   readLibraryOpenRequest,
   readPrepRecord,
@@ -492,6 +493,7 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
   'library.catalog': s.object(
     {
       query: s.optional(s.string({ min: 0, max: 200 })),
+      name: s.optional(s.string({ min: 1, max: 200, pattern: /^[A-Za-z0-9][A-Za-z0-9._-]*$/ })),
       language: s.optional(s.string({ min: 2, max: 40, pattern: /^[a-z]{2,3}(,[a-z]{2,3})*$/ })),
       count: s.optional(s.number({ min: 1, max: 100, integer: true })),
     },
@@ -500,6 +502,7 @@ export const REQUEST_SCHEMAS: RequestSchemas = {
   'library.download.start': fromReader(readLibraryDownloadRequest, 'library download request'),
   'library.download.status': voidSchema,
   'library.download.cancel': voidSchema,
+  'library.collection.lookup': fromReader(readCollectionLookupRequest, 'collection lookup request'),
   'offline.status': voidSchema,
   'field.status': voidSchema,
   'offline.installPack': voidSchema,

@@ -584,6 +584,8 @@ export interface CatalogEntry {
 
 export interface CatalogRequest {
   query?: string;
+  /** A book name exactly (`wikipedia_en_all`), as the catalogue's `name` filter takes it. */
+  name?: string;
   /** ISO 639-3, as the catalogue uses (`eng`). */
   language?: string;
   count?: number;
@@ -596,7 +598,15 @@ export interface CatalogAnswer {
   message?: string;
 }
 
-export type LibraryDownloadRequest = { kind: 'zim'; entry: CatalogEntry } | { kind: 'references'; ids?: string[] };
+export type LibraryDownloadRequest =
+  | { kind: 'zim'; entry: CatalogEntry }
+  | { kind: 'references'; ids?: string[] }
+  /** Several catalogue books one after another (the starter collection); at most 30. */
+  | { kind: 'collection'; entries: CatalogEntry[] };
+
+/** The `item` a collection download reports while it runs and when it ends. */
+export const COLLECTION_ITEM = 'starter collection';
+export const MAX_COLLECTION_ENTRIES = 30;
 
 export interface LibraryDownloadStatus {
   phase: 'idle' | 'downloading' | 'verifying' | 'done' | 'failed' | 'cancelled';
@@ -604,6 +614,8 @@ export interface LibraryDownloadStatus {
   item?: string;
   /** Queue position, for the references: done of total. */
   step?: { done: number; total: number };
+  /** In a collection: the book being fetched now. */
+  book?: string;
   progress?: { bytesDone: number; bytesTotal: number; bytesPerSecond?: number };
   /** Bytes already on disk from an earlier, unfinished download of the same file. */
   resumedFrom?: number;
@@ -644,22 +656,37 @@ export function readLibraryDownloadRequest(v: unknown): LibraryDownloadRequest |
       return undefined;
     return { kind: 'references', ids: ids as string[] };
   }
-  if (r['kind'] !== 'zim' || typeof r['entry'] !== 'object' || r['entry'] === null) return undefined;
-  const e = r['entry'] as Record<string, unknown>;
+  if (r['kind'] === 'collection') {
+    const list = r['entries'];
+    if (!Array.isArray(list) || list.length < 1 || list.length > MAX_COLLECTION_ENTRIES) return undefined;
+    const entries: CatalogEntry[] = [];
+    for (const x of list as unknown[]) {
+      const e = readDownloadEntry(x);
+      if (!e || entries.some((y) => y.url === e.url)) return undefined;
+      entries.push(e);
+    }
+    return { kind: 'collection', entries };
+  }
+  if (r['kind'] !== 'zim') return undefined;
+  const entry = readDownloadEntry(r['entry']);
+  return entry ? { kind: 'zim', entry } : undefined;
+}
+
+/** A catalogue entry as a download request carries it: only what a download needs. */
+function readDownloadEntry(v: unknown): CatalogEntry | undefined {
+  if (typeof v !== 'object' || v === null) return undefined;
+  const e = v as Record<string, unknown>;
   const str = (k: string, max: number) =>
     typeof e[k] === 'string' && (e[k] as string).length >= 1 && (e[k] as string).length <= max;
   if (!str('id', 100) || !str('name', 200) || !str('title', 300) || !str('url', 1000)) return undefined;
   const size = e['sizeBytes'];
   if (size !== undefined && (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 0)) return undefined;
   return {
-    kind: 'zim',
-    entry: {
-      id: e['id'] as string,
-      name: e['name'] as string,
-      title: e['title'] as string,
-      url: e['url'] as string,
-      ...(typeof size === 'number' ? { sizeBytes: size } : {}),
-    },
+    id: e['id'] as string,
+    name: e['name'] as string,
+    title: e['title'] as string,
+    url: e['url'] as string,
+    ...(typeof size === 'number' ? { sizeBytes: size } : {}),
   };
 }
 

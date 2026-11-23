@@ -112,6 +112,7 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'library.download.start': { kind: 'references' },
   'library.download.status': undefined,
   'library.download.cancel': undefined,
+  'library.collection.lookup': { language: 'eng' },
   'search.nearest': { position: { latitude: 19.9, longitude: -155.6 } },
   'sky.overhead': { observer: { latitude: 21.3, longitude: -157.85 } },
   'lenses.list': undefined,

@@ -531,6 +531,20 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **The library by subject, and a starter collection fitted to a drive** (Command Center →
+  Knowledge). *By subject* puts the books and downloaded references under ten subjects —
+  medicine, farming, food and water, building, trades and repair, engineering, survival and
+  defence, radio and navigation, teaching, science — and opens them from there. *Starter
+  collection* looks sixteen Kiwix books up in the live catalogue (post-disaster, water,
+  medicine guides, WikiMed, WikEM, food preparation, knots, Appropedia, Gardenology,
+  Energypedia, Wikipedia, iFixit, Wikivoyage, Wikibooks, the Arch Linux wiki, Project
+  Gutenberg) by exact file name, fits them to the free space or a drive size (32 GB to 2 TB;
+  a tenth kept back), the essentials first and the fullest edition that fits, skips what the
+  library holds, names what is too big or no longer in the catalogue, and downloads them one
+  after another with the same checks as a single book (`library.collection.lookup`,
+  `library.download.start` `kind: 'collection'`, at most 30). A book that fails is noted and the
+  next begins; a stop keeps what is there.
+
 - **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
   (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
   (`21.3N157.8W`, `N21.3W157.8`). Without both letters (`21.3N157.8`) it still declines.

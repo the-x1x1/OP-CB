@@ -32,7 +32,7 @@ function cluster(blobs: Uint8Array[], compression: 1 | 4 | 5): Uint8Array {
 
 export function buildZim(
   items: ZimItemSpec[],
-  opts: { minor?: number; noTitleList?: boolean; xz?: boolean } = {},
+  opts: { minor?: number; noTitleList?: boolean; xz?: boolean; uuid?: string } = {},
 ): Uint8Array {
   const enc = new TextEncoder();
   const key = (i: ZimItemSpec) => Buffer.from(i.ns + i.path);
@@ -91,7 +91,7 @@ export function buildZim(
   header.writeUInt32LE(ZIM_MAGIC, 0);
   header.writeUInt16LE(opts.minor !== undefined ? 6 : 5, 4);
   header.writeUInt16LE(opts.minor ?? 0, 6);
-  Buffer.from('00112233445566778899aabbccddeeff', 'hex').copy(header, 8);
+  Buffer.from(opts.uuid ?? '00112233445566778899aabbccddeeff', 'hex').copy(header, 8);
   header.writeUInt32LE(n, 24);
   header.writeUInt32LE(clusters.length, 28);
   header.writeBigUInt64LE(BigInt(urlPos), 32);

@@ -2,13 +2,18 @@ import { createHash, type Hash } from 'node:crypto';
 import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import type { Logger } from '@opcb/core';
-import type {
-  CatalogAnswer,
-  CatalogEntry,
-  CatalogRequest,
-  LibraryDownloadRequest,
-  LibraryDownloadStatus,
-  ReferenceDoc,
+import {
+  COLLECTION_ITEM,
+  STARTER_COLLECTION,
+  catalogNameOf,
+  resolveItem,
+  type CatalogAnswer,
+  type CatalogEntry,
+  type CatalogRequest,
+  type CollectionLookupAnswer,
+  type LibraryDownloadRequest,
+  type LibraryDownloadStatus,
+  type ReferenceDoc,
 } from '@opcb/ipc-contract';
 import { REFERENCES } from './references.js';
 import {
@@ -217,6 +222,10 @@ async function hashFile(file: string, upTo: number, hashes: Hash[], signal: Abor
 export class LibraryDownloads {
   private status: LibraryDownloadStatus = { phase: 'idle' };
   private abort: AbortController | undefined;
+  /** While a collection runs: its position, put on every status a book's download reports. */
+  private queue: { done: number; total: number; book: string } | undefined;
+  /** How the last book of a running collection ended (its own status, before the queue's). */
+  private lastBook: LibraryDownloadStatus | undefined;
 
   constructor(private readonly deps: LibraryDownloadsDeps) {}
 
@@ -229,7 +238,20 @@ export class LibraryDownloads {
   }
 
   private set(s: LibraryDownloadStatus): void {
-    this.status = s;
+    if (!this.queue) {
+      this.status = s;
+      return;
+    }
+    // A book's own end is not the queue's: it stays busy (so nothing else starts) until the last.
+    const ended = s.phase === 'done' || s.phase === 'failed' || s.phase === 'cancelled';
+    this.lastBook = ended ? s : undefined;
+    this.status = {
+      ...s,
+      ...(ended ? { phase: 'downloading' as const } : {}),
+      item: COLLECTION_ITEM,
+      step: { done: this.queue.done, total: this.queue.total },
+      book: this.queue.book,
+    };
   }
 
   private busy(): boolean {
@@ -289,6 +311,7 @@ export class LibraryDownloads {
     u.searchParams.set('count', String(Math.min(Math.max(req.count ?? 40, 1), 100)));
     if (req.language) u.searchParams.set('lang', req.language);
     if (req.query?.trim()) u.searchParams.set('q', req.query.trim());
+    if (req.name?.trim()) u.searchParams.set('name', req.name.trim());
     try {
       const res = await this.deps.fetchImpl(u.toString(), signal ? { signal } : {});
       if (!res.ok) return { ok: false, entries: [], message: `the Kiwix catalogue answered ${res.status}` };
@@ -303,6 +326,16 @@ export class LibraryDownloads {
     if (this.busy()) return this.current();
     const ac = new AbortController();
     this.abort = ac;
+    if (req.kind === 'collection') {
+      this.set({
+        phase: 'downloading',
+        item: COLLECTION_ITEM,
+        step: { done: 0, total: req.entries.length },
+        message: 'starting',
+      });
+      void this.runCollection(req.entries, ac.signal);
+      return this.current();
+    }
     if (req.kind === 'zim') {
       const url = kiwixDownloadUrl(req.entry.url);
       const name = url ? zimFileName(url) : undefined;
@@ -333,6 +366,95 @@ export class LibraryDownloads {
    */
   private endedOutside(item: string, err: unknown): void {
     this.set({ phase: 'failed', item, message: failureText(err) });
+  }
+
+  // ---- the starter collection ------------------------------------------------------------------
+
+  /**
+   * Looks every book of the starter collection up in the catalogue: by its exact name and by its
+   * search words, matched by file name (library-collection.ts `resolveItem`). Four questions at a
+   * time; one that fails is noted and the rest go on.
+   */
+  async lookupCollection(language: string | undefined, signal?: AbortSignal): Promise<CollectionLookupAnswer> {
+    const notes: string[] = [];
+    const ask = async (req: CatalogRequest): Promise<CatalogEntry[]> => {
+      const a = await this.catalog({ ...req, ...(language ? { language } : {}), count: 100 }, signal);
+      if (!a.ok) {
+        const note = `${req.name ?? req.query}: ${a.message ?? 'no answer'}`;
+        if (!notes.includes(note)) notes.push(note);
+        return [];
+      }
+      return a.entries;
+    };
+    const jobs = STARTER_COLLECTION.map((item) => async () => {
+      const names = [...new Set(item.files.map(catalogNameOf))];
+      const found = (await Promise.all([...names.map((name) => ask({ name })), ask({ query: item.query })])).flat();
+      return { id: item.id, choices: resolveItem(item, found).choices };
+    });
+    const items: CollectionLookupAnswer['items'] = new Array(jobs.length);
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: 4 }, async () => {
+        while (next < jobs.length) {
+          const i = next++;
+          items[i] = await jobs[i]!();
+        }
+      }),
+    );
+    const anyFound = items.some((x) => x.choices.length > 0);
+    return {
+      ok: anyFound || notes.length === 0,
+      items,
+      notes: notes.slice(0, 20),
+      ...(!anyFound && notes.length ? { message: 'the Kiwix catalogue did not answer' } : {}),
+    };
+  }
+
+  /** Books one after another; one that fails is noted and the next begins. A stop ends the queue. */
+  private async runCollection(entries: CatalogEntry[], signal: AbortSignal): Promise<void> {
+    const problems: string[] = [];
+    let added = 0;
+    try {
+      for (let i = 0; i < entries.length; i++) {
+        if (signal.aborted) break;
+        const entry = entries[i]!;
+        this.queue = { done: i, total: entries.length, book: entry.title };
+        const url = kiwixDownloadUrl(entry.url);
+        const name = url ? zimFileName(url) : undefined;
+        if (!url || !name) {
+          problems.push(`${entry.title}: no download on download.kiwix.org`);
+          continue;
+        }
+        this.lastBook = undefined;
+        await this.runZim(url, name, entry, signal);
+        const st = this.lastBook ?? this.status;
+        if (st.phase === 'cancelled') break;
+        if (st.phase === 'failed') problems.push(`${entry.title}: ${st.message ?? 'failed'}`);
+        else if (st.phase === 'done') added++;
+      }
+    } finally {
+      this.queue = undefined;
+      this.lastBook = undefined;
+    }
+    const total = entries.length;
+    if (signal.aborted)
+      this.set({
+        phase: 'cancelled',
+        item: COLLECTION_ITEM,
+        step: { done: added, total },
+        message: 'stopped; what was downloaded is kept and continues next time',
+        ...(problems.length ? { problems } : {}),
+      });
+    else
+      this.set({
+        phase: added === 0 && problems.length ? 'failed' : 'done',
+        item: COLLECTION_ITEM,
+        step: { done: added, total },
+        message: problems.length
+          ? `${added} of ${total} in the library; ${problems.length} could not be fetched`
+          : `all ${total} in the library`,
+        ...(problems.length ? { problems } : {}),
+      });
   }
 
   // ---- one book --------------------------------------------------------------------------------

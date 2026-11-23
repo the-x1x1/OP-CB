@@ -17,6 +17,7 @@ import type { SourceHealthEntry, ConnectionSnapshot } from '@opcb/source-health'
 import type { StateChange, TrackPoint } from '@opcb/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@opcb/render-core';
 import type { ViewLink } from './view-link.js';
+import type { CollectionLookupAnswer, CollectionLookupRequest } from './library-collection.js';
 import type {
   AiTestAnswer,
   AiTestRequest,
@@ -1276,6 +1277,7 @@ export interface WorldRequests {
   'library.download.start': { request: LibraryDownloadRequest; response: LibraryDownloadStatus };
   'library.download.status': { request: void; response: LibraryDownloadStatus };
   'library.download.cancel': { request: void; response: LibraryDownloadStatus };
+  'library.collection.lookup': { request: CollectionLookupRequest; response: CollectionLookupAnswer };
 
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
@@ -1528,6 +1530,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'library.download.start',
   'library.download.status',
   'library.download.cancel',
+  'library.collection.lookup',
   'offline.status',
   'field.status',
   'offline.installPack',
@@ -1619,5 +1622,6 @@ export function isIpcError(v: unknown): v is IpcError {
 }
 
 export * from './command-center.js';
+export * from './library-collection.js';
 export * from './local-api.js';
 export * from './view-link.js';

@@ -734,6 +734,8 @@ export class DemoClient implements WorldClient {
       case 'library.download.status':
       case 'library.download.cancel':
         return { phase: 'idle' };
+      case 'library.collection.lookup':
+        return { ok: false, items: [], notes: [], message: 'the browser demo contacts no catalogue' };
       case 'field.status':
         // A browser cannot read this computer's power or disks: said as unknown, never made up.
         return { power: { source: 'unknown' }, at: new Date(nowMs).toISOString() };
