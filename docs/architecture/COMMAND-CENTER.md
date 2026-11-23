@@ -200,6 +200,10 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   SHA-256 and https mirrors; Range continuation from `<library>/.downloads/<file>.part` across
   restarts; size, SHA-256 and the ZIM MD5 (computed while downloading) before the file is
   renamed into the library. Licence register: `kiwix-library`.
+- **Walkthrough `bootable-drive`** (`guides/bootable.ts`, Resources, 2026-11-22): Ventoy,
+  an Ubuntu ISO with a `casper-rw` persistence file, the `.deb` installed in the live system and
+  the data folder moved onto the Ventoy partition; the last step's check is
+  `library.builtInBooks`. OP-CB changes nothing on the drive or computer itself.
 - **The private folder** (`packages/offline/src/private-store.ts`, 2026-11-22): `<data>/private`
   holds `key.json` (scrypt parameters, salt, the data key wrapped with AES-256-GCM),
   `index.opcbx` (the encrypted list) and one `<random id>.opcbx` per file. Channels

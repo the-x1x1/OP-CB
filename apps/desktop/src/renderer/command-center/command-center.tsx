@@ -898,6 +898,7 @@ function Resources() {
     <div className="wv-cc-section">
       <SectionHead id="resources" />
       <DataLocationCard />
+      <GuideCards section="resources" />
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">World packs</h3>
         <PackList />

@@ -531,6 +531,13 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **Walkthrough: a drive that starts any computer** (Command Center → Resources). How to put
+  Ubuntu, OP-CB and OP-CB's data — maps, library, private folder — on one USB drive with Ventoy
+  and a persistence file, so it boots most PCs (and Intel Macs), even one whose own system no
+  longer starts, and also carries the Windows portable copy. Secure Boot's one-time key
+  enrolment, start-up menu keys, and what cannot start it (Apple-chip Macs, Chromebooks) are
+  said; the last step checks the library on the drive holds a book.
+
 - **A private folder for your own documents** (Command Center → Prepare): IDs, deeds,
   prescriptions, insurance, contacts — encrypted inside OP-CB's data folder with a passphrase
   only you know (AES-256-GCM under a random data key, the key wrapped with scrypt), names and

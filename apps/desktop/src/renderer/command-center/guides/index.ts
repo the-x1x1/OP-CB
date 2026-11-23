@@ -1,4 +1,5 @@
 import type { GuideDefinition, SectionId } from '../guide-types.js';
+import { BOOTABLE_GUIDE } from './bootable.js';
 import { MAPS_GUIDE } from './maps.js';
 import { MESHTASTIC_GUIDE } from './meshtastic.js';
 import { AI_GUIDE, LEARNING_GUIDE, LIBRARY_GUIDE, PREP_GUIDE, SDR_GUIDE, START_GUIDE } from './others.js';
@@ -13,6 +14,7 @@ export const GUIDES: readonly GuideDefinition[] = Object.freeze([
   MESHTASTIC_GUIDE,
   SDR_GUIDE,
   PREP_GUIDE,
+  BOOTABLE_GUIDE,
 ]);
 
 export function guideById(id: string): GuideDefinition | undefined {

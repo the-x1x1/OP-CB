@@ -42,6 +42,9 @@ export const STATIC_EXTERNAL_HOSTS: readonly string[] = Object.freeze([
   'www.rtl-sdr.com',
   'protomaps.com',
   'www.ready.gov',
+  // The bootable-drive walkthrough (2026-11-22): Ventoy's and Ubuntu's own pages.
+  'www.ventoy.net',
+  'ubuntu.com',
 ]);
 
 export type ExternalHostAllowlist = ReadonlySet<string>;

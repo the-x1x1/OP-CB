@@ -193,6 +193,10 @@ stored keys and logs — and the room left there. Two ways to put it all on an e
 Stored keys are encrypted by the operating system for one user on one computer: on another
 computer they are asked for again.
 
+**A drive that starts any computer**: Resources → the walkthrough of that name puts Ubuntu,
+OP-CB and its data on one USB drive with Ventoy, so it boots most PCs — even one whose own
+system will not start — into your own OP-CB, maps and library.
+
 ## Working offline
 
 Settings → Network → **Work offline** makes OP-CB ask nothing of the internet, whether
