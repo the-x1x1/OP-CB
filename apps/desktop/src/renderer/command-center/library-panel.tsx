@@ -142,7 +142,8 @@ export function EmergencyReferences() {
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">Emergency references</h3>
       <p className="wv-cc-muted">
-        Public-domain guides from FEMA, the CDC and the U.S. Army, kept in the library folder and readable offline.
+        Public-domain guides from FEMA, the CDC, the USDA and the U.S. Army, kept in the library folder and readable
+        offline.
       </p>
       <ul className="wv-cc-list">
         {refs.map((r) => (

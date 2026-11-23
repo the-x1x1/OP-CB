@@ -2895,8 +2895,8 @@
     },
     {
       "providerId": "us-federal-preparedness",
-      "name": "Public-domain emergency references (FEMA, CDC, U.S. Army)",
-      "sourceUrl": "https://www.ready.gov/ ; https://www.cdc.gov/ ; Army manuals via https://irp.fas.org/doddir/army/",
+      "name": "Public-domain emergency references (FEMA, CDC, USDA, U.S. Army)",
+      "sourceUrl": "https://www.ready.gov/ ; https://www.cdc.gov/ ; Army manuals via https://armypubs.army.mil/ and https://irp.fas.org/doddir/army/ ; USDA canning guide via https://nchfp.uga.edu/ ; FM 5-426 and FM 3-25.26 via https://archive.org/details/MManuals",
       "termsUrl": "https://www.usa.gov/government-copyright",
       "license": "U.S. Government work — public domain (17 U.S.C. § 105); the Army manuals are also marked approved for public release, distribution unlimited",
       "category": "reference-library",
@@ -2910,11 +2910,11 @@
         "exportAllowed": true,
         "commercialUseAllowed": true,
         "attributionRequired": false,
-        "attributionText": "FEMA, CDC and U.S. Army publications (public domain)",
+        "attributionText": "FEMA, CDC, USDA and U.S. Army publications (public domain)",
         "termsUrl": "https://www.usa.gov/government-copyright"
       },
       "commercialReview": "approved",
-      "notes": "Operator decision 2026-10-30. Six documents, listed in packages/ipc-contract command-center.ts EMERGENCY_REFERENCES with every address and whether it was opened on 2026-10-30. Fetched on the operator's press, never bundled; each checked to be a PDF and its SHA-256 recorded. Some federal documents include third-party photographs; none is reused outside the document."
+      "notes": "Operator decision 2026-10-30. Six documents, listed in packages/ipc-contract command-center.ts EMERGENCY_REFERENCES with every address and whether it was opened on 2026-10-30. Fetched on the operator's press, never bundled; each checked to be a PDF and its SHA-256 recorded. Some federal documents include third-party photographs; none is reused outside the document. 2026-11-22: nine more (USDA Complete Guide to Home Canning, 2015, its seven guides; FM 5-426 Carpentry, 1995; FM 3-25.26 Map Reading and Land Navigation, 2001), same handling; the two Army manuals are marked approved for public release. For the operator to confirm: the canning guide is a USDA bulletin (AIB 539) prepared with the National Center for Home Food Preservation, which serves it."
     }
   ]
 }

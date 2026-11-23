@@ -200,8 +200,20 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   SHA-256 and https mirrors; Range continuation from `<library>/.downloads/<file>.part` across
   restarts; size, SHA-256 and the ZIM MD5 (computed while downloading) before the file is
   renamed into the library. Licence register: `kiwix-library`.
-- **Emergency references** (`EMERGENCY_REFERENCES` in the contract): six U.S. federal
-  public-domain PDFs with their addresses and which were opened on 2026-10-30; fetched on the
+- **Subjects and the starter collection** (`packages/ipc-contract/src/library-collection.ts`,
+  2026-11-22): ten subjects; a book from the collection takes the collection's subjects, any other
+  book or reference is placed by whole words in its title and description. Sixteen Kiwix books
+  named by the start of their file name (`zimgit-water_en`, `wikipedia_en_all_maxi`, …);
+  `library.collection.lookup` asks the catalogue for each by exact `name` (flavour taken off)
+  and by search words, and keeps the newest dated file matching each name. `planCollection`
+  goes by rank, takes the fullest edition that fits what is left, skips what the library holds.
+  `library.download.start` `{ kind: 'collection', entries }` (1–30, no duplicates) fetches them
+  in turn through the single-book path; while it runs every status is the queue's (`item`
+  `starter collection`, `step`, `book`), so nothing else starts between two books.
+- **Emergency references** (`EMERGENCY_REFERENCES` in the contract): fifteen U.S. federal
+  public-domain PDFs (six from 2026-10-30; the USDA canning guide's seven parts, FM 5-426
+  Carpentry and FM 3-25.26 Map Reading and Land Navigation added 2026-11-22) with their addresses
+  and how each was checked; fetched on the
   operator's press into `<library>/references/`, `%PDF-` checked, SHA-256 recorded in
   `references.json`; opened with the system's PDF viewer. Licence register:
   `us-federal-preparedness`.

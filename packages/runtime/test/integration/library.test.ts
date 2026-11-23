@@ -121,6 +121,13 @@ function fakeKiwix(file: Uint8Array, opts: { sha?: string; stallAt?: number; noM
       return new Response(Buffer.from('%PDF-1.6 survival'), { headers: { 'content-type': 'application/pdf' } });
     if (url.includes('armypubs.army.mil') && url.includes('4-02.11'))
       return new Response(Buffer.from('%PDF-1.7 first aid'), { headers: { 'content-type': 'application/pdf' } });
+    // The canning guides and the carpentry manual answer; the land navigation manual does not.
+    if (/^https:\/\/nchfp\.uga\.edu\/papers\/guide\/GUIDE0[1-7]_HomeCan_rev0715\.pdf$/.test(url))
+      return new Response(Buffer.from(`%PDF-1.5 canning ${url.slice(-20)}`), {
+        headers: { 'content-type': 'application/pdf' },
+      });
+    if (url === 'https://archive.org/download/MManuals/UsArmyEngineerCarpentry1995.pdf')
+      return new Response(Buffer.from('%PDF-1.3 carpentry'), { headers: { 'content-type': 'application/pdf' } });
     if (url.includes('irp.fas.org'))
       return new Response('<html>checking your browser</html>', {
         status: 202,
@@ -162,7 +169,7 @@ test('library: a ZIM file in the folder is listed, searched by title (across red
     const broken = shelf.books.find((b) => b.file === 'not-a-zim.zim');
     assert.equal(broken?.readable, false);
     assert.match(broken?.problem ?? '', /smaller than a ZIM header|not a ZIM/);
-    assert.equal(shelf.references.length, 6);
+    assert.equal(shelf.references.length, 15);
     assert.ok(shelf.references.every((r) => !r.installed));
 
     const found = await h.client.request('library.find', { query: 'boil', withText: true });
@@ -319,16 +326,29 @@ test('library: the emergency references — PDFs only, a fallback address, probl
     await h.client.request('library.download.start', { kind: 'references' });
     const st = await until(h.client, ['done', 'failed']);
     assert.equal(st.phase, 'done');
-    assert.equal(st.step?.total, 6);
+    assert.equal(st.step?.total, 15);
     const shelf = await h.client.request('library.shelf', undefined);
     const got = shelf.references.filter((r) => r.installed).map((r) => r.id);
-    assert.deepEqual(got.sort(), ['army-atp-3-50-21', 'army-atp-4-02-11', 'fema-are-you-ready']);
+    assert.deepEqual(got.sort(), [
+      'army-atp-3-50-21',
+      'army-atp-4-02-11',
+      'army-fm-5-426',
+      'fema-are-you-ready',
+      'usda-canning-01',
+      'usda-canning-02',
+      'usda-canning-03',
+      'usda-canning-04',
+      'usda-canning-05',
+      'usda-canning-06',
+      'usda-canning-07',
+    ]);
     const fema = shelf.references.find((r) => r.id === 'fema-are-you-ready')!;
     assert.equal(fema.installed?.from, 'https://www.nj.gov/njoem/pdf/areyouready.pdf', 'the web pages were refused');
     const survival = shelf.references.find((r) => r.id === 'army-atp-3-50-21')!;
     assert.match(survival.installed?.from ?? '', /^https:\/\/armypubs\.army\.mil\//, "the Army's own copy first");
     assert.equal(fema.installed?.sha256, createHash('sha256').update('%PDF-1.4 fema').digest('hex'));
-    assert.equal(st.problems?.length, 3);
+    assert.equal(st.problems?.length, 4);
+    assert.match(st.problems!.join('\n'), /Map Reading and Land Navigation/);
     assert.match(st.problems!.join('\n'), /answered 404/);
     await assert.rejects(h.client.request('library.download.start', { kind: 'references', ids: ['../x'] }));
   } finally {

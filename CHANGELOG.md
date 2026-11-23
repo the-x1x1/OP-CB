@@ -531,11 +531,17 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **Nine more public-domain references**: the USDA _Complete Guide to Home Canning_ (2015
+  revision), its seven guides — principles, fruit, tomatoes, vegetables, meat and fish, pickles,
+  jams; the Army's FM 5-426 _Carpentry_ (1995) and FM 3-25.26 _Map Reading and Land Navigation_
+  (2001), both approved for public release. Fifteen in all, downloaded and checked like the
+  first six. Copies whose distribution is limited (TC 3-25.26, FM 24-18) were left out.
+
 - **The library by subject, and a starter collection fitted to a drive** (Command Center →
-  Knowledge). *By subject* puts the books and downloaded references under ten subjects —
+  Knowledge). _By subject_ puts the books and downloaded references under ten subjects —
   medicine, farming, food and water, building, trades and repair, engineering, survival and
-  defence, radio and navigation, teaching, science — and opens them from there. *Starter
-  collection* looks sixteen Kiwix books up in the live catalogue (post-disaster, water,
+  defence, radio and navigation, teaching, science — and opens them from there. _Starter
+  collection_ looks sixteen Kiwix books up in the live catalogue (post-disaster, water,
   medicine guides, WikiMed, WikEM, food preparation, knots, Appropedia, Gardenology,
   Energypedia, Wikipedia, iFixit, Wikivoyage, Wikibooks, the Arch Linux wiki, Project
   Gutenberg) by exact file name, fits them to the free space or a drive size (32 GB to 2 TB;

@@ -102,7 +102,7 @@ export const LIBRARY_GUIDE: GuideDefinition = {
   title: 'Offline library (Wikipedia, manuals, emergency guides)',
   summary: 'Keep Wikipedia, medical and repair references and emergency guides on this computer, readable offline.',
   whatItDoes:
-    'Kiwix publishes whole websites — Wikipedia, WikiMed, iFixit, WikiHow, Wikivoyage, survival and medicine collections — as single files called ZIM files. OP-CB opens ZIM files itself, finds pages by title, and shows them in a reader window with no internet. It also fetches public-domain emergency guides from FEMA, the CDC and the U.S. Army.',
+    'Kiwix publishes whole websites — Wikipedia, WikiMed, iFixit, WikiHow, Wikivoyage, survival and medicine collections — as single files called ZIM files. OP-CB opens ZIM files itself, finds pages by title, and shows them in a reader window with no internet. It also fetches public-domain guides from FEMA, the CDC, the USDA and the U.S. Army: first aid, survival, water, canning, carpentry and land navigation.',
   prerequisites: [
     'The internet once, to download books and guides (reading them needs none)',
     'Room for them: from tens of megabytes for one topic to around 100 GB for all of English Wikipedia with pictures',

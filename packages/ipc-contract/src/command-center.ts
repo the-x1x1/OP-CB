@@ -708,6 +708,17 @@ function readDownloadEntry(v: unknown): CatalogEntry | undefined {
  * the Federation of American Scientists' archive as the fallback for the survival manual.
  * FM 4-25.11 First Aid (2002) was superseded by TC 4-02.1 (2016) and that by ATP 4-02.11
  * (23 March 2026), which is what the Army publishes now; the 2002 manual is no longer listed.
+ *
+ * Added 2026-11-22, each read through WebFetch that day (text read, size and SHA-256 not
+ * taken: the app records both when the file arrives): the USDA Complete Guide to Home Canning,
+ * 2015 revision, its seven guides as the National Center for Home Food Preservation (University
+ * of Georgia) serves them — the addresses its own page for the guide lists; FM 5-426 Carpentry
+ * and FM 3-25.26 Map Reading and Land Navigation (2001), both marked "Approved for public
+ * release; distribution is unlimited", from the Internet Archive's MManuals collection
+ * (archive.org/download redirects to a storage host). Left out on purpose: TC 3-25.26 (2013) and
+ * FM 24-18 (radio), whose copies say distribution is limited to government agencies, and
+ * TC 9-524 (machine tools), whose distribution statement was not read. Not yet opened from the
+ * operator's network.
  */
 export const PUBLIC_DOMAIN_US = 'U.S. Government work — public domain (17 U.S.C. § 105)';
 
@@ -782,5 +793,86 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
       'https://www.cdc.gov/disasters/hurricanes/pdf/woundcare.pdf',
       'https://stacks.cdc.gov/view/cdc/49402/cdc_49402_DS1.pdf',
     ],
+  },
+  {
+    id: 'usda-canning-01',
+    title: 'Complete Guide to Home Canning, Guide 1: Principles of Home Canning',
+    publisher: 'USDA',
+    topic: 'Why canning is safe or not, equipment, jars, altitude, botulism',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE01_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-02',
+    title: 'Complete Guide to Home Canning, Guide 2: Fruit and Fruit Products',
+    publisher: 'USDA',
+    topic: 'Canning fruit, sauces, pie fillings, syrups',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE02_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-03',
+    title: 'Complete Guide to Home Canning, Guide 3: Tomatoes and Tomato Products',
+    publisher: 'USDA',
+    topic: 'Acidifying and canning tomatoes, sauces, salsas',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE03_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-04',
+    title: 'Complete Guide to Home Canning, Guide 4: Vegetables and Vegetable Products',
+    publisher: 'USDA',
+    topic: 'Pressure canning beans, corn, roots, soups',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE04_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-05',
+    title: 'Complete Guide to Home Canning, Guide 5: Poultry, Red Meats, and Seafoods',
+    publisher: 'USDA',
+    topic: 'Pressure canning meat, poultry, fish, stock',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE05_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-06',
+    title: 'Complete Guide to Home Canning, Guide 6: Fermented Foods and Pickled Vegetables',
+    publisher: 'USDA',
+    topic: 'Sauerkraut, pickles, relishes, brines',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE06_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'usda-canning-07',
+    title: 'Complete Guide to Home Canning, Guide 7: Jams and Jellies',
+    publisher: 'USDA',
+    topic: 'Jams, jellies, preserves, with and without added pectin',
+    edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
+    licence: PUBLIC_DOMAIN_US,
+    urls: ['https://nchfp.uga.edu/papers/guide/GUIDE07_HomeCan_rev0715.pdf'],
+  },
+  {
+    id: 'army-fm-5-426',
+    title: 'FM 5-426 Carpentry',
+    publisher: 'U.S. Army',
+    topic: 'Tools, wood, framing, foundations, concrete forms, roofs, doors, windows, timber bridges',
+    edition: '3 October 1995',
+    licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    urls: ['https://archive.org/download/MManuals/UsArmyEngineerCarpentry1995.pdf'],
+  },
+  {
+    id: 'army-fm-3-25-26',
+    title: 'FM 3-25.26 Map Reading and Land Navigation',
+    publisher: 'U.S. Army',
+    topic: 'Maps, grid references, compass, terrain, navigating by day and night',
+    edition: '20 July 2001',
+    licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    urls: ['https://archive.org/download/MManuals/Fm3-25.26MapReadingAndLandNavigation.pdf'],
   },
 ]);
