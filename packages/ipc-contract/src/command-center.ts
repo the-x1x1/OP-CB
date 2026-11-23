@@ -709,16 +709,15 @@ function readDownloadEntry(v: unknown): CatalogEntry | undefined {
  * FM 4-25.11 First Aid (2002) was superseded by TC 4-02.1 (2016) and that by ATP 4-02.11
  * (23 March 2026), which is what the Army publishes now; the 2002 manual is no longer listed.
  *
- * Added 2026-11-22, each read through WebFetch that day (text read, size and SHA-256 not
- * taken: the app records both when the file arrives): the USDA Complete Guide to Home Canning,
+ * Added 2026-11-22, each read through WebFetch that day, then fetched whole from the
+ * operator's network through the browser pane (size, PDF header and SHA-256 beside each): the USDA Complete Guide to Home Canning,
  * 2015 revision, its seven guides as the National Center for Home Food Preservation (University
  * of Georgia) serves them — the addresses its own page for the guide lists; FM 5-426 Carpentry
  * and FM 3-25.26 Map Reading and Land Navigation (2001), both marked "Approved for public
  * release; distribution is unlimited", from the Internet Archive's MManuals collection
  * (archive.org/download redirects to a storage host). Left out on purpose: TC 3-25.26 (2013) and
  * FM 24-18 (radio), whose copies say distribution is limited to government agencies, and
- * TC 9-524 (machine tools), whose distribution statement was not read. Not yet opened from the
- * operator's network.
+ * TC 9-524 (machine tools), whose distribution statement was not read.
  */
 export const PUBLIC_DOMAIN_US = 'U.S. Government work — public domain (17 U.S.C. § 105)';
 
@@ -801,6 +800,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Why canning is safe or not, equipment, jars, altitude, botulism',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 3,794,234 bytes, PDF 1.4, SHA-256 60d1e1a74a9fe61c… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE01_HomeCan_rev0715.pdf'],
   },
   {
@@ -810,6 +810,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Canning fruit, sauces, pie fillings, syrups',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 1,098,841 bytes, PDF 1.4, SHA-256 5f6918678e1410b7… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE02_HomeCan_rev0715.pdf'],
   },
   {
@@ -819,6 +820,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Acidifying and canning tomatoes, sauces, salsas',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 976,490 bytes, PDF 1.4, SHA-256 6f8d166be89c7260… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE03_HomeCan_rev0715.pdf'],
   },
   {
@@ -828,6 +830,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Pressure canning beans, corn, roots, soups',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 2,013,613 bytes, PDF 1.6, SHA-256 bb1d6ccce65146b5… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE04_HomeCan_rev0715.pdf'],
   },
   {
@@ -837,6 +840,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Pressure canning meat, poultry, fish, stock',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 1,356,485 bytes, PDF 1.4, SHA-256 bffe17ee5a99d5b3… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE05_HomeCan_rev0715.pdf'],
   },
   {
@@ -846,6 +850,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Sauerkraut, pickles, relishes, brines',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 3,173,534 bytes, PDF 1.4, SHA-256 fa4be9f7ac718801… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE06_HomeCan_rev0715.pdf'],
   },
   {
@@ -855,6 +860,7 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Jams, jellies, preserves, with and without added pectin',
     edition: 'Revised 2015 (Agriculture Information Bulletin 539)',
     licence: PUBLIC_DOMAIN_US,
+    // 1,300,368 bytes, PDF 1.4, SHA-256 6023faf9ea45f8e2… (2026-11-22, from the operator's network).
     urls: ['https://nchfp.uga.edu/papers/guide/GUIDE07_HomeCan_rev0715.pdf'],
   },
   {
@@ -864,6 +870,8 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Tools, wood, framing, foundations, concrete forms, roofs, doors, windows, timber bridges',
     edition: '3 October 1995',
     licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    // 4,520,854 bytes, PDF 1.5, SHA-256 7fd30a1d3468c6de… (2026-11-22, from the operator's network;
+    // archive.org/download redirects to ia601500.us.archive.org).
     urls: ['https://archive.org/download/MManuals/UsArmyEngineerCarpentry1995.pdf'],
   },
   {
@@ -873,6 +881,8 @@ export const EMERGENCY_REFERENCES: readonly Omit<ReferenceDoc, 'installed'>[] = 
     topic: 'Maps, grid references, compass, terrain, navigating by day and night',
     edition: '20 July 2001',
     licence: `${PUBLIC_DOMAIN_US}; approved for public release, distribution unlimited`,
+    // 23,583,528 bytes, PDF 1.5, SHA-256 e86dadb55f03d0cd… (2026-11-22, from the operator's network;
+    // archive.org/download redirects to ia601500.us.archive.org).
     urls: ['https://archive.org/download/MManuals/Fm3-25.26MapReadingAndLandNavigation.pdf'],
   },
 ]);
