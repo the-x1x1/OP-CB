@@ -531,6 +531,15 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **A private folder for your own documents** (Command Center → Prepare): IDs, deeds,
+  prescriptions, insurance, contacts — encrypted inside OP-CB's data folder with a passphrase
+  only you know (AES-256-GCM under a random data key, the key wrapped with scrypt), names and
+  dates included. Files go in through the open dialog and come out as a copy through the save
+  dialog; the folder closes itself after fifteen minutes unused and at quit; changing the
+  passphrase keeps every file; wrong passphrases are slowed after the fifth. Moving the data to a
+  drive carries it along. No recovery without the passphrase — said before setup. Threat model
+  T19.
+
 - **Nine more public-domain references**: the USDA _Complete Guide to Home Canning_ (2015
   revision), its seven guides — principles, fruit, tomatoes, vegetables, meat and fish, pickles,
   jams; the Army's FM 5-426 _Carpentry_ (1995) and FM 3-25.26 _Map Reading and Land Navigation_

@@ -48,6 +48,7 @@ import {
 } from '@opcb/query-engine';
 import {
   ConnectionMonitor,
+  PrivateStore,
   VaultMonitor,
   WorldPackRegistry,
   initVault,
@@ -324,6 +325,8 @@ export class RuntimeCore {
   mapDownloads!: MapDownloads;
   /** The built-in library: ZIM files read here, and downloads into it (2026-10-30). */
   zimLibrary!: ZimLibrary;
+  /** The operator's encrypted documents (`<data>/private`). */
+  privateStore!: PrivateStore;
   libraryDownloads!: LibraryDownloads;
   watchZoneStore!: JsonDocStore<WatchZone>;
   lenses!: JsonDocStore<LensDefinition>;
@@ -910,6 +913,7 @@ export class RuntimeCore {
       },
     });
     this.zimLibrary = new ZimLibrary(this.dirs.libraryDir, this.loggerHub.logger('offline'));
+    this.privateStore = new PrivateStore({ dataDir: this.dirs.root, now: () => this.clock.now() });
     this.libraryDownloads = new LibraryDownloads({
       fetchImpl: (input, init) => (this.deps.downloadFetchImpl ?? this.deps.fetchImpl ?? fetch)(input, init),
       dir: this.dirs.libraryDir,
@@ -1551,6 +1555,7 @@ export class RuntimeCore {
     this.events.dispose();
     this.state.dispose();
     this.libraryDownloads?.cancel();
+    this.privateStore?.close();
     await this.zimLibrary?.close().catch(() => undefined);
     await this.cameraRelay?.stop().catch(() => undefined);
     await this.go2rtc?.stop().catch(() => undefined);

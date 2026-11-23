@@ -43,6 +43,10 @@ export interface IpcRateLimitRule {
 
 export const DEFAULT_RATE_LIMITS: readonly IpcRateLimitRule[] = Object.freeze([
   { prefix: 'credentials.', max: 10, windowMs: 60_000 },
+  // Each runs scrypt (128 MiB, about a third of a second); the store slows wrong ones too.
+  { prefix: 'private.unlock', max: 20, windowMs: 60_000 },
+  { prefix: 'private.setup', max: 5, windowMs: 60_000 },
+  { prefix: 'private.changePassphrase', max: 5, windowMs: 60_000 },
   { prefix: 'app.openExternal', max: 30, windowMs: 60_000 },
   { prefix: 'camera.register', max: 20, windowMs: 60_000 },
   // Each draft is one GET to a host the operator typed; each save writes a file.
@@ -84,6 +88,9 @@ export const LONG_REQUEST_TIMEOUTS_MS: Readonly<Partial<Record<RequestChannel, n
   'diagnostics.export': null,
   'data.moveTo': null,
   'view.capture': null,
+  // The private folder's add and save-a-copy open a file dialog.
+  'private.add': null,
+  'private.export': null,
 });
 
 export interface IpcRouterOptions {

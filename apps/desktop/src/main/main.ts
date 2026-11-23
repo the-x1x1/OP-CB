@@ -553,7 +553,7 @@ async function bootstrap(): Promise<void> {
         ok: true,
         message: r.adopted
           ? `OP-CB will use the data already in ${chosen.filePaths[0]} from the next start`
-          : `From the next start OP-CB keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory, keys, each source's settings and your own source definitions were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
+          : `From the next start OP-CB keeps its data in ${chosen.filePaths[0]}. Settings, places, zones, walkthroughs, the inventory, keys, each source's settings, your own source definitions and the private folder were copied; history and installed packs stay in the old folder (install or download maps again onto the drive).`,
         restartNeeded: true,
       };
     },

@@ -110,8 +110,11 @@ export const CARRIED_FILES: readonly string[] = Object.freeze([
   'provider-settings.json',
 ]);
 
-/** Small folders carried the same way: the operator's own source definitions. */
-export const CARRIED_FOLDERS: readonly string[] = Object.freeze(['connectors']);
+/**
+ * Small folders carried the same way: the operator's own source definitions, and the encrypted
+ * private folder (useless left behind).
+ */
+export const CARRIED_FOLDERS: readonly string[] = Object.freeze(['connectors', 'private']);
 
 /**
  * Make `target` OP-CB's data folder from the next start: mark it, carry the small files

@@ -18,6 +18,7 @@ import type { StateChange, TrackPoint } from '@opcb/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@opcb/render-core';
 import type { ViewLink } from './view-link.js';
 import type { CollectionLookupAnswer, CollectionLookupRequest } from './library-collection.js';
+import type { PrivateAddAnswer, PrivateExportAnswer, PrivateStatus } from './private-folder.js';
 import type {
   AiTestAnswer,
   AiTestRequest,
@@ -1278,6 +1279,14 @@ export interface WorldRequests {
   'library.download.status': { request: void; response: LibraryDownloadStatus };
   'library.download.cancel': { request: void; response: LibraryDownloadStatus };
   'library.collection.lookup': { request: CollectionLookupRequest; response: CollectionLookupAnswer };
+  'private.status': { request: void; response: PrivateStatus };
+  'private.setup': { request: { passphrase: string }; response: PrivateStatus };
+  'private.unlock': { request: { passphrase: string }; response: PrivateStatus };
+  'private.lock': { request: void; response: PrivateStatus };
+  'private.changePassphrase': { request: { current: string; next: string }; response: PrivateStatus };
+  'private.add': { request: void; response: PrivateAddAnswer };
+  'private.export': { request: { id: string }; response: PrivateExportAnswer };
+  'private.remove': { request: { id: string }; response: PrivateStatus };
 
   'offline.status': { request: void; response: OfflineStatus };
   /** (additive, 2026-10-08) Power and disk headroom for the field status strip (docs/cyberdeck M5). */
@@ -1531,6 +1540,14 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'library.download.status',
   'library.download.cancel',
   'library.collection.lookup',
+  'private.status',
+  'private.setup',
+  'private.unlock',
+  'private.lock',
+  'private.changePassphrase',
+  'private.add',
+  'private.export',
+  'private.remove',
   'offline.status',
   'field.status',
   'offline.installPack',
@@ -1623,5 +1640,6 @@ export function isIpcError(v: unknown): v is IpcError {
 
 export * from './command-center.js';
 export * from './library-collection.js';
+export * from './private-folder.js';
 export * from './local-api.js';
 export * from './view-link.js';

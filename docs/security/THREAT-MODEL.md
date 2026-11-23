@@ -432,6 +432,38 @@ _Residual:_ a public DNS name can resolve to a private address: the check is on 
 as it is for a definition's endpoint, so a name the operator types that points inside their
 network is fetched once. The operator typed it; the response is only drafted, never run.
 
+### T19 The private folder (the operator's own documents, encrypted)
+
+_Threat:_ a lost or stolen drive or laptop gives away the documents kept in the private
+folder (IDs, deeds, prescriptions); a compromised renderer or a log leaks the passphrase or
+the decrypted files; someone guesses the passphrase by trying many; a changed file on disk is
+shown as if it were the original.
+
+_Mitigation:_ `packages/offline/src/private-store.ts`. A random 256-bit data key encrypts
+every file and the list of names (AES-256-GCM, a fresh nonce each write, the header bound as
+associated data so a list and a file cannot be swapped); the data key is stored only wrapped
+under a key from scrypt (N = 2^17, r = 8, p = 1, a 16-byte salt). The passphrase crosses IPC in
+three channels only, is never stored, logged, or answered back, and no error carries it; the
+keys live in main's memory while the folder is open and are zeroed when it closes (on request,
+after fifteen minutes unused, at stop). After five wrong passphrases in a row each try waits
+(1 s doubling, at most 60 s), and the router allows 20 unlocks a minute. Any changed or cut
+byte is refused (GCM tag), never returned. Files enter only through the open dialog and leave
+only as a copy through the save dialog, which says the copy is not encrypted; a file is at
+most 256 MB, the folder at most 2,000 files.
+
+_Verification:_ `private folder: set up, add, read back, close, open again with the passphrase only`
+(no name, contents or passphrase in any file on disk);
+`private folder: a changed byte anywhere is refused, never returned as other contents`;
+`private folder: wrong passphrases are slowed after the fifth in a row`; runtime
+`private folder: set up, add through the dialog, save a copy out, close and open again`
+(nothing in the whole data folder holds the passphrase, name or contents; errors carry no
+passphrase).
+
+_Residual:_ a forgotten passphrase loses the files — by design, and the window says so before
+setup. While the folder is open, anything that can read main's memory can read the key. A
+saved copy outside the folder is an ordinary file. File sizes are visible to within the
+cipher's 32 bytes of overhead, and the number of files by the number of `.opcbx` files.
+
 ## Conventions
 
 A name in backticks on a _Verification:_ line is the exact title of a test in this

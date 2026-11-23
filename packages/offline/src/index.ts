@@ -28,6 +28,7 @@ export * from './builder.js';
 export * from './registry.js';
 export * from './connection-monitor.js';
 export * from './vault.js';
+export * from './private-store.js';
 
 export const OFFLINE_CONTRACT_VERSION = 'architecture-contract-v1';
 export * from './basemaps/martin.js';

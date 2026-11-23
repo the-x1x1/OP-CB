@@ -175,3 +175,24 @@ test("moving: each source's settings and the operator's own source definitions c
   const r2 = await moveDataTo(path.join(await tmp(), 'OP-CB'), plain, plain);
   assert.ok(r2.ok && r2.carried.join() === 'settings.json');
 });
+
+test('moving: the encrypted private folder goes along whole', async () => {
+  const usual = await tmp();
+  await fs.mkdir(path.join(usual, 'private'));
+  await fs.writeFile(path.join(usual, 'private', 'key.json'), '{"formatVersion":1}');
+  await fs.writeFile(path.join(usual, 'private', 'index.opcbx'), Buffer.from([1, 2, 3]));
+  await fs.writeFile(path.join(usual, 'private', `${'a'.repeat(32)}.opcbx`), Buffer.from([4, 5, 6]));
+  const drive = path.join(await tmp(), 'OP-CB');
+  const r = await moveDataTo(drive, usual, usual);
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  assert.deepEqual(r.carried, ['private']);
+  assert.deepEqual(
+    (await fs.readdir(path.join(drive, 'private'))).sort(),
+    (await fs.readdir(path.join(usual, 'private'))).sort(),
+  );
+  assert.deepEqual([...(await fs.readFile(path.join(drive, 'private', `${'a'.repeat(32)}.opcbx`)))], [4, 5, 6]);
+  // Without one, nothing is said about it.
+  const r2 = await moveDataTo(path.join(await tmp(), 'OP-CB'), await tmp(), await tmp());
+  assert.ok(r2.ok && !r2.carried.includes('private'));
+});

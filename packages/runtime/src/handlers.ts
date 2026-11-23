@@ -26,7 +26,7 @@ import {
   searchWorld,
 } from '@opcb/query-engine';
 import { whatChanged } from '@opcb/event-engine';
-import { VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@opcb/offline';
+import { MAX_PRIVATE_FILE_BYTES, VaultPackError, parsePublisherKeyFile, placeHitToSearchResult } from '@opcb/offline';
 import { exportBundle } from '@opcb/diagnostics';
 import {
   EVENT_TYPE_LABELS,
@@ -38,6 +38,9 @@ import {
   readGuideProgress,
   readPrepRecord,
   readCollectionLookupRequest,
+  readPassphraseChange,
+  readPassphraseRequest,
+  readPrivateId,
   readLibraryDownloadRequest,
   readLibraryOpenRequest,
   type LocalServiceId,
@@ -82,10 +85,10 @@ import {
   DeniedError,
   InvalidRequestError,
   NotFoundError,
+  UnavailableError,
   requireCollection,
   requireLens,
   requireWatchZone,
-  UnavailableError,
   validateCollection,
   validateRegion,
 } from './validate.js';
@@ -1019,6 +1022,79 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
     },
     'library.download.status': async () => core.libraryDownloads.current(),
     'library.download.cancel': async () => core.libraryDownloads.cancel(),
+    // ---- the private folder (2026-11-22) ------------------------------------------------------
+    // The passphrase is passed to the store and nowhere else: not logged, not in an error.
+    'private.status': async () => core.privateStore.status(),
+    'private.setup': async (req) => {
+      const r = readPassphraseRequest(req);
+      if (!r) throw new InvalidRequestError('a passphrase is needed');
+      if (core.demoMode()) throw new UnavailableError('the demo build keeps no private folder');
+      return core.privateStore.setup(r.passphrase);
+    },
+    'private.unlock': async (req) => {
+      const r = readPassphraseRequest(req);
+      if (!r) throw new InvalidRequestError('a passphrase is needed');
+      return core.privateStore.unlock(r.passphrase);
+    },
+    'private.lock': async () => {
+      core.privateStore.close();
+      return core.privateStore.status();
+    },
+    'private.changePassphrase': async (req) => {
+      const r = readPassphraseChange(req);
+      if (!r) throw new InvalidRequestError('the current and the new passphrase are needed');
+      return core.privateStore.changePassphrase(r.current, r.next);
+    },
+    'private.add': async () => {
+      core.privateStore.list(); // closed → refused before a dialog opens
+      const choice = await core.hostBridge.pickOpenFile({ title: 'Put a file in the private folder' });
+      if ('cancelled' in choice) return { status: await core.privateStore.status(), cancelled: true };
+      let data: Buffer;
+      try {
+        const st = await fs.stat(choice.path);
+        if (!st.isFile()) throw new InvalidRequestError('that is not a file');
+        if (st.size > MAX_PRIVATE_FILE_BYTES)
+          throw new InvalidRequestError(
+            `a file in the private folder can be at most ${MAX_PRIVATE_FILE_BYTES / 1024 ** 2} MB`,
+          );
+        data = await fs.readFile(choice.path);
+      } catch (err) {
+        if (err instanceof InvalidRequestError) throw err;
+        throw new UnavailableError(`the file could not be read (${(err as NodeJS.ErrnoException).code ?? 'error'})`);
+      }
+      const added = await core.privateStore.add(path.basename(choice.path), data);
+      data.fill(0);
+      core.log.info('private folder: a file was added', { bytes: added.sizeBytes });
+      return { status: await core.privateStore.status(), added };
+    },
+    'private.export': async (req) => {
+      const r = readPrivateId(req);
+      if (!r) throw new InvalidRequestError('id names a file in the private folder');
+      const { entry, data } = await core.privateStore.read(r.id);
+      const choice = await core.hostBridge.pickSaveFile({
+        title: 'Save a copy outside the private folder (not encrypted)',
+        defaultPath: suggestedPath(core, entry.name),
+      });
+      if ('cancelled' in choice) {
+        data.fill(0);
+        return { cancelled: true };
+      }
+      try {
+        await fs.writeFile(choice.path, data);
+      } catch (err) {
+        throw new UnavailableError(`the copy could not be written (${(err as NodeJS.ErrnoException).code ?? 'error'})`);
+      } finally {
+        data.fill(0);
+      }
+      core.log.info('private folder: a copy was saved outside it', { bytes: entry.sizeBytes });
+      return { path: choice.path };
+    },
+    'private.remove': async (req) => {
+      const r = readPrivateId(req);
+      if (!r) throw new InvalidRequestError('id names a file in the private folder');
+      await core.privateStore.remove(r.id);
+      return core.privateStore.status();
+    },
     'library.collection.lookup': async (req, ctx) => {
       const r = readCollectionLookupRequest(req);
       if (!r) throw new InvalidRequestError('language is an ISO 639-3 code such as eng');

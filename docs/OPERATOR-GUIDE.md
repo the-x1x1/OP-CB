@@ -139,10 +139,35 @@ Command Center → **Knowledge**.
   the file) before it appears. Stop it, close OP-CB, lose the connection — the next
   Download of the same book carries on. Sizes run from a few MB to about 100 GB (English
   Wikipedia with pictures); "nopic" and "mini" versions are much smaller.
-- **Emergency references**: **Download all** fetches six public-domain guides (FEMA, U.S. Army,
-  CDC); **Open** shows one in your PDF viewer, offline.
+- **By subject** shows what the library holds under ten subjects (medicine, farming, food and
+  water, building, trades, engineering, survival, radio and navigation, teaching, science).
+- **Starter collection** (Online mode): choose how much room — the free space on the library's
+  drive, or a drive size from 32 GB to 2 TB — and **Look up the collection**. OP-CB finds
+  sixteen Kiwix books in the live catalogue (survival, water, medicine, food, farming, energy,
+  repair, travel, textbooks, Wikipedia, Project Gutenberg…), takes the essentials first and
+  the fullest edition of each that fits, and lists what is too big or no longer offered.
+  Choose subjects to narrow it; **Download** fetches them one after another, each checked as
+  above. A book that fails is noted and the next begins.
+- **Emergency references**: **Download all** fetches fifteen public-domain guides (FEMA, the
+  U.S. Army, the CDC, and the USDA's home canning guide); **Open** shows one in your PDF
+  viewer, offline.
 - Files you already have: **Open the library folder**, copy `.zim` files in, **Look again**.
   Files made before about 2021 (older xz format) are listed but need kiwix-serve.
+
+## The private folder
+
+Command Center → **Prepare** → **Private folder**: your own documents (IDs, deeds,
+prescriptions, insurance, contacts) kept encrypted inside OP-CB's data folder, so they travel
+with it to a drive and a lost drive gives nothing away.
+
+- **Set up**: choose a passphrase (at least 8 characters; four or five ordinary words are
+  easy to remember and hard to guess). **There is no way back in without it.** Write it down.
+- **Add a file…** puts a copy in; the original stays where it was (delete it yourself if it
+  should not stay). **Save a copy…** writes a decrypted copy where you choose — an ordinary
+  file, so delete it when done. **Remove** asks twice, then deletes the encrypted copy.
+- The folder closes itself after fifteen minutes unused, and when OP-CB closes. **Change
+  passphrase** keeps every file.
+- After five wrong passphrases in a row, each try waits a little longer (up to a minute).
 
 ## Keeping OP-CB on an external drive
 
@@ -152,8 +177,9 @@ stored keys and logs — and the room left there. Two ways to put it all on an e
 
 - **Move it** (Windows or Linux, app installed as usual): **Keep all OP-CB data on a
   drive…**, choose an empty folder on the drive (or one OP-CB already uses) and restart.
-  Settings, places, zones, walkthroughs, the inventory, keys, each source's settings and your
-  own source definitions are copied; history and installed packs stay in the old folder — download maps again with **Save to** that drive.
+  Settings, places, zones, walkthroughs, the inventory, keys, each source's settings, your own
+  source definitions and the private folder are copied; history and installed packs stay in the
+  old folder — download maps again with **Save to** that drive.
   If the drive is not plugged in at the next start, OP-CB says so and offers this
   computer's own data instead; it never writes into an empty mount point.
 - **Portable** (Windows): unzip `OP-CB-Portable-<version>.zip` onto the drive. The zip holds a

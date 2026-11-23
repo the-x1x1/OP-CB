@@ -166,6 +166,12 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'library.open': { kind: 'folder' },
     'library.catalog': { query: 'medicine', language: 'eng' },
     'library.download.start': { kind: 'references' },
+    'library.collection.lookup': { language: 'eng' },
+    'private.setup': { passphrase: 'router test passphrase' },
+    'private.unlock': { passphrase: 'router test passphrase' },
+    'private.changePassphrase': { current: 'router test passphrase', next: 'another passphrase' },
+    'private.export': { id: 'a'.repeat(32) },
+    'private.remove': { id: 'a'.repeat(32) },
     'search.nearest': { position: { latitude: 19.9, longitude: -155.6 }, kinds: ['city'], limit: 3 },
     'sky.overhead': { observer: { latitude: 21.3, longitude: -157.85 }, minElevationDeg: 10, limit: 50 },
     'lenses.save': {
@@ -283,6 +289,10 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'offline.removePublisher': { keyId: '../../trust' },
     'offline.trustPublisher': { packId: 'pack-1', name: 'x'.repeat(200) },
     'collections.save': { id: 'c', name: 'n', createdAt: 'yesterday', updatedAt: 'today', items: [] },
+    'private.unlock': { passphrase: 'x'.repeat(1025) },
+    'private.setup': { passphrase: '' },
+    'private.export': { id: '../../credentials' },
+    'library.collection.lookup': { language: 'en' },
   };
   for (const channel of REQUEST_CHANNELS) {
     const payload = channel in good ? good[channel] : undefined;

@@ -200,6 +200,12 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   SHA-256 and https mirrors; Range continuation from `<library>/.downloads/<file>.part` across
   restarts; size, SHA-256 and the ZIM MD5 (computed while downloading) before the file is
   renamed into the library. Licence register: `kiwix-library`.
+- **The private folder** (`packages/offline/src/private-store.ts`, 2026-11-22): `<data>/private`
+  holds `key.json` (scrypt parameters, salt, the data key wrapped with AES-256-GCM),
+  `index.opcbx` (the encrypted list) and one `<random id>.opcbx` per file. Channels
+  `private.status|setup|unlock|lock|changePassphrase|add|export|remove`; add and export go
+  through the host's open and save dialogs. Closes after 15 minutes unused and at stop. Carried
+  whole by a data-folder move (`CARRIED_FOLDERS`). Threat model T19.
 - **Subjects and the starter collection** (`packages/ipc-contract/src/library-collection.ts`,
   2026-11-22): ten subjects; a book from the collection takes the collection's subjects, any other
   book or reference is placed by whole words in its title and description. Sixteen Kiwix books

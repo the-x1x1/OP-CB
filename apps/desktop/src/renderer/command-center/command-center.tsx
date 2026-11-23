@@ -33,6 +33,7 @@ import {
 } from './widgets.js';
 import { MapDownloadPanel } from './map-download-panel.js';
 import { DataLocationCard } from './data-location-card.js';
+import { PrivateFolderCard } from './private-folder-card.js';
 import { BuiltInLibrary, EmergencyReferences, KiwixCatalog } from './library-panel.js';
 import { StarterCollection, SubjectShelf } from './library-collection-panel.js';
 import './command-center.css';
@@ -881,6 +882,7 @@ function Prepare() {
           {!contacts.length && !notes.length ? <li className="wv-cc-muted">None yet.</li> : null}
         </ul>
       </section>
+      <PrivateFolderCard />
       <GuideCards section="prepare" />
     </div>
   );

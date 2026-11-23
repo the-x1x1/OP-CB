@@ -734,6 +734,19 @@ export class DemoClient implements WorldClient {
       case 'library.download.status':
       case 'library.download.cancel':
         return { phase: 'idle' };
+      // The browser demo keeps no private folder: every answer says none is set up, nothing is
+      // stored, and the dialogs are cancelled (the card says so when setup does not take).
+      case 'private.status':
+      case 'private.lock':
+      case 'private.setup':
+      case 'private.unlock':
+      case 'private.changePassphrase':
+      case 'private.remove':
+        return { set: false, open: false };
+      case 'private.add':
+        return { status: { set: false, open: false }, cancelled: true };
+      case 'private.export':
+        return { cancelled: true };
       case 'library.collection.lookup':
         return { ok: false, items: [], notes: [], message: 'the browser demo contacts no catalogue' };
       case 'field.status':
