@@ -381,6 +381,42 @@
   box-shadow: inset 0 0 0 1px var(--wv-accent-border);
 }
 
+/* Toggle chips (library subjects): several can be on; pressed reads like .wv-cc-seg--on. */
+.wv-cc-pick {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px var(--wv-space-3);
+  border: 1px solid var(--wv-border);
+  border-radius: var(--wv-radius-pill);
+  background: var(--wv-surface-2);
+  color: var(--wv-text-secondary);
+  font: inherit;
+  font-size: var(--wv-text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wv-cc-pick:hover {
+  border-color: var(--wv-border-strong);
+  color: var(--wv-text-primary);
+}
+
+.wv-cc-pick:focus-visible {
+  outline: none;
+  box-shadow: var(--wv-focus-ring);
+}
+
+.wv-cc-pick[aria-pressed='true'] {
+  border-color: var(--wv-accent-border);
+  background: var(--wv-accent-soft);
+  color: var(--wv-text-primary);
+}
+
+.wv-cc-pick--empty:not([aria-pressed='true']) {
+  color: var(--wv-text-muted);
+}
+
 /* ---- readiness ---- */
 .wv-cc-readylist,
 .wv-cc-list,

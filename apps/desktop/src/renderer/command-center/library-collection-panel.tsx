@@ -50,21 +50,23 @@ export function SubjectShelf() {
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">By subject</h3>
       <p className="wv-cc-muted">What the library holds, under each subject. A book can sit under several.</p>
-      <input
-        className="wv-input"
-        type="search"
-        placeholder="Find a book or guide by its title or what it covers (canning, splint, antenna…)"
-        aria-label="Find in the library by title or topic"
-        maxLength={200}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="wv-cc-inline">
+        <input
+          className="wv-input"
+          type="search"
+          placeholder="Find a book or guide by its title or what it covers (canning, splint, antenna…)"
+          aria-label="Find in the library by title or topic"
+          maxLength={200}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
       <div className="wv-cc-actions" role="group" aria-label="Subjects">
         {LIBRARY_SUBJECTS.map((s) => (
           <button
             key={s.id}
             type="button"
-            className={`wv-cc-chip${counts[s.id] ? '' : ' wv-cc-chip--muted'}`}
+            className={`wv-cc-pick${counts[s.id] ? '' : ' wv-cc-pick--empty'}`}
             aria-pressed={subject === s.id}
             title={s.blurb}
             onClick={() => setSubject(subject === s.id ? null : s.id)}
@@ -175,7 +177,7 @@ export function StarterCollection() {
           <button
             key={s.id}
             type="button"
-            className="wv-cc-chip"
+            className="wv-cc-pick"
             aria-pressed={subjects.includes(s.id)}
             title={s.blurb}
             onClick={() => setSubjects(toggle(subjects, s.id))}
