@@ -238,3 +238,67 @@ test('collection: a catalogue that answers some questions and not others still p
     await h.dispose();
   }
 });
+
+/*
+ * One thing decides when a download has finished. While a collection runs, a book's own end is
+ * not the queue's (the status stays "downloading" between books), and a single book asked for
+ * meanwhile is not started: the answer is the collection's status, and nothing of it is fetched.
+ */
+test('collection: a single book asked for while a collection downloads is not started; only the queue ends it', async () => {
+  const k = fakeCatalog();
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input instanceof Request ? input.url : input);
+    // The second book's body waits until the test lets it go.
+    if (url.endsWith('zimgit-knots_en_2024-08.zim') && init?.method !== 'HEAD') await held;
+    return k.fetchImpl(input, init);
+  }) as typeof fetch;
+  const h = await startRuntime({ fetchImpl });
+  try {
+    const answer = await h.client.request('library.collection.lookup', { language: 'eng' });
+    const pick = (id: string) => answer.items.find((x) => x.id === id)!.choices[0]!.entry;
+    await h.client.request('library.download.start', { kind: 'collection', entries: [pick('water'), pick('knots')] });
+
+    // Between books and while the second is held, the status is the queue's and still running.
+    const seen: LibraryDownloadStatus[] = [];
+    for (let i = 0; i < 400; i++) {
+      const st = await h.client.request('library.download.status', undefined);
+      seen.push(st);
+      if (st.book === 'Knots') break;
+      await new Promise((r) => setTimeout(r, 10));
+    }
+    assert.equal(seen.at(-1)?.book, 'Knots', JSON.stringify(seen.at(-1)));
+    for (const st of seen) {
+      assert.equal(st.item, COLLECTION_ITEM, JSON.stringify(st));
+      assert.ok(st.phase === 'downloading' || st.phase === 'verifying', `not ended between books: ${st.phase}`);
+    }
+
+    // A single book now: not started; the answer is the collection's own status.
+    const single = await h.client.request('library.download.start', { kind: 'zim', entry: pick('gardenology') });
+    assert.equal(single.item, COLLECTION_ITEM);
+    assert.equal(single.book, 'Knots');
+    assert.ok(!k.asked.some((u) => u.includes('gardenology.org_en_all_2026-09.zim')), 'nothing of it fetched');
+
+    release();
+    const st = await until(h.client, ['done', 'failed', 'cancelled']);
+    assert.equal(st.phase, 'done', JSON.stringify(st));
+    assert.equal(st.item, COLLECTION_ITEM);
+    assert.deepEqual(st.step, { done: 2, total: 2 });
+    const lib = path.join(h.dataDir, 'library');
+    assert.deepEqual((await fs.readdir(lib)).filter((n) => n.endsWith('.zim')).sort(), [
+      'zimgit-knots_en_2024-08.zim',
+      'zimgit-water_en_2024-08.zim',
+    ]);
+
+    // Once it has ended, the single book starts as any other.
+    await h.client.request('library.download.start', { kind: 'zim', entry: pick('gardenology') });
+    const one = await until(h.client, ['done', 'failed', 'cancelled']);
+    assert.equal(one.phase, 'done', JSON.stringify(one));
+    assert.equal(one.item, 'Plants');
+    assert.equal(one.step, undefined, 'a single book carries no queue step');
+  } finally {
+    release();
+    await h.dispose();
+  }
+});

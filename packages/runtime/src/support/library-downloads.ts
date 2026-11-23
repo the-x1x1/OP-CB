@@ -439,6 +439,9 @@ export class LibraryDownloads {
         if (signal.aborted) break;
         const entry = entries[i]!;
         this.queue = { done: i, total: entries.length, book: entry.title };
+        // Said at once: until the next book's bytes came, the status still named the one before,
+        // at the count before ("Water is in the library", 0 of 2) while the next was asked for.
+        this.set({ phase: 'downloading', item: entry.title, message: 'asking for the file' });
         const url = kiwixDownloadUrl(entry.url);
         const name = url ? zimFileName(url) : undefined;
         if (!url || !name) {
