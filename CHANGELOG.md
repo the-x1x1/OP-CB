@@ -5,6 +5,71 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **The library on phones and tablets** (Command Center → Knowledge → On phones and tablets):
+  for 30 minutes to 12 hours, phones and tablets on the same network read every book, open the
+  downloaded guides and search both in their browser, read only. A QR code of the address (the
+  encoder is OP-CB's own; every version and mask checked against OpenCV's decoder) or the address
+  typed. Off at every start; ends at Stop, at the time chosen and when OP-CB closes. A fresh
+  code in every address (twenty wrong ones and a device is not answered), private networks only,
+  the computer's own address as `Host` only, GET only, no script in pages, no referrer. Threat
+  model T20.
+
+- **Search inside the emergency references** (Command Center → Knowledge → By subject): the
+  find box also searches the pages of every downloaded guide, and lists each page that holds
+  every word — guide, page number and the words around the match — with Open beside it
+  (`library.references.search`). Each PDF's text is read once, after its download or at the
+  first search, into `<id>.text.json` beside it, tied to the PDF's SHA-256, size and time: a
+  file changed or downloaded again is read again. Encrypted guides and guides whose pages are
+  pictures are named as not searched. The PDF reader is OP-CB's own
+  (`packages/offline/src/pdf-text.ts`; no new dependency): classic and compressed
+  cross-references, object streams, Flate/ASCIIHex/ASCII85, simple fonts with their encodings
+  and widths, composite fonts through their Unicode maps, forms and annotation appearances;
+  every size bounded, never throws. Run over the 1,104 real-world PDFs of Mozilla pdf.js's test
+  corpus: no failure or hang (slowest 0.6 s), 98.3 % of the words poppler's pdftotext finds.
+
+- **Walkthrough: a drive that starts any computer** (Command Center → Resources). How to put
+  Ubuntu, OP-CB and OP-CB's data — maps, library, private folder — on one USB drive with Ventoy
+  and a persistence file, so it boots most PCs (and Intel Macs), even one whose own system no
+  longer starts, and also carries the Windows portable copy. Secure Boot's one-time key
+  enrolment, start-up menu keys, and what cannot start it (Apple-chip Macs, Chromebooks) are
+  said; the last step checks the library on the drive holds a book.
+
+- **A private folder for your own documents** (Command Center → Prepare): IDs, deeds,
+  prescriptions, insurance, contacts — encrypted inside OP-CB's data folder with a passphrase
+  only you know (AES-256-GCM under a random data key, the key wrapped with scrypt), names and
+  dates included. Files go in through the open dialog and come out as a copy through the save
+  dialog; the folder closes itself after fifteen minutes unused and at quit; changing the
+  passphrase keeps every file; wrong passphrases are slowed after the fifth. Moving the data to a
+  drive carries it along. No recovery without the passphrase — said before setup. Threat model
+  T19.
+
+- **Nine more public-domain references**: the USDA _Complete Guide to Home Canning_ (2015
+  revision), its seven guides — principles, fruit, tomatoes, vegetables, meat and fish, pickles,
+  jams; the Army's FM 5-426 _Carpentry_ (1995) and FM 3-25.26 _Map Reading and Land Navigation_
+  (2001), both approved for public release. Fifteen in all, downloaded and checked like the
+  first six. Copies whose distribution is limited (TC 3-25.26, FM 24-18) were left out.
+
+- **The library by subject, and a starter collection fitted to a drive** (Command Center →
+  Knowledge). _By subject_ has a find box over the titles and topics of every book and
+  downloaded reference (word starts, any case, accents ignored, title matches first; inside a
+  subject when one is chosen), and puts the books and downloaded references under ten subjects —
+  medicine, farming, food and water, building, trades and repair, engineering, survival and
+  defence, radio and navigation, teaching, science — and opens them from there. _Starter
+  collection_ looks twenty-five Kiwix books up in the live catalogue — post-disaster, water,
+  the medical library, FAS Military Medicine, WikiMed, the USDA canning guide, food
+  preparation, knots, Appropedia, Gardenology, Energypedia, Wikipedia, iFixit, Wikivoyage,
+  Wikibooks, the Arch Linux wiki, Project Gutenberg, and the Stack Exchange answers on the
+  outdoors, amateur radio, gardening, cooking, sustainable living, vehicle mechanics, home
+  improvement and electronics; every name checked against the catalogue on 2026-11-22 — by
+  exact file name, fits them to the free space or a drive size (32 GB to 2 TB;
+  a tenth kept back), the essentials first and the fullest edition that fits, skips what the
+  library holds, names what is too big or no longer in the catalogue, and downloads them one
+  after another with the same checks as a single book (`library.collection.lookup`,
+  `library.download.start` `kind: 'collection'`, at most 30). A book that fails is noted and the
+  next begins; a stop keeps what is there.
+
 ### Changed
 
 - Public cameras: a pinned frame path is held as a folder even when written without its
@@ -530,69 +595,6 @@ mean anything, and memory a busy watch zone never gave back. Checked in the buil
 branch from 2026-11-13 were run on the operator's computer, this release itself not yet.
 
 ### Added
-
-- **The library on phones and tablets** (Command Center → Knowledge → On phones and tablets):
-  for 30 minutes to 12 hours, phones and tablets on the same network read every book, open the
-  downloaded guides and search both in their browser, read only. A QR code of the address (the
-  encoder is OP-CB's own; every version and mask checked against OpenCV's decoder) or the address
-  typed. Off at every start; ends at Stop, at the time chosen and when OP-CB closes. A fresh
-  code in every address (twenty wrong ones and a device is not answered), private networks only,
-  the computer's own address as `Host` only, GET only, no script in pages, no referrer. Threat
-  model T20.
-
-- **Search inside the emergency references** (Command Center → Knowledge → By subject): the
-  find box also searches the pages of every downloaded guide, and lists each page that holds
-  every word — guide, page number and the words around the match — with Open beside it
-  (`library.references.search`). Each PDF's text is read once, after its download or at the
-  first search, into `<id>.text.json` beside it, tied to the PDF's SHA-256, size and time: a
-  file changed or downloaded again is read again. Encrypted guides and guides whose pages are
-  pictures are named as not searched. The PDF reader is OP-CB's own
-  (`packages/offline/src/pdf-text.ts`; no new dependency): classic and compressed
-  cross-references, object streams, Flate/ASCIIHex/ASCII85, simple fonts with their encodings
-  and widths, composite fonts through their Unicode maps, forms and annotation appearances;
-  every size bounded, never throws. Run over the 1,104 real-world PDFs of Mozilla pdf.js's test
-  corpus: no failure or hang (slowest 0.6 s), 98.3 % of the words poppler's pdftotext finds.
-
-- **Walkthrough: a drive that starts any computer** (Command Center → Resources). How to put
-  Ubuntu, OP-CB and OP-CB's data — maps, library, private folder — on one USB drive with Ventoy
-  and a persistence file, so it boots most PCs (and Intel Macs), even one whose own system no
-  longer starts, and also carries the Windows portable copy. Secure Boot's one-time key
-  enrolment, start-up menu keys, and what cannot start it (Apple-chip Macs, Chromebooks) are
-  said; the last step checks the library on the drive holds a book.
-
-- **A private folder for your own documents** (Command Center → Prepare): IDs, deeds,
-  prescriptions, insurance, contacts — encrypted inside OP-CB's data folder with a passphrase
-  only you know (AES-256-GCM under a random data key, the key wrapped with scrypt), names and
-  dates included. Files go in through the open dialog and come out as a copy through the save
-  dialog; the folder closes itself after fifteen minutes unused and at quit; changing the
-  passphrase keeps every file; wrong passphrases are slowed after the fifth. Moving the data to a
-  drive carries it along. No recovery without the passphrase — said before setup. Threat model
-  T19.
-
-- **Nine more public-domain references**: the USDA _Complete Guide to Home Canning_ (2015
-  revision), its seven guides — principles, fruit, tomatoes, vegetables, meat and fish, pickles,
-  jams; the Army's FM 5-426 _Carpentry_ (1995) and FM 3-25.26 _Map Reading and Land Navigation_
-  (2001), both approved for public release. Fifteen in all, downloaded and checked like the
-  first six. Copies whose distribution is limited (TC 3-25.26, FM 24-18) were left out.
-
-- **The library by subject, and a starter collection fitted to a drive** (Command Center →
-  Knowledge). _By subject_ has a find box over the titles and topics of every book and
-  downloaded reference (word starts, any case, accents ignored, title matches first; inside a
-  subject when one is chosen), and puts the books and downloaded references under ten subjects —
-  medicine, farming, food and water, building, trades and repair, engineering, survival and
-  defence, radio and navigation, teaching, science — and opens them from there. _Starter
-  collection_ looks twenty-five Kiwix books up in the live catalogue — post-disaster, water,
-  the medical library, FAS Military Medicine, WikiMed, the USDA canning guide, food
-  preparation, knots, Appropedia, Gardenology, Energypedia, Wikipedia, iFixit, Wikivoyage,
-  Wikibooks, the Arch Linux wiki, Project Gutenberg, and the Stack Exchange answers on the
-  outdoors, amateur radio, gardening, cooking, sustainable living, vehicle mechanics, home
-  improvement and electronics; every name checked against the catalogue on 2026-11-22 — by
-  exact file name, fits them to the free space or a drive size (32 GB to 2 TB;
-  a tenth kept back), the essentials first and the fullest edition that fits, skips what the
-  library holds, names what is too big or no longer in the catalogue, and downloads them one
-  after another with the same checks as a single book (`library.collection.lookup`,
-  `library.download.start` `kind: 'collection'`, at most 30). A book that fails is noted and the
-  next begins; a stop keeps what is there.
 
 - **Search reads two more ways of writing a position:** degrees, minutes and seconds with colons
   (`21:18:25N 157:51:30W`), and the two halves written together when each has its own letter
