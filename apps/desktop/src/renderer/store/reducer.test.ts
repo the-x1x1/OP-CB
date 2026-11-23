@@ -128,7 +128,7 @@ test('selection: track/related only apply to the current selection; clearing res
   assert.equal(s.world.track.length, 0, 'stale track ignored');
   s = rootReducer(s, { type: 'world/track', objectId: 'x', points: [{ observedAt: ISO, latitude: 1, longitude: 2 }] });
   assert.equal(s.world.track.length, 1);
-  s = rootReducer(s, { type: 'world/selectedObject', object: obj('x') });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'x', object: obj('x') });
   assert.equal(s.world.selectedObject?.id, 'x');
   assert.equal(s.world.objects.has('x'), true, 'selected object loaded outside the subscription is mirrored');
   s = rootReducer(s, { type: 'world/related', forId: 'x', objects: [obj('z')], events: [] });
@@ -164,15 +164,31 @@ test('selection: an object the runtime no longer has reads as missing, not as lo
   let s: RootState = initialState(NOW);
   s = rootReducer(s, { type: 'world/select', id: 'earthquake:usgs:old', kind: 'object' });
   assert.equal(s.world.selectedMissing, false);
-  s = rootReducer(s, { type: 'world/selectedObject', object: null });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'earthquake:usgs:old', object: null });
   assert.equal(s.world.selectedMissing, true);
   s = rootReducer(s, { type: 'world/select', id: 'x', kind: 'object' });
   assert.equal(s.world.selectedMissing, false, 'a new selection starts over');
-  s = rootReducer(s, { type: 'world/selectedObject', object: obj('x') });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'x', object: obj('x') });
   assert.equal(s.world.selectedMissing, false);
   s = rootReducer(s, { type: 'world/select', id: null });
-  s = rootReducer(s, { type: 'world/selectedObject', object: null });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'x', object: null });
   assert.equal(s.world.selectedMissing, false, 'nothing selected is not missing');
+});
+
+test('selection: an answer for an earlier selection, arriving late, changes nothing', () => {
+  let s: RootState = initialState(NOW);
+  // A chosen, then B; B's answer comes first, then A's "not there".
+  s = rootReducer(s, { type: 'world/select', id: 'earthquake:usgs:a', kind: 'object' });
+  s = rootReducer(s, { type: 'world/select', id: 'x', kind: 'object' });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'x', object: obj('x') });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'earthquake:usgs:a', object: null });
+  assert.equal(s.world.selectedMissing, false, 'B is not marked gone');
+  assert.equal(s.world.selectedObject?.id, 'x', 'and stays shown');
+  // The same for events.
+  s = rootReducer(s, { type: 'world/select', id: 'event:a', kind: 'event' });
+  s = rootReducer(s, { type: 'world/select', id: 'event:b', kind: 'event' });
+  s = rootReducer(s, { type: 'world/selectedEvent', forId: 'event:a', event: null });
+  assert.equal(s.world.selectedMissing, false);
 });
 
 test('timeline: runtime sync maps ISO state into the control reducer; control actions delegate', () => {
@@ -302,7 +318,7 @@ test('session, lenses, sources, ui slices', () => {
 test('world/changed: the selected object moving grows its track; a replayed position does not', () => {
   let s: RootState = initialState(NOW);
   s = rootReducer(s, { type: 'world/select', id: 'a', kind: 'object' });
-  s = rootReducer(s, { type: 'world/selectedObject', object: obj('a') });
+  s = rootReducer(s, { type: 'world/selectedObject', forId: 'a', object: obj('a') });
   s = rootReducer(s, {
     type: 'world/track',
     objectId: 'a',

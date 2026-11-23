@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Choosing one thing on the map and then another before the first had loaded could show the
+  second as gone ("no longer in the live world") when the first turned out to be: the late
+  answer was applied to whatever was chosen by then. In 0.7.4 too.
 - Keeping all data on a drive now copies each source's settings (a Home Assistant address, a
   receiver's port) and the operator's own source definitions along with the rest. They were
   left behind: on the drive those sources came up unconfigured, or were gone, while their keys

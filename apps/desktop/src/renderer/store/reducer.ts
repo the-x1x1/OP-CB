@@ -197,6 +197,9 @@ function world(state: WorldSlice, action: RootAction): WorldSlice {
       };
     }
     case 'world/selectedObject': {
+      // An answer for an earlier selection: dropped. "Not there" for A, arriving after B was
+      // chosen and found, marked B as gone.
+      if (action.forId !== state.selectedId) return state;
       // The runtime has no such object (it left the live world): say so, not "Loading" forever.
       if (!action.object)
         return {
@@ -211,6 +214,7 @@ function world(state: WorldSlice, action: RootAction): WorldSlice {
       return { ...state, selectedObject: action.object, selectedMissing: false, objects };
     }
     case 'world/selectedEvent':
+      if (action.forId !== state.selectedId) return state;
       if (!action.event)
         return { ...state, selectedEvent: null, selectedMissing: state.selectedKind === 'event' && !!state.selectedId };
       return action.event.id === state.selectedId ? { ...state, selectedEvent: action.event } : state;

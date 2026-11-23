@@ -55,7 +55,11 @@ export async function loadInitialState(
 /** Selects an object in a loaded state, resolving its track and related items through the client. */
 export async function withSelection(state: RootState, client: WorldClient, objectId: string): Promise<RootState> {
   let s = rootReducer(state, { type: 'world/select', id: objectId, kind: 'object' });
-  s = rootReducer(s, { type: 'world/selectedObject', object: await client.request('world.get', { objectId }) });
+  s = rootReducer(s, {
+    type: 'world/selectedObject',
+    forId: objectId,
+    object: await client.request('world.get', { objectId }),
+  });
   s = rootReducer(s, {
     type: 'world/track',
     objectId,

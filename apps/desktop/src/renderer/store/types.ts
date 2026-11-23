@@ -312,8 +312,9 @@ export type WorldAction =
   /** `replace`: the list as the runtime has it now (ended events leave); else merged in. */
   | { type: 'world/events'; events: WorldEvent[]; replace?: boolean }
   | { type: 'world/select'; id: string | null; kind?: 'object' | 'event' }
-  | { type: 'world/selectedObject'; object: WorldObject | null }
-  | { type: 'world/selectedEvent'; event: WorldEvent | null }
+  /** `forId`: the id asked for. An answer for a selection since replaced is dropped. */
+  | { type: 'world/selectedObject'; forId: string; object: WorldObject | null }
+  | { type: 'world/selectedEvent'; forId: string; event: WorldEvent | null }
   | { type: 'world/track'; objectId: string; points: TrackPoint[] }
   | { type: 'world/flight'; objectId: string; loading: boolean; info: WorldFlightInfo | null }
   | { type: 'world/related'; forId: string; objects: WorldObject[]; events: WorldEvent[] }

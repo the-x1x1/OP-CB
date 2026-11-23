@@ -314,7 +314,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     if (kind === 'event') {
       try {
         const event = await client.request('world.event', { eventId: id });
-        dispatch({ type: 'world/selectedEvent', event });
+        dispatch({ type: 'world/selectedEvent', forId: id, event });
         const related = await client.request('world.related', { eventId: id });
         dispatch({ type: 'world/related', forId: id, objects: related.objects, events: related.events });
       } catch (err) {
@@ -324,7 +324,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     }
     try {
       const object = await client.request('world.get', { objectId: id });
-      dispatch({ type: 'world/selectedObject', object });
+      dispatch({ type: 'world/selectedObject', forId: id, object });
       // An aircraft's flight (airline, type, planned route) — asked for beside the track and
       // never waited on: a route lookup can take seconds, the rest of the panel cannot.
       if (object?.type === 'aircraft') void loadFlight(id);
@@ -532,7 +532,7 @@ export function createActions({ client, dispatch, getState, hosts, now }: Action
     }
     if (items.length === 1) {
       const only = items[0]!;
-      dispatch({ type: 'world/selectedObject', object: only });
+      dispatch({ type: 'world/selectedObject', forId: only.id, object: only });
       await select(only.id, { kind: 'object', fly: true });
       return;
     }
