@@ -378,7 +378,19 @@ export class PrivateStore {
     const key = this.key();
     const entry = this.entries.find((e) => e.id === id);
     if (!ID_PATTERN.test(id) || !entry) throw new PrivateStoreError('no such file in the private folder', 'invalid');
-    const data = open(key, PURPOSE_FILE, await fs.readFile(path.join(this.dir, `${id}${FILE_EXT}`)));
+    let sealed: Buffer;
+    try {
+      sealed = await fs.readFile(path.join(this.dir, `${id}${FILE_EXT}`));
+    } catch (err) {
+      // Removed meanwhile, or the drive went away: said as such, never as an internal error.
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT')
+        throw new PrivateStoreError('no such file in the private folder', 'invalid');
+      throw new PrivateStoreError(
+        `the file could not be read (${(err as NodeJS.ErrnoException).code ?? 'error'})`,
+        'damaged',
+      );
+    }
+    const data = open(key, PURPOSE_FILE, sealed);
     if (data.length !== entry.sizeBytes)
       throw new PrivateStoreError('the file is not the size it was put in at', 'damaged');
     return { entry: { ...entry }, data };

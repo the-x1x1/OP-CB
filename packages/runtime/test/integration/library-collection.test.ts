@@ -58,13 +58,14 @@ function entryXml(file: string): string {
   </entry>`;
 }
 
-function fakeCatalog(opts: { down?: boolean } = {}) {
+function fakeCatalog(opts: { down?: boolean; failWhen?: (url: URL) => boolean } = {}) {
   const asked: string[] = [];
   const fetchImpl = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(String(input instanceof Request ? input.url : input));
     asked.push(`${init?.method === 'HEAD' ? 'HEAD ' : ''}${url.toString()}`);
     if (url.href.startsWith('https://library.kiwix.org/catalog/v2/entries')) {
       if (opts.down) return new Response('busy', { status: 503 });
+      if (opts.failWhen?.(url)) throw new TypeError('fetch failed');
       const name = url.searchParams.get('name');
       const q = url.searchParams.get('q')?.toLowerCase();
       const files = Object.keys(BOOKS).filter((f) =>
@@ -206,6 +207,33 @@ test('collection: a stop ends the queue and keeps what is there; an entry off do
     const stopped = await until(h.client, ['done', 'failed', 'cancelled']);
     assert.equal(stopped.phase, 'cancelled');
     assert.equal(stopped.item, COLLECTION_ITEM);
+  } finally {
+    await h.dispose();
+  }
+});
+
+test('collection: a catalogue that answers some questions and not others still plans what it found', async () => {
+  // Every question about water fails; the rest answer.
+  const k = fakeCatalog({
+    failWhen: (u) => u.searchParams.get('name') === 'zimgit-water_en' || u.searchParams.get('q') === 'water',
+  });
+  const h = await startRuntime({ fetchImpl: k.fetchImpl });
+  try {
+    const a = await h.client.request('library.collection.lookup', {});
+    assert.equal(a.ok, true);
+    assert.equal(a.items.find((x) => x.id === 'water')!.choices.length, 0);
+    assert.equal(a.items.find((x) => x.id === 'knots')!.choices.length, 1);
+    assert.ok(a.notes.length >= 1 && a.notes.length <= 20);
+    assert.ok(
+      a.notes.some((n) => /^(zimgit-water_en|water): /.test(n)),
+      a.notes.join(' | '),
+    );
+    // Notes name the question, never repeat one, and carry no address.
+    assert.equal(new Set(a.notes).size, a.notes.length);
+    assert.ok(a.notes.every((n) => !/https?:/.test(n)));
+    const plan = planCollection(resolvedFromAnswer(a), 10 * 1024 ** 3);
+    assert.ok(plan.missing.some((m) => m.id === 'water'));
+    assert.ok(plan.picks.some((p) => p.item.id === 'knots'));
   } finally {
     await h.dispose();
   }

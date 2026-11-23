@@ -52,6 +52,7 @@ export function readPassphraseChange(v: unknown): { current: string; next: strin
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
   const r = v as Record<string, unknown>;
   if (Object.keys(r).some((k) => k !== 'current' && k !== 'next')) return undefined;
+  if (!Object.hasOwn(r, 'current') || !Object.hasOwn(r, 'next')) return undefined;
   const ok = (x: unknown) => typeof x === 'string' && x.length >= 1 && x.length <= PRIVATE_PASSPHRASE_MAX;
   return ok(r['current']) && ok(r['next']) ? { current: r['current'] as string, next: r['next'] as string } : undefined;
 }

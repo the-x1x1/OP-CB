@@ -685,7 +685,7 @@ export function readCollectionLookupRequest(v: unknown): CollectionLookupRequest
   if (typeof v !== 'object' || Array.isArray(v)) return undefined;
   const r = v as Record<string, unknown>;
   if (Object.keys(r).some((k) => k !== 'language')) return undefined;
-  const lang = r['language'];
+  const lang = Object.hasOwn(r, 'language') ? r['language'] : undefined;
   if (lang === undefined) return {};
   return typeof lang === 'string' && /^[a-z]{3}$/.test(lang) ? { language: lang } : undefined;
 }

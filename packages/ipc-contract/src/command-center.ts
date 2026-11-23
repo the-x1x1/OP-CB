@@ -656,8 +656,8 @@ export function readLibraryDownloadRequest(v: unknown): LibraryDownloadRequest |
       return undefined;
     return { kind: 'references', ids: ids as string[] };
   }
-  if (r['kind'] === 'collection') {
-    const list = r['entries'];
+  if (r['kind'] === 'collection' && Object.hasOwn(r, 'kind')) {
+    const list = Object.hasOwn(r, 'entries') ? r['entries'] : undefined;
     if (!Array.isArray(list) || list.length < 1 || list.length > MAX_COLLECTION_ENTRIES) return undefined;
     const entries: CatalogEntry[] = [];
     for (const x of list as unknown[]) {
@@ -677,9 +677,9 @@ function readDownloadEntry(v: unknown): CatalogEntry | undefined {
   if (typeof v !== 'object' || v === null) return undefined;
   const e = v as Record<string, unknown>;
   const str = (k: string, max: number) =>
-    typeof e[k] === 'string' && (e[k] as string).length >= 1 && (e[k] as string).length <= max;
+    Object.hasOwn(e, k) && typeof e[k] === 'string' && (e[k] as string).length >= 1 && (e[k] as string).length <= max;
   if (!str('id', 100) || !str('name', 200) || !str('title', 300) || !str('url', 1000)) return undefined;
-  const size = e['sizeBytes'];
+  const size = Object.hasOwn(e, 'sizeBytes') ? e['sizeBytes'] : undefined;
   if (size !== undefined && (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 0)) return undefined;
   return {
     id: e['id'] as string,

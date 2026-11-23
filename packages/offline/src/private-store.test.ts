@@ -191,3 +191,62 @@ test('privateName and passphraseProblem', () => {
   // Eight characters, not eight UTF-16 units.
   assert.match(passphraseProblem('😀😀😀😀') ?? '', /at least/);
 });
+
+test('private folder: names that are not plain come back safe and unique ids keep them apart', async () => {
+  const dir = await tmp();
+  const store = new PrivateStore({ dataDir: dir, scrypt: CHEAP });
+  await store.setup('hostile names passphrase');
+  const names = ['a\nb.txt', '..\\..\\x.pdf', 'evil\u202Etxt.exe', '\u0000', '   ', 'same.txt', 'same.txt', 'x'.repeat(300)];
+  const added = [];
+  for (const n of names) added.push(await store.add(n, Buffer.from(n)));
+  assert.deepEqual(
+    added.map((a) => a.name),
+    ['ab.txt', 'x.pdf', 'eviltxt.exe', 'file', 'file', 'same.txt', 'same.txt', 'x'.repeat(200)],
+  );
+  assert.equal(new Set(added.map((a) => a.id)).size, names.length);
+  for (let i = 0; i < names.length; i++) assert.equal((await store.read(added[i]!.id)).data.toString(), names[i]);
+  // Nothing outside the private folder was written.
+  assert.deepEqual(await fs.readdir(dir), ['private']);
+});
+
+test('private folder: a close while adds are waiting refuses the rest, and nothing half-added is listed', async () => {
+  const dir = await tmp();
+  const store = new PrivateStore({ dataDir: dir, scrypt: CHEAP });
+  await store.setup('close while adding');
+  const jobs = Array.from({ length: 6 }, (_, i) => store.add(`f${i}`, Buffer.from(`${i}`)));
+  store.close();
+  const results = await Promise.allSettled(jobs);
+  const kept = results.filter((r) => r.status === 'fulfilled').length;
+  for (const r of results) if (r.status === 'rejected') assert.equal(kind(r.reason), 'closed');
+  await store.unlock('close while adding');
+  assert.equal(store.list().length, kept);
+  // Every listed file reads; no encrypted file is left without a listing.
+  for (const e of store.list()) await store.read(e.id);
+  const onDisk = (await fs.readdir(path.join(dir, 'private'))).filter((f) => /^[0-9a-f]{32}\.opcbx$/.test(f));
+  assert.equal(onDisk.length, kept);
+});
+
+test('private folder: a read whose file has gone is told so, not an internal error', async () => {
+  const dir = await tmp();
+  const store = new PrivateStore({ dataDir: dir, scrypt: CHEAP });
+  await store.setup('file gone passphrase');
+  const e = await store.add('a.txt', Buffer.from('x'));
+  await fs.rm(path.join(dir, 'private', `${e.id}.opcbx`));
+  await assert.rejects(
+    store.read(e.id),
+    (err) => kind(err) === 'invalid' && /no such file/.test((err as Error).message),
+  );
+});
+
+test('private folder: a remove and a read of the same file asked together', async () => {
+  const dir = await tmp();
+  const store = new PrivateStore({ dataDir: dir, scrypt: CHEAP });
+  await store.setup('remove while reading');
+  const e = await store.add('a.txt', Buffer.from('contents'));
+  const [read, removed] = await Promise.allSettled([store.read(e.id), store.remove(e.id)]);
+  assert.equal(removed.status, 'fulfilled');
+  // The read either got the whole file or was told it is gone — never something else.
+  if (read.status === 'fulfilled') assert.equal(read.value.data.toString(), 'contents');
+  else assert.equal(kind(read.reason), 'invalid');
+  assert.deepEqual(store.list(), []);
+});
