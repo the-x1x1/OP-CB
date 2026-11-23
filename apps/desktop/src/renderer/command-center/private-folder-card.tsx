@@ -104,7 +104,7 @@ export function PrivateFolderCard() {
             className="wv-input"
             type="password"
             autoComplete="new-password"
-            placeholder={`Choose a passphrase (at least ${PRIVATE_PASSPHRASE_MIN} characters)`}
+            placeholder={`Passphrase, ${PRIVATE_PASSPHRASE_MIN}+ characters`}
             aria-label="New passphrase"
             value={pass}
             maxLength={1024}
