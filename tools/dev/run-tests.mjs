@@ -18,7 +18,7 @@
  * Writes a machine-readable summary to artifacts/verification/tests/<group>.json
  * (evidence for the release verification file).
  */
-import { readdirSync, statSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -97,32 +97,59 @@ const nodeArgs = [
   '--test-reporter=spec',
   '--test-reporter-destination=stdout',
   '--test-reporter=tap',
-  '--test-reporter-destination=' + path.join(root, 'artifacts', 'verification', 'tests', `${group}.tap`),
 ];
-mkdirSync(path.join(root, 'artifacts', 'verification', 'tests'), { recursive: true });
-const result = spawnSync(process.execPath, [...nodeArgs, ...files.map((t) => t.file)], {
-  cwd: root,
-  env,
-  stdio: 'inherit',
-});
+const tapDir = path.join(root, 'artifacts', 'verification', 'tests');
+mkdirSync(tapDir, { recursive: true });
 
-// Parse the TAP summary for evidence.
-const summary = { pass: 0, fail: 0, skipped: 0, todo: 0, duration_ms: Date.now() - started };
-try {
-  const tap = (await import('node:fs')).readFileSync(
-    path.join(root, 'artifacts', 'verification', 'tests', `${group}.tap`),
-    'utf8',
-  );
-  for (const [key, re] of Object.entries({
-    pass: /^# pass (\d+)/m,
-    fail: /^# fail (\d+)/m,
-    skipped: /^# skipped (\d+)/m,
-    todo: /^# todo (\d+)/m,
-  })) {
-    const m = tap.match(re);
-    if (m) summary[key] = Number(m[1]);
+// Windows refuses a command line past 32,767 characters, and 501 absolute paths on a CI runner
+// passed it: node never started and the run counted nothing. The files go relative to the root,
+// in runs whose command line stays well under that.
+const MAX_LINE = 20_000;
+const rels = files.map((t) => path.relative(root, t.file));
+const batches = [];
+let batch = [];
+let length = 0;
+for (const rel of rels) {
+  if (batch.length && length + rel.length + 3 > MAX_LINE) {
+    batches.push(batch);
+    batch = [];
+    length = 0;
   }
-} catch {}
+  batch.push(rel);
+  length += rel.length + 3;
+}
+if (batch.length) batches.push(batch);
+
+// Parse each run's TAP summary for evidence.
+const summary = { pass: 0, fail: 0, skipped: 0, todo: 0, duration_ms: 0 };
+let status = 0;
+for (const [i, list] of batches.entries()) {
+  const tapPath = path.join(tapDir, batches.length === 1 ? `${group}.tap` : `${group}-${i + 1}.tap`);
+  const result = spawnSync(process.execPath, [...nodeArgs, '--test-reporter-destination=' + tapPath, ...list], {
+    cwd: root,
+    env,
+    stdio: 'inherit',
+  });
+  if (result.error) console.error(`[tests] could not start node for ${list.length} files: ${result.error.message}`);
+  if (status === 0) status = result.error ? 1 : (result.status ?? 1);
+  try {
+    const tap = readFileSync(tapPath, 'utf8');
+    for (const [key, re] of Object.entries({
+      pass: /^# pass (\d+)/m,
+      fail: /^# fail (\d+)/m,
+      skipped: /^# skipped (\d+)/m,
+      todo: /^# todo (\d+)/m,
+    })) {
+      const m = tap.match(re);
+      if (m) summary[key] += Number(m[1]);
+    }
+  } catch {}
+}
+summary.duration_ms = Date.now() - started;
+if (status === 0 && summary.pass + summary.fail === 0) {
+  console.error('[tests] no test reported a result');
+  status = 1;
+}
 
 const evidence = {
   group,
@@ -131,7 +158,8 @@ const evidence = {
   files: files.map((t) => path.relative(root, t.file).split(path.sep).join('/')),
   fileCount: files.length,
   ...summary,
-  exitCode: result.status ?? 1,
+  runs: batches.length,
+  exitCode: status,
 };
 const outPath = jsonOut || path.join(root, 'artifacts', 'verification', 'tests', `${group}.json`);
 mkdirSync(path.dirname(outPath), { recursive: true });
@@ -139,4 +167,4 @@ writeFileSync(outPath, JSON.stringify(evidence, null, 2) + '\n');
 console.log(
   `\n[tests] group=${group} files=${files.length} pass=${summary.pass} fail=${summary.fail} -> ${path.relative(root, outPath)}`,
 );
-process.exit(result.status ?? 1);
+process.exit(status);
