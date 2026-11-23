@@ -38,7 +38,7 @@ const HOSTILE: unknown[] = [
   1e308,
   -1e308,
   1e-320,
-  9_007_199_254_740_993,
+  Number.MAX_SAFE_INTEGER + 2,
   [],
   [1, 2],
   ['a'],

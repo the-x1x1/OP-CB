@@ -43,7 +43,7 @@ const NAMES = [
 ];
 const LATS = [40.71, -40.71, 0, 89.999999, -89.999999, 90, -90, 91, Number.NaN];
 const LONS = [-74, 74, 0, 179.999999, -179.999999, 180, -180, 181];
-const NUMBERS = [0, -0, 1, -1, 55, 1e308, -1e308, 1e-320, 9_007_199_254_740_993, 0.1 + 0.2];
+const NUMBERS = [0, -0, 1, -1, 55, 1e308, -1e308, 1e-320, Number.MAX_SAFE_INTEGER + 2, 0.1 + 0.2];
 const TYPED = new Set(['InvalidRequestError', 'NotFoundError', 'DeniedError', 'UnavailableError']);
 
 test('integration: a window that applies every change holds what a query returns, poll after poll', async () => {

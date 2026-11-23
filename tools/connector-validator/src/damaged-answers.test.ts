@@ -50,7 +50,7 @@ const AWKWARD: unknown[] = [
   1e308,
   -1e308,
   1_795_000_000,
-  9_007_199_254_740_993,
+  Number.MAX_SAFE_INTEGER + 2,
   '',
   ' ',
   'x',

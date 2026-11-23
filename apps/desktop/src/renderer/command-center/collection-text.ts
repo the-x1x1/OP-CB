@@ -36,7 +36,7 @@ export function budgetBytes(choice: BudgetChoice, freeBytes: number | undefined)
 }
 
 /** "12.4 GB of 230 GB" for a plan's use of its budget. */
-export function useText(bytes: number, budget: number, text: (n: number) => string): string {
+export function shareText(bytes: number, budget: number, text: (n: number) => string): string {
   if (budget <= 0) return 'no room';
   const pct = Math.min(100, Math.round((bytes / budget) * 100));
   return `${text(bytes)} of ${text(budget)} (${pct}%)`;
@@ -57,7 +57,7 @@ export function planSummary(
       listTooBig: false,
     };
   if (plan.picks.length)
-    return { line: `${plan.picks.length} books, ${useText(plan.bytes, plan.budgetBytes, text)}.`, listTooBig: true };
+    return { line: `${plan.picks.length} books, ${shareText(plan.bytes, plan.budgetBytes, text)}.`, listTooBig: true };
   if (plan.tooBig.length) return { line: 'Nothing left to fetch fits in this room.', listTooBig: true };
   if (plan.have.length && !plan.missing.length)
     return { line: 'Everything chosen is already in the library.', listTooBig: false };

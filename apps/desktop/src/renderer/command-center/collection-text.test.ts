@@ -7,7 +7,7 @@ import {
   planSummary,
   shareMinutesText,
   shareUntilText,
-  useText,
+  shareText,
 } from './collection-text.js';
 
 test('budgetBytes: a sized drive keeps a tenth back; free space keeps a margin', () => {
@@ -26,11 +26,11 @@ test('budgetBytes: a sized drive keeps a tenth back; free space keeps a margin',
   );
 });
 
-test('useText: share of the budget, capped at 100%; no budget is no room', () => {
+test('shareText: share of the budget, capped at 100%; no budget is no room', () => {
   const t = (n: number) => `${n}B`;
-  assert.equal(useText(25, 100, t), '25B of 100B (25%)');
-  assert.equal(useText(150, 100, t), '150B of 100B (100%)');
-  assert.equal(useText(0, 0, t), 'no room');
+  assert.equal(shareText(25, 100, t), '25B of 100B (25%)');
+  assert.equal(shareText(150, 100, t), '150B of 100B (100%)');
+  assert.equal(shareText(0, 0, t), 'no room');
 });
 
 test('planSummary: says why nothing is planned', () => {

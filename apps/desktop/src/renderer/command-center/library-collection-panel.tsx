@@ -36,8 +36,9 @@ function toggle(list: LibrarySubjectId[], id: LibrarySubjectId): LibrarySubjectI
 
 export function SubjectShelf() {
   const [cc, store] = useCC();
-  const books = cc.shelf?.books ?? [];
-  const refs = (cc.shelf?.references ?? []).filter((r) => r.installed);
+  const shelf = cc.shelf;
+  const books = useMemo(() => shelf?.books ?? [], [shelf]);
+  const refs = useMemo(() => (shelf?.references ?? []).filter((r) => r.installed), [shelf]);
   const counts = useMemo(() => subjectCounts(books, refs), [books, refs]);
   const [subject, setSubject] = useState<LibrarySubjectId | null>(null);
   const [query, setQuery] = useState('');
