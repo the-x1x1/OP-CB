@@ -415,3 +415,38 @@ test('field status: a slower answer never replaces a newer push', () => {
   s = rootReducer(s, { type: 'offline/field', field: at('2026-10-08T20:01:00.000Z', 49) });
   assert.equal(s.offline.field?.power.batteryPct, 49);
 });
+
+/**
+ * Choices and their answers in any order (each answer comes once, late or not): what is shown
+ * is only ever about the current choice, and "gone" is said only when the current choice's own
+ * answer said so.
+ */
+test('selection: generated choices and late answers never show one thing for another', () => {
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31), seed / 2 ** 31);
+  const ids = ['a', 'b', 'c', 'd'];
+  const exists = (id: string) => id !== 'c'; // c has left the live world
+  for (let run = 0; run < 400; run++) {
+    let s: RootState = initialState(NOW);
+    const pending: string[] = [];
+    const answered = new Map<string, boolean>(); // the current choice's own answer: found?
+    for (let step = 0; step < 12; step++) {
+      if (pending.length === 0 || rnd() < 0.45) {
+        const id = ids[Math.floor(rnd() * ids.length)]!;
+        // Choosing what is already chosen changes nothing (the reducer keeps it as it is).
+        if (id !== s.world.selectedId) answered.clear();
+        s = rootReducer(s, { type: 'world/select', id, kind: 'object' });
+        pending.push(id);
+      } else {
+        const [forId] = pending.splice(Math.floor(rnd() * pending.length), 1) as [string];
+        s = rootReducer(s, { type: 'world/selectedObject', forId, object: exists(forId) ? obj(forId) : null });
+        if (forId === s.world.selectedId) answered.set(forId, exists(forId));
+      }
+      const w = s.world;
+      if (w.selectedObject) assert.equal(w.selectedObject.id, w.selectedId, `run ${run} step ${step}`);
+      if (w.selectedMissing)
+        assert.equal(answered.get(w.selectedId!), false, `run ${run} step ${step}: gone only on its own answer`);
+      if (answered.get(w.selectedId ?? '') === true) assert.equal(w.selectedMissing, false);
+    }
+  }
+});
