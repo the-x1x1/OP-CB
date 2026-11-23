@@ -225,3 +225,42 @@ test('the store: a walkthrough started over whose save fails says it may come ba
   await store.saveGuide(startGuide(MAPS_GUIDE, t));
   assert.equal(await store.resetGuide(MAPS_GUIDE.id), null);
 });
+
+test('the store: a status answer older than a Start or a mode choice does not undo it', async () => {
+  const demo = createDemoClient({ autoTick: false });
+  const held: Array<() => void> = [];
+  let holding = true;
+  // Held while the test runs; afterwards answered at once (the polling a Start begins ends on "idle").
+  const hold = <T>(answer: T) =>
+    holding ? new Promise<T>((r) => held.push(() => r(answer))) : Promise.resolve(answer);
+  const client = Object.assign(Object.create(demo) as typeof demo, {
+    request: (channel: string, req: unknown) => {
+      if (channel === 'maps.download.status') return hold({ phase: 'idle' });
+      if (channel === 'maps.download.start') return Promise.resolve({ phase: 'downloading', done: 0, total: 10 });
+      if (channel === 'mode.state') return hold({ mode: 'online' });
+      if (channel === 'mode.choose') return Promise.resolve({ mode: (req as { mode: string }).mode });
+      if (channel === 'library.shelf') return hold({ books: [], dir: 'old' });
+      return demo.request(channel as never, req as never);
+    },
+  });
+  const store = new CommandCenterStore(client, () => Date.parse('2026-11-22T09:00:00.000Z'));
+  try {
+    // A poll is out; Start is pressed and answered; then the poll's "idle" comes.
+    const poll = store.refreshMap();
+    await store.startMap();
+    assert.equal(store.get().mapDownload.phase, 'downloading');
+    held.shift()!();
+    assert.equal((await poll).phase, 'downloading', 'the older answer is not taken');
+    assert.equal(store.get().mapDownload.phase, 'downloading', 'and the download is still shown running');
+
+    const modeRead = store.refreshMode();
+    await store.chooseMode('offline' as never);
+    held.shift()!();
+    await modeRead;
+    assert.equal((store.get().mode as { mode: string } | null)?.mode, 'offline', 'the choice stands');
+  } finally {
+    holding = false;
+    for (const r of held) r();
+    await new Promise((r) => setTimeout(r, 1_200));
+  }
+});

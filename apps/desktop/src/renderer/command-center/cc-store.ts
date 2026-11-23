@@ -140,18 +140,35 @@ export class CommandCenterStore {
     this.set({ guideId });
   }
 
+  /**
+   * A ticket for an answer about `key` (the mode, a download's status, the shelf): it holds
+   * while no later request about the same thing has been sent. An answer that comes after a
+   * later one was asked for is older than what is shown, and is dropped. A status poll answered
+   * after a Start, still saying idle, showed the download as not running and stopped the polling.
+   */
+  private ask(key: string): () => boolean {
+    const n = (this.asked.get(key) ?? 0) + 1;
+    this.asked.set(key, n);
+    return () => this.asked.get(key) === n;
+  }
+  private readonly asked = new Map<string, number>();
+
   // ---- the mode ----------------------------------------------------------------------------
   async refreshMode(): Promise<void> {
+    const latest = this.ask('mode');
     try {
-      this.set({ mode: await this.client.request('mode.state', undefined), modeError: null });
+      const mode = await this.client.request('mode.state', undefined);
+      if (latest()) this.set({ mode, modeError: null });
     } catch (err) {
-      this.set({ modeError: err instanceof Error ? err.message : 'the runtime did not answer' });
+      if (latest()) this.set({ modeError: err instanceof Error ? err.message : 'the runtime did not answer' });
     }
   }
 
   async chooseMode(mode: OperatingMode): Promise<boolean> {
+    const latest = this.ask('mode');
     try {
-      this.set({ mode: await this.client.request('mode.choose', { mode }), modeError: null });
+      const state = await this.client.request('mode.choose', { mode });
+      if (latest()) this.set({ mode: state, modeError: null });
       return true;
     } catch (err) {
       this.set({ modeError: err instanceof Error ? err.message : 'the mode was not set' });
@@ -259,8 +276,10 @@ export class CommandCenterStore {
   }
 
   async refreshMap(): Promise<MapDownloadStatus> {
+    const latest = this.ask('map');
     try {
       const st = await this.client.request('maps.download.status', undefined);
+      if (!latest()) return this.state.mapDownload;
       this.set({ mapDownload: st });
       if (!['planning', 'downloading', 'verifying', 'installing'].includes(st.phase) && this.mapTimer) {
         clearInterval(this.mapTimer);
@@ -273,13 +292,16 @@ export class CommandCenterStore {
   }
 
   async planMap(req: MapDownloadRequest): Promise<void> {
+    const latest = this.ask('map');
     try {
-      this.set({ mapDownload: await this.client.request('maps.download.plan', req) });
+      const st = await this.client.request('maps.download.plan', req);
+      if (latest()) this.set({ mapDownload: st });
       this.watchMap();
     } catch (err) {
-      this.set({
-        mapDownload: { phase: 'failed', request: req, message: err instanceof Error ? err.message : 'refused' },
-      });
+      if (latest())
+        this.set({
+          mapDownload: { phase: 'failed', request: req, message: err instanceof Error ? err.message : 'refused' },
+        });
     }
   }
 
@@ -287,8 +309,10 @@ export class CommandCenterStore {
   // runtime reports (which the polling replaces every second). Thrown, the press showed nothing.
   async startMap(): Promise<void> {
     this.set({ mapNote: undefined });
+    const latest = this.ask('map');
     try {
-      this.set({ mapDownload: await this.client.request('maps.download.start', undefined) });
+      const st = await this.client.request('maps.download.start', undefined);
+      if (latest()) this.set({ mapDownload: st });
     } catch (err) {
       this.set({ mapNote: `The download could not be started: ${describeError(err)}` });
     }
@@ -297,8 +321,10 @@ export class CommandCenterStore {
 
   async cancelMap(): Promise<void> {
     this.set({ mapNote: undefined });
+    const latest = this.ask('map');
     try {
-      this.set({ mapDownload: await this.client.request('maps.download.cancel', undefined) });
+      const st = await this.client.request('maps.download.cancel', undefined);
+      if (latest()) this.set({ mapDownload: st });
     } catch (err) {
       this.set({ mapNote: `The download could not be stopped: ${describeError(err)}` });
     }
@@ -309,13 +335,15 @@ export class CommandCenterStore {
   private libraryTimer: ReturnType<typeof setInterval> | undefined;
 
   async refreshShelf(): Promise<LibraryShelf | null> {
+    const latest = this.ask('shelf');
     try {
       const shelf = await this.client.request('library.shelf', undefined);
+      if (!latest()) return this.state.shelf;
       this.set({ shelf, shelfProblem: undefined });
       return shelf;
     } catch (err) {
       // Said beside the list: the books last read stay, and the reason they may not be all.
-      this.set({ shelfProblem: describeError(err) });
+      if (latest()) this.set({ shelfProblem: describeError(err) });
       return this.state.shelf;
     }
   }
@@ -349,8 +377,10 @@ export class CommandCenterStore {
   }
 
   async refreshLibraryDownload(): Promise<LibraryDownloadStatus> {
+    const latest = this.ask('library');
     try {
       const st = await this.client.request('library.download.status', undefined);
+      if (!latest()) return this.state.libraryDownload;
       const was = this.state.libraryDownload.phase;
       this.set({ libraryDownload: st });
       if (st.phase !== 'downloading' && st.phase !== 'verifying') {
@@ -366,18 +396,23 @@ export class CommandCenterStore {
 
   async startLibraryDownload(req: LibraryDownloadRequest): Promise<void> {
     this.set({ libraryNote: undefined });
+    const latest = this.ask('library');
     try {
-      this.set({ libraryDownload: await this.client.request('library.download.start', req) });
+      const st = await this.client.request('library.download.start', req);
+      if (latest()) this.set({ libraryDownload: st });
       this.watchLibrary();
     } catch (err) {
-      this.set({ libraryDownload: { phase: 'failed', message: err instanceof Error ? err.message : 'refused' } });
+      if (latest())
+        this.set({ libraryDownload: { phase: 'failed', message: err instanceof Error ? err.message : 'refused' } });
     }
   }
 
   async cancelLibraryDownload(): Promise<void> {
     this.set({ libraryNote: undefined });
+    const latest = this.ask('library');
     try {
-      this.set({ libraryDownload: await this.client.request('library.download.cancel', undefined) });
+      const st = await this.client.request('library.download.cancel', undefined);
+      if (latest()) this.set({ libraryDownload: st });
     } catch (err) {
       this.set({ libraryNote: `The download could not be stopped: ${describeError(err)}` });
     }

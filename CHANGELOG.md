@@ -41,6 +41,9 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Command Center: a status answer that came back after a later press (a download's Start or
+  Stop, a mode chosen, the shelf read again) no longer undoes it. A poll still saying "idle"
+  after Start showed the download as not running and stopped following it. In 0.7.4 too.
 - Choosing one thing on the map and then another before the first had loaded could show the
   second as gone ("no longer in the live world") when the first turned out to be: the late
   answer was applied to whatever was chosen by then. In 0.7.4 too.
