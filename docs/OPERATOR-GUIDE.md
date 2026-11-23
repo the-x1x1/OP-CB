@@ -152,8 +152,8 @@ stored keys and logs — and the room left there. Two ways to put it all on an e
 
 - **Move it** (Windows or Linux, app installed as usual): **Keep all OP-CB data on a
   drive…**, choose an empty folder on the drive (or one OP-CB already uses) and restart.
-  Settings, places, zones, walkthroughs, the inventory and keys are copied; history and
-  installed packs stay in the old folder — download maps again with **Save to** that drive.
+  Settings, places, zones, walkthroughs, the inventory, keys, each source's settings and your
+  own source definitions are copied; history and installed packs stay in the old folder — download maps again with **Save to** that drive.
   If the drive is not plugged in at the next start, OP-CB says so and offers this
   computer's own data instead; it never writes into an empty mount point.
 - **Portable** (Windows): unzip `OP-CB-Portable-<version>.zip` onto the drive. The zip holds a

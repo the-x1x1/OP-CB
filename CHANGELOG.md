@@ -41,6 +41,10 @@ Versioning: [semantic versioning](https://semver.org/).
 
 ### Fixed
 
+- Keeping all data on a drive now copies each source's settings (a Home Assistant address, a
+  receiver's port) and the operator's own source definitions along with the rest. They were
+  left behind: on the drive those sources came up unconfigured, or were gone, while their keys
+  had come along. In 0.7.4 too.
 - Map tile cache: a tile used again while the cache was being trimmed to its size is kept;
   it was deleted from under the map and, fetched again, counted wrong until the next start.
   In 0.7.4 too.

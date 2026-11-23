@@ -132,3 +132,37 @@ test('moving: a pointer that cannot be written is said; the folder made ready is
   assert.ok(again.ok && again.adopted, 'chosen again, the ready folder is used');
   assert.equal(await fs.readFile(path.join(drive, 'settings.json'), 'utf8'), '{"from":"this computer"}');
 });
+
+test("moving: each source's settings and the operator's own source definitions come along", async () => {
+  const usual = await tmp();
+  await fs.writeFile(path.join(usual, 'settings.json'), '{"schemaVersion":8}');
+  await fs.writeFile(
+    path.join(usual, 'provider-settings.json'),
+    '{"version":1,"providers":{"ha":{"host":"ha.local"}}}',
+  );
+  await fs.mkdir(path.join(usual, 'connectors', 'nested'), { recursive: true });
+  await fs.writeFile(path.join(usual, 'connectors', 'my-bikes.json'), '{"id":"my-bikes"}');
+  await fs.writeFile(path.join(usual, 'connectors', 'nested', 'x.json'), '{}');
+  const drive = path.join(await tmp(), 'OP-CB');
+  const r = await moveDataTo(drive, usual, usual);
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  assert.deepEqual(r.carried, ['settings.json', 'provider-settings.json', 'connectors']);
+  assert.equal(
+    await fs.readFile(path.join(drive, 'provider-settings.json'), 'utf8'),
+    '{"version":1,"providers":{"ha":{"host":"ha.local"}}}',
+  );
+  assert.equal(await fs.readFile(path.join(drive, 'connectors', 'my-bikes.json'), 'utf8'), '{"id":"my-bikes"}');
+  assert.equal(await fs.readFile(path.join(drive, 'connectors', 'nested', 'x.json'), 'utf8'), '{}');
+  assert.equal(
+    await fs.readFile(path.join(usual, 'connectors', 'my-bikes.json'), 'utf8'),
+    '{"id":"my-bikes"}',
+    'copied, not moved',
+  );
+
+  // No connectors folder: nothing to carry, and no error.
+  const plain = await tmp();
+  await fs.writeFile(path.join(plain, 'settings.json'), '{}');
+  const r2 = await moveDataTo(path.join(await tmp(), 'OP-CB'), plain, plain);
+  assert.ok(r2.ok && r2.carried.join() === 'settings.json');
+});

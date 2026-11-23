@@ -105,7 +105,13 @@ export const CARRIED_FILES: readonly string[] = Object.freeze([
   'cameras.json',
   'guides.json',
   'preparedness.json',
+  // Each source's own settings (a Home Assistant address, a receiver's port): left behind, the
+  // sources came up unconfigured on the drive while their keys had come along.
+  'provider-settings.json',
 ]);
+
+/** Small folders carried the same way: the operator's own source definitions. */
+export const CARRIED_FOLDERS: readonly string[] = Object.freeze(['connectors']);
 
 /**
  * Make `target` OP-CB's data folder from the next start: mark it, carry the small files
@@ -145,11 +151,18 @@ export async function moveDataTo(
     }
     if (existing.length) return { ok: false, reason: 'choose an empty folder (or one OP-CB already uses)' };
     const takeBack = async (names: readonly string[]) => {
-      for (const done of names) await p.rm(path.join(resolved, done), { force: true }).catch(() => undefined);
+      for (const done of names)
+        await p.rm(path.join(resolved, done), { force: true, recursive: true }).catch(() => undefined);
     };
-    for (const name of CARRIED_FILES) {
+    for (const name of [...CARRIED_FILES, ...CARRIED_FOLDERS]) {
       try {
-        await p.copyFile(path.join(from, name), path.join(resolved, name));
+        if (CARRIED_FOLDERS.includes(name))
+          await p.cp(path.join(from, name), path.join(resolved, name), {
+            recursive: true,
+            errorOnExist: true,
+            force: false,
+          });
+        else await p.copyFile(path.join(from, name), path.join(resolved, name));
         carried.push(name);
       } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') continue; // not there: nothing to carry
