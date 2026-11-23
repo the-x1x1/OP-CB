@@ -713,8 +713,8 @@ export function resolvedFromAnswer(answer: CollectionLookupAnswer): ResolvedItem
 
 // ---- finding on the shelf ---------------------------------------------------------------------
 
-/** Lower case, accents off, anything not a letter or digit a space. */
-function foldText(s: string): string {
+/** Lower case, accents off, anything not a letter or digit a space (for searching). */
+export function foldText(s: string): string {
   return s
     .normalize('NFKD')
     .replace(/\p{M}+/gu, '')
@@ -798,4 +798,82 @@ export function shelfView<B extends ShelfBook, R extends ShelfRef>(
       other: [r.topic, r.publisher],
     })).map((m) => m.item),
   };
+}
+
+// ---- searching inside the references (`library.references.search`) ---------------------------
+
+export interface ReferenceSearchHit {
+  /** The reference's id. */
+  id: string;
+  title: string;
+  /** 1-based page number. */
+  page: number;
+  /** A few words around the first match, from the page's text. */
+  snippet: string;
+  /** How many times the words appear on the page. */
+  score: number;
+}
+
+export interface ReferenceSearchAnswer {
+  hits: ReferenceSearchHit[];
+  /** Downloaded references whose text was searched. */
+  searched: number;
+  /** Downloaded references whose text could not be read, and why. */
+  unreadable: { id: string; title: string; why: string }[];
+}
+
+export const MAX_REFERENCE_HITS = 60;
+
+/** `{ query }` (1–200 characters) for `library.references.search`, or undefined. */
+export function readReferenceSearchRequest(v: unknown): { query: string } | undefined {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
+  const r = v as Record<string, unknown>;
+  if (Object.keys(r).length !== 1 || !Object.hasOwn(r, 'query')) return undefined;
+  const q = r['query'];
+  return typeof q === 'string' && q.trim().length >= 1 && q.length <= 200 ? { query: q } : undefined;
+}
+
+/**
+ * Pages of text matched against a query: every word (folded, as a word start) must be on the
+ * page. Pages scored by how often the words appear; a snippet around the first match.
+ */
+export function searchPages(
+  query: string,
+  docs: readonly { id: string; title: string; pages: readonly string[] }[],
+  limit = MAX_REFERENCE_HITS,
+): ReferenceSearchHit[] {
+  const words = foldText(query).split(' ').filter(Boolean).slice(0, 12);
+  if (!words.length) return [];
+  const hits: ReferenceSearchHit[] = [];
+  for (const d of docs) {
+    d.pages.forEach((text, i) => {
+      const folded = ` ${foldText(text)}`;
+      let score = 0;
+      for (const w of words) {
+        let n = 0;
+        for (let at = folded.indexOf(` ${w}`); at >= 0 && n < 1000; at = folded.indexOf(` ${w}`, at + 1)) n++;
+        if (!n) return;
+        score += n;
+      }
+      hits.push({ id: d.id, title: d.title, page: i + 1, snippet: snippetOf(text, words[0]!), score });
+    });
+  }
+  return hits
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title, 'en') || a.page - b.page)
+    .slice(0, limit);
+}
+
+/** About 160 characters of a page around the first word starting with `word` (folded). */
+function snippetOf(text: string, word: string): string {
+  const flat = text.replace(/\s+/g, ' ').trim();
+  const re = /[\p{L}\p{N}]+/gu;
+  let at = 0;
+  for (let m = re.exec(flat); m; m = re.exec(flat))
+    if (foldText(m[0]).startsWith(word)) {
+      at = m.index;
+      break;
+    }
+  const start = Math.max(0, at - 60);
+  const end = Math.min(flat.length, at + 100);
+  return `${start > 0 ? '…' : ''}${flat.slice(start, end).trim()}${end < flat.length ? '…' : ''}`;
 }

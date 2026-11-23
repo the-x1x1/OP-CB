@@ -17,7 +17,7 @@ import type { SourceHealthEntry, ConnectionSnapshot } from '@opcb/source-health'
 import type { StateChange, TrackPoint } from '@opcb/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@opcb/render-core';
 import type { ViewLink } from './view-link.js';
-import type { CollectionLookupAnswer, CollectionLookupRequest } from './library-collection.js';
+import type { CollectionLookupAnswer, CollectionLookupRequest, ReferenceSearchAnswer } from './library-collection.js';
 import type { PrivateAddAnswer, PrivateExportAnswer, PrivateStatus } from './private-folder.js';
 import type {
   AiTestAnswer,
@@ -1279,6 +1279,7 @@ export interface WorldRequests {
   'library.download.status': { request: void; response: LibraryDownloadStatus };
   'library.download.cancel': { request: void; response: LibraryDownloadStatus };
   'library.collection.lookup': { request: CollectionLookupRequest; response: CollectionLookupAnswer };
+  'library.references.search': { request: { query: string }; response: ReferenceSearchAnswer };
   'private.status': { request: void; response: PrivateStatus };
   'private.setup': { request: { passphrase: string }; response: PrivateStatus };
   'private.unlock': { request: { passphrase: string }; response: PrivateStatus };
@@ -1540,6 +1541,7 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'library.download.status',
   'library.download.cancel',
   'library.collection.lookup',
+  'library.references.search',
   'private.status',
   'private.setup',
   'private.unlock',

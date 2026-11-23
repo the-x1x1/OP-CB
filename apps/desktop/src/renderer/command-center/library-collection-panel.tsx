@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   COLLECTION_ITEM,
   LIBRARY_SUBJECTS,
@@ -8,6 +8,7 @@ import {
   subjectCounts,
   subjectsOfReference,
   type CollectionLookupAnswer,
+  type ReferenceSearchAnswer,
   type LibrarySubjectId,
 } from '@opcb/ipc-contract';
 import { Button } from '@opcb/ui';
@@ -42,6 +43,37 @@ export function SubjectShelf() {
   const [query, setQuery] = useState('');
   const [note, setNote] = useState<string | null>(null);
   const view = useMemo(() => shelfView(books, refs, subject, query), [books, refs, subject, query]);
+  // Inside the guides: their pages searched once typing pauses.
+  const [inside, setInside] = useState<{ query: string; answer: ReferenceSearchAnswer | { failed: string } } | null>(
+    null,
+  );
+  const refCount = refs.length;
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || q.length > 200 || refCount === 0) {
+      setInside(null);
+      return;
+    }
+    let live = true;
+    const t = setTimeout(() => {
+      void store.searchReferences(q).then((answer) => {
+        if (live) setInside({ query: q, answer });
+      });
+    }, 350);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [query, refCount, store]);
+  const insideHits =
+    inside && 'hits' in inside.answer
+      ? subject
+        ? inside.answer.hits.filter((h) => {
+            const r = refs.find((x) => x.id === h.id);
+            return r ? subjectsOfReference(r).includes(subject) : false;
+          })
+        : inside.answer.hits
+      : [];
   const finding = view.searched;
   const inBooks = view.books;
   const inRefs = view.refs;
@@ -108,10 +140,43 @@ export function SubjectShelf() {
         ) : (
           <p className="wv-cc-muted">
             {finding
-              ? 'Nothing on the shelf matches. Inside a book, the library search above finds article titles.'
+              ? 'No book or guide has that in its title or description. Inside a book, the library search above finds article titles.'
               : `Nothing under ${LIBRARY_SUBJECTS.find((s) => s.id === subject)?.title.toLowerCase()} yet: the starter collection below has books for it.`}
           </p>
         )
+      ) : null}
+      {finding && inside ? (
+        <>
+          <h4>Inside the guides</h4>
+          {'failed' in inside.answer ? (
+            <p className="wv-cc-problem">{inside.answer.failed}</p>
+          ) : insideHits.length ? (
+            <ul className="wv-cc-list">
+              {insideHits.map((h) => (
+                <li key={`${h.id}:${h.page}`} className="wv-cc-libbook">
+                  <div>
+                    <strong>{h.title}</strong>
+                    <span className="wv-cc-muted"> · page {h.page}</span>
+                    <div className="wv-cc-muted">{h.snippet}</div>
+                  </div>
+                  <Button size="sm" onClick={() => void store.openLibrary({ kind: 'reference', id: h.id }).then(say)}>
+                    Open
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="wv-cc-muted">
+              No page of the {inside.answer.searched} downloaded guide{inside.answer.searched === 1 ? '' : 's'} has
+              every word.
+            </p>
+          )}
+          {'unreadable' in inside.answer && inside.answer.unreadable.length ? (
+            <p className="wv-cc-muted">
+              Not searched: {inside.answer.unreadable.map((u) => `${u.title} (${u.why})`).join('; ')}.
+            </p>
+          ) : null}
+        </>
       ) : null}
       {note ? <p className="wv-cc-problem">{note}</p> : null}
     </section>

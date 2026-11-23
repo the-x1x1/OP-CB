@@ -167,6 +167,7 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'library.catalog': { query: 'medicine', language: 'eng' },
     'library.download.start': { kind: 'references' },
     'library.collection.lookup': { language: 'eng' },
+    'library.references.search': { query: 'splint' },
     'private.setup': { passphrase: 'router test passphrase' },
     'private.unlock': { passphrase: 'router test passphrase' },
     'private.changePassphrase': { current: 'router test passphrase', next: 'another passphrase' },
@@ -293,6 +294,7 @@ test('router: every channel rejects a malformed payload and accepts a well-forme
     'private.setup': { passphrase: '' },
     'private.export': { id: '../../credentials' },
     'library.collection.lookup': { language: 'en' },
+    'library.references.search': { query: '' },
   };
   for (const channel of REQUEST_CHANNELS) {
     const payload = channel in good ? good[channel] : undefined;

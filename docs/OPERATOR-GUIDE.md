@@ -142,7 +142,10 @@ Command Center → **Knowledge**.
 - **By subject** shows what the library holds under ten subjects (medicine, farming, food and
   water, building, trades, engineering, survival, radio and navigation, teaching, science).
   Its find box looks through the titles and topics of every book and guide (try _splint_,
-  _canning_, _antenna_); article titles inside a book are found by the library search above.
+  _canning_, _antenna_), and through the pages of every downloaded guide: _Inside the guides_
+  lists each page with all your words, its page number and the words around them. The first
+  search after a download reads the guides once (a few seconds). Article titles inside a Kiwix
+  book are found by the library search above.
 - **Starter collection** (Online mode): choose how much room — the free space on the library's
   drive, or a drive size from 32 GB to 2 TB — and **Look up the collection**. OP-CB finds
   twenty-five Kiwix books in the live catalogue (survival, water, medicine, canning, cooking,

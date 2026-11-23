@@ -14,7 +14,9 @@ import {
   type LibraryDownloadRequest,
   type LibraryDownloadStatus,
   type ReferenceDoc,
+  type ReferenceSearchAnswer,
 } from '@opcb/ipc-contract';
+import { ReferenceSearch } from './reference-search.js';
 import { REFERENCES } from './references.js';
 import {
   firstXmlBlock,
@@ -227,7 +229,25 @@ export class LibraryDownloads {
   /** How the last book of a running collection ended (its own status, before the queue's). */
   private lastBook: LibraryDownloadStatus | undefined;
 
-  constructor(private readonly deps: LibraryDownloadsDeps) {}
+  /** The references' text, for searching inside them. */
+  private readonly text: ReferenceSearch;
+
+  constructor(private readonly deps: LibraryDownloadsDeps) {
+    this.text = new ReferenceSearch(path.join(deps.dir, REFERENCES_DIR), deps.log);
+  }
+
+  private async readTextSoon(id: string, sha256: string): Promise<void> {
+    try {
+      await this.text.index(id, sha256);
+    } catch (err) {
+      this.deps.log.warn('library: reference text not read', { id, error: failureText(err) });
+    }
+  }
+
+  /** Every downloaded reference searched for words on its pages. */
+  async searchReferences(query: string, signal?: AbortSignal): Promise<ReferenceSearchAnswer> {
+    return this.text.search(query, await this.references(), signal);
+  }
 
   get referencesDir(): string {
     return path.join(this.deps.dir, REFERENCES_DIR);
@@ -662,6 +682,9 @@ export class LibraryDownloads {
               from: new URL(url).hostname,
               bytes: bytes.length,
             });
+            // Its text, for searching, read now while it is fresh (a failure here only means it is
+            // read at the first search instead).
+            void this.readTextSoon(id, installed[id].sha256);
             got = true;
             break;
           } catch (err) {

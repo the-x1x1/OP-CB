@@ -204,6 +204,16 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   an Ubuntu ISO with a `casper-rw` persistence file, the `.deb` installed in the live system and
   the data folder moved onto the Ventoy partition; the last step's check is
   `library.builtInBooks`. OP-CB changes nothing on the drive or computer itself.
+- **Searching inside the references** (2026-11-22): `packages/offline/src/pdf-text.ts` reads a
+  PDF's text page by page (objects found by scanning, not by the cross-reference table; object
+  streams; Flate/ASCIIHex/ASCII85; simple fonts by encoding, `/Differences` and `/Widths`;
+  Type0 fonts by `/ToUnicode` and `/W`; spaces and line breaks from the text position; forms
+  nested ≤ 4; annotations' normal appearance; 64 MiB per stream, 32 MiB of text; encrypted →
+  `note: 'encrypted'`). `extractPdfTextAsync` gives way after each page.
+  `runtime/src/support/reference-search.ts` keeps `<id>.text.json` (`sha256`, `stamp` = size:mtime,
+  `pages`), read after each download (detached) or at the first search; `searchPages`
+  (ipc-contract) matches every folded word as a word start, ≤ 60 hits. Channel
+  `library.references.search { query }`.
 - **The private folder** (`packages/offline/src/private-store.ts`, 2026-11-22): `<data>/private`
   holds `key.json` (scrypt parameters, salt, the data key wrapped with AES-256-GCM),
   `index.opcbx` (the encrypted list) and one `<random id>.opcbx` per file. Channels

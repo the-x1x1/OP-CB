@@ -113,6 +113,7 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'library.download.status': undefined,
   'library.download.cancel': undefined,
   'library.collection.lookup': { language: 'eng' },
+  'library.references.search': { query: 'water' },
   'private.status': undefined,
   'private.setup': { passphrase: 'handlers test passphrase' },
   'private.unlock': { passphrase: 'handlers test passphrase' },

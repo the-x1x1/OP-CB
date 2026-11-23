@@ -196,7 +196,16 @@ test('private folder: names that are not plain come back safe and unique ids kee
   const dir = await tmp();
   const store = new PrivateStore({ dataDir: dir, scrypt: CHEAP });
   await store.setup('hostile names passphrase');
-  const names = ['a\nb.txt', '..\\..\\x.pdf', 'evil\u202Etxt.exe', '\u0000', '   ', 'same.txt', 'same.txt', 'x'.repeat(300)];
+  const names = [
+    'a\nb.txt',
+    '..\\..\\x.pdf',
+    'evil\u202Etxt.exe',
+    '\u0000',
+    '   ',
+    'same.txt',
+    'same.txt',
+    'x'.repeat(300),
+  ];
   const added = [];
   for (const n of names) added.push(await store.add(n, Buffer.from(n)));
   assert.deepEqual(

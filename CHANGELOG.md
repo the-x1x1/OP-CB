@@ -531,6 +531,19 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **Search inside the emergency references** (Command Center → Knowledge → By subject): the
+  find box also searches the pages of every downloaded guide, and lists each page that holds
+  every word — guide, page number and the words around the match — with Open beside it
+  (`library.references.search`). Each PDF's text is read once, after its download or at the
+  first search, into `<id>.text.json` beside it, tied to the PDF's SHA-256, size and time: a
+  file changed or downloaded again is read again. Encrypted guides and guides whose pages are
+  pictures are named as not searched. The PDF reader is OP-CB's own
+  (`packages/offline/src/pdf-text.ts`; no new dependency): classic and compressed
+  cross-references, object streams, Flate/ASCIIHex/ASCII85, simple fonts with their encodings
+  and widths, composite fonts through their Unicode maps, forms and annotation appearances;
+  every size bounded, never throws. Run over the 1,104 real-world PDFs of Mozilla pdf.js's test
+  corpus: no failure or hang (slowest 0.6 s), 98.3 % of the words poppler's pdftotext finds.
+
 - **Walkthrough: a drive that starts any computer** (Command Center → Resources). How to put
   Ubuntu, OP-CB and OP-CB's data — maps, library, private folder — on one USB drive with Ventoy
   and a persistence file, so it boots most PCs (and Intel Macs), even one whose own system no

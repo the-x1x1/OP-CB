@@ -4,6 +4,7 @@ import type {
   CatalogRequest,
   CollectionLookupAnswer,
   CollectionLookupRequest,
+  ReferenceSearchAnswer,
   GuideProgress,
   LibraryDownloadRequest,
   LibraryDownloadStatus,
@@ -370,6 +371,15 @@ export class CommandCenterStore {
       return await this.client.request('library.catalog', req);
     } catch (err) {
       return { ok: false, entries: [], message: err instanceof Error ? err.message : 'the catalogue did not answer' };
+    }
+  }
+
+  /** Words searched for inside the downloaded references (their pages' text). */
+  async searchReferences(query: string): Promise<ReferenceSearchAnswer | { failed: string }> {
+    try {
+      return await this.client.request('library.references.search', { query });
+    } catch (err) {
+      return { failed: err instanceof Error ? err.message : 'the search did not answer' };
     }
   }
 

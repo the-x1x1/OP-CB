@@ -38,6 +38,7 @@ import {
   readGuideProgress,
   readPrepRecord,
   readCollectionLookupRequest,
+  readReferenceSearchRequest,
   readPassphraseChange,
   readPassphraseRequest,
   readPrivateId,
@@ -1094,6 +1095,11 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       if (!r) throw new InvalidRequestError('id names a file in the private folder');
       await core.privateStore.remove(r.id);
       return core.privateStore.status();
+    },
+    'library.references.search': async (req, ctx) => {
+      const r = readReferenceSearchRequest(req);
+      if (!r) throw new InvalidRequestError('query must be 1–200 characters');
+      return core.libraryDownloads.searchReferences(r.query, ctx.signal);
     },
     'library.collection.lookup': async (req, ctx) => {
       const r = readCollectionLookupRequest(req);

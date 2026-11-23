@@ -15,6 +15,9 @@ import {
   subjectsOfText,
   findOnShelf,
   shelfView,
+  searchPages,
+  readReferenceSearchRequest,
+  MAX_REFERENCE_HITS,
   zimFilePrefix,
   type CollectionItem,
 } from './library-collection.js';
@@ -323,4 +326,64 @@ test('shelfView: nothing chosen lists nothing; a subject lists its own; a search
   assert.deepEqual(v('food', 'splint'), [], 'a search inside a subject stays inside it');
   assert.deepEqual(v(null, 'water'), ['Water']);
   assert.equal(shelfView(books, refs, null, '  ').searched, false);
+});
+
+test('searchPages: every word on the page as a word start; scored by count; snippet around the first', () => {
+  const docs = [
+    {
+      id: 'a',
+      title: 'Canning',
+      pages: ['Jars and lids.', 'Pressure canning at 240 °F. Pressure matters; canning is safe.', 'Nothing here.'],
+    },
+    { id: 'b', title: 'Army First Aid', pages: ['Splint the fracture. Pressure on the wound stops bleeding.'] },
+  ];
+  const hits = searchPages('pressure', docs);
+  assert.deepEqual(
+    hits.map((h) => [h.id, h.page, h.score]),
+    [
+      ['a', 2, 2],
+      ['b', 1, 1],
+    ],
+  );
+  assert.deepEqual(
+    searchPages('PRESSURE canning', docs).map((h) => [h.id, h.page]),
+    [['a', 2]],
+  );
+  assert.deepEqual(searchPages('ressure', docs), [], 'inside a word is not a match');
+  assert.deepEqual(searchPages('°', docs), [], 'no words, no search');
+  const long = {
+    id: 'c',
+    title: 'Long',
+    pages: [`${'filler words here '.repeat(40)}tourniquet ${'more text after '.repeat(40)}`],
+  };
+  const [h] = searchPages('tourniquet', [long]);
+  assert.ok(h!.snippet.startsWith('…') && h!.snippet.endsWith('…'));
+  assert.match(h!.snippet, /tourniquet/);
+  assert.ok(h!.snippet.length < 200);
+  // At most the limit, best first.
+  const many = {
+    id: 'm',
+    title: 'Many',
+    pages: Array.from({ length: 200 }, (_, i) => `water ${'water '.repeat(i % 7)}`),
+  };
+  const top = searchPages('water', [many]);
+  assert.equal(top.length, MAX_REFERENCE_HITS);
+  assert.ok(top.every((x, i) => i === 0 || top[i - 1]!.score >= x.score));
+});
+
+test('readReferenceSearchRequest: a query of 1 to 200 characters, own key only', () => {
+  assert.deepEqual(readReferenceSearchRequest({ query: 'splint' }), { query: 'splint' });
+  for (const bad of [
+    undefined,
+    null,
+    [],
+    {},
+    { query: '' },
+    { query: '  ' },
+    { query: 'x'.repeat(201) },
+    { query: 5 },
+    { query: 'a', b: 1 },
+    Object.create({ query: 'x' }),
+  ])
+    assert.equal(readReferenceSearchRequest(bad), undefined, JSON.stringify(bad));
 });

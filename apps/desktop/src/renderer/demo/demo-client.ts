@@ -747,6 +747,8 @@ export class DemoClient implements WorldClient {
         return { status: { set: false, open: false }, cancelled: true };
       case 'private.export':
         return { cancelled: true };
+      case 'library.references.search':
+        return { hits: [], searched: 0, unreadable: [] };
       case 'library.collection.lookup':
         return { ok: false, items: [], notes: [], message: 'the browser demo contacts no catalogue' };
       case 'field.status':
