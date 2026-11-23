@@ -1,13 +1,21 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { powerText, readPower } from './power.js';
 
+// Every folder made here is removed when the file's tests end (left behind, each run added
+// to the system's temporary folder).
+const madeDirs: string[] = [];
+after(async () => {
+  for (const dir of madeDirs) await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+});
+
 /** A fake /sys/class/power_supply laid out as the kernel does (values invented). */
 async function sysfs(supplies: Record<string, Record<string, string>>): Promise<string> {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-power-'));
+  madeDirs.push(root);
   for (const [name, files] of Object.entries(supplies)) {
     const d = path.join(root, 'class', 'power_supply', name);
     await fs.mkdir(d, { recursive: true });

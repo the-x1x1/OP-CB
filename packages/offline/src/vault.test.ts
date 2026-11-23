@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
@@ -18,8 +18,17 @@ import {
   type VaultFs,
 } from './vault.js';
 
+// Every folder made here is removed when the file's tests end (left behind, each run added
+// to the system's temporary folder).
+const madeDirs: string[] = [];
+after(async () => {
+  for (const dir of madeDirs) await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+});
+
 async function tmp(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), 'wv-vault-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-vault-'));
+  madeDirs.push(dir);
+  return dir;
 }
 
 async function listing(dir: string): Promise<string[]> {

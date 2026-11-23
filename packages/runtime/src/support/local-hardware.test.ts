@@ -1,9 +1,16 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { hardwareLines, scanLocalHardware } from './local-hardware.js';
+
+// Every folder made here is removed when the file's tests end (left behind, each run added
+// to the system's temporary folder).
+const madeDirs: string[] = [];
+after(async () => {
+  for (const dir of madeDirs) await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+});
 
 /**
  * The fake sysfs uses the kernel's own names, and USB interfaces are named with a colon
@@ -19,6 +26,7 @@ async function fakeMachine(opts: {
   dvbLoaded?: boolean;
 }) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-hw-'));
+  madeDirs.push(root);
   const sys = path.join(root, 'sys');
   const dev = path.join(root, 'dev');
   const usb = path.join(sys, 'bus', 'usb', 'devices');
