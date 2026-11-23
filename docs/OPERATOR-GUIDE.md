@@ -160,6 +160,21 @@ Command Center → **Knowledge**.
 - Files you already have: **Open the library folder**, copy `.zim` files in, **Look again**.
   Files made before about 2021 (older xz format) are listed but need kiwix-serve.
 
+## The library on phones and tablets
+
+Command Center → **Knowledge** → **On phones and tablets**: choose how long (30 minutes to 12
+hours) and **Share the library**. Point a phone's camera at the QR code, or type one of the
+addresses shown into its browser; the phone must be on the same Wi-Fi or network. It can read
+every book, open the downloaded guides and search both — nothing else of OP-CB's, and nothing
+can be changed from it.
+
+- The address holds a code made fresh each time; **New address** makes another and the old one
+  stops working. **Stop sharing** ends it at once; it also ends at the time chosen and when
+  OP-CB closes, and is off whenever OP-CB starts.
+- On Windows the firewall may ask the first time: allow OP-CB on **private** networks only.
+- Plain HTTP: someone who can watch the network can see the pages. The private folder is never
+  shared.
+
 ## The private folder
 
 Command Center → **Prepare** → **Private folder**: your own documents (IDs, deeds,

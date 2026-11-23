@@ -18,7 +18,7 @@ import type { StateChange, TrackPoint } from '@opcb/state-engine';
 import type { LensDefinition, ResolvedMapProvider } from '@opcb/render-core';
 import type { ViewLink } from './view-link.js';
 import type { CollectionLookupAnswer, CollectionLookupRequest, ReferenceSearchAnswer } from './library-collection.js';
-import type { PrivateAddAnswer, PrivateExportAnswer, PrivateStatus } from './private-folder.js';
+import type { LibraryShareStatus, PrivateAddAnswer, PrivateExportAnswer, PrivateStatus } from './private-folder.js';
 import type {
   AiTestAnswer,
   AiTestRequest,
@@ -1280,6 +1280,9 @@ export interface WorldRequests {
   'library.download.cancel': { request: void; response: LibraryDownloadStatus };
   'library.collection.lookup': { request: CollectionLookupRequest; response: CollectionLookupAnswer };
   'library.references.search': { request: { query: string }; response: ReferenceSearchAnswer };
+  'library.share.status': { request: void; response: LibraryShareStatus };
+  'library.share.start': { request: { minutes: number }; response: LibraryShareStatus };
+  'library.share.stop': { request: void; response: LibraryShareStatus };
   'private.status': { request: void; response: PrivateStatus };
   'private.setup': { request: { passphrase: string }; response: PrivateStatus };
   'private.unlock': { request: { passphrase: string }; response: PrivateStatus };
@@ -1542,6 +1545,9 @@ export const REQUEST_CHANNELS: readonly RequestChannel[] = Object.freeze([
   'library.download.cancel',
   'library.collection.lookup',
   'library.references.search',
+  'library.share.status',
+  'library.share.start',
+  'library.share.stop',
   'private.status',
   'private.setup',
   'private.unlock',

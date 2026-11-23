@@ -214,6 +214,13 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   `pages`), read after each download (detached) or at the first search; `searchPages`
   (ipc-contract) matches every folded word as a word start, ≤ 60 hits. Channel
   `library.references.search { query }`.
+- **The library on the local network** (`runtime/src/support/library-share.ts`, 2026-11-22):
+  `library.share.status|start|stop`; `start { minutes }` (30/120/480/720) listens on
+  `0.0.0.0`, an ephemeral port, until the time, Stop or dispose. Routes under `/<code>/`: `/`
+  (shelf), `/find?q=` (`zimLibrary.find` titles + `searchReferences` pages), `/book/<id>/<key>`
+  (ZIM entries, redirects kept under the code), `/ref/<id>.pdf`. Private peers only, own `Host`
+  only, 20 wrong codes per peer, 16 in flight. The card (`library-share-card.tsx`) draws a QR of
+  the first address (`qr.ts`: byte mode, level M, versions 1–10). Threat model T20.
 - **The private folder** (`packages/offline/src/private-store.ts`, 2026-11-22): `<data>/private`
   holds `key.json` (scrypt parameters, salt, the data key wrapped with AES-256-GCM),
   `index.opcbx` (the encrypted list) and one `<random id>.opcbx` per file. Channels

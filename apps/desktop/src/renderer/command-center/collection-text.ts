@@ -64,3 +64,17 @@ export function planSummary(
   if (plan.missing.length) return { line: 'Nothing chosen is in the catalogue now.', listTooBig: false };
   return { line: 'Nothing to fetch.', listTooBig: false };
 }
+
+/** "30 minutes", "2 hours", "12 hours". */
+export function shareMinutesText(m: number): string {
+  if (m < 60) return `${m} minutes`;
+  const h = m / 60;
+  return `${Number.isInteger(h) ? h : h.toFixed(1)} hour${h === 1 ? '' : 's'}`;
+}
+
+/** "Until 21:30" in this computer's time (a bad or missing time: "Until it is stopped"). */
+export function shareUntilText(iso: string | undefined, locale?: string): string {
+  const t = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(t)) return 'Until it is stopped';
+  return `Until ${new Date(t).toLocaleTimeString(locale ?? 'en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+}

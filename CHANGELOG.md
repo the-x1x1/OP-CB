@@ -531,6 +531,15 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
 
 ### Added
 
+- **The library on phones and tablets** (Command Center → Knowledge → On phones and tablets):
+  for 30 minutes to 12 hours, phones and tablets on the same network read every book, open the
+  downloaded guides and search both in their browser, read only. A QR code of the address (the
+  encoder is OP-CB's own; every version and mask checked against OpenCV's decoder) or the address
+  typed. Off at every start; ends at Stop, at the time chosen and when OP-CB closes. A fresh
+  code in every address (twenty wrong ones and a device is not answered), private networks only,
+  the computer's own address as `Host` only, GET only, no script in pages, no referrer. Threat
+  model T20.
+
 - **Search inside the emergency references** (Command Center → Knowledge → By subject): the
   find box also searches the pages of every downloaded guide, and lists each page that holds
   every word — guide, page number and the words around the match — with Open beside it

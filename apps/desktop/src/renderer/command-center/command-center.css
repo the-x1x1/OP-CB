@@ -417,6 +417,34 @@
   color: var(--wv-text-muted);
 }
 
+/* Library on phones and tablets: the QR code beside the addresses. */
+.wv-cc-share {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wv-space-4);
+  align-items: flex-start;
+}
+
+.wv-cc-share > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.wv-cc-qr {
+  flex: 0 0 auto;
+  shape-rendering: crispEdges;
+  width: 176px;
+  height: 176px;
+  border-radius: var(--wv-radius-sm);
+}
+
+.wv-cc-mono {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: var(--wv-text-sm);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 /* ---- readiness ---- */
 .wv-cc-readylist,
 .wv-cc-list,

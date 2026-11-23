@@ -135,6 +135,7 @@ import { LocalServices } from './support/local-services.js';
 import { MapDownloads } from './support/map-download.js';
 import { ZimLibrary } from './support/zim-library.js';
 import { LibraryDownloads } from './support/library-downloads.js';
+import { LibraryShare } from './support/library-share.js';
 import { MartinBasemaps } from './martin-basemap.js';
 import {
   validateCollection,
@@ -325,6 +326,8 @@ export class RuntimeCore {
   mapDownloads!: MapDownloads;
   /** The built-in library: ZIM files read here, and downloads into it (2026-10-30). */
   zimLibrary!: ZimLibrary;
+  /** The library shared read-only with phones and tablets on the local network (off unless asked). */
+  libraryShare!: LibraryShare;
   /** The operator's encrypted documents (`<data>/private`). */
   privateStore!: PrivateStore;
   libraryDownloads!: LibraryDownloads;
@@ -914,6 +917,17 @@ export class RuntimeCore {
     });
     this.zimLibrary = new ZimLibrary(this.dirs.libraryDir, this.loggerHub.logger('offline'));
     this.privateStore = new PrivateStore({ dataDir: this.dirs.root, now: () => this.clock.now() });
+    this.libraryShare = new LibraryShare({
+      books: () => this.zimLibrary.books(),
+      lookup: (bookId, key) => this.zimLibrary.lookup(bookId, key),
+      mainKey: (bookId) => this.zimLibrary.mainKey(bookId),
+      references: () => this.libraryDownloads.references(),
+      referenceFile: (id) => this.libraryDownloads.referenceFile(id),
+      findTitles: (query) => this.zimLibrary.find({ query, limit: 50 }),
+      searchReferences: (query) => this.libraryDownloads.searchReferences(query),
+      now: () => this.clock.now(),
+      log: this.loggerHub.logger('offline'),
+    });
     this.libraryDownloads = new LibraryDownloads({
       fetchImpl: (input, init) => (this.deps.downloadFetchImpl ?? this.deps.fetchImpl ?? fetch)(input, init),
       dir: this.dirs.libraryDir,
@@ -1556,6 +1570,7 @@ export class RuntimeCore {
     this.state.dispose();
     this.libraryDownloads?.cancel();
     this.privateStore?.close();
+    await this.libraryShare?.stop().catch(() => undefined);
     await this.zimLibrary?.close().catch(() => undefined);
     await this.cameraRelay?.stop().catch(() => undefined);
     await this.go2rtc?.stop().catch(() => undefined);

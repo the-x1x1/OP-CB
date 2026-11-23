@@ -39,6 +39,7 @@ import {
   readPrepRecord,
   readCollectionLookupRequest,
   readReferenceSearchRequest,
+  readShareStartRequest,
   readPassphraseChange,
   readPassphraseRequest,
   readPrivateId,
@@ -1101,6 +1102,21 @@ export function createHandlers(core: RuntimeCore): RequestHandlers {
       if (!r) throw new InvalidRequestError('query must be 1–200 characters');
       return core.libraryDownloads.searchReferences(r.query, ctx.signal);
     },
+    // ---- the library on the local network (2026-11-22): off unless the operator asks ------------
+    'library.share.status': async () => core.libraryShare.status(),
+    'library.share.start': async (req) => {
+      const r = readShareStartRequest(req);
+      if (!r) throw new InvalidRequestError('minutes must be 30, 120, 480 or 720');
+      if (core.demoMode()) throw new UnavailableError('the demo build shares nothing');
+      try {
+        return await core.libraryShare.start(r.minutes);
+      } catch (err) {
+        throw new UnavailableError(
+          `the library could not be shared (${(err as NodeJS.ErrnoException).code ?? (err instanceof Error ? err.message : 'error')})`,
+        );
+      }
+    },
+    'library.share.stop': async () => core.libraryShare.stop(),
     'library.collection.lookup': async (req, ctx) => {
       const r = readCollectionLookupRequest(req);
       if (!r) throw new InvalidRequestError('language is an ISO 639-3 code such as eng');

@@ -65,3 +65,28 @@ export function readPrivateId(v: unknown): { id: string } | undefined {
     ? { id: r['id'] }
     : undefined;
 }
+
+// ---- sharing the library on the local network (`library.share.*`) ----------------------------
+
+export interface LibraryShareStatus {
+  sharing: boolean;
+  /** Addresses to open on a phone or tablet on the same network, the code included. */
+  urls?: string[];
+  code?: string;
+  port?: number;
+  /** When the share ends by itself (ISO). */
+  until?: string;
+  /** Answers given since the share began. */
+  served?: number;
+}
+
+export const SHARE_MINUTES_CHOICES = Object.freeze([30, 120, 480, 720]);
+
+/** `{ minutes }` for `library.share.start`: one of the choices offered. */
+export function readShareStartRequest(v: unknown): { minutes: number } | undefined {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
+  const r = v as Record<string, unknown>;
+  if (Object.keys(r).length !== 1 || !Object.hasOwn(r, 'minutes')) return undefined;
+  const m = r['minutes'];
+  return typeof m === 'number' && SHARE_MINUTES_CHOICES.includes(m) ? { minutes: m } : undefined;
+}

@@ -36,6 +36,7 @@ import { DataLocationCard } from './data-location-card.js';
 import { PrivateFolderCard } from './private-folder-card.js';
 import { BuiltInLibrary, EmergencyReferences, KiwixCatalog } from './library-panel.js';
 import { StarterCollection, SubjectShelf } from './library-collection-panel.js';
+import { LibraryShareCard } from './library-share-card.js';
 import './command-center.css';
 
 /** One empty list for selectors: a new [] each read would never settle. */
@@ -461,6 +462,7 @@ function Knowledge() {
       <SubjectShelf />
       <EmergencyReferences />
       <StarterCollection />
+      <LibraryShareCard />
       <KiwixCatalog />
       <section className="wv-cc-card">
         <h3 className="wv-cc-caps">Kiwix server (optional)</h3>

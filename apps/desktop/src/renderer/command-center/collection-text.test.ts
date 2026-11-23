@@ -1,6 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BUDGET_CHOICES, FREE_MARGIN_BYTES, budgetBytes, planSummary, useText } from './collection-text.js';
+import {
+  BUDGET_CHOICES,
+  FREE_MARGIN_BYTES,
+  budgetBytes,
+  planSummary,
+  shareMinutesText,
+  shareUntilText,
+  useText,
+} from './collection-text.js';
 
 test('budgetBytes: a sized drive keeps a tenth back; free space keeps a margin', () => {
   assert.equal(budgetBytes('256', undefined), 230_400_000_000);
@@ -56,4 +64,14 @@ test('planSummary: says why nothing is planned', () => {
     'Nothing chosen is in the catalogue now.',
   );
   assert.equal(planSummary({ ...base, budgetBytes: 5 }, 'free', t).line, 'Nothing to fetch.');
+});
+
+test('share words: lengths and the end time', () => {
+  assert.equal(shareMinutesText(30), '30 minutes');
+  assert.equal(shareMinutesText(60), '1 hour');
+  assert.equal(shareMinutesText(120), '2 hours');
+  assert.equal(shareMinutesText(90), '1.5 hours');
+  assert.match(shareUntilText('2026-11-22T21:30:00.000Z'), /^Until \d{2}:\d{2}$/);
+  assert.equal(shareUntilText(undefined), 'Until it is stopped');
+  assert.equal(shareUntilText('not a time'), 'Until it is stopped');
 });

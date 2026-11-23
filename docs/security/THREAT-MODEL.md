@@ -464,6 +464,41 @@ setup. While the folder is open, anything that can read main's memory can read t
 saved copy outside the folder is an ordinary file. File sizes are visible to within the
 cipher's 32 bytes of overhead, and the number of files by the number of `.opcbx` files.
 
+### T20 The library shared on the local network (phones and tablets)
+
+_Threat:_ sharing the library opens a port on the operator's networks. Someone else on the
+network, or on the internet if the computer has a public address, reads it; guesses or
+scans for the address; a web page in the operator's own browser reaches it by pointing a name
+of its own at the computer (DNS rebinding); a page from a book carries the address out in a
+`Referer`; the share is left on and forgotten; it serves more than the library.
+
+_Mitigation:_ `runtime/src/support/library-share.ts`. Off at every start of OP-CB and until the
+operator presses Share; ends at the time chosen (30 minutes to 12 hours), at Stop and when
+OP-CB closes; nothing about it is saved. Every address carries a code made fresh at each
+Share (12 characters from 31, ~59 bits); a wrong code is the same 404 as a missing page, and a
+device that gives twenty wrong codes is not answered again during that share. Only peers on
+private networks are answered (RFC 1918, CGNAT, link-local, ULA, loopback); others are
+dropped without an answer. The `Host` must be one of this computer's own addresses with the
+share's port (421 otherwise). GET and HEAD only; at most 16 answers at once. What is served:
+readable books' pages, downloaded references' PDFs, the shelf and a search — through the
+reader's Content-Security-Policy (no script, frames or anything from elsewhere),
+`Referrer-Policy: no-referrer`, `no-store`, `X-Frame-Options: DENY`, `nosniff`; titles,
+snippets and the query escaped.
+
+_Verification:_ `share: off until started; the code is in every address; books, pages, guides and search answer`;
+`share: a wrong code is a plain 404, and after twenty the device is not answered`;
+`share: stop, a new share has a new code, the time runs out; minutes are checked`;
+`share: asked by this computer's own address only, not by a name (DNS rebinding)`;
+`isPrivatePeer: private and local networks only`; runtime
+`share through the runtime: off at start, a ZIM read over HTTP with the code, gone after stop`
+and `share through the runtime: closing OP-CB ends the share`.
+
+_Residual:_ plain HTTP: anyone who can watch the network's traffic sees the code and the pages
+(the library is public material; the private folder is never shared). Anyone on the network
+who is given or sees the address can read the library until the share ends. On Windows the
+firewall asks once whether OP-CB may use the network; allowing public networks too would let
+devices on a café's network ask (and they still need the code).
+
 ## Conventions
 
 A name in backticks on a _Verification:_ line is the exact title of a test in this

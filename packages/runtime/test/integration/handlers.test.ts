@@ -114,6 +114,9 @@ const BENIGN: { [C in RequestChannel]: RequestOf<C> } = {
   'library.download.cancel': undefined,
   'library.collection.lookup': { language: 'eng' },
   'library.references.search': { query: 'water' },
+  'library.share.status': undefined,
+  'library.share.start': { minutes: 30 },
+  'library.share.stop': undefined,
   'private.status': undefined,
   'private.setup': { passphrase: 'handlers test passphrase' },
   'private.unlock': { passphrase: 'handlers test passphrase' },
@@ -224,6 +227,7 @@ const MAY_REPORT_MISSING = new Set<RequestChannel>([
   'export.track',
   // The demo keeps no private folder: setting one up is refused, so opening, changing,
   // adding to, exporting from and removing from it are refused as "not set up" or "closed".
+  'library.share.start',
   'private.setup',
   'private.unlock',
   'private.changePassphrase',

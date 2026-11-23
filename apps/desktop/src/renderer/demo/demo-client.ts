@@ -747,6 +747,11 @@ export class DemoClient implements WorldClient {
         return { status: { set: false, open: false }, cancelled: true };
       case 'private.export':
         return { cancelled: true };
+      case 'library.share.status':
+      case 'library.share.stop':
+      case 'library.share.start':
+        // The browser demo shares nothing; start answers as not sharing (the card says so).
+        return { sharing: false };
       case 'library.references.search':
         return { hits: [], searched: 0, unreadable: [] };
       case 'library.collection.lookup':
