@@ -23,7 +23,7 @@ export const BUDGET_CHOICES: readonly { id: BudgetChoice; label: string }[] = Ob
 /** Kept back on a drive of a given size: formatting and OP-CB's own data. */
 const SIZED_SHARE = 0.1;
 /** Kept free on the drive the library is on (as the downloads themselves keep 1 GiB spare). */
-export const FREE_MARGIN_BYTES = 2 * 1024 ** 3;
+export const FREE_MARGIN_BYTES = 2_000_000_000;
 
 /** The bytes the collection may take for a choice; undefined when the free space is not known. */
 export function budgetBytes(choice: BudgetChoice, freeBytes: number | undefined): number | undefined {
@@ -40,4 +40,27 @@ export function useText(bytes: number, budget: number, text: (n: number) => stri
   if (budget <= 0) return 'no room';
   const pct = Math.min(100, Math.round((bytes / budget) * 100));
   return `${text(bytes)} of ${text(budget)} (${pct}%)`;
+}
+
+/** What a plan comes to, in a sentence, and whether its "too big" list is worth showing. */
+export function planSummary(
+  plan: { picks: unknown[]; have: string[]; tooBig: unknown[]; missing: unknown[]; bytes: number; budgetBytes: number },
+  choice: BudgetChoice,
+  text: (n: number) => string,
+): { line: string; listTooBig: boolean } {
+  if (plan.budgetBytes <= 0)
+    return {
+      line:
+        choice === 'free'
+          ? `No room: this drive has less than ${text(FREE_MARGIN_BYTES)} free, which OP-CB keeps spare. Choose a drive size, or free some space.`
+          : 'No room.',
+      listTooBig: false,
+    };
+  if (plan.picks.length)
+    return { line: `${plan.picks.length} books, ${useText(plan.bytes, plan.budgetBytes, text)}.`, listTooBig: true };
+  if (plan.tooBig.length) return { line: 'Nothing left to fetch fits in this room.', listTooBig: true };
+  if (plan.have.length && !plan.missing.length)
+    return { line: 'Everything chosen is already in the library.', listTooBig: false };
+  if (plan.missing.length) return { line: 'Nothing chosen is in the catalogue now.', listTooBig: false };
+  return { line: 'Nothing to fetch.', listTooBig: false };
 }

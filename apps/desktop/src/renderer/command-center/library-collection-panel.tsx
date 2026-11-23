@@ -14,7 +14,7 @@ import { Button } from '@opcb/ui';
 import { useCC } from './use-cc.js';
 import { bytesText } from './map-download-panel.js';
 import { flavourText } from './catalog-text.js';
-import { BUDGET_CHOICES, budgetBytes, useText, type BudgetChoice } from './collection-text.js';
+import { BUDGET_CHOICES, budgetBytes, planSummary, type BudgetChoice } from './collection-text.js';
 import { DownloadState } from './library-panel.js';
 
 /**
@@ -136,6 +136,7 @@ export function StarterCollection() {
         : null,
     [answer, budget, cc.shelf, subjects],
   );
+  const summary = plan ? planSummary(plan, choice, bytesText) : null;
   const lookUp = async () => {
     setLooking(true);
     try {
@@ -195,11 +196,7 @@ export function StarterCollection() {
       ) : null}
       {plan ? (
         <>
-          <p>
-            {plan.picks.length
-              ? `${plan.picks.length} books, ${useText(plan.bytes, plan.budgetBytes, bytesText)}.`
-              : 'Nothing more fits, or everything chosen is already here.'}
-          </p>
+          <p>{summary?.line}</p>
           {plan.picks.length ? (
             <ul className="wv-cc-list">
               {plan.picks.map((p) => (
@@ -221,7 +218,7 @@ export function StarterCollection() {
             </ul>
           ) : null}
           {plan.have.length ? <p className="wv-cc-muted">Already in the library: {plan.have.length}.</p> : null}
-          {plan.tooBig.length ? (
+          {plan.tooBig.length && summary?.listTooBig ? (
             <p className="wv-cc-muted">
               Too big for what is left:{' '}
               {plan.tooBig.map((t) => `${t.item.title} (${bytesText(t.smallestBytes)})`).join(', ')}.

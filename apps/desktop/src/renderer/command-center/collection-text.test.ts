@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { BUDGET_CHOICES, FREE_MARGIN_BYTES, budgetBytes, useText } from './collection-text.js';
+import { BUDGET_CHOICES, FREE_MARGIN_BYTES, budgetBytes, planSummary, useText } from './collection-text.js';
 
 test('budgetBytes: a sized drive keeps a tenth back; free space keeps a margin', () => {
   assert.equal(budgetBytes('256', undefined), 230_400_000_000);
@@ -23,4 +23,37 @@ test('useText: share of the budget, capped at 100%; no budget is no room', () =>
   assert.equal(useText(25, 100, t), '25B of 100B (25%)');
   assert.equal(useText(150, 100, t), '150B of 100B (100%)');
   assert.equal(useText(0, 0, t), 'no room');
+});
+
+test('planSummary: says why nothing is planned', () => {
+  const t = (n: number) => `${Math.round(n / 1e6)} MB`;
+  const base = {
+    picks: [] as unknown[],
+    have: [] as string[],
+    tooBig: [] as unknown[],
+    missing: [] as unknown[],
+    bytes: 0,
+  };
+  // No room at all: the margin, not each book, is the reason; the "too big" list is not shown.
+  const none = planSummary({ ...base, tooBig: [1, 2], budgetBytes: 0 }, 'free', t);
+  assert.match(none.line, /^No room: this drive has less than 2000 MB free/);
+  assert.equal(none.listTooBig, false);
+  assert.equal(planSummary({ ...base, budgetBytes: 0 }, '32', t).line, 'No room.');
+  assert.deepEqual(planSummary({ ...base, picks: [1, 2], bytes: 25e6, budgetBytes: 100e6 }, 'free', t), {
+    line: '2 books, 25 MB of 100 MB (25%).',
+    listTooBig: true,
+  });
+  assert.equal(
+    planSummary({ ...base, tooBig: [1], budgetBytes: 5 }, 'free', t).line,
+    'Nothing left to fetch fits in this room.',
+  );
+  assert.equal(
+    planSummary({ ...base, have: ['a'], budgetBytes: 5 }, 'free', t).line,
+    'Everything chosen is already in the library.',
+  );
+  assert.equal(
+    planSummary({ ...base, missing: [1], budgetBytes: 5 }, 'free', t).line,
+    'Nothing chosen is in the catalogue now.',
+  );
+  assert.equal(planSummary({ ...base, budgetBytes: 5 }, 'free', t).line, 'Nothing to fetch.');
 });
