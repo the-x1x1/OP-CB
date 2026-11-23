@@ -13,6 +13,8 @@ import {
   subjectsOfBook,
   subjectsOfReference,
   subjectsOfText,
+  findOnShelf,
+  shelfView,
   zimFilePrefix,
   type CollectionItem,
 } from './library-collection.js';
@@ -265,4 +267,60 @@ test('subjectCounts: every subject present; a book counts under each of its subj
   assert.equal(c.medical, 1);
   assert.equal(c.building, 2);
   assert.equal(c.comms, 0);
+});
+
+test('findOnShelf: every word, as word starts; title words first; accents and case ignored', () => {
+  const refs = [
+    { title: 'Complete Guide to Home Canning, Guide 4', topic: 'Pressure canning beans, corn' },
+    { title: 'FM 5-426 Carpentry', topic: 'Framing, roofs' },
+    { title: 'Make Water Safe During an Emergency', topic: 'Boiling and disinfecting water' },
+    { title: 'Café Médical', topic: 'Notes' },
+  ];
+  const text = (r: (typeof refs)[number]) => ({ title: r.title, other: [r.topic] });
+  const t = (q: string) => findOnShelf(q, refs, text).map((m) => m.item.title);
+  assert.deepEqual(t('canning'), ['Complete Guide to Home Canning, Guide 4']);
+  assert.deepEqual(t('CORN pressure'), ['Complete Guide to Home Canning, Guide 4']);
+  assert.deepEqual(t('roof'), ['FM 5-426 Carpentry']);
+  assert.deepEqual(t('oofs'), [], 'inside a word is not a match');
+  assert.deepEqual(t('medical cafe'), ['Café Médical']);
+  // A subject's name is not searched (the subject buttons do that): "water" is not canning.
+  assert.deepEqual(t('shelter'), []);
+  // Title words outrank topic words.
+  const water = findOnShelf('water', refs, text);
+  assert.equal(water[0]!.item.title, 'Make Water Safe During an Emergency');
+  assert.deepEqual(t('canning carpentry'), [], 'every word must match');
+  for (const q of ['', '   ', '!!!', 'x'.repeat(201)]) assert.deepEqual(t(q), [], JSON.stringify(q));
+  // Hostile text does not throw and finds nothing odd.
+  assert.deepEqual(t('constructor __proto__'), []);
+  assert.deepEqual(t('(.*)+$'), []);
+});
+
+test('findOnShelf: at most 50, and fast on a large shelf with long text', () => {
+  const many = Array.from({ length: 5000 }, (_, i) => ({ title: `Book ${i} water`, other: ['x '.repeat(3000)] }));
+  const started = performance.now();
+  const r = findOnShelf('water book', many, (b) => ({ title: b.title, other: b.other }));
+  assert.equal(r.length, 50);
+  assert.ok(performance.now() - started < 2000);
+});
+
+test('shelfView: nothing chosen lists nothing; a subject lists its own; a search looks through all or the subject', () => {
+  const books = [
+    { file: 'zimgit-water_en_2024-08.zim', title: 'Water' },
+    { file: 'mdwiki_en_all_maxi_2025-11.zim', title: 'WikiMed' },
+  ];
+  const refs = [
+    { title: 'Complete Guide to Home Canning, Guide 1', topic: 'Jars, altitude, botulism' },
+    { title: 'ATP 4-02.11 Army First Aid', topic: 'Bleeding, splints, burns' },
+  ];
+  const v = (s: Parameters<typeof shelfView>[2], q: string) => {
+    const r = shelfView(books, refs, s, q);
+    return [...r.books.map((b) => b.title), ...r.refs.map((x) => x.title)];
+  };
+  assert.deepEqual(v(null, ''), []);
+  assert.deepEqual(v('food', ''), ['Water', 'Complete Guide to Home Canning, Guide 1']);
+  assert.deepEqual(v('medical', ''), ['WikiMed', 'ATP 4-02.11 Army First Aid']);
+  assert.deepEqual(v(null, 'splint'), ['ATP 4-02.11 Army First Aid']);
+  assert.deepEqual(v('food', 'splint'), [], 'a search inside a subject stays inside it');
+  assert.deepEqual(v(null, 'water'), ['Water']);
+  assert.equal(shelfView(books, refs, null, '  ').searched, false);
 });

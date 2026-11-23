@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import {
   COLLECTION_ITEM,
   LIBRARY_SUBJECTS,
+  shelfView,
   planCollection,
   resolvedFromAnswer,
   subjectCounts,
-  subjectsOfBook,
   subjectsOfReference,
   type CollectionLookupAnswer,
   type LibrarySubjectId,
@@ -39,14 +39,26 @@ export function SubjectShelf() {
   const refs = (cc.shelf?.references ?? []).filter((r) => r.installed);
   const counts = useMemo(() => subjectCounts(books, refs), [books, refs]);
   const [subject, setSubject] = useState<LibrarySubjectId | null>(null);
+  const [query, setQuery] = useState('');
   const [note, setNote] = useState<string | null>(null);
-  const inBooks = subject ? books.filter((b) => subjectsOfBook(b).includes(subject)) : [];
-  const inRefs = subject ? refs.filter((r) => subjectsOfReference(r).includes(subject)) : [];
+  const view = useMemo(() => shelfView(books, refs, subject, query), [books, refs, subject, query]);
+  const finding = view.searched;
+  const inBooks = view.books;
+  const inRefs = view.refs;
   const say = (r: { opened: boolean; message?: string }) => setNote(r.opened ? null : (r.message ?? 'not opened'));
   return (
     <section className="wv-cc-card">
       <h3 className="wv-cc-caps">By subject</h3>
       <p className="wv-cc-muted">What the library holds, under each subject. A book can sit under several.</p>
+      <input
+        className="wv-input"
+        type="search"
+        placeholder="Find a book or guide by its title or what it covers (canning, splint, antenna…)"
+        aria-label="Find in the library by title or topic"
+        maxLength={200}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
       <div className="wv-cc-actions" role="group" aria-label="Subjects">
         {LIBRARY_SUBJECTS.map((s) => (
           <button
@@ -61,7 +73,7 @@ export function SubjectShelf() {
           </button>
         ))}
       </div>
-      {subject ? (
+      {subject || finding ? (
         inBooks.length || inRefs.length ? (
           <ul className="wv-cc-list">
             {inBooks.map((b) => (
@@ -93,8 +105,9 @@ export function SubjectShelf() {
           </ul>
         ) : (
           <p className="wv-cc-muted">
-            Nothing under {LIBRARY_SUBJECTS.find((s) => s.id === subject)?.title.toLowerCase()} yet: the starter
-            collection below has books for it.
+            {finding
+              ? 'Nothing on the shelf matches. Inside a book, the library search above finds article titles.'
+              : `Nothing under ${LIBRARY_SUBJECTS.find((s) => s.id === subject)?.title.toLowerCase()} yet: the starter collection below has books for it.`}
           </p>
         )
       ) : null}

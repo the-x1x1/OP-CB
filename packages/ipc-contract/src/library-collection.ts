@@ -710,3 +710,92 @@ export function resolvedFromAnswer(answer: CollectionLookupAnswer): ResolvedItem
   }
   return out;
 }
+
+// ---- finding on the shelf ---------------------------------------------------------------------
+
+/** Lower case, accents off, anything not a letter or digit a space. */
+function foldText(s: string): string {
+  return s
+    .normalize('NFKD')
+    .replace(/\p{M}+/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+export interface ShelfMatch<T> {
+  item: T;
+  /** Higher is better: a word in the title counts double a word only in the description. */
+  score: number;
+}
+
+/**
+ * Books or references whose title, description or topic hold every word of the query (as word starts, any case, accents ignored). Title matches first, then by title.
+ * At most 50; a query with no words, or of more than 200 characters, finds nothing.
+ */
+export function findOnShelf<T>(
+  query: string,
+  items: readonly T[],
+  textOf: (item: T) => { title: string; other?: (string | undefined)[] },
+): ShelfMatch<T>[] {
+  if (typeof query !== 'string' || query.length > 200) return [];
+  const words = foldText(query).split(' ').filter(Boolean).slice(0, 12);
+  if (!words.length) return [];
+  const has = (text: string, w: string) => text.startsWith(w) || text.includes(` ${w}`);
+  const out: ShelfMatch<T>[] = [];
+  for (const item of items) {
+    const t = textOf(item);
+    const title = foldText(t.title);
+    const rest = foldText(
+      (t.other ?? [])
+        .filter((x): x is string => typeof x === 'string')
+        .join(' ')
+        .slice(0, 4000),
+    );
+    let score = 0;
+    let all = true;
+    for (const w of words) {
+      if (has(title, w)) score += 2;
+      else if (has(rest, w)) score += 1;
+      else {
+        all = false;
+        break;
+      }
+    }
+    if (all) out.push({ item, score });
+  }
+  return out
+    .sort((a, b) => b.score - a.score || textOf(a.item).title.localeCompare(textOf(b.item).title, 'en'))
+    .slice(0, 50);
+}
+
+type ShelfBook = Pick<LibraryBook, 'file' | 'title'> & Partial<LibraryBook>;
+type ShelfRef = Pick<ReferenceDoc, 'title' | 'topic'> &
+  Partial<ReferenceDoc> & { subjects?: readonly LibrarySubjectId[] };
+
+/**
+ * What the By subject card lists: with a search, the matches (within the chosen subject if
+ * one is chosen), best first; with only a subject, everything under it; with neither, nothing.
+ */
+export function shelfView<B extends ShelfBook, R extends ShelfRef>(
+  books: readonly B[],
+  refs: readonly R[],
+  subject: LibrarySubjectId | null,
+  query: string,
+): { books: B[]; refs: R[]; searched: boolean } {
+  const searched = query.trim().length > 0;
+  const bs = subject ? books.filter((b) => subjectsOfBook(b).includes(subject)) : [...books];
+  const rs = subject ? refs.filter((r) => subjectsOfReference(r).includes(subject)) : [...refs];
+  if (!searched) return subject ? { books: bs, refs: rs, searched } : { books: [], refs: [], searched };
+  return {
+    searched,
+    books: findOnShelf(query, bs, (b) => ({
+      title: b.title,
+      other: [b.name, b.description],
+    })).map((m) => m.item),
+    refs: findOnShelf(query, rs, (r) => ({
+      title: r.title,
+      other: [r.topic, r.publisher],
+    })).map((m) => m.item),
+  };
+}

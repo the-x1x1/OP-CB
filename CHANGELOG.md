@@ -554,7 +554,9 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
   first six. Copies whose distribution is limited (TC 3-25.26, FM 24-18) were left out.
 
 - **The library by subject, and a starter collection fitted to a drive** (Command Center →
-  Knowledge). _By subject_ puts the books and downloaded references under ten subjects —
+  Knowledge). _By subject_ has a find box over the titles and topics of every book and
+  downloaded reference (word starts, any case, accents ignored, title matches first; inside a
+  subject when one is chosen), and puts the books and downloaded references under ten subjects —
   medicine, farming, food and water, building, trades and repair, engineering, survival and
   defence, radio and navigation, teaching, science — and opens them from there. _Starter
   collection_ looks twenty-five Kiwix books up in the live catalogue — post-disaster, water,
