@@ -36,6 +36,9 @@ const BOOKS: Record<string, { name: string; title: string; data: Uint8Array; bro
   'zimgit-knots_en_2024-08.zim': { name: 'zimgit-knots_en', title: 'Knots', data: zim('Knots') },
   // An older water book: the lookup takes the newest.
   'zimgit-water_en_2023-01.zim': { name: 'zimgit-water_en', title: 'Water (old)', data: zim('Old water') },
+  // The catalogue's name is not the file's (as for the real Gardenology), and the title does
+  // not hold the search word: only the item's own `names` finds it.
+  'gardenology.org_en_all_2026-09.zim': { name: 'gardenology_en_all', title: 'Plants', data: zim('Plants') },
   'zimgit-post-disaster_en_2024-05.zim': {
     name: 'zimgit-post-disaster_en',
     title: 'Post-disaster',
@@ -104,6 +107,12 @@ test('collection: looked up by name and search, newest file kept, planned, fetch
       ['https://lb.download.kiwix.org/zim/other/zimgit-water_en_2024-08.zim'],
     );
     assert.equal(answer.items.find((x) => x.id === 'wikipedia')!.choices.length, 0);
+    assert.deepEqual(
+      answer.items.find((x) => x.id === 'gardenology')!.choices.map((c) => c.file),
+      ['gardenology.org_en_all'],
+    );
+    assert.ok(k.asked.some((u) => /[?&]name=gardenology_en_all(&|$)/.test(u)));
+    assert.ok(!k.asked.some((u) => /[?&]name=gardenology\.org_en_all(&|$)/.test(u)));
     // The name filter went out without the flavour; the language with every question.
     assert.ok(k.asked.some((u) => u.includes('name=wikipedia_en_all&') || u.endsWith('name=wikipedia_en_all')));
     assert.ok(k.asked.filter((u) => u.includes('/catalog/')).every((u) => u.includes('lang=eng')));
@@ -111,7 +120,7 @@ test('collection: looked up by name and search, newest file kept, planned, fetch
     const plan = planCollection(resolvedFromAnswer(answer), 10 * 1024 ** 3);
     assert.deepEqual(
       plan.picks.map((p) => p.item.id),
-      ['post-disaster', 'water', 'knots'],
+      ['post-disaster', 'water', 'knots', 'gardenology'],
     );
     assert.ok(plan.missing.some((m) => m.id === 'wikipedia'));
 
@@ -123,22 +132,23 @@ test('collection: looked up by name and search, newest file kept, planned, fetch
     const st = await until(h.client, ['done', 'failed', 'cancelled']);
     assert.equal(st.phase, 'done', JSON.stringify(st));
     assert.equal(st.item, COLLECTION_ITEM);
-    assert.deepEqual(st.step, { done: 2, total: 3 });
+    assert.deepEqual(st.step, { done: 3, total: 4 });
     assert.equal(st.problems?.length, 1);
     assert.match(st.problems![0]!, /^Post-disaster: /);
-    assert.match(st.message ?? '', /2 of 3 in the library; 1 could not be fetched/);
+    assert.match(st.message ?? '', /3 of 4 in the library; 1 could not be fetched/);
     const lib = path.join(h.dataDir, 'library');
     assert.deepEqual((await fs.readdir(lib)).filter((n) => n.endsWith('.zim')).sort(), [
+      'gardenology.org_en_all_2026-09.zim',
       'zimgit-knots_en_2024-08.zim',
       'zimgit-water_en_2024-08.zim',
     ]);
     const shelf = await h.client.request('library.shelf', undefined);
-    assert.deepEqual(shelf.books.map((b) => b.title).sort(), ['Knots', 'Water']);
+    assert.deepEqual(shelf.books.map((b) => b.title).sort(), ['Knots', 'Plants', 'Water']);
     // Planned again with what the shelf holds: those two are had, not fetched again.
     const again = planCollection(resolvedFromAnswer(answer), 10 * 1024 ** 3, {
       haveFiles: shelf.books.map((b) => b.file),
     });
-    assert.deepEqual(again.have.sort(), ['knots', 'water']);
+    assert.deepEqual(again.have.sort(), ['gardenology', 'knots', 'water']);
     assert.deepEqual(
       again.picks.map((p) => p.item.id),
       ['post-disaster'],

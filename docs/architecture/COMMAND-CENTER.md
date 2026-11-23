@@ -212,9 +212,11 @@ The operator's "ship it like NOMAD": the library no longer needs kiwix-serve.
   whole by a data-folder move (`CARRIED_FOLDERS`). Threat model T19.
 - **Subjects and the starter collection** (`packages/ipc-contract/src/library-collection.ts`,
   2026-11-22): ten subjects; a book from the collection takes the collection's subjects, any other
-  book or reference is placed by whole words in its title and description. Sixteen Kiwix books
-  named by the start of their file name (`zimgit-water_en`, `wikipedia_en_all_maxi`, …);
-  `library.collection.lookup` asks the catalogue for each by exact `name` (flavour taken off)
+  book or reference is placed by whole words in its title and description. Twenty-five Kiwix books
+  named by the start of their file name (`zimgit-water_en`, `wikipedia_en_all_maxi`, …),
+  checked against the live catalogue 2026-11-22; `library.collection.lookup` asks the catalogue
+  for each by exact `name` (flavour taken off, or the item's own `names` where the catalogue's
+  differs: Gardenology)
   and by search words, and keeps the newest dated file matching each name. `planCollection`
   goes by rank, takes the fullest edition that fits what is left, skips what the library holds.
   `library.download.start` `{ kind: 'collection', entries }` (1–30, no duplicates) fetches them

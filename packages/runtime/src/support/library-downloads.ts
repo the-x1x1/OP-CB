@@ -5,7 +5,7 @@ import type { Logger } from '@opcb/core';
 import {
   COLLECTION_ITEM,
   STARTER_COLLECTION,
-  catalogNameOf,
+  catalogNamesOf,
   resolveItem,
   type CatalogAnswer,
   type CatalogEntry,
@@ -387,7 +387,7 @@ export class LibraryDownloads {
       return a.entries;
     };
     const jobs = STARTER_COLLECTION.map((item) => async () => {
-      const names = [...new Set(item.files.map(catalogNameOf))];
+      const names = catalogNamesOf(item);
       const found = (await Promise.all([...names.map((name) => ask({ name })), ask({ query: item.query })])).flat();
       return { id: item.id, choices: resolveItem(item, found).choices };
     });

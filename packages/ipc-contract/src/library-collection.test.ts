@@ -5,6 +5,7 @@ import { EMERGENCY_REFERENCES } from './command-center.js';
 import {
   LIBRARY_SUBJECTS,
   STARTER_COLLECTION,
+  catalogNamesOf,
   isLibrarySubject,
   planCollection,
   resolveItem,
@@ -75,6 +76,19 @@ test('the starter collection is well formed: unique ids and files, known subject
       STARTER_COLLECTION.some((i) => i.subjects.includes(s.id)),
       s.id,
     );
+});
+
+test('catalogNamesOf: flavours taken off and merged; the item names win where given', () => {
+  const wp = STARTER_COLLECTION.find((i) => i.id === 'wikipedia')!;
+  assert.deepEqual(catalogNamesOf(wp), ['wikipedia_en_all']);
+  const g = STARTER_COLLECTION.find((i) => i.id === 'gardenology')!;
+  assert.deepEqual(catalogNamesOf(g), ['gardenology_en_all']);
+  assert.deepEqual(catalogNamesOf(item('x', 1, ['a_en_all_maxi', 'a_en_all_mini', 'b_x'])), ['a_en_all', 'b_x']);
+  // Every name is a plain catalogue name, as library.catalog accepts.
+  for (const i of STARTER_COLLECTION)
+    for (const n of catalogNamesOf(i)) assert.match(n, /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/, i.id);
+  // The whole collection fits one collection download.
+  assert.ok(STARTER_COLLECTION.length <= 30);
 });
 
 test('resolveItem: newest dated file of each alternative, matched by file name only', () => {

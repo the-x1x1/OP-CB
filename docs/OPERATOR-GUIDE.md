@@ -143,8 +143,9 @@ Command Center → **Knowledge**.
   water, building, trades, engineering, survival, radio and navigation, teaching, science).
 - **Starter collection** (Online mode): choose how much room — the free space on the library's
   drive, or a drive size from 32 GB to 2 TB — and **Look up the collection**. OP-CB finds
-  sixteen Kiwix books in the live catalogue (survival, water, medicine, food, farming, energy,
-  repair, travel, textbooks, Wikipedia, Project Gutenberg…), takes the essentials first and
+  twenty-five Kiwix books in the live catalogue (survival, water, medicine, canning, cooking,
+  gardening, energy, repair, vehicles, radio, travel, textbooks, Wikipedia, Project
+  Gutenberg…), takes the essentials first and
   the fullest edition of each that fits, and lists what is too big or no longer offered.
   Choose subjects to narrow it; **Download** fetches them one after another, each checked as
   above. A book that fails is noted and the next begins.

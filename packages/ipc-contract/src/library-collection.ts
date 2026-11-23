@@ -254,16 +254,26 @@ export interface CollectionItem {
   files: readonly string[];
   /** What to ask the catalogue for (its `q`); the answer is matched by file name. */
   query: string;
+  /**
+   * The catalogue's book names, where they are not the file names with the flavour taken off
+   * (Gardenology's book is `gardenology_en_all`, its files `gardenology.org_en_all_…`).
+   */
+  names?: readonly string[];
   /** Lower comes first when space is short. */
   rank: number;
 }
 
 /**
- * The starter collection (2026-11-22). File names checked against download.kiwix.org's
- * listing and published lists of its books that month: zimgit-* (post-disaster, water,
- * medicine, food-preparation, knots), mdwiki, appropedia, energypedia, gardenology,
- * archlinux; wikipedia, wikem, ifixit, wikivoyage, wikibooks and gutenberg by their long-
- * standing names. Anything the catalogue does not hold now is reported, not fetched.
+ * The starter collection. Checked 2026-11-22 against the live catalogue (opds.library.kiwix.org,
+ * from the browser pane on the operator's computer): every file name below was answered by its
+ * catalogue name and by the search words, with these sizes then — post-disaster 0.64 GB, water
+ * 0.02, medical library 0.07, military medicine 0.06, mdwiki maxi 2.30, USDA canning 0.02,
+ * food preparation 0.10, knots 0.03, outdoors 0.14, amateur radio 0.08, appropedia maxi 0.58,
+ * gardenology 0.11, gardening 0.93, cooking 0.24, sustainability 0.03, energypedia 0.80/0.72,
+ * mechanics 0.34, wikipedia 127.42/52.69/14.39, home improvement 2.09, ifixit 3.57, wikivoyage
+ * 1.07/0.27, wikibooks 4.74/3.54, archlinux 0.04, electronics 4.26, gutenberg 221.25. Not in the
+ * catalogue that day and left out: WikEM, mdwiki and appropedia without pictures. Anything the
+ * catalogue no longer holds is reported, not fetched.
  */
 export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
   {
@@ -286,7 +296,7 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
   },
   {
     id: 'medicine-guides',
-    title: 'Medicine guides',
+    title: 'Medical library',
     subjects: ['medical'],
     why: 'Field medicine and first-aid handbooks',
     files: ['zimgit-medicine_en'],
@@ -294,22 +304,31 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     rank: 3,
   },
   {
+    id: 'military-medicine',
+    title: 'Military Medicine (FAS)',
+    subjects: ['medical', 'defence'],
+    why: 'Army and Navy medical manuals: trauma, field surgery, wilderness and austere care',
+    files: ['irp.fas.org_en_military-medicine'],
+    query: 'military medicine',
+    rank: 4,
+  },
+  {
     id: 'wikimed',
     title: 'WikiMed (mdwiki)',
     subjects: ['medical'],
     why: 'Medical encyclopedia: conditions, drugs, procedures',
-    files: ['mdwiki_en_all_maxi', 'mdwiki_en_all_nopic'],
+    files: ['mdwiki_en_all_maxi'],
     query: 'mdwiki',
-    rank: 4,
+    rank: 5,
   },
   {
-    id: 'wikem',
-    title: 'WikEM emergency medicine',
-    subjects: ['medical'],
-    why: 'Emergency medicine reference written by clinicians',
-    files: ['wikem_en_all_maxi', 'wikem_en_all_nopic'],
-    query: 'wikem',
-    rank: 5,
+    id: 'canning',
+    title: 'USDA Guide to Home Canning',
+    subjects: ['food'],
+    why: 'Safe home canning of fruit, vegetables, meat and pickles',
+    files: ['usda-2015_en'],
+    query: 'canning',
+    rank: 6,
   },
   {
     id: 'food-preparation',
@@ -318,7 +337,7 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Cooking, preserving and storing food',
     files: ['zimgit-food-preparation_en'],
     query: 'food preparation',
-    rank: 6,
+    rank: 7,
   },
   {
     id: 'knots',
@@ -327,16 +346,34 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Knots and lashings, illustrated',
     files: ['zimgit-knots_en'],
     query: 'knots',
-    rank: 7,
+    rank: 8,
+  },
+  {
+    id: 'outdoors',
+    title: 'The Great Outdoors Q&A',
+    subjects: ['defence', 'comms'],
+    why: 'Camping, bushcraft, navigation and staying alive outside',
+    files: ['outdoors.stackexchange.com_en_all'],
+    query: 'outdoors',
+    rank: 9,
+  },
+  {
+    id: 'ham-radio',
+    title: 'Amateur Radio Q&A',
+    subjects: ['comms'],
+    why: 'Radios, antennas, licensing and getting a signal out',
+    files: ['ham.stackexchange.com_en_all'],
+    query: 'amateur radio',
+    rank: 10,
   },
   {
     id: 'appropedia',
     title: 'Appropedia',
     subjects: ['building', 'farming', 'engineering'],
     why: 'Appropriate technology: water, energy, building, farming',
-    files: ['appropedia_en_all_maxi', 'appropedia_en_all_nopic'],
+    files: ['appropedia_en_all_maxi'],
     query: 'appropedia',
-    rank: 8,
+    rank: 11,
   },
   {
     id: 'gardenology',
@@ -345,7 +382,35 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Plants, growing and gardening',
     files: ['gardenology.org_en_all'],
     query: 'gardenology',
-    rank: 9,
+    names: ['gardenology_en_all'],
+    rank: 12,
+  },
+  {
+    id: 'gardening',
+    title: 'Gardening & Landscaping Q&A',
+    subjects: ['farming'],
+    why: 'Answers on growing food, soil, pests and trees',
+    files: ['gardening.stackexchange.com_en_all'],
+    query: 'gardening',
+    rank: 13,
+  },
+  {
+    id: 'cooking',
+    title: 'Cooking Q&A',
+    subjects: ['food'],
+    why: 'Answers on cooking, keeping and preserving food',
+    files: ['cooking.stackexchange.com_en_all'],
+    query: 'cooking',
+    rank: 14,
+  },
+  {
+    id: 'sustainability',
+    title: 'Sustainable Living Q&A',
+    subjects: ['building', 'farming'],
+    why: 'Living on less: water, power, waste, growing',
+    files: ['sustainability.stackexchange.com_en_all'],
+    query: 'sustainable living',
+    rank: 15,
   },
   {
     id: 'energypedia',
@@ -354,16 +419,34 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Solar, wind, stoves and small-scale energy',
     files: ['energypedia_en_all_maxi', 'energypedia_en_all_nopic'],
     query: 'energypedia',
-    rank: 10,
+    rank: 16,
+  },
+  {
+    id: 'mechanics',
+    title: 'Motor Vehicle Mechanics Q&A',
+    subjects: ['engineering', 'trades'],
+    why: 'Keeping engines and vehicles running',
+    files: ['mechanics.stackexchange.com_en_all'],
+    query: 'mechanics',
+    rank: 17,
   },
   {
     id: 'wikipedia',
     title: 'Wikipedia',
     subjects: ['science', 'education'],
-    why: 'All of English Wikipedia; without pictures when space is short',
+    why: 'All of English Wikipedia; without pictures, or the short version, when space is short',
     files: ['wikipedia_en_all_maxi', 'wikipedia_en_all_nopic', 'wikipedia_en_all_mini'],
     query: 'wikipedia english',
-    rank: 11,
+    rank: 18,
+  },
+  {
+    id: 'diy',
+    title: 'Home Improvement Q&A',
+    subjects: ['building', 'trades'],
+    why: 'Answers on wiring, plumbing, carpentry and repair',
+    files: ['diy.stackexchange.com_en_all'],
+    query: 'home improvement',
+    rank: 19,
   },
   {
     id: 'ifixit',
@@ -372,7 +455,7 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Step-by-step repair of devices, vehicles and tools',
     files: ['ifixit_en_all'],
     query: 'ifixit',
-    rank: 12,
+    rank: 20,
   },
   {
     id: 'wikivoyage',
@@ -381,7 +464,7 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Travel guide: places, routes, getting around',
     files: ['wikivoyage_en_all_maxi', 'wikivoyage_en_all_nopic'],
     query: 'wikivoyage',
-    rank: 13,
+    rank: 21,
   },
   {
     id: 'wikibooks',
@@ -390,7 +473,7 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Open textbooks across every subject',
     files: ['wikibooks_en_all_maxi', 'wikibooks_en_all_nopic'],
     query: 'wikibooks',
-    rank: 14,
+    rank: 22,
   },
   {
     id: 'linux',
@@ -399,16 +482,25 @@ export const STARTER_COLLECTION: readonly CollectionItem[] = Object.freeze([
     why: 'Running and repairing Linux computers',
     files: ['archlinux_en_all_maxi'],
     query: 'archlinux',
-    rank: 15,
+    rank: 23,
+  },
+  {
+    id: 'electronics',
+    title: 'Electronics Q&A',
+    subjects: ['engineering'],
+    why: 'Circuits, power supplies, repair and building',
+    files: ['electronics.stackexchange.com_en_all'],
+    query: 'electronics',
+    rank: 24,
   },
   {
     id: 'gutenberg',
     title: 'Project Gutenberg',
     subjects: ['education', 'trades', 'farming'],
-    why: 'Tens of thousands of public-domain books, old trade and farm manuals among them',
+    why: 'Tens of thousands of public-domain books, old trade and farm manuals among them (over 200 GB)',
     files: ['gutenberg_en_all'],
     query: 'gutenberg',
-    rank: 16,
+    rank: 25,
   },
 ]);
 
@@ -601,6 +693,11 @@ export function readCollectionLookupRequest(v: unknown): CollectionLookupRequest
 /** The catalogue's book name for a file-name start: the flavour (`_maxi`, `_nopic`, `_mini`) taken off. */
 export function catalogNameOf(file: string): string {
   return file.replace(/_(maxi|nopic|mini)$/, '');
+}
+
+/** The names to ask the catalogue for an item: its own when given, else from its files. */
+export function catalogNamesOf(item: CollectionItem): string[] {
+  return [...new Set(item.names?.length ? item.names : item.files.map(catalogNameOf))];
 }
 
 /** Rebuilds resolved items from an answer, against the collection as this build knows it. */

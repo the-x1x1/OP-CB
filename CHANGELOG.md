@@ -557,10 +557,13 @@ branch from 2026-11-13 were run on the operator's computer, this release itself 
   Knowledge). _By subject_ puts the books and downloaded references under ten subjects —
   medicine, farming, food and water, building, trades and repair, engineering, survival and
   defence, radio and navigation, teaching, science — and opens them from there. _Starter
-  collection_ looks sixteen Kiwix books up in the live catalogue (post-disaster, water,
-  medicine guides, WikiMed, WikEM, food preparation, knots, Appropedia, Gardenology,
-  Energypedia, Wikipedia, iFixit, Wikivoyage, Wikibooks, the Arch Linux wiki, Project
-  Gutenberg) by exact file name, fits them to the free space or a drive size (32 GB to 2 TB;
+  collection_ looks twenty-five Kiwix books up in the live catalogue — post-disaster, water,
+  the medical library, FAS Military Medicine, WikiMed, the USDA canning guide, food
+  preparation, knots, Appropedia, Gardenology, Energypedia, Wikipedia, iFixit, Wikivoyage,
+  Wikibooks, the Arch Linux wiki, Project Gutenberg, and the Stack Exchange answers on the
+  outdoors, amateur radio, gardening, cooking, sustainable living, vehicle mechanics, home
+  improvement and electronics; every name checked against the catalogue on 2026-11-22 — by
+  exact file name, fits them to the free space or a drive size (32 GB to 2 TB;
   a tenth kept back), the essentials first and the fullest edition that fits, skips what the
   library holds, names what is too big or no longer in the catalogue, and downloads them one
   after another with the same checks as a single book (`library.collection.lookup`,
