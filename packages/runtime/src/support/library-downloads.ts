@@ -353,7 +353,7 @@ export class LibraryDownloads {
         step: { done: 0, total: req.entries.length },
         message: 'starting',
       });
-      void this.runCollection(req.entries, ac.signal);
+      void this.runCollection(req.entries, ac.signal).catch((err: unknown) => this.endedOutside(COLLECTION_ITEM, err));
       return this.current();
     }
     if (req.kind === 'zim') {
