@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import os from 'node:os';
@@ -43,8 +43,17 @@ const SOURCE = {
   worldPreload: true,
 };
 
+// Every folder made here is removed when the file's tests end: left behind, each run kept
+// about 60 MB of tiles in the system's temporary folder.
+const made: string[] = [];
+after(async () => {
+  for (const dir of made) await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+});
+
 async function tmp(): Promise<string> {
-  return fs.mkdtemp(path.join(os.tmpdir(), 'wv-tiles-'));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'wv-tiles-'));
+  made.push(dir);
+  return dir;
 }
 
 function cache(dir: string, fetch: FetchLike, extra: Partial<ConstructorParameters<typeof TileCache>[0]> = {}) {
